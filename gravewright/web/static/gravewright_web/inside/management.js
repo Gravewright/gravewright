@@ -21,6 +21,11 @@ const text = (root, selector, value) => {
   if (el) el.textContent = value ?? "";
 };
 const show = (root, selector, visible) => root.querySelector(selector)?.toggleAttribute("hidden", !visible);
+const blueprintAudioCleanupErrors = {
+  en: "Copying without audio would exceed an object's connection limit. Include audio or simplify its graph.",
+  "pt-BR": "Copiar sem áudio ultrapassaria o limite de conexões de um objeto. Inclua o áudio ou simplifique o grafo.",
+  es: "Copiar sin audio superaría el límite de conexiones de un objeto. Incluye el audio o simplifica el grafo."
+};
 const marketplaceErrors = {
   managed_start_required: "Start Gravewright with the 0.1.2 or newer Runner or main.py to activate Django apps. When upgrading from 0.1.1, replace the old launcher using the new release ZIP and installer.",
   update_in_progress: "Another server operation is running. Wait for it to finish before activating Django apps.",
@@ -56,7 +61,10 @@ async function run(root, work) {
   try {
     await work();
   } catch (error) {
-    text(root, "[role=alert]", (root.dataset.moduleCatalog && marketplaceErrors[error.code ?? error.message]) || (error.status === 403 ? "Only the installation owner or campaign GM can perform this action." : error.status === 409 ? "The state changed. Refresh before trying again." : error.status === 413 ? "The archive exceeds the 256 MB upload limit." : error.message || "The operation failed. Check the file or connection and try again."));
+    const code = error.code ?? error.message;
+    const blueprintMessage = code === 'blueprint_audio_cleanup_limit'
+      && (blueprintAudioCleanupErrors[document.documentElement.lang] || blueprintAudioCleanupErrors.en);
+    text(root, "[role=alert]", blueprintMessage || (root.dataset.moduleCatalog && marketplaceErrors[code]) || (error.status === 403 ? "Only the installation owner or campaign GM can perform this action." : error.status === 409 ? "The state changed. Refresh before trying again." : error.status === 413 ? "The archive exceeds the 256 MB upload limit." : error.message || "The operation failed. Check the file or connection and try again."));
     show(root, "[role=alert]", true);
   } finally {
     root.dataset.busy = "false";

@@ -58,6 +58,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `COMMAND_PALETTE_ENABLED` | `true` | Enable the table command palette |
 | `LOBBY_READY_CHECK_ENABLED` | `true` | Enable lobby readiness controls |
 | `DYNAMIC_LIGHTING_ENABLED` | `true` | Enable dynamic-lighting feature |
+| `GRAVEWRIGHT_AUTOMATION_WORKER_ENABLED` | `true` | Run the ASGI background worker for persistent Blueprint Delay continuations; false leaves pending waits stored without executing them |
 | `SCENE_VIEWPORT_MAX_WIDTH_CHUNKS` | `16` | Maximum streamed viewport width in chunks |
 | `SCENE_VIEWPORT_MAX_HEIGHT_CHUNKS` | `16` | Maximum streamed viewport height in chunks |
 | `SCENE_VIEWPORT_MAX_AREA_CHUNKS` | `256` | Maximum streamed viewport area in chunks |
@@ -92,6 +93,26 @@ Two optional commented settings are also recognized:
 | `DJANGO_SECURE_COOKIES` | `false` | Enable secure cookies; a configured HTTPS public origin always enables them. This flag does not configure TLS or the WebSocket origin |
 
 `GRAVEWRIGHT_CONTAINER` is read by release discovery to label the install format when set to `1`, `true` or `yes`; it does not configure a container runtime or provide automatic updates. `DJANGO_SETTINGS_MODULE` selects the Python settings module; entry points default to `config.settings`.
+
+## Blueprint Delay worker
+
+The ASGI host starts the Delay worker automatically. Daphne uses its reactor
+startup/shutdown hooks, including normal Runner execution; other ASGI hosts must
+deliver lifespan startup/shutdown events. Importing Django or running a management
+command does not start a scheduler. The worker checks due database rows every
+250 ms, processing at most 20 per pass; actual execution can be later under load
+or after downtime. It does not require connected browsers, HTTP polling, Redis
+jobs or a separately launched process.
+
+Pending waits live in the configured SQLite database and survive a server
+restart. `GRAVEWRIGHT_AUTOMATION_WORKER_ENABLED=false` disables processing for
+that process without discarding the queue. Scene-level **Pause automation**
+instead holds only that scene's waits until resume. The updater's existing
+managed maintenance flag holds the queue through health verification until the
+update is committed or rolled back. Apply the normal migrations
+before starting the host; the worker reports database failures in server logs
+and retries, rather than treating them as successful executions. See
+[Persistent Delay](map-builder.md#persistent-delay) for cancellation and copying.
 
 ## Map tiling and large images
 

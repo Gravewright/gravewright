@@ -14,7 +14,7 @@ from jinja2.ext import Extension
 @lru_cache(maxsize=1)
 def native_messages():
     root = Path(__file__).resolve().parents[1]
-    return {name: json.loads((root / path).read_text()) for name, path in {
+    return {name: json.loads((root / path).read_text(encoding='utf-8')) for name, path in {
         'accounts': 'accounts/messages.json', 'inside': 'web/inside_messages.json',
         'table': 'table/messages.json', 'tools': 'table/tool_messages.json',
     }.items()}

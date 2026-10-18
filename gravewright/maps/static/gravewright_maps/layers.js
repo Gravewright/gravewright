@@ -2,7 +2,9 @@ import { createTools } from "./tools.js";
 import { journalPins } from './journal-pins.js';
 import { lightingWorkspace } from "./lighting.js";
 import { wallController } from "./walls/ui/walls.js";
-import { wallPresets, wallPreset, wallPayload } from "./walls/model/walls.js";
+import { wallPresets, wallPreset } from "./walls/model/walls.js";
+import { createWallEditor } from './wall-editor.js';
+import { canInteractWithBlueprintDoor } from './builder/blueprint-model.js';
 import {
   getPath,
   mergePatch,
@@ -102,6 +104,7 @@ export function createLayers(surface, board, map, gm, initial) {
       picker = undefined;
     }
     if (name === "editor") {
+      editor?.dispose();
       editor?.remove();
       editor = undefined;
     }
@@ -203,94 +206,15 @@ export function createLayers(surface, board, map, gm, initial) {
   function openEditor(view) {
     if (editor?.dataset.id !== view.editing.id) {
       closeDialog("editor");
-      editor = clone("wall-editor");
-      editor.dataset.id = view.editing.id;
-      const w = view.editing,
-        d = wallPayload(w),
-        f = editor.querySelector("form");
-      editor.querySelector("strong").textContent =
-        w.kind === "door" ? "Configure door" : "Configure wall";
-      const p = f.elements.preset;
-      for (const preset of wallPresets)
-        p.append(new Option(preset.name, preset.id));
-      p.value = wallPreset(w).id;
-      for (const [k, v] of Object.entries(d.behavior)) f.elements[k].value = v;
-      f.elements.finite.checked = d.vertical.bottom != null;
-      f.elements.bottom.value = d.vertical.bottom ?? 0;
-      f.elements.top.value = d.vertical.top ?? 3;
-      f.elements.discovered.checked = !!w.discovered;
-      const sync = () => {
-        const finite = f.elements.finite.checked;
-        for (const el of f.querySelectorAll("[data-finite]"))
-          el.hidden = !finite;
-        f.elements.bottom.disabled = f.elements.top.disabled = !finite;
-        f.querySelector("[data-secret]").hidden =
-          wallPresets.find((p) => p.id === f.elements.preset.value)
-            .presentation !== "secret";
-        const valid =
-          !finite ||
-          Number(f.elements.top.value) > Number(f.elements.bottom.value);
-        f.elements.top.setCustomValidity(
-          valid ? "" : "Upper height must be greater than lower height.",
-        );
-      };
-      p.onchange = () => {
-        const p = wallPresets.find((p) => p.id === f.elements.preset.value);
-        for (const [k, v] of Object.entries(p.behavior))
-          f.elements[k].value = v;
-        f.elements.finite.checked = !!p.vertical;
-        f.elements.bottom.value = p.vertical?.bottom ?? 0;
-        f.elements.top.value = p.vertical?.top ?? 3;
-        sync();
-      };
-      f.oninput = sync;
-      f.onsubmit = (e) => {
-        e.preventDefault();
-        if (!f.reportValidity()) return;
-        const behavior = Object.fromEntries(
-          ["movement", "vision", "light", "sound"].map((k) => [
-            k,
-            f.elements[k].value,
-          ]),
-        );
-        controller.call(
-          "run",
-          "walls",
-          "update",
-          {
-            wall_id: w.id,
-            version: w.version,
-            behavior,
-            presentation: wallPresets.find((preset) => preset.id === p.value)
-              .presentation,
-            vertical: {
-              bottom: f.elements.finite.checked
-                ? Number(f.elements.bottom.value)
-                : null,
-              top: f.elements.finite.checked
-                ? Number(f.elements.top.value)
-                : null,
-            },
-            discovered: f.elements.discovered.checked,
-          },
-          () => controller.call("closeEditor"),
-        );
-      };
-      editor.querySelector("header button").onclick = () =>
-        controller.call("closeEditor");
-      editor.onkeydown = (e) => {
-        if (e.key === "Escape") {
-          e.stopPropagation();
-          controller.call("closeEditor");
-        }
-      };
+      const w = view.editing;
+      editor = createWallEditor(w, {
+        onClose: () => controller.call('closeEditor'),
+        onSave: patch => controller.call('run', 'walls', 'update',
+          { wall_id: w.id, version: w.version, ...patch }, () => controller.call('closeEditor')),
+      });
       document.body.append(editor);
-      sync();
     }
-    editor.querySelector("fieldset").disabled = view.busy;
-    const error = editor.querySelector("[role=alert]");
-    error.hidden = !view.error;
-    error.textContent = view.error;
+    editor.setState({ busy: view.busy, error: view.error });
   }
   function context(view) {
     if (menu?.dataset.id === view.context.wall.id) return;
@@ -314,12 +238,12 @@ export function createLayers(surface, board, map, gm, initial) {
               [
                 "Door",
                 w.door_state === "open" ? "Close" : "Open",
-                () => controller.call("operate", w),
+                () => controller.call("setDoorState", w, w.door_state === "open" ? "closed" : "open"),
               ],
               [
                 "Lock",
                 w.door_state === "locked" ? "Unlock" : "Lock",
-                () => controller.call("operate", w, true),
+                () => controller.call("setDoorState", w, w.door_state === "locked" ? "closed" : "locked"),
               ],
             ]
           : [
@@ -473,7 +397,7 @@ export function createLayers(surface, board, map, gm, initial) {
           tabindex: 0,
           "aria-label": `Porta ${w.door_state}`,
           "aria-disabled": String(
-            view.busy || (!gm && w.door_state === "locked"),
+            view.busy || !canInteractWithBlueprintDoor(w, gm),
           ),
         });
         g.append(
@@ -507,7 +431,7 @@ export function createLayers(surface, board, map, gm, initial) {
         const operate = (e, lock = false) => {
           e.preventDefault();
           e.stopPropagation();
-          if (view.busy || (!gm && (lock || w.door_state === "locked"))) return;
+          if (view.busy || !canInteractWithBlueprintDoor(w, gm) || !gm && lock) return;
           controller.call("operate", w, lock);
         };
         g.onclick = operate;

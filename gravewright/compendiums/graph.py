@@ -4,7 +4,7 @@ import re
 from .assets import identifiers
 
 CHILDREN = {
-    'gravewright_maps.scene': {'gravewright_maps.tile','gravewright_maps.scenestate','gravewright_maps.sceneobject','gravewright_tokens.token'},
+    'gravewright_maps.scene': {'gravewright_maps.tile','gravewright_maps.scenestate','gravewright_maps.sceneobject','gravewright_maps.mapbuilderproject','gravewright_tokens.token'},
     'gravewright_actors.actor': {'gravewright_actors.asset'},
     'gravewright_journals.journal': {'gravewright_journals.asset','gravewright_journals.boardentry'},
     'gravewright_cards.deck': {'gravewright_cards.card'},

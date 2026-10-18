@@ -7,7 +7,7 @@ export function shaderInstructions(description) {
     return shaderPrompt.replace('<describe appearance, motion, density, and lighting behavior here>', () => description.trim());
 }
 
-export function openShaderPrompt(onInsert, onClose) {
+export function openShaderPrompt(onInsert, onClose, { nested = false } = {}) {
     const previousFocus = document.activeElement;
     const dialog = document.createElement('section');
     dialog.className = 'table-modal-window shader-prompt-dialog';
@@ -91,7 +91,7 @@ export function openShaderPrompt(onInsert, onClose) {
         input.focus();
     }
     render(1);
-    mountModal(dialog);
+    mountModal(dialog, { nested });
     dialog.querySelector('textarea').focus();
     return close;
 }

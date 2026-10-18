@@ -3,6 +3,12 @@ import { openFormModal, modalText } from "/static/gravewright_table/form-modal.j
 
 // gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
+function onTextChange(listener) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 function notifyTextChange() {
   for (const listener of listeners)
     listener();
@@ -103,6 +109,49 @@ function hit(row, p, tolerance) {
   });
 }
 
+// gravewright/maps/frontend/features/images/model/image-components.js
+var kinds = { lights: "light", particles: "particle", shaders: "shader" };
+function imageComponentKeys(image) {
+  return Object.entries(image.torch?.components ?? {}).flatMap(([kind, component]) => kinds[kind] && typeof component?.id === "string" ? [`${kinds[kind]}:${component.id}`] : []);
+}
+
+// gravewright/maps/static/gravewright_maps/region-filters.js
+var uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\s\S])/i;
+var regionFilterDispositions = Object.freeze(["friendly", "neutral", "hostile", "unknown"]);
+var regionFilterVisibility = Object.freeze(["any", "visible", "hidden"]);
+function normalizeRegionFilters(filters = {}) {
+  const fields = ["tokenIds", "actorIds", "dispositions", "visibility"];
+  if (!filters || typeof filters !== "object" || Array.isArray(filters) || Object.keys(filters).some((key) => !fields.includes(key)))
+    throw new TypeError("Invalid region filters.");
+  const result = { tokenIds: [], actorIds: [], dispositions: [], visibility: "any", ...structuredClone(filters) };
+  for (const key of ["tokenIds", "actorIds"]) {
+    const rows = result[key];
+    if (!Array.isArray(rows) || rows.length > 64 || !Array.from(rows).every((id) => typeof id === "string" && uuid.test(id)) || new Set(rows.map((id) => id.toLowerCase())).size !== rows.length) throw new TypeError("Invalid region filters.");
+    result[key] = rows.map((id) => id.toLowerCase());
+  }
+  if (!Array.isArray(result.dispositions) || result.dispositions.length > 4 || !Array.from(result.dispositions).every((value) => regionFilterDispositions.includes(value)) || new Set(result.dispositions).size !== result.dispositions.length || !regionFilterVisibility.includes(result.visibility))
+    throw new TypeError("Invalid region filters.");
+  return result;
+}
+
+// gravewright/maps/frontend/features/regions/model/regions.js
+function containsRegion(geometry, point, tolerance = 0) {
+  if (!geometry || !point) return false;
+  if (geometry.shape === "circle")
+    return Math.hypot(point.x - geometry.x, point.y - geometry.y) <= geometry.radius + tolerance;
+  if (geometry.shape === "rect")
+    return point.x >= geometry.x - tolerance && point.y >= geometry.y - tolerance && point.x <= geometry.x + geometry.width + tolerance && point.y <= geometry.y + geometry.height + tolerance;
+  const vertices = geometry.points || [];
+  let inside = false;
+  for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+    const a = vertices[j], b = vertices[i], dx = b.x - a.x, dy = b.y - a.y, length = dx * dx + dy * dy;
+    const t = length ? Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / length)) : 0;
+    if (Math.hypot(point.x - a.x - t * dx, point.y - a.y - t * dy) <= tolerance) return true;
+    if (a.y > point.y !== b.y > point.y && point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+}
+
 // gravewright/maps/frontend/features/selection/model/objects.js
 function rotate(p, c, degrees) {
   const a = degrees * Math.PI / 180, dx = p.x - c.x, dy = p.y - c.y;
@@ -116,6 +165,8 @@ function corners(o) {
   return [{ x: o.x - o.width / 2, y: o.y - o.height / 2 }, { x: o.x + o.width / 2, y: o.y - o.height / 2 }, { x: o.x + o.width / 2, y: o.y + o.height / 2 }, { x: o.x - o.width / 2, y: o.y + o.height / 2 }].map((p) => rotate(p, o, o.rotation));
 }
 function hit2(o, p, tolerance = 5) {
+  if (o.kind === "zone")
+    return containsRegion(o.data.geometry, p, tolerance);
   if (o.kind === "drawing")
     return hit(o.data, p, tolerance);
   if (o.kind === "measure") {
@@ -144,6 +195,7 @@ function centerOf(rows) {
 }
 function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0, y: 0 }) {
   const out = [];
+  const components = new Set(state.images.flatMap(imageComponentKeys));
   function add(kind, data, x, y, width = 18, height = 18, rotation = 0, rank = 10, label = kind, points) {
     out.push({ key: `${kind}:${data.id}`, id: data.id, kind, data, x, y, width, height, rotation, rank, label, points });
   }
@@ -152,19 +204,30 @@ function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0, y: 0 }
   for (const c of state.cards.filter((c2) => c2.can_manage))
     add("card", c, c.x, c.y, 56 * c.scale, 80 * c.scale, c.rotation, 25, c.card?.face_state === "face_up" ? c.card?.name || text("Card") : text("Card (back)"));
   if (gm) {
-    for (const i of state.images)
-      add("image", i, i.x, i.y, i.natural_width * i.scale, i.natural_height * i.scale, i.rotation, 5, text("Image"));
+    for (const i of state.images.filter((row) => !row.surfacePlane || row.surface))
+      add(
+        "image",
+        i,
+        i.x,
+        i.y,
+        i.natural_width * i.scale,
+        i.natural_height * i.scale,
+        i.rotation,
+        5,
+        text(i.empty === true ? "Empty Object" : "Image")
+      );
     for (const w of state.walls)
       add("wall", w, (w.x1 + w.x2) / 2, (w.y1 + w.y2) / 2, Math.hypot(w.x2 - w.x1, w.y2 - w.y1), 4, Math.atan2(w.y2 - w.y1, w.x2 - w.x1) * 180 / Math.PI, 15, text("Wall"), [{ x: w.x1, y: w.y1 }, { x: w.x2, y: w.y2 }]);
     for (const [kind, list] of [["light", state.lights], ["particle", state.particles], ["shader", state.shaders], ["sound", state.spatialSounds]])
       for (const o of list)
-        add(kind, o, o.x, o.y, 18, 18, 0, 35, { get light() {
-          return text("Light");
-        }, get particle() {
-          return text("Particles");
-        }, shader: "Shader", get sound() {
-          return text("Audio");
-        } }[kind]);
+        if (!components.has(`${kind}:${o.id}`))
+          add(kind, o, o.x, o.y, 18, 18, 0, 35, { get light() {
+            return text("Light");
+          }, get particle() {
+            return text("Particles");
+          }, shader: "Shader", get sound() {
+            return text("Audio");
+          } }[kind]);
     for (const d of state.drawings?.rows ?? []) {
       const b = bounds(d), anchor = d.points[0], center = rotate({ x: b.x + b.width / 2, y: b.y + b.height / 2 }, anchor, d.rotation ?? 0);
       add("drawing", d, center.x, center.y, b.width, b.height, d.rotation ?? 0, 10, text("Drawing"));
@@ -174,7 +237,7 @@ function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0, y: 0 }
       if (!points.length)
         continue;
       const xs = points.map((p) => p.x), ys = points.map((p) => p.y);
-      add("zone", z, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 0, 4, text("Zone"));
+      add("zone", z, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 0, 4, z.region?.name || text("Zone"));
     }
   }
   for (const m of measures) {
@@ -188,6 +251,17 @@ function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0, y: 0 }
   return out.sort((a, b) => a.rank - b.rank);
 }
 
+// gravewright/maps/frontend/features/images/model/image-layer.js
+function isGMImage(image) {
+  return image.empty === true || ["gm", "gm-image-layer"].includes(image.layer);
+}
+function imageInWorkspace(image, layer = "game") {
+  return isGMImage(image) ? layer === "gm" : layer !== "gm";
+}
+function canMoveImageToGame(image) {
+  return image.empty !== true;
+}
+
 // gravewright/maps/frontend/features/selection/model/selection-commands.js
 async function applySelection(api, tokens, container, block, map, cell, state, objects, action, center, dx = 0, dy = 0, angle = 0, origin = { x: 0, y: 0 }) {
   const failed = [], done = [];
@@ -198,7 +272,7 @@ async function applySelection(api, tokens, container, block, map, cell, state, o
     const d = o.data, p = point(o);
     try {
       if (["hide", "show"].includes(action)) {
-        if (o.kind !== "image") continue;
+        if (o.kind !== "image" || action === "show" && !canMoveImageToGame(d)) continue;
         await command("images", "update", { placement_id: o.id, layer: action === "hide" ? "gm-image-layer" : "map", expected_version: d.version });
       } else if (action === "flip") {
         if (o.kind !== "card") continue;
@@ -286,7 +360,14 @@ function resizeImage(image, corner, start, point) {
   const dx = point.x - start.x, dy = point.y - start.y;
   const localX = dx * cos + dy * sin, localY = -dx * sin + dy * cos;
   const width = image.natural_width, height = image.natural_height;
-  const scale = Math.max(1e-3, Math.min(100, image.scale + (localX * corner.x * width + localY * corner.y * height) / (width * width + height * height)));
+  const requested = image.scale + (localX * corner.x * width + localY * corner.y * height) / (width * width + height * height);
+  let scale;
+  const box = image.torch ?? image.lever;
+  if (box && [box.width, box.height].every((value) => Number.isFinite(value) && value > 0)) {
+    const minimum = Math.max(1e-12, image.scale * Math.max(1e-3 / box.width, 1e-3 / box.height));
+    const maximum = Math.min(1e6, image.scale * Math.min(1e6 / box.width, 1e6 / box.height));
+    scale = minimum >= maximum ? image.scale : requested < minimum ? Math.min(maximum, minimum * (1 + 4 * Number.EPSILON)) : requested > maximum ? Math.max(minimum, maximum * (1 - 4 * Number.EPSILON)) : requested;
+  } else scale = Math.max(1e-3, Math.min(100, requested));
   const halfX = corner.x * width * (scale - image.scale) / 2;
   const halfY = corner.y * height * (scale - image.scale) / 2;
   return {
@@ -319,7 +400,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   let state = api.state, selected = [], drag, preview, resizePreview, busy = false, menu, dialog, timer, pingTimer, clipboard = [], lastPoint = { x: 0, y: 0 };
   const cell = () => map.gridSize * map.imageScale, origin = () => ({ x: (map.gridOffsetX || 0) * map.imageScale, y: (map.gridOffsetY || 0) * map.imageScale });
   const active = () => stateAPI.getPath("_tool") === "select" && !document.querySelector(".grid-calibration-panel") && document.querySelector("#table-workspace")?.dataset.role !== "streamer";
-  const all = () => sceneObjects(state, (window.gravewrightTokenState?.tokens || []).filter((t) => gm || (t.layer || (t.hidden ? "gm" : "game")) === (stateAPI.getPath("_layer") || "game")), cell(), gm, measurements.rows(), origin()).filter((o) => o.kind !== "image" || !["gm", "gm-image-layer"].includes(o.data.layer) || stateAPI.getPath("_layer") === "composition");
+  const all = () => sceneObjects(state, (window.gravewrightTokenState?.tokens || []).filter((t) => gm || (t.layer || (t.hidden ? "gm" : "game")) === (stateAPI.getPath("_layer") || "game")), cell(), gm, measurements.rows(), origin()).filter((o) => o.kind !== "image" || imageInWorkspace(o.data, stateAPI.getPath("_layer") || "game"));
   const chosen = () => all().filter((o) => selected.includes(o.key));
   const mixed = () => chosen().some((o) => o.kind !== "token");
   const point = (e) => {
@@ -383,7 +464,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     menu = void 0;
     publish();
   }
-  const ignored = (e) => e.target.closest("button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.image-workspace,.card-placement");
+  const ignored = (e) => e.target.closest("button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.smart-image-controls,.image-workspace,.card-placement");
   function down(e) {
     if (!active() || busy || e.button !== 0 || ignored(e)) return;
     const p = point(e), handle = e.target.closest("[data-image-resize]");
@@ -564,11 +645,11 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     }
     if (chosen().some((o2) => ["light", "particle", "shader"].includes(o2.kind))) add("Copy lights and effects", copy);
     if (clipboard.length) add("Paste lights and effects", () => void paste());
-    if (chosen().length === 1 && !["image", "card", "zone"].includes(o.kind)) add("Edit", () => editObject(o, e));
+    if (chosen().length === 1 && (!["image", "card", "zone"].includes(o.kind) || o.kind === "zone" && o.data.region)) add(text("Edit"), () => editObject(o, e));
     add("Rotate selection \u221290\xB0", () => rotate2(-90));
     add("Rotate selection +90\xB0", () => rotate2(90));
-    if (chosen().some((o2) => o2.kind === "image" && !["gm", "gm-image-layer"].includes(o2.data.layer))) add(modalText("Move to GM image layer", "Mover para camada de imagens do GM"), () => void execute("hide"));
-    if (chosen().some((o2) => o2.kind === "image" && ["gm", "gm-image-layer"].includes(o2.data.layer))) add(modalText("Move to image layer", "Mover para camada de imagens"), () => void execute("show"));
+    if (chosen().some((o2) => o2.kind === "image" && !isGMImage(o2.data))) add(modalText("Move to GM image layer", "Mover para camada de imagens do GM"), () => void execute("hide"));
+    if (chosen().some((o2) => o2.kind === "image" && isGMImage(o2.data) && canMoveImageToGame(o2.data))) add(modalText("Move to image layer", "Mover para camada de imagens"), () => void execute("show"));
     if (chosen().some((o2) => o2.kind === "card")) add("Flip selected cards", () => void execute("flip"));
     add("Delete selection", confirmDelete);
     document.body.append(menu);
@@ -1702,7 +1783,7 @@ var MeasurementWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "re
 // gravewright/maps/frontend/features/images/ui/ImageWorkspace.native.js
 import { modalText as modalText2 } from "/static/gravewright_table/form-modal.js";
 var PhTrash3 = "PhTrash";
-var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "root", "class": "image-workspace" }, "bind": {}, "events": [{ "event": "pointermove", "code": "move;", "mods": [] }, { "event": "pointerup", "code": "up;", "mods": [] }, { "event": "pointercancel", "code": "cancel;", "mods": [] }], "children": [{ "tag": "g", "attrs": {}, "bind": { "transform": "(`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`)" }, "events": [], "children": [{ "tag": "g", "attrs": {}, "bind": { "key": "(image.id)", "transform": "(`translate(${image.x} ${image.y}) rotate(${image.rotation})`)" }, "events": [], "children": [{ "tag": "rect", "attrs": { "class": "image-workspace__image", "fill": "transparent", "role": "button" }, "bind": { "class": "({ 'image-workspace__image--active': tool === 'select' })", "x": "(-image.natural_width * image.scale / 2)", "y": "(-image.natural_height * image.scale / 2)", "width": "(image.natural_width * image.scale)", "height": "(image.natural_height * image.scale)", "stroke": "(selected === image.id ? '#e9c46a' : 'none')", "stroke-width": "(2 / viewport.scale)", "tabindex": "(tool === 'select' ? 0 : -1)", "aria-label": "(gwText('Scene image'))", "aria-pressed": "(selected === image.id)" }, "events": [{ "event": "pointerdown", "code": "down($event, image);", "mods": [] }, { "event": "contextmenu", "code": "menu($event, image);", "mods": [] }, { "event": "keydown", "code": "selected = image.id;", "mods": ["enter", "stop"] }], "children": [] }, { "tag": "rect", "attrs": { "class": "image-workspace__resize", "role": "button", "tabindex": "0" }, "bind": { "key": "`handle-${corner.x}-${corner.y}`", "x": "corner.x * image.natural_width * image.scale / 2 - 6 / viewport.scale", "y": "corner.y * image.natural_height * image.scale / 2 - 6 / viewport.scale", "width": "12 / viewport.scale", "height": "12 / viewport.scale", "stroke-width": "1 / viewport.scale", "aria-label": "gwText('Drag to resize')" }, "events": [{ "event": "pointerdown", "code": "down($event, image, corner);", "mods": [] }, { "event": "keydown", "code": "resizeKey($event, image, corner);", "mods": [] }], "children": [{ "tag": "title", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "gwText('Drag to resize')" }] }], "each": { "names": ["corner"], "value": "corners" }, "when": "selected === image.id && tool === 'select'" }], "each": { "names": ["image"], "value": "(images)" } }] }] }, { "tag": "p", "attrs": { "class": "image-workspace__status" }, "bind": { "role": "(error ? 'alert' : 'status')" }, "events": [], "children": [{ "value": "(error || gwText('Saving image\u2026'))" }], "when": "(error || busy)" }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "DirectoryContextMenu", "attrs": {}, "bind": { "x": "(context.x)", "y": "(context.y)", "label": "(gwText('Image actions'))" }, "events": [{ "event": "close", "code": "context = undefined;", "mods": [] }], "children": [{ "tag": "li", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": "moveLayer;", "mods": [] }], "children": [{ "value": "layerLabel()" }] }] }, { "tag": "li", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "class": "is-danger" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove from scene'))" }] }] }], "when": "(context)" }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
+var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "root", "class": "image-workspace" }, "bind": {}, "events": [{ "event": "pointermove", "code": "move;", "mods": [] }, { "event": "pointerup", "code": "up;", "mods": [] }, { "event": "pointercancel", "code": "cancel;", "mods": [] }], "children": [{ "tag": "g", "attrs": {}, "bind": { "transform": "(`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`)" }, "events": [], "children": [{ "tag": "g", "attrs": {}, "bind": { "key": "(image.id)", "transform": "(`translate(${image.x} ${image.y}) rotate(${image.rotation})`)" }, "events": [], "children": [{ "tag": "rect", "attrs": { "class": "image-workspace__image", "fill": "transparent", "role": "button" }, "bind": { "class": "({ 'image-workspace__image--active': tool === 'select' })", "x": "(-image.natural_width * image.scale / 2)", "y": "(-image.natural_height * image.scale / 2)", "width": "(image.natural_width * image.scale)", "height": "(image.natural_height * image.scale)", "stroke": "(selected === image.id ? '#e9c46a' : 'none')", "stroke-width": "(2 / viewport.scale)", "tabindex": "(tool === 'select' ? 0 : -1)", "aria-label": "(gwText(image.empty === true ? 'Empty Object' : 'Scene image'))", "aria-pressed": "(selected === image.id)" }, "events": [{ "event": "pointerdown", "code": "down($event, image);", "mods": [] }, { "event": "contextmenu", "code": "menu($event, image);", "mods": [] }, { "event": "keydown", "code": "selected = image.id;", "mods": ["enter", "stop"] }], "children": [] }, { "tag": "rect", "attrs": { "class": "image-workspace__resize", "role": "button", "tabindex": "0" }, "bind": { "key": "`handle-${corner.x}-${corner.y}`", "x": "corner.x * image.natural_width * image.scale / 2 - 6 / viewport.scale", "y": "corner.y * image.natural_height * image.scale / 2 - 6 / viewport.scale", "width": "12 / viewport.scale", "height": "12 / viewport.scale", "stroke-width": "1 / viewport.scale", "aria-label": "gwText('Drag to resize')" }, "events": [{ "event": "pointerdown", "code": "down($event, image, corner);", "mods": [] }, { "event": "keydown", "code": "resizeKey($event, image, corner);", "mods": [] }], "children": [{ "tag": "title", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "gwText('Drag to resize')" }] }], "each": { "names": ["corner"], "value": "corners" }, "when": "selected === image.id && tool === 'select'" }], "each": { "names": ["image"], "value": "(images)" } }] }] }, { "tag": "p", "attrs": { "class": "image-workspace__status" }, "bind": { "role": "(error ? 'alert' : 'status')" }, "events": [], "children": [{ "value": "(error || gwText('Saving image\u2026'))" }], "when": "(error || busy)" }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "DirectoryContextMenu", "attrs": {}, "bind": { "x": "(context.x)", "y": "(context.y)", "label": "(gwText('Image actions'))" }, "events": [{ "event": "close", "code": "context = undefined;", "mods": [] }], "children": [{ "tag": "li", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": "moveLayer;", "mods": [] }], "children": [{ "value": "layerLabel()" }] }] }, { "tag": "li", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "class": "is-danger" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove from scene'))" }] }] }], "when": "(context)" }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const HttpClient2 = options.HttpClient;
   const BlockStateApi = class {
     command(_c, _b, a, b, p) {
@@ -1812,7 +1893,7 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
   }
   async function moveLayer() {
     const image = props.images.find((i) => i.id === selected.value);
-    if (!image || busy.value) return;
+    if (!image || !canMoveImageToGame(image) || busy.value) return;
     busy.value = true;
     context.value = void 0;
     error.value = "";
@@ -1902,6 +1983,369 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
   });
   return { layerLabel, moveLayer, gwText: text, PhTrash: PhTrash3, BlockStateApi, HttpClient: HttpClient2, DirectoryContextMenu: DirectoryContextMenu_native_default, root, selected, preview, busy, error, context, images, corners: corners2, drag, show, point, down, move, release, cancel, save, up, resizeKey, remove, menu, key, emit: options.emit };
 });
+
+// gravewright/maps/frontend/features/images/model/lever-interaction.js
+function interactiveImageKind(image) {
+  if (["off", "on"].includes(image.torch?.state) && typeof image.torch.lit === "boolean") return "torch";
+  if (["off", "on"].includes(image.lever?.state)) return "lever";
+}
+function canInteractWithImage(image, gm = false) {
+  return !!image && !!interactiveImageKind(image) && (gm || image.interactionEnabled !== false);
+}
+function createInteractiveImageHitTest(images, gm, layer) {
+  const ordered = images.filter((image) => gm ? layer === void 0 || imageInWorkspace(image, layer) : !isGMImage(image)).map((image, index) => ({ image, index })).sort((a, b) => Number(isGMImage(b.image)) - Number(isGMImage(a.image)) || b.image.z_index - a.image.z_index || b.index - a.index);
+  return (point) => {
+    for (const { image } of ordered) {
+      const width = image.natural_width * image.scale, height = image.natural_height * image.scale;
+      if (![image.x, image.y, image.rotation, width, height].every(Number.isFinite) || width <= 0 || height <= 0)
+        continue;
+      const angle = -image.rotation * Math.PI / 180, dx = point.x - image.x, dy = point.y - image.y;
+      if (Math.abs(dx * Math.cos(angle) - dy * Math.sin(angle)) > width / 2 || Math.abs(dx * Math.sin(angle) + dy * Math.cos(angle)) > height / 2)
+        continue;
+      return canInteractWithImage(image, gm) ? image : void 0;
+    }
+  };
+}
+
+// gravewright/maps/frontend/features/images/ui/lever-controls.js
+function createLeverControls(surface, board, gm, api, stateAPI) {
+  const abort = new AbortController(), signal = abort.signal, pending = /* @__PURE__ */ new Set(), nodes = /* @__PURE__ */ new Map();
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.classList.add("smart-image-controls");
+  surface.append(svg);
+  let state = api.state, hit3 = createInteractiveImageHitTest(state.images, gm, stateAPI.getPath("_layer")), hovered;
+  const ignored = "button,input,textarea,select,[contenteditable=true],[data-image-resize],.gw-window,.directory-context-menu,.game-dock,.door-controls,.smart-image-controls,.image-workspace,.token-workspace [role=button],.token-workspace [role=img],.card-placement,.scene-sources,.wall-workspace";
+  const active = () => stateAPI.getPath("_tool") === "select" && ["game", "gm"].includes(stateAPI.getPath("_layer")) && document.querySelector("#table-workspace")?.dataset.role !== "streamer" && !document.querySelector(".grid-calibration-panel");
+  const node = (tag, attributes = {}) => {
+    const element = document.createElementNS(svg.namespaceURI, tag);
+    for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, value);
+    return element;
+  };
+  function makeControls(image) {
+    const group = node("g", { "data-smart-image": image.id });
+    const main = node("rect", {
+      class: "smart-image-controls__object",
+      role: "button",
+      tabindex: 0,
+      "data-smart-image-id": image.id,
+      "data-smart-image-action": "interact",
+      fill: "transparent"
+    });
+    const light = node("g", {
+      class: "smart-image-controls__light",
+      role: "button",
+      tabindex: -1,
+      "data-smart-image-id": image.id,
+      "data-smart-image-action": "torch-light"
+    });
+    light.append(node("circle", { r: 14 }), node("path", {
+      d: "M0 -8 C2 -3 7 -2 6 3 C6 7 3 9 0 9 C-5 9 -8 5 -6 1 C-5 -1 -3 -2 -3 -5 C-2 -2 1 0 0 -8Z"
+    }));
+    group.append(main, light);
+    const entry = { group, main, light };
+    nodes.set(image.id, entry);
+    svg.append(group);
+    return entry;
+  }
+  function render() {
+    const view = board.viewport(), enabled = active();
+    const valid = /* @__PURE__ */ new Set();
+    svg.toggleAttribute("hidden", !enabled || !view);
+    if (enabled && view) for (const image of state.images) {
+      const kind = interactiveImageKind(image);
+      if (!kind || !canInteractWithImage(image, gm) || hit3(image)?.id !== image.id) continue;
+      const width = image.natural_width * image.scale * view.scale;
+      const height = image.natural_height * image.scale * view.scale;
+      const x = view.x + image.x * view.scale, y = view.y + image.y * view.scale;
+      const angle = image.rotation * Math.PI / 180;
+      const right = Math.abs(Math.cos(angle) * width / 2) + Math.abs(Math.sin(angle) * height / 2);
+      const top = Math.abs(Math.sin(angle) * width / 2) + Math.abs(Math.cos(angle) * height / 2);
+      const bounds2 = surface.getBoundingClientRect();
+      if (x + right < 0 || y + top < 0 || x - right > bounds2.width || y - top > bounds2.height) continue;
+      valid.add(image.id);
+      const { group, main, light } = nodes.get(image.id) ?? makeControls(image);
+      group.setAttribute("transform", `translate(${x} ${y})`);
+      group.setAttribute("data-smart-image-kind", kind);
+      group.toggleAttribute("data-hovered", hovered === image.id);
+      main.setAttribute("transform", `rotate(${image.rotation})`);
+      for (const [key, value] of Object.entries({ x: -width / 2, y: -height / 2, width, height }))
+        main.setAttribute(key, value);
+      const pressed = (kind === "torch" ? image.torch : image.lever).state === "on";
+      main.setAttribute("aria-pressed", String(pressed));
+      main.setAttribute("aria-disabled", String(pending.has(image.id)));
+      main.setAttribute("aria-label", image.empty === true ? text("Empty Object: {0}.", text(pressed ? "Activated" : "Deactivated")) : kind === "torch" ? text(
+        "Torch: {0}. {1}. {2}.",
+        text(pressed ? "Turned" : "Normal"),
+        text(image.torch.lit ? "Lit" : "Unlit"),
+        text(pressed ? "Return torch" : "Turn torch")
+      ) : text("Lever: {0}.", text(pressed ? "Activated" : "Deactivated")));
+      const anchorX = Math.min(Math.max(16, x + right + 16), Math.max(16, bounds2.width - 16));
+      const anchorY = Math.min(Math.max(16, y - top), Math.max(16, bounds2.height - 16));
+      light.setAttribute("transform", `translate(${anchorX - x} ${anchorY - y})`);
+      light.toggleAttribute("hidden", kind !== "torch");
+      light.setAttribute("aria-label", text(image.torch?.lit ? "Extinguish torch" : "Light torch"));
+      light.setAttribute("aria-pressed", String(image.torch?.lit === true));
+      light.setAttribute("aria-disabled", String(pending.has(image.id)));
+      light.setAttribute("tabindex", kind === "torch" ? 0 : -1);
+    }
+    for (const [id, entry] of nodes) if (!valid.has(id)) {
+      entry.group.remove();
+      nodes.delete(id);
+    }
+  }
+  async function operate(image, action2 = "interact") {
+    if (!active() || pending.has(image.id)) return;
+    image = state.images.find((row) => row.id === image.id);
+    if (!canInteractWithImage(image, gm) || !imageInWorkspace(image, stateAPI.getPath("_layer")) || action2 === "torch-light" && !image.torch) return;
+    pending.add(image.id);
+    render();
+    try {
+      await api.command("images", action2, {
+        image_id: image.id,
+        ...action2 === "torch-light" ? { lit: !image.torch.lit } : {}
+      });
+      if (!signal.aborted) await api.read();
+    } catch (error) {
+      if (!signal.aborted) {
+        window.dispatchEvent(new CustomEvent("gravewright:tool-error", { detail: { message: error.message } }));
+        try {
+          await api.read();
+        } catch {
+        }
+      }
+    } finally {
+      pending.delete(image.id);
+      if (!signal.aborted) render();
+    }
+  }
+  const stop = (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+  function double(event) {
+    if (event.target.closest(".smart-image-controls")) {
+      stop(event);
+      return;
+    }
+    if (event.button !== 0 || !active() || event.target.closest(ignored)) return;
+    const view = board.viewport();
+    if (!view) return;
+    const bounds2 = surface.getBoundingClientRect();
+    const image = hit3({
+      x: (event.clientX - bounds2.left - view.x) / view.scale,
+      y: (event.clientY - bounds2.top - view.y) / view.scale
+    });
+    if (!image) return;
+    stop(event);
+    void operate(image);
+  }
+  function action(event) {
+    const target = event.target.closest("[data-smart-image-action]");
+    if (!target || !active() || event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+    if (event.type === "click" && target.dataset.smartImageAction !== "torch-light") return;
+    stop(event);
+    if (event.repeat) return;
+    const image = state.images.find((row) => row.id === target.dataset.smartImageId);
+    if (image) void operate(image, target.dataset.smartImageAction);
+  }
+  function hover(event) {
+    const view = board.viewport();
+    if (!active() || !view) return;
+    if (event.target.closest(".smart-image-controls")) return;
+    const bounds2 = surface.getBoundingClientRect();
+    const image = hit3({
+      x: (event.clientX - bounds2.left - view.x) / view.scale,
+      y: (event.clientY - bounds2.top - view.y) / view.scale
+    });
+    if (!image && hovered) {
+      const nearby = nodes.get(hovered)?.group.getBoundingClientRect();
+      if (nearby && event.clientX >= nearby.left - 8 && event.clientX <= nearby.right + 8 && event.clientY >= nearby.top - 8 && event.clientY <= nearby.bottom + 8) return;
+    }
+    if (hovered !== image?.id) {
+      hovered = image?.id;
+      render();
+    }
+  }
+  surface.addEventListener("dblclick", double, { capture: true, signal });
+  surface.addEventListener("keydown", action, { capture: true, signal });
+  surface.addEventListener("click", action, { capture: true, signal });
+  surface.addEventListener("pointerdown", (event) => {
+    const target = event.target.closest('[data-smart-image-action="torch-light"]');
+    if (target) {
+      stop(event);
+      target.focus();
+    }
+  }, { capture: true, signal });
+  surface.addEventListener("pointermove", hover, { signal });
+  surface.addEventListener("pointerleave", () => {
+    hovered = void 0;
+    render();
+  }, { signal });
+  window.addEventListener("gravewright:map-viewport", render, { signal });
+  const stopText = onTextChange(render);
+  render();
+  return {
+    update(next) {
+      state = next;
+      hit3 = createInteractiveImageHitTest(state.images, gm, stateAPI.getPath("_layer"));
+      render();
+    },
+    destroy() {
+      abort.abort();
+      stopText();
+      pending.clear();
+      nodes.clear();
+      svg.remove();
+    }
+  };
+}
+
+// gravewright/maps/frontend/features/regions/ui/region-editor.js
+import { openFormModal as openFormModal2 } from "/static/gravewright_table/form-modal.js";
+function openRegionEditor(zone, { save, tokens = [], campaignId, sceneId } = {}) {
+  const filters = normalizeRegionFilters(zone.region.filters);
+  const selected = { actorIds: new Set(filters.actorIds), tokenIds: new Set(filters.tokenIds), dispositions: new Set(filters.dispositions) };
+  const fields = [
+    { name: "name", label: text("Region name"), value: zone.region.name, required: true },
+    { name: "enabled", label: text("Enabled"), type: "checkbox", value: zone.enabled !== false }
+  ];
+  const geometry = zone.geometry;
+  const dimensions = geometry.shape === "rect" ? ["x", "y", "width", "height"] : geometry.shape === "circle" ? ["x", "y", "radius"] : [];
+  const captions = { x: "X", y: "Y", width: "Width", height: "Height", radius: "Radius" };
+  for (const key of dimensions) fields.push({ name: key, label: text(captions[key]), type: "number", value: geometry[key], required: true });
+  const modal = openFormModal2(text("Configure region"), fields, async (form) => {
+    const patch2 = { region: { name: form.elements.name.value.trim() }, enabled: form.elements.enabled.checked };
+    const currentFilters = {
+      actorIds: [...selected.actorIds],
+      tokenIds: [...selected.tokenIds],
+      dispositions: [...selected.dispositions],
+      visibility: form.elements.regionVisibility.value
+    };
+    const changed = currentFilters.visibility !== filters.visibility || ["actorIds", "tokenIds", "dispositions"].some((key) => currentFilters[key].length !== filters[key].length || currentFilters[key].some((id) => !filters[key].includes(id)));
+    if (zone.region.filters !== void 0 || changed) patch2.region.filters = changed ? currentFilters : filters;
+    if (dimensions.length) patch2.geometry = { ...geometry, ...Object.fromEntries(dimensions.map((key) => [key, Number(form.elements[key].value)])) };
+    await save?.(patch2);
+  }, { key: "scene-region-editor" });
+  modal.dataset.regionEditor = zone.id;
+  const name = modal.querySelector("[name=name]");
+  name.maxLength = 120;
+  for (const key of dimensions) {
+    const control = modal.querySelector(`[name=${key}]`);
+    control.step = "any";
+    if (["width", "height", "radius"].includes(key)) control.min = "0.000001";
+  }
+  const status = document.createElement("p");
+  status.dataset.regionStatus = "";
+  status.textContent = `${text(zone.region.state === "occupied" ? "Occupied" : "Empty")} \xB7 ${text("Tokens inside: {0}", zone.region.count ?? 0)}`;
+  const note = document.createElement("p");
+  note.textContent = text("Region occupancy is computed from token positions.");
+  modal.querySelector("[data-fields]").prepend(status, note);
+  const controller = new AbortController();
+  modal.addEventListener("close", () => controller.abort(), { once: true });
+  const details = document.createElement("details");
+  details.className = "region-editor__filters";
+  details.dataset.regionFilters = "";
+  details.open = zone.region.filters !== void 0;
+  const summary2 = document.createElement("summary");
+  summary2.textContent = text("Presence filters");
+  const hint = document.createElement("p");
+  hint.textContent = text("All selected criteria must match. Empty lists accept any token.");
+  const visibilityLabel = document.createElement("label"), visibilityCaption = document.createElement("span");
+  visibilityCaption.textContent = text("Visibility");
+  const visibility = document.createElement("select");
+  visibility.name = "regionVisibility";
+  visibility.dataset.regionFilterVisibility = "";
+  for (const [value, label] of [["any", "Any token"], ["visible", "Visible tokens"], ["hidden", "Hidden tokens"]])
+    visibility.add(new Option(text(label), value));
+  visibility.value = filters.visibility;
+  visibilityLabel.append(visibilityCaption, visibility);
+  details.append(summary2, hint, visibilityLabel);
+  function choices(key, caption, rows, empty) {
+    const field = document.createElement("fieldset");
+    field.dataset.regionFilter = key;
+    const legend = document.createElement("legend");
+    legend.textContent = text(caption);
+    const list = document.createElement("div");
+    list.className = "region-editor__choices";
+    field.append(legend, list);
+    details.append(field);
+    const render = (values) => {
+      list.replaceChildren();
+      const catalog = new Map(values.map((row) => [row.id, row.name || row.id]));
+      for (const id of selected[key]) if (!catalog.has(id)) catalog.set(id, text("Unavailable: {0}", id));
+      if (!catalog.size) {
+        const message = document.createElement("p");
+        message.textContent = text(empty);
+        list.append(message);
+      }
+      const updateLimit = () => {
+        if (key === "dispositions") return;
+        for (const input of list.querySelectorAll("input")) input.disabled = selected[key].size >= 64 && !input.checked;
+      };
+      for (const [id, name2] of catalog) {
+        const label = document.createElement("label"), input = document.createElement("input"), text2 = document.createElement("span");
+        input.type = "checkbox";
+        input.value = id;
+        input.checked = selected[key].has(id);
+        input.dataset.regionFilterValue = id;
+        text2.textContent = name2;
+        if (key !== "dispositions") text2.translate = false;
+        input.addEventListener("change", () => {
+          input.checked ? selected[key].add(id) : selected[key].delete(id);
+          updateLimit();
+        });
+        label.append(input, text2);
+        list.append(label);
+      }
+      updateLimit();
+    };
+    render(rows);
+    return { field, render };
+  }
+  const dispositions = { friendly: "Friendly", neutral: "Neutral", hostile: "Hostile", unknown: "Unknown" };
+  choices("dispositions", "Dispositions", regionFilterDispositions.map((id) => ({ id, name: text(dispositions[id]) })), "");
+  const actors = choices("actorIds", "Actors", [], "No actors available.");
+  const tokenChoices = choices("tokenIds", "Tokens", tokens, "No tokens in this scene.");
+  function loadCatalog(target, url, key, loadingText, errorText) {
+    const loading = document.createElement("p");
+    loading.setAttribute("role", "status");
+    loading.className = "region-editor__catalog-status";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.textContent = text("Retry");
+    retry.hidden = true;
+    target.field.append(loading, retry);
+    const load = async () => {
+      retry.disabled = true;
+      loading.textContent = text(loadingText);
+      try {
+        const response = await fetch(url, { credentials: "same-origin", signal: controller.signal });
+        if (!response.ok) throw Error(errorText);
+        const catalog = await response.json();
+        if (!modal.isConnected || controller.signal.aborted) return;
+        if (!Array.isArray(catalog[key])) throw Error(errorText);
+        target.render(catalog[key]);
+        loading.textContent = "";
+        retry.hidden = true;
+      } catch {
+        if (!modal.isConnected || controller.signal.aborted) return;
+        loading.textContent = text(errorText);
+        retry.hidden = false;
+      } finally {
+        if (!controller.signal.aborted) retry.disabled = false;
+      }
+    };
+    retry.addEventListener("click", load);
+    void load();
+  }
+  if (campaignId) {
+    const base = `/api/containers/${encodeURIComponent(campaignId)}`;
+    loadCatalog(actors, `${base}/actors`, "actors", "Loading actors...", "Could not load actors.");
+    if (sceneId) loadCatalog(tokenChoices, `${base}/maps/${encodeURIComponent(sceneId)}/tokens`, "tokens", "Loading tokens...", "Could not load tokens.");
+  }
+  modal.querySelector("[data-fields]").append(details);
+  return modal;
+}
 
 // gravewright/maps/frontend/features/lighting/ui/LightPicker.native.js
 import { renderingPreferences } from "/static/gravewright_maps/render-profile.js";
@@ -2173,7 +2617,7 @@ var vMovableResizable = { mounted: mount, unmounted(element) {
 // gravewright/maps/frontend/features/lighting/ui/LightEditor.native.js
 var PhX4 = "PhX";
 var PhTrash4 = "PhTrash";
-var LightEditor_native_default = widget([{ "tag": "section", "attrs": { "class": "gw-window light-editor", "role": "dialog" }, "bind": { "aria-label": "(gwText('Light source'))" }, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "wheel", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "light-editor__header", "data-move-handle": "" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Light source'))" }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": "(gwText('Close'))" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "div", "attrs": { "class": "light-editor__body" }, "bind": {}, "events": [], "children": [{ "tag": "template", "attrs": {}, "bind": { "key": "(range.key)" }, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.name)" }] }, { "tag": "div", "attrs": { "class": "light-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range" }, "bind": { "min": "(range.min)", "max": "(Math.max(range.max, draft[range.key]))", "step": "(range.step)", "disabled": "(range.key === 'dim_radius' && draft.dim_radius === 0)" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft[range.key])", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.key === 'dim_radius' && draft.dim_radius === 0 ? '\u221E' : draft[range.key])" }, { "value": "(['angle', 'rotation'].includes(range.key) ? '\xB0' : '')" }] }] }], "when": "(range.key !== 'rotation' || draft.angle < 360)" }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "checked": "(draft.dim_radius === 0)" }, "events": [{ "event": "change", "code": "unlimited;", "mods": [] }], "children": [] }, { "value": "(gwText('Unlimited'))" }], "when": "(range.key === 'dim_radius')" }], "each": { "names": ["range"], "value": "(ranges)" } }, { "tag": "div", "attrs": { "class": "light-editor__pair" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Animation'))" }] }, { "tag": "select", "attrs": {}, "bind": {}, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [{ "tag": "option", "attrs": { "value": "none" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Steady'))" }] }, { "tag": "option", "attrs": { "value": "torch" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Torch'))" }] }, { "tag": "option", "attrs": { "value": "pulse" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Pulse'))" }] }, { "tag": "option", "attrs": {}, "bind": { "value": "(draft.animation)" }, "events": [], "children": [{ "value": "(draft.animation)" }], "when": "(!['none', 'torch', 'pulse'].includes(draft.animation))" }], "model": { "path": "(draft.animation)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": {}, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }] }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": {}, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(gwText('On'))" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Radii use grid cells. Walls block light.'))" }] }, { "tag": "p", "attrs": { "role": "alert" }, "bind": {}, "events": [], "children": [{ "value": "(props.error)" }], "when": "(props.error)" }, { "tag": "footer", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": { "role": "status" }, "bind": {}, "events": [], "children": [{ "value": "(busy ? gwText('Saving\u2026') : gwText('Changes saved automatically'))" }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('remove');", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove'))" }] }] }] }], "movable": true }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
+var LightEditor_native_default = widget([{ "tag": "section", "attrs": { "class": "gw-window light-editor", "role": "dialog" }, "bind": { "aria-label": "(gwText('Light source'))", "role": "(transactional ? 'group' : 'dialog')" }, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "wheel", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "light-editor__header", "data-move-handle": "" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Light source'))" }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": "(gwText('Close'))", "disabled": "(transactional && busy)" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "div", "attrs": { "class": "light-editor__body" }, "bind": { "inert": "(transactional && busy)" }, "events": [], "children": [{ "tag": "template", "attrs": {}, "bind": { "key": "(range.key)" }, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.name)" }] }, { "tag": "div", "attrs": { "class": "light-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range" }, "bind": { "min": "(range.min)", "max": "(Math.max(range.max, draft[range.key]))", "step": "(range.step)", "disabled": "(range.key === 'dim_radius' && draft.dim_radius === 0)", "aria-label": "(range.name)" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft[range.key])", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.key === 'dim_radius' && draft.dim_radius === 0 ? '\u221E' : draft[range.key])" }, { "value": "(['angle', 'rotation'].includes(range.key) ? '\xB0' : '')" }] }] }], "when": "(range.key !== 'rotation' || draft.angle < 360)" }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "checked": "(draft.dim_radius === 0)" }, "events": [{ "event": "change", "code": "unlimited;", "mods": [] }], "children": [] }, { "value": "(gwText('Unlimited'))" }], "when": "(range.key === 'dim_radius')" }], "each": { "names": ["range"], "value": "(ranges)" } }, { "tag": "div", "attrs": { "class": "light-editor__pair" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Animation'))" }] }, { "tag": "select", "attrs": {}, "bind": { "aria-label": "(gwText('Animation'))" }, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [{ "tag": "option", "attrs": { "value": "none" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Steady'))" }] }, { "tag": "option", "attrs": { "value": "torch" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Torch'))" }] }, { "tag": "option", "attrs": { "value": "pulse" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Pulse'))" }] }, { "tag": "option", "attrs": {}, "bind": { "value": "(draft.animation)" }, "events": [], "children": [{ "value": "(draft.animation)" }], "when": "(!['none', 'torch', 'pulse'].includes(draft.animation))" }], "model": { "path": "(draft.animation)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(gwText('Color'))" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }] }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "aria-label": "(gwText('On'))" }, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(gwText('On'))" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Radii use grid cells. Walls block light.'))" }] }, { "tag": "p", "attrs": { "role": "alert" }, "bind": {}, "events": [], "children": [{ "value": "(props.error)" }], "when": "(props.error)" }, { "tag": "footer", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": { "role": "status" }, "bind": {}, "events": [], "children": [{ "value": "(busy ? gwText('Saving\u2026') : gwText('Changes saved automatically'))" }], "when": "(!transactional)" }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('remove');", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove'))" }], "when": "(!transactional)" }, { "tag": "button", "attrs": { "type": "button", "data-native-editor-cancel": "" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "value": "(gwText('Cancel'))" }], "when": "(transactional)" }, { "tag": "button", "attrs": { "type": "button", "data-native-editor-save": "" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('save');", "mods": [] }], "children": [{ "value": "(gwText('Save'))" }], "when": "(transactional)" }] }] }], "movable": true }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const HttpClient2 = options.HttpClient;
   const BlockStateApi = class {
     command(_c, _b, a, b, p) {
@@ -2201,7 +2645,7 @@ var LightEditor_native_default = widget([{ "tag": "section", "attrs": { "class":
     draft.value.dim_radius = e.target.checked ? 0 : Math.max(6, draft.value.bright_radius);
     emit("change");
   }
-  return { gwText: text, PhX: PhX4, PhTrash: PhTrash4, vMovableResizable, draft, ranges, unlimited, emit: options.emit };
+  return { gwText: text, PhX: PhX4, PhTrash: PhTrash4, vMovableResizable, props, draft, ranges, unlimited, emit: options.emit };
 });
 
 // gravewright/maps/frontend/features/scene-layers/lib/shader-presets.js
@@ -3465,7 +3909,7 @@ import { mountModal } from "/static/gravewright_table/modal.js";
 function shaderInstructions(description) {
   return shaderPrompt.replace("<describe appearance, motion, density, and lighting behavior here>", () => description.trim());
 }
-function openShaderPrompt(onInsert, onClose) {
+function openShaderPrompt(onInsert, onClose, { nested = false } = {}) {
   const previousFocus = document.activeElement;
   const dialog = document.createElement("section");
   dialog.className = "table-modal-window shader-prompt-dialog";
@@ -3561,7 +4005,7 @@ function openShaderPrompt(onInsert, onClose) {
     input.focus();
   }
   render(1);
-  mountModal(dialog);
+  mountModal(dialog, { nested });
   dialog.querySelector("textarea").focus();
   return close;
 }
@@ -3738,7 +4182,7 @@ var effectLabels = {
     return text("Quantity controls performance: lower it if the scene slows down.");
   },
   get "lighting.particles.hint"() {
-    return text("Scene effect: does not emit light.");
+    return text("Scene effect: can receive and emit light.");
   },
   get "lighting.shaders.presets.title"() {
     return text("Preset library (50)");
@@ -3805,7 +4249,7 @@ var PhCheck = "PhCheck";
 var PhBooks = "PhBooks";
 var PhMagicWand = "PhMagicWand";
 var PhCopy2 = "PhCopy";
-var EffectEditor_native_default = widget([{ "tag": "section", "attrs": { "class": "gw-window effect-editor", "role": "dialog" }, "bind": { "class": "({ 'effect-editor--shader': kind === 'shader' })", "aria-label": "(t('editor'))" }, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "wheel", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "effect-editor__header gw-move-handle", "data-move-handle": "" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('editor'))" }] }, { "tag": "button", "attrs": { "type": "button", "class": "gw-window__control" }, "bind": { "aria-label": "(gwText('Close'))" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "div", "attrs": { "class": "effect-editor__body" }, "bind": {}, "events": [{ "event": "input", "code": "kind === 'shader' && emit('change');", "mods": [] }, { "event": "change", "code": "kind === 'shader' && emit('change');", "mods": [] }], "children": [{ "tag": "fieldset", "attrs": { "class": "effect-editor__interaction" }, "bind": {}, "events": [], "children": [{ "tag": "legend", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Light interaction'))" }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Receive lighting'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "1", "step": "0.05" }, "bind": {}, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.light_response)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(Math.round(draft.light_response * 100))" }, { "text": "%" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Emit light'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "2", "step": "0.05" }, "bind": {}, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.light_emission)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.light_emission.toFixed(2))" }] }] }] }] }, { "tag": "template", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('kind'))" }] }, { "tag": "select", "attrs": {}, "bind": {}, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [{ "tag": "option", "attrs": {}, "bind": { "key": "(kind)", "value": "(kind)" }, "events": [], "children": [{ "value": "(t(kind))" }], "each": { "names": ["kind"], "value": "(['smoke', 'ember', 'dust', 'arcane', 'rain', 'snow', 'firefly', 'leaves', 'bubbles', 'ash', 'blood', 'runes'])" } }], "model": { "path": "(draft.kind)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('scale'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": ".5", "max": "20", "step": ".5" }, "bind": {}, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.scale)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.scale)" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('density'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "1", "step": ".05" }, "bind": {}, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.density)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.density.toFixed(2))" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": {}, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "effect-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": {}, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(t('enabled'))" }] }, { "tag": "p", "attrs": { "class": "effect-editor__hint" }, "bind": {}, "events": [], "children": [{ "value": "(t('density_hint'))" }] }, { "tag": "p", "attrs": { "class": "effect-editor__hint" }, "bind": {}, "events": [], "children": [{ "value": "(t('hint'))" }] }], "when": "(kind === 'particle')" }, { "tag": "template", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "details", "attrs": { "class": "effect-editor__library" }, "bind": {}, "events": [], "children": [{ "tag": "summary", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "PhBooks", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "text": " " }, { "value": "(t('presets.title'))" }] }, { "tag": "p", "attrs": { "class": "effect-editor__hint" }, "bind": {}, "events": [], "children": [{ "value": "(t('presets.hint'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "search" }, "bind": { "placeholder": "(t('presets.search'))", "aria-label": "(t('presets.search'))" }, "events": [], "children": [], "model": { "path": "(search)", "mods": [] } }, { "tag": "select", "attrs": {}, "bind": { "aria-label": "(t('presets.category'))" }, "events": [], "children": [{ "tag": "option", "attrs": { "value": "" }, "bind": {}, "events": [], "children": [{ "value": "(t('presets.all'))" }] }, { "tag": "option", "attrs": {}, "bind": { "key": "(c)" }, "events": [], "children": [{ "value": "(c)" }], "each": { "names": ["c"], "value": "(categories)" } }], "model": { "path": "(category)", "mods": [] } }] }, { "tag": "div", "attrs": { "class": "effect-editor__presets", "role": "listbox" }, "bind": { "aria-label": "(t('presets.title'))" }, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button", "role": "option" }, "bind": { "key": "(p.id)", "aria-selected": "(choice === p.id)" }, "events": [{ "event": "click", "code": "choice = p.id;", "mods": [] }], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(p.name)" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(p.category)" }] }], "each": { "names": ["p"], "value": "(presets)" } }, { "tag": "p", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('presets.empty'))" }], "when": "(!presets.length)" }] }, { "tag": "div", "attrs": { "class": "effect-editor__choice" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(chosen.name)" }] }, { "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(chosen.description)" }] }, { "tag": "button", "attrs": { "type": "button" }, "bind": {}, "events": [{ "event": "click", "code": "apply;", "mods": [] }], "children": [{ "tag": "PhMagicWand", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(t('presets.apply'))" }] }], "when": "(chosen)" }] }, { "tag": "div", "attrs": { "class": "effect-editor__columns" }, "bind": {}, "events": [], "children": [{ "tag": "section", "attrs": { "class": "effect-editor__code" }, "bind": {}, "events": [], "children": [{ "tag": "header", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "for": "effect-shader-source" }, "bind": {}, "events": [], "children": [{ "value": "(t('source'))" }] }, { "tag": "label", "attrs": { "class": "effect-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": {}, "events": [], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(t('enabled'))" }] }] }, { "tag": "textarea", "attrs": { "id": "effect-shader-source", "spellcheck": "false", "rows": "10" }, "bind": {}, "events": [], "children": [], "model": { "path": "(draft.source)", "mods": [] } }] }, { "tag": "div", "attrs": { "class": "effect-editor__controls" }, "bind": {}, "events": [], "children": [{ "tag": "section", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "h3", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('group.appearance'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('opacity'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "1", "step": ".05" }, "bind": {}, "events": [], "children": [], "model": { "path": "(draft.opacity)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.opacity.toFixed(2))" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": {}, "events": [], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('blend_mode'))" }] }, { "tag": "select", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "option", "attrs": {}, "bind": { "key": "(mode)", "value": "(mode)" }, "events": [], "children": [{ "value": "(t(`blend.${mode}`))" }], "each": { "names": ["mode"], "value": "(['normal', 'multiply', 'screen', 'add'])" } }], "model": { "path": "(draft.blend_mode)", "mods": [] } }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('blend_hint'))" }] }] }] }, { "tag": "section", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "h3", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('group.pattern'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": { "key": "(range.key)" }, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t(range.key))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range" }, "bind": { "min": "(range.min)", "max": "(range.max)", "step": "(range.step)" }, "events": [], "children": [], "model": { "path": "(draft[range.key])", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft[range.key])" }, { "value": "(range.key === 'rotation' ? '\xB0' : '')" }] }] }], "each": { "names": ["range"], "value": "(ranges)" } }] }] }, { "tag": "section", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "h3", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('group.area'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('radius'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "120", "step": "1" }, "bind": {}, "events": [], "children": [], "model": { "path": "(draft.radius)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.radius)" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "checked": "(draft.radius === 0)" }, "events": [{ "event": "click", "code": "draft.radius = $event.target.checked ? 0 : 8; emit('change');", "mods": [] }], "children": [] }, { "value": "(t('whole_scene'))" }] }] }] }] }] }, { "tag": "div", "attrs": { "class": "effect-editor__reference" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button" }, "bind": {}, "events": [{ "event": "click", "code": "showPrompt();", "mods": [] }], "children": [{ "tag": "PhCopy", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(t('prompt_title'))" }] }] }], "otherwise": true }] }, { "tag": "footer", "attrs": { "class": "effect-editor__actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button", "class": "effect-editor__remove" }, "bind": { "disabled": "(busy)", "aria-label": "(t('remove'))" }, "events": [{ "event": "click", "code": "emit('remove');", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }], "when": "(existing)" }, { "tag": "span", "attrs": { "role": "status" }, "bind": {}, "events": [], "children": [{ "value": "(error || (!existing ? gwText('Click the scene to place the origin.') : ''))" }] }, { "tag": "button", "attrs": { "type": "button" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('save');", "mods": [] }], "children": [{ "tag": "PhCheck", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(existing ? t('save') : gwText('Create'))" }], "when": "(kind === 'shader' || !existing)" }] }], "movable": true }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
+var EffectEditor_native_default = widget([{ "tag": "section", "attrs": { "class": "gw-window effect-editor", "role": "dialog" }, "bind": { "class": "({ 'effect-editor--shader': kind === 'shader' })", "aria-label": "(t('editor'))", "role": "(transactional ? 'group' : 'dialog')" }, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "wheel", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "effect-editor__header gw-move-handle", "data-move-handle": "" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('editor'))" }] }, { "tag": "button", "attrs": { "type": "button", "class": "gw-window__control" }, "bind": { "aria-label": "(gwText('Close'))", "disabled": "(transactional && busy)" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "div", "attrs": { "class": "effect-editor__body" }, "bind": { "inert": "(transactional && busy)" }, "events": [{ "event": "input", "code": "kind === 'shader' && emit('change');", "mods": [] }, { "event": "change", "code": "kind === 'shader' && emit('change');", "mods": [] }], "children": [{ "tag": "fieldset", "attrs": { "class": "effect-editor__interaction" }, "bind": {}, "events": [], "children": [{ "tag": "legend", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Light interaction'))" }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Receive lighting'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "1", "step": "0.05" }, "bind": { "aria-label": "(gwText('Receive lighting'))" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.light_response)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(Math.round(draft.light_response * 100))" }, { "text": "%" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Emit light'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "2", "step": "0.05" }, "bind": { "aria-label": "(gwText('Emit light'))" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.light_emission)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.light_emission.toFixed(2))" }] }] }] }] }, { "tag": "template", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('kind'))" }] }, { "tag": "select", "attrs": {}, "bind": { "aria-label": "(t('kind'))" }, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [{ "tag": "option", "attrs": {}, "bind": { "key": "(kind)", "value": "(kind)" }, "events": [], "children": [{ "value": "(t(kind))" }], "each": { "names": ["kind"], "value": "(['smoke', 'ember', 'dust', 'arcane', 'rain', 'snow', 'firefly', 'leaves', 'bubbles', 'ash', 'blood', 'runes'])" } }], "model": { "path": "(draft.kind)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('scale'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": ".5", "max": "20", "step": ".5" }, "bind": { "aria-label": "(t('scale'))" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.scale)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.scale)" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('density'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "1", "step": ".05" }, "bind": { "aria-label": "(t('density'))" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.density)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.density.toFixed(2))" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(t('color'))" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "effect-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "aria-label": "(t('enabled'))" }, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(t('enabled'))" }] }, { "tag": "p", "attrs": { "class": "effect-editor__hint" }, "bind": {}, "events": [], "children": [{ "value": "(t('density_hint'))" }] }, { "tag": "p", "attrs": { "class": "effect-editor__hint" }, "bind": {}, "events": [], "children": [{ "value": "(t('hint'))" }] }], "when": "(kind === 'particle')" }, { "tag": "template", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "details", "attrs": { "class": "effect-editor__library" }, "bind": {}, "events": [], "children": [{ "tag": "summary", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "PhBooks", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "text": " " }, { "value": "(t('presets.title'))" }] }, { "tag": "p", "attrs": { "class": "effect-editor__hint" }, "bind": {}, "events": [], "children": [{ "value": "(t('presets.hint'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "search" }, "bind": { "placeholder": "(t('presets.search'))", "aria-label": "(t('presets.search'))" }, "events": [], "children": [], "model": { "path": "(search)", "mods": [] } }, { "tag": "select", "attrs": {}, "bind": { "aria-label": "(t('presets.category'))" }, "events": [], "children": [{ "tag": "option", "attrs": { "value": "" }, "bind": {}, "events": [], "children": [{ "value": "(t('presets.all'))" }] }, { "tag": "option", "attrs": {}, "bind": { "key": "(c)" }, "events": [], "children": [{ "value": "(c)" }], "each": { "names": ["c"], "value": "(categories)" } }], "model": { "path": "(category)", "mods": [] } }] }, { "tag": "div", "attrs": { "class": "effect-editor__presets", "role": "listbox" }, "bind": { "aria-label": "(t('presets.title'))" }, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button", "role": "option" }, "bind": { "key": "(p.id)", "aria-selected": "(choice === p.id)" }, "events": [{ "event": "click", "code": "choice = p.id;", "mods": [] }], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(p.name)" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(p.category)" }] }], "each": { "names": ["p"], "value": "(presets)" } }, { "tag": "p", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('presets.empty'))" }], "when": "(!presets.length)" }] }, { "tag": "div", "attrs": { "class": "effect-editor__choice" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(chosen.name)" }] }, { "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(chosen.description)" }] }, { "tag": "button", "attrs": { "type": "button" }, "bind": {}, "events": [{ "event": "click", "code": "apply;", "mods": [] }], "children": [{ "tag": "PhMagicWand", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(t('presets.apply'))" }] }], "when": "(chosen)" }] }, { "tag": "div", "attrs": { "class": "effect-editor__columns" }, "bind": {}, "events": [], "children": [{ "tag": "section", "attrs": { "class": "effect-editor__code" }, "bind": {}, "events": [], "children": [{ "tag": "header", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "for": "effect-shader-source" }, "bind": {}, "events": [], "children": [{ "value": "(t('source'))" }] }, { "tag": "label", "attrs": { "class": "effect-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "aria-label": "(t('enabled'))" }, "events": [], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(t('enabled'))" }] }] }, { "tag": "textarea", "attrs": { "id": "effect-shader-source", "spellcheck": "false", "rows": "10" }, "bind": {}, "events": [], "children": [], "model": { "path": "(draft.source)", "mods": [] } }] }, { "tag": "div", "attrs": { "class": "effect-editor__controls" }, "bind": {}, "events": [], "children": [{ "tag": "section", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "h3", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('group.appearance'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('opacity'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "1", "step": ".05" }, "bind": { "aria-label": "(t('opacity'))" }, "events": [], "children": [], "model": { "path": "(draft.opacity)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.opacity.toFixed(2))" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(t('color'))" }, "events": [], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('blend_mode'))" }] }, { "tag": "select", "attrs": {}, "bind": { "aria-label": "(t('blend_mode'))" }, "events": [], "children": [{ "tag": "option", "attrs": {}, "bind": { "key": "(mode)", "value": "(mode)" }, "events": [], "children": [{ "value": "(t(`blend.${mode}`))" }], "each": { "names": ["mode"], "value": "(['normal', 'multiply', 'screen', 'add'])" } }], "model": { "path": "(draft.blend_mode)", "mods": [] } }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('blend_hint'))" }] }] }] }, { "tag": "section", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "h3", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('group.pattern'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": { "key": "(range.key)" }, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t(range.key))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range" }, "bind": { "min": "(range.min)", "max": "(range.max)", "step": "(range.step)", "aria-label": "(t(range.key))" }, "events": [], "children": [], "model": { "path": "(draft[range.key])", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft[range.key])" }, { "value": "(range.key === 'rotation' ? '\xB0' : '')" }] }] }], "each": { "names": ["range"], "value": "(ranges)" } }] }] }, { "tag": "section", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "h3", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('group.area'))" }] }, { "tag": "div", "attrs": { "class": "effect-editor__grid" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "effect-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(t('radius'))" }] }, { "tag": "span", "attrs": { "class": "effect-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range", "min": "0", "max": "120", "step": "1" }, "bind": { "aria-label": "(t('radius'))" }, "events": [], "children": [], "model": { "path": "(draft.radius)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(draft.radius)" }] }] }] }, { "tag": "label", "attrs": { "class": "effect-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "checked": "(draft.radius === 0)" }, "events": [{ "event": "click", "code": "draft.radius = $event.target.checked ? 0 : 8; emit('change');", "mods": [] }], "children": [] }, { "value": "(t('whole_scene'))" }] }] }] }] }] }, { "tag": "div", "attrs": { "class": "effect-editor__reference" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button" }, "bind": {}, "events": [{ "event": "click", "code": "showPrompt();", "mods": [] }], "children": [{ "tag": "PhCopy", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(t('prompt_title'))" }] }] }], "otherwise": true }] }, { "tag": "footer", "attrs": { "class": "effect-editor__actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button", "class": "effect-editor__remove" }, "bind": { "disabled": "(busy)", "aria-label": "(t('remove'))" }, "events": [{ "event": "click", "code": "emit('remove');", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }], "when": "(existing && !transactional)" }, { "tag": "span", "attrs": { "role": "status" }, "bind": {}, "events": [], "children": [{ "value": "(error || (!existing ? gwText('Click the scene to place the origin.') : ''))" }] }, { "tag": "button", "attrs": { "type": "button", "data-native-editor-cancel": "" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "value": "(gwText('Cancel'))" }], "when": "(transactional)" }, { "tag": "button", "attrs": { "type": "button", "data-native-editor-save": "" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('save');", "mods": [] }], "children": [{ "tag": "PhCheck", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(existing ? t('save') : gwText('Create'))" }], "when": "(transactional || kind === 'shader' || !existing)" }] }], "movable": true }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const HttpClient2 = options.HttpClient;
   const BlockStateApi = class {
     command(_c, _b, a, b, p) {
@@ -3856,7 +4300,7 @@ var EffectEditor_native_default = widget([{ "tag": "section", "attrs": { "class"
       emit("change");
     }, () => {
       closePrompt = null;
-    });
+    }, { nested: props.transactional === true });
   }
   const ranges = [{ key: "intensity", min: 0, max: 1, step: 0.05 }, { key: "scale", min: 0.1, max: 20, step: 0.1 }, { key: "speed", min: 0, max: 8, step: 0.1 }, { key: "rotation", min: 0, max: 359, step: 1 }];
   return { gwText: text, PhX: PhX5, PhTrash: PhTrash5, PhCheck, PhBooks, PhMagicWand, PhCopy: PhCopy2, vMovableResizable, shaderPresets, effectLabels, draft, particleNames, t, search, category, choice, categories, presets, chosen, apply, showPrompt, ranges, emit: options.emit };
@@ -5219,7 +5663,7 @@ var HttpClient = class {
   }
 };
 function createTools(surface, board, map, gm, api, stateAPI) {
-  let state = api.state, drawing, images, effects2, library, libraryHost, closed = false;
+  let state = api.state, drawing, images, effects2, library, libraryHost, regionEditor, closed = false;
   const hosts = { drawing: document.createElement("div"), images: document.createElement("div"), effects: document.createElement("div"), measurement: document.createElement("div"), markers: document.createElement("div") };
   for (const host of Object.values(hosts)) {
     host.style.display = "contents";
@@ -5228,6 +5672,7 @@ function createTools(surface, board, map, gm, api, stateAPI) {
   const common = { HttpClient, command: api.command, read: api.read };
   const base = () => ({ viewport: board.viewport(), containerId: map.containerId, blockId: map.blockId, cell: map.gridSize * map.imageScale, grid: map.gridVisible });
   let measureRows = [], selection;
+  const levers = createLeverControls(surface, board, gm, api, stateAPI);
   const measurement = MeasurementWorkspace_native_default(hosts.measurement, { ...common, props: { ...base(), active: false, maxRows: state.capabilities?.maxMeasurements, measureValue: map.measureValue, measureUnit: map.measureUnit }, emit(type, value) {
     if (type === "change") measureRows = value;
     if (type === "close") {
@@ -5255,6 +5700,8 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     if (closed || !board.viewport())
       return;
     const layer = stateAPI.getPath("_layer"), tool = stateAPI.getPath("_tool");
+    board.editingLayer?.(layer || "game");
+    levers.update(state);
     selection?.update(state);
     const measure = ["measure", "templates"].includes(tool);
     markers.update({ ...base(), active: tool === "templates", shared: true, rows: state.markers || [], maxRows: state.capabilities?.maxMarkers, measureValue: map.measureValue, measureUnit: map.measureUnit });
@@ -5275,8 +5722,9 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     } else
       drawing?.update({ ...base(), document: state.drawings, audience: layer === "gm" ? "gm" : "campaign" });
     const compose = gm && layer === "composition" && !measure;
+    const editableImages = state.images.filter((image) => imageInWorkspace(image, layer));
     if (compose && !images)
-      images = ImageWorkspace_native_default(hosts.images, { ...common, props: { ...base(), images: state.images, tool }, emit(type, value) {
+      images = ImageWorkspace_native_default(hosts.images, { ...common, props: { ...base(), images: editableImages, tool }, emit(type, value) {
         if (type === "refresh")
           void api.read();
         if (type === "preview")
@@ -5286,7 +5734,7 @@ function createTools(surface, board, map, gm, api, stateAPI) {
       images.destroy();
       images = void 0;
     } else
-      images?.update({ ...base(), images: state.images, tool });
+      images?.update({ ...base(), images: editableImages, tool });
     const effect = gm && layer === "effects" && !measure;
     if (effect && !effects2)
       effects2 = SceneSourcesWorkspace_native_default(hosts.effects, { ...common, props: { ...base(), state, layer: "effects", tool }, emit(type, value) {
@@ -5341,6 +5789,19 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     vMovableResizable.mounted(libraryHost);
   }
   function editSelection({ detail: { object, event } }) {
+    if (gm && object.kind === "zone" && object.data.region) {
+      regionEditor?.close();
+      regionEditor = openRegionEditor(object.data, { campaignId: map.containerId, sceneId: map.id, save: async (patch2) => {
+        try {
+          await api.command("zones", "update", { zone_id: object.id, expected_version: object.data.version, patch: patch2 });
+        } catch (error) {
+          if (!closed) await api.read().catch(() => {
+          });
+          throw error;
+        }
+        if (!closed) await api.read();
+      } });
+    }
     if (object.kind === "drawing") {
       stateAPI.mergePatch({ _layer: object.data.audience === "gm" ? "gm" : "game", _tool: "draw" });
       sync();
@@ -5384,7 +5845,9 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     sync();
   }, destroy() {
     closed = true;
+    regionEditor?.close(true);
     window.removeEventListener("gravewright:selection-edit", editSelection);
+    levers.destroy();
     selection?.destroy();
     drawing?.destroy();
     images?.destroy();

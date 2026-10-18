@@ -400,8 +400,8 @@ class MarketplaceTests(TestCase):
             self.assertFalse((data / runner.DEFAULT_MARKETPLACE_CHOICE).exists())
             with patch.object(runner, 'ROOT', self.directory / 'another-project'):
                 self.assertNotEqual(runner.marketplace_directory(data), key_path.parent)
-            configured = (project / ".env").read_text()
-            self.assertEqual((data / '.env').read_text(), '# Legacy configuration must stay untouched\n')
+            configured = (project / ".env").read_text(encoding="utf-8")
+            self.assertEqual((data / '.env').read_text(encoding='utf-8'), '# Legacy configuration must stay untouched\n')
             self.assertIn("GRAVEWRIGHT_MARKETPLACE_URL", configured)
             self.assertIn("GRAVEWRIGHT_MARKETPLACE_KEYS_FILE", configured)
 

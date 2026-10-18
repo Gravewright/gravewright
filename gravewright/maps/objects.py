@@ -3,8 +3,9 @@
 from django.conf import settings
 from copy import deepcopy
 import math
-from .models import SceneObject, SceneState
+from .models import MapAsset, SceneObject, SceneState
 from .services import MapError, color, manage
+from .element_names import copy_name
 from gravewright.journals.services import identifier
 
 
@@ -30,7 +31,7 @@ def choice(value, options):
     return value
 
 
-def wall(raw, previous=None):
+def wall(raw, previous=None, *, campaign_id=None, scene_id=None):
     if not isinstance(raw, dict):
         raise MapError("Invalid wall.")
     p = {**(previous or {}), **raw}
@@ -67,7 +68,31 @@ def wall(raw, previous=None):
         raise MapError("Upper height must be greater than lower height.")
     data["blocks_light"] = int(data["light_behavior"] == "block")
     data["blocks_sight"] = int(data["vision_behavior"] == "block")
-    return data
+    # Door art belongs to the live door, so opening it never leaves a closed
+    # texture baked into the scene raster. Keep references campaign-local.
+    asset_id = p.get("asset_id")
+    if asset_id is not None and data["kind"] == "door":
+        asset_id = identifier(asset_id)
+        if campaign_id is not None and not MapAsset.objects.filter(
+            pk=asset_id, campaign_id=campaign_id
+        ).exists():
+            raise MapError("Choose an image from this campaign.")
+        data["asset_id"] = str(asset_id)
+        data["thickness"] = number(p.get("thickness", 14), 0.1, 512)
+    if data["kind"] == "door" and p.get("blueprint") is not None:
+        from .blueprint_runtime import clean_native_blueprint, clean_sprite
+        data["blueprint"] = clean_native_blueprint(p["blueprint"], campaign_id, scene_id, kind="door")
+        data.setdefault("thickness", number(p.get("thickness", 14), 0.1, 512))
+        # A live Change Sprite appearance is runtime state: edits keep it, but
+        # authored payloads cannot set it directly.
+        sprite = clean_sprite((previous or {}).get("sprite"))
+        if sprite is not None:
+            data["sprite"] = sprite
+    if "interactionEnabled" in raw:
+        data["interactionEnabled"] = boolean(raw["interactionEnabled"])
+    from .blueprint_variables import copy_runtime
+    from .blueprint_actions import preserve_interaction
+    return preserve_interaction(previous, copy_runtime(previous, copy_name(data, p)))
 
 
 def light(raw, previous=None):
@@ -103,7 +128,7 @@ def light(raw, previous=None):
         p["animation"], {"none", "torch", "pulse", "candle", "fire", "arcane", "smoke"}
     )
     data["enabled"] = boolean(p["enabled"])
-    return data
+    return copy_name(data, p)
 
 
 def get_object(scene, pk, kind=None):
@@ -114,7 +139,120 @@ def get_object(scene, pk, kind=None):
 
 
 def entry(obj):
-    return {"id": str(obj.pk), **obj.data, "version": obj.version}
+    data = {"id": str(obj.pk), **obj.data, "version": obj.version}
+    data.pop("areaPresence", None)
+    if obj.kind == "images" and data.get("empty") is True:
+        # Older saved scenes are private immediately, before their next edit.
+        data["layer"] = "gm-image-layer"
+        if isinstance(data.get("lever"), dict):
+            data["lever"] = {**data["lever"], "baseLayer": "gm-image-layer"}
+    if data.get("blueprint") is not None:
+        from .blueprints import clean_blueprint
+        from .blueprint_memory import reconcile_memory
+        data["blueprint"] = clean_blueprint(data["blueprint"])
+        if "automationMemory" in data:
+            memory = reconcile_memory(data["blueprint"], data["automationMemory"])
+            if memory:
+                data["automationMemory"] = memory
+            else:
+                data.pop("automationMemory")
+    return data
+
+
+def interact_lever(scene, who, p):
+    """Start a Blueprint interaction, or toggle a native image mechanism.
+
+    Players may use visible levers and torches. The command keeps the map command
+    transaction and receipt, like operating a door.
+    """
+    from .blueprint_runtime import automation_paused, operate, record_paused
+    obj = get_object(scene, p.get("image_id"), "images")
+    from .blueprint_actions import require_interaction
+    require_interaction(obj, who)
+    element_key = "torch" if isinstance(obj.data.get("torch"), dict) else "lever"
+    lever = obj.data.get(element_key)
+    if not isinstance(lever, dict):
+        raise MapError("Choose a lever.")
+    if element_key == "torch":
+        from .torches import clean_native
+        clean_native(lever)
+    if who.role != "gm" and (obj.data.get("empty") is True or obj.data.get("layer") in ("gm", "gm-image-layer")):
+        error = MapError("This torch cannot be used." if element_key == "torch" else "This lever cannot be used.")
+        if obj.data.get("blueprint") is not None:
+            error.automation_run = {"requested": "off" if lever["state"] == "on" else "on",
+                                    "stateBefore": lever["state"], "stateAfter": lever["state"],
+                                    "events": [], "message": str(error)}
+        raise error
+    target = "off" if lever["state"] == "on" else "on"
+    if obj.data.get("blueprint") is not None:
+        if automation_paused(scene):
+            record_paused(scene, who, obj, lever["state"])
+            result = {}
+        else:
+            result = operate(scene, who, obj, target)
+        if who.role != "gm":
+            result.pop("blueprint", None)
+    else:
+        from .blueprint_runtime import apply_lever_appearance
+        before = deepcopy(obj.data)
+        lever["state"] = target
+        apply_lever_appearance(obj)
+        if element_key == "torch":
+            from .torches import sync_components
+            sync_components(obj, before, remember=True)
+        obj.version += 1
+        obj.save()
+        result = {}
+    public = {"state": obj.data[element_key]["state"]}
+    if element_key == "torch":
+        public["lit"] = obj.data["torch"]["lit"]
+    result["image"] = entry(obj) if who.role == "gm" else {"id": str(obj.pk), element_key: public}
+    return result
+
+
+def torch_light(scene, who, p):
+    """Change flame without moving the mechanism or executing its state graphs."""
+    from .torches import sync_components
+    obj = get_object(scene, p.get("image_id"), "images")
+    from .blueprint_actions import require_interaction
+    require_interaction(obj, who)
+    if not isinstance(obj.data.get("torch"), dict):
+        raise MapError("Choose a torch.")
+    from .torches import clean_native
+    clean_native(obj.data["torch"])
+    if who.role != "gm" and obj.data.get("layer") in ("gm", "gm-image-layer"):
+        raise MapError("This torch cannot be used.")
+    lit = boolean(p.get("lit"))
+    if obj.data["torch"]["lit"] != lit:
+        obj.data["torch"]["lit"] = lit
+        sync_components(obj, remember=True)
+        obj.version += 1
+        obj.save(update_fields=["data", "version"])
+    return {"image": entry(obj) if who.role == "gm" else {"id": str(obj.pk), "torch": {
+        "state": obj.data["torch"]["state"], "lit": obj.data["torch"]["lit"]}}}
+
+
+def door_presentation(row, *, private=False, automation_enabled=True):
+    """Keep graphs and inactive state assets confined to the game master."""
+    if not private:
+        row.pop("automationVariables", None)
+        row.pop("automationMemory", None)
+    if row.get("kind") == "door" and "blueprint" in row:
+        from .blueprint_runtime import appearance
+        row["blueprintAppearance"] = appearance(row)
+        if not private:
+            from .blueprints import has_event_path
+            # Players need only know whether a gesture has an authored handler.
+            # The server still validates visibility, lock rules and permissions.
+            row["blueprintInteraction"] = bool(automation_enabled and row.get("interactionEnabled", True)
+                and has_event_path(row["blueprint"], "interact"))
+            row.pop("blueprint", None)
+            row.pop("sprite", None)
+            if row["blueprintAppearance"]["assetId"]:
+                row["asset_id"] = row["blueprintAppearance"]["assetId"]
+            else:
+                row.pop("asset_id", None)
+    return row
 
 
 def layer_state(scene, who):
@@ -165,10 +303,25 @@ def layer_state(scene, who):
     for obj in scene.elements.all():
         if obj.kind in result:
             result[obj.kind].append(entry(obj))
+    from .blueprint_runtime import automation_paused
+    automation_enabled = not automation_paused(scene)
+    for row in result["walls"]:
+        door_presentation(row, private=who.role == "gm", automation_enabled=automation_enabled)
     for row in result['images']:
         if row.get('layer') == 'gm':row['layer'] = 'gm-image-layer'
     if who.role != "gm":
-        result["images"] = [r for r in result["images"] if r.get("layer") != "gm-image-layer"]
+        result["images"] = [r for r in result["images"] if r.get("layer") != "gm-image-layer" and r.get("empty") is not True]
+        for r in result["images"]:
+            # A lever shows players its state and active image, never its graphs.
+            r.pop("blueprint", None)
+            r.pop("sprite", None)
+            r.pop("spriteBase", None)
+            r.pop("automationVariables", None)
+            r.pop("automationMemory", None)
+            if isinstance(r.get("lever"), dict):
+                r["lever"] = {"state": r["lever"]["state"]}
+            if isinstance(r.get("torch"), dict):
+                r["torch"] = {"state": r["torch"]["state"], "lit": r["torch"]["lit"]}
         result["drawings"]["rows"] = [
             r
             for r in result["drawings"].get("rows", [])
@@ -178,9 +331,17 @@ def layer_state(scene, who):
         # barriers have no interactive door handles until the GM reveals them.
         for w in result["walls"]:
             if w["presentation"] in ("secret", "invisible") and not w["discovered"]:
+                w.pop("name", None)
+                w.pop("asset_id", None)
+                w.pop("thickness", None)
+                w.pop("blueprint", None)
+                w.pop("blueprintAppearance", None)
+                w.pop("blueprintInteraction", None)
                 w["kind"] = "wall"
     from .zones import visible as zone_visible
-    result['zones'] = [{**z,'sceneId':str(scene.pk)} for z in result['zones'] if zone_visible(z,who)]
+    from .regions import projection as region_projection
+    result['zones'] = [{**region_projection(z),'sceneId':str(scene.pk)} for z in result['zones']
+                       if zone_visible(z,who) and (who.role == 'gm' or 'region' not in z)]
     result['markers'] = [{**r,'canEdit':who.role=='gm' or r.get('owner')==str(who.user_id)} for r in result['markers']]
     from .journal_pins import visible as visible_pins
     result['journalPins'] = visible_pins(result['journalPins'], who)
@@ -231,6 +392,8 @@ def apply(scene, who, area, action, p):
         from .zones import apply as zones
         result=zones(scene,who,action,p)
         env.version+=1;env.save()
+        from .blueprint_delays import cancel_invalid_delays
+        cancel_invalid_delays(scene)
         return result
     if area == "soundscape":
         from gravewright.audio.services import set_soundscape
@@ -240,38 +403,83 @@ def apply(scene, who, area, action, p):
         if action != "replace":raise MapError("Unknown marker command.")
         from .markers import replace
         return replace(scene,who,env,p)
+    if area == "images" and action == "interact":
+        return interact_lever(scene, who, p)
+    if area == "images" and action == "torch-light":
+        return torch_light(scene, who, p)
     if area in ("drawings", "images", "particles", "shaders", "effects"):
         from .extra_objects import apply as extra
 
         result = extra(scene, who, env, area, action, p)
         env.version += 1
         env.save()
+        from .blueprint_delays import cancel_invalid_delays
+        cancel_invalid_delays(scene)
         return result
+    if area == "automation":
+        manage(who)
+        from .blueprint_runtime import automation_command
+        return automation_command(scene, action, p)
     if area == "walls" and action == "door":
         obj = get_object(scene, p.get("wall_id"), "walls")
+        from .blueprint_actions import require_interaction
+        require_interaction(obj, who)
         target = choice(p.get("door_state"), {"open", "closed", "locked"})
         if obj.data["kind"] != "door":
             raise MapError("Choose a door.")
+        from .blueprint_runtime import automation_paused
+        # Paused blueprints keep their state; objects without a blueprint use native controls.
+        automated = obj.data.get("blueprint") is not None and not automation_paused(scene)
+        from .blueprints import has_event_path
+        locked_interaction = (automated and obj.data["door_state"] == "locked"
+                              and has_event_path(obj.data.get("blueprint"), "interact"))
         if who.role != "gm" and (
-            obj.data["door_state"] == "locked"
-            or target == "locked"
+            obj.data["door_state"] == "locked" and not locked_interaction
+            or target == "locked" and not automated
             or (
                 obj.data["presentation"] in ("secret", "invisible")
                 and not obj.data["discovered"]
             )
         ):
-            raise MapError("This door cannot be operated.")
-        obj.data["door_state"] = target
-        obj.version += 1
-        obj.save()
-        result = {"wall": entry(obj)}
+            error = MapError("This door cannot be operated.")
+            if obj.data.get("blueprint") is not None:
+                # The GM's automation log also shows attempts refused before any graph ran.
+                error.automation_run = {"requested": target, "stateBefore": obj.data["door_state"],
+                                        "stateAfter": obj.data["door_state"], "events": [], "message": str(error)}
+            raise error
+        if automated:
+            from .blueprint_runtime import operate
+            result = operate(scene, who, obj, target)
+            if who.role != "gm":
+                result.pop("blueprint", None)
+        else:
+            if obj.data.get("blueprint") is not None:
+                from .blueprint_runtime import record_paused
+                record_paused(scene, who, obj, obj.data["door_state"])
+            else:
+                obj.data["door_state"] = target
+                obj.version += 1
+                obj.save()
+        result["wall"] = door_presentation(entry(obj), private=who.role == "gm", automation_enabled=automated)
     else:
         manage(who)
         if area in ("walls", "lights"):
-            validator = wall if area == "walls" else light
+            def validator(raw, previous=None):
+                return (wall(raw, previous, campaign_id=scene.campaign_id, scene_id=scene.pk)
+                        if area == "walls" else light(raw, previous))
             key = "wall" if area == "walls" else "light"
             if action == "clear":
-                scene.elements.filter(kind=area).delete()
+                if area == "lights":
+                    from .blueprint_runtime import detach_scene_lights
+                    detach_scene_lights(scene.pk, scene.elements.filter(kind="lights").values_list("pk", flat=True))
+                    from .torches import detach_component
+                    for child in list(scene.elements.filter(kind="lights")):
+                        detach_component(scene, child.pk)
+                if area == "walls":
+                    from .blueprint_lifecycle import destroy_objects
+                    destroy_objects(scene, who, scene.elements.filter(kind=area))
+                else:
+                    scene.elements.filter(kind=area).delete()
             elif action == "create":
                 if scene.elements.count() >= 5000:
                     raise MapError("Scene object limit reached.")
@@ -282,16 +490,42 @@ def apply(scene, who, area, action, p):
             elif action in ("update", "delete"):
                 obj = get_object(scene, p.get(key + "_id", p.get("id")), area)
                 if action == "delete":
-                    obj.delete()
+                    expected = p.get("expected_version", p.get("version"))
+                    if expected is not None and (type(expected) is not int or expected != obj.version):
+                        raise MapError("This object changed. Reopen it and try again.", "conflict")
+                    if area == "lights":
+                        from .blueprint_runtime import detach_scene_lights
+                        detach_scene_lights(scene.pk, [obj.pk])
+                        from .torches import detach_component
+                        detach_component(scene, obj.pk)
+                    if area == "walls":
+                        from .blueprint_lifecycle import destroy_objects
+                        destroy_objects(scene, who, [obj])
+                    else:
+                        obj.delete()
                 else:
                     if "version" in p and p["version"] != obj.version:
                         raise MapError(
                             "This object changed. Reopen it and try again.", "conflict"
                         )
+                    previous_state, previous_version = obj.data.get("door_state"), obj.version
                     obj.data = validator(p, obj.data)
-                    obj.version += 1
+                    if area == "lights":
+                        from .torches import gate_edit
+                        gate_edit(scene, obj, p)
+                    if (area == "walls" and obj.data.get("kind") == "door" and obj.data.get("blueprint")
+                            and previous_state is not None and obj.data["door_state"] != previous_state):
+                        from .blueprint_runtime import automation_paused, operate, record_paused
+                        target = obj.data["door_state"]
+                        obj.data["door_state"] = previous_state
+                        if automation_paused(scene):
+                            record_paused(scene, who, obj, target)
+                            obj.data["door_state"] = target
+                        else:
+                            result = operate(scene, who, obj, target, interact=False)
+                    obj.version = previous_version + 1
                     obj.save()
-                    result = {key: entry(obj)}
+                    result[key] = door_presentation(entry(obj), private=True) if area == "walls" else entry(obj)
             elif area == "walls" and action in ("move-node", "move-endpoint"):
                 to_x = number(p.get("to_x"))
                 to_y = number(p.get("to_y"))
@@ -320,7 +554,7 @@ def apply(scene, who, area, action, p):
                             data[f"y{n}"] = to_y
                             changed = True
                     if changed:
-                        obj.data = wall(data)
+                        obj.data = wall(data, obj.data)
                         obj.version += 1
                         obj.save()
             elif area == "walls" and action == "split":
@@ -346,6 +580,11 @@ def apply(scene, who, area, action, p):
                 raise MapError("Unknown object command.")
         elif area == "light-selection":
             if action == "clear":
+                from .blueprint_runtime import detach_scene_lights
+                detach_scene_lights(scene.pk, scene.elements.filter(kind="lights").values_list("pk", flat=True))
+                from .torches import detach_component
+                for child in list(scene.elements.filter(kind="lights")):
+                    detach_component(scene, child.pk)
                 scene.elements.filter(kind="lights").delete()
             elif action == "paste":
                 rows = p.get("effects")
@@ -372,6 +611,10 @@ def apply(scene, who, area, action, p):
                         raise MapError("Invalid light selection.")
                     obj = get_object(scene, ref.get("id"), "lights")
                     if action == "delete":
+                        from .blueprint_runtime import detach_scene_lights
+                        detach_scene_lights(scene.pk, [obj.pk])
+                        from .torches import detach_component
+                        detach_component(scene, obj.pk)
                         obj.delete()
                     else:
                         obj.data = light(
@@ -391,7 +634,8 @@ def apply(scene, who, area, action, p):
                 raise MapError("Unknown light selection command.")
         elif area == "wall-selection":
             if action == "clear":
-                scene.elements.filter(kind="walls").delete()
+                from .blueprint_lifecycle import destroy_objects
+                destroy_objects(scene, who, scene.elements.filter(kind="walls"))
             elif action == "paste":
                 rows = p.get("walls")
                 if not isinstance(rows, list) or not 1 <= len(rows) <= 500:
@@ -402,7 +646,9 @@ def apply(scene, who, area, action, p):
                     "walls": [
                         str(
                             SceneObject.objects.create(
-                                scene=scene, kind="walls", data=wall(w)
+                                scene=scene, kind="walls", data=wall(
+                                    w, campaign_id=scene.campaign_id, scene_id=scene.pk
+                                )
                             ).pk
                         )
                         for w in rows
@@ -413,9 +659,12 @@ def apply(scene, who, area, action, p):
                 if not isinstance(ids, list) or not 1 <= len(ids) <= 500:
                     raise MapError("Invalid wall selection.")
                 rows = [get_object(scene, pk, "walls") for pk in ids]
+                if action == "delete":
+                    from .blueprint_lifecycle import destroy_objects
+                    destroy_objects(scene, who, rows)
                 for obj in rows:
                     if action == "delete":
-                        obj.delete()
+                        continue
                     else:
                         dx, dy = number(p.get("dx")), number(p.get("dy"))
                         obj.data = wall(
@@ -510,4 +759,6 @@ def apply(scene, who, area, action, p):
             raise MapError("Unknown scene area.")
     env.version += 1
     env.save()
+    from .blueprint_delays import cancel_invalid_delays
+    cancel_invalid_delays(scene)
     return result

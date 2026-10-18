@@ -112,6 +112,20 @@ def rows(scene, who):
     ]
 
 
+def teleport_metadata(visible, candidates):
+    """Keep transport markers only for the recipient's current token revisions."""
+    if not isinstance(candidates, list):
+        return {}
+    versions = {row["id"]: row["version"] for row in visible}
+    accepted = {}
+    for entry in candidates:
+        if (isinstance(entry, dict) and isinstance(entry.get("id"), str)
+                and type(entry.get("version")) is int
+                and versions.get(entry["id"]) == entry["version"]):
+            accepted[entry["id"]] = {"id": entry["id"], "version": entry["version"]}
+    return {"teleports": list(accepted.values())} if accepted else {}
+
+
 def state(campaign, user, map_id):
     who = member(campaign, user)
     scene = maps.scene(map_id, who)
@@ -243,8 +257,14 @@ def command(campaign, user, action, raw, request_id):
                 for i in previous.result.get("createdIds", [])
                 if i in {t["id"] for t in visible}
             ],
+            **teleport_metadata(visible, previous.result.get("teleports")),
         }
     created = []
+    presence_changes = []
+
+    def presence(token, before, after, path=()):
+        presence_changes.append({"token": token, "id": str(token.pk), "before": before,
+                                 "after": after, "path": path})
     if action == "place":
         maps.manage(who)
         actor = actors.get(raw.get("actorId"), who)
@@ -267,6 +287,7 @@ def command(campaign, user, action, raw, request_id):
         t.grid_x, t.grid_y = position(t, raw.get("gridX"), raw.get("gridY"))
         t.save()
         created = [str(t.pk)]
+        presence(t, None, (t.grid_x, t.grid_y, t.elevation))
     elif action == "move":
         t = get(raw.get("id"), who)
         if t.scene_id != scene.pk:
@@ -277,6 +298,7 @@ def command(campaign, user, action, raw, request_id):
         t.save()
         from gravewright.maps.zones import movement_events
         movement_events(scene,t,before)
+        presence(t, before, (t.grid_x, t.grid_y, t.elevation), raw.get("path", []))
     else:
         ids = raw.get("tokenIds")
         if (
@@ -309,7 +331,9 @@ def command(campaign, user, action, raw, request_id):
         if not rotate and not conditions:
             maps.manage(who)
         for t in selected:
+            before = (t.grid_x, t.grid_y, t.elevation)
             if action == "remove":
+                presence(t, before, None)
                 t.delete()
                 continue
             if action == "duplicate":
@@ -385,12 +409,28 @@ def command(campaign, user, action, raw, request_id):
                 raise maps.MapError("Unknown token command.")
             t.version += 1
             t.save()
-    result = {"tokens": rows(scene, who), "createdIds": created}
+            if action == "duplicate":
+                presence(t, None, (t.grid_x, t.grid_y, t.elevation))
+            elif action == "configure" and before[2] != t.elevation:
+                presence(t, before, (t.grid_x, t.grid_y, t.elevation))
+    from gravewright.maps.regions import token_events
+    from gravewright.maps.blueprint_delays import automation_request
+    with automation_request(request_id) as world:
+        token_events(scene, who, presence_changes)
+    if action == "hidden" or action == "configure" and "disposition" in raw.get("values", {}):
+        # Filter metadata is configuration, so establish presence without events.
+        from gravewright.maps.regions import rebaseline
+        rebaseline(scene)
+    visible = rows(scene, who)
+    teleports = [{"id": row["id"], "version": row["version"]}
+                 for row in visible if row["id"] in world.teleported]
+    receipt_result = {"createdIds": created, **teleport_metadata(visible, teleports)}
+    result = {"tokens": visible, **receipt_result}
     Receipt.objects.create(
-        campaign_id=campaign, user_id=user, request_id=request_id, result={"createdIds": created}
+        campaign_id=campaign, user_id=user, request_id=request_id, result=receipt_result
     )
     from gravewright.realtime.dispatch import changed
-    changed(campaign,user,'tokens',action,request_id,result)
+    changed(campaign,user,'tokens',action,request_id,{"mapId": str(scene.pk), **result})
     return result
 
 

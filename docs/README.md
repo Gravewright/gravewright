@@ -2,7 +2,7 @@
 
 [English](README.md) · [Português (Brasil)](README.pt-BR.md) · [Project home](../README.md)
 
-English is the primary documentation. Each guide has a corresponding Portuguese version; source identifiers, API names and commands remain unchanged. This documentation describes the implementation in this checkout, including its current limits.
+English is the primary documentation. Each guide has a corresponding Portuguese version; source identifiers, API names and commands remain unchanged. Guides describe the implementation in this checkout, including its current limits. Design-direction documents identify proposed capabilities separately.
 
 | Guide | What it explains |
 | --- | --- |
@@ -11,6 +11,9 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | [macOS runner](en/macos-runner.md) | Intel/Apple Silicon installation, Finder launcher, private tools and local execution |
 | [Getting started](en/getting-started.md) | Dependencies, configuration, migrations and first login |
 | [User guide](en/user-guide.md) | Campaigns, scenes, sheets, journals and table workflows |
+| [Map Builder](en/map-builder.md) | Studio, editable projects, user assets and native wall/door generation |
+| [Universal VTT](en/universal-vtt.md) | Import and export native scenes, supported fields and format limitations |
+| [Smart Objects direction](en/smart-objects-direction.md) | Proposed node editor, element capabilities, references and delivery order |
 | [Architecture](en/architecture.md) | Request flow, persistence, authorization and realtime |
 | [Code map](en/code-map.md) | What each domain does and where to make changes |
 | [Development](en/development.md) | Contributor workflow, source conventions and contracts |

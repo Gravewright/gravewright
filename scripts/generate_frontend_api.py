@@ -3,8 +3,9 @@ import json
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1] / 'gravewright/modules'
-contract = json.loads((root / 'contracts/frontend.json').read_text())
+contract = json.loads((root / 'contracts/frontend.json').read_text(encoding='utf-8'))
 (root / 'static/gravewright_modules/frontend-contract.js').write_text(
     '// Generated from contracts/frontend.json; run scripts/generate_frontend_api.py.\n'
-    + 'export const FRONTEND_CONTRACT = ' + json.dumps(contract, indent=2) + ';\n'
+    + 'export const FRONTEND_CONTRACT = ' + json.dumps(contract, indent=2) + ';\n',
+    encoding='utf-8',
 )

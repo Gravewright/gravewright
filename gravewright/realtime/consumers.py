@@ -312,21 +312,26 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                 pass
 
     async def room_tokens(self, event):
+        # Board updates must not wait for spatial audio or combat projections.
+        # Each later delivery still performs its own live authorization check.
+        if getattr(self, "token_map_id", None) and await self.authorized():
+            try:
+                projection = await db(tokens.state)(
+                    self.campaign_id, self.user_id, self.token_map_id
+                )
+                if event.get("mapId") == projection["mapId"]:
+                    projection.update(tokens.teleport_metadata(projection["tokens"], event.get("teleports")))
+                await self.emit(
+                    "tokens.state",
+                    projection,
+                )
+            except maps.MapError, journals.JournalError:
+                await self.emit("tokens.state", {"mapId": self.token_map_id, "tokens": []})
+                self.token_map_id = None
         await self.api_changed('tokens')
         await self.room_resources({'module':'audio'})
-        await self.room_resources({'module':'combat'})
-        if not getattr(self, "token_map_id", None) or not await self.authorized():
-            return
-        try:
-            await self.emit(
-                "tokens.state",
-                await db(tokens.state)(
-                    self.campaign_id, self.user_id, self.token_map_id
-                ),
-            )
-        except maps.MapError, journals.JournalError:
-            await self.emit("tokens.state", {"mapId": self.token_map_id, "tokens": []})
-            self.token_map_id = None
+        if event.get('refresh_combat', True):
+            await self.room_resources({'module':'combat'})
 
     async def end_drag(self, phase):
         packet = getattr(self, "drag_packet", None)
@@ -432,6 +437,14 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             return
         await self.emit("maps.ping", event["payload"])
 
+    async def room_automation_presentation(self, event):
+        if str(self.user_id) not in event.get("recipients", []) or not await self.authorized():
+            return
+        from gravewright.maps.blueprint_world import presentation_for
+        payload = await db(presentation_for)(self.campaign_id, self.user_id, event["payload"])
+        if payload is not None:
+            await self.emit("automation.presentation", payload)
+
     async def map_command(self, payload):
         request_id = payload.get("requestId")
         try:
@@ -456,11 +469,6 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             )
 
     async def room_map_layers(self, event):
-        await self.api_changed('maps.layers')
-        await self.room_resources({'module':'audio'})
-        if not getattr(self, "map_layer_id", None) or not await self.authorized():
-            return
-
         def read():
             from gravewright.maps.objects import layer_state
 
@@ -468,10 +476,15 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             scene = maps.scene(self.map_layer_id, who)
             return layer_state(scene, who)
 
-        try:
-            await self.emit("maps.layers", await db(read)())
-        except maps.MapError, journals.JournalError:
-            self.map_layer_id = None
+        # Deliver committed scene changes before dependent resource refreshes.
+        if getattr(self, "map_layer_id", None) and await self.authorized():
+            try:
+                await self.emit("maps.layers", await db(read)())
+            except maps.MapError, journals.JournalError:
+                self.map_layer_id = None
+        await self.api_changed('maps.layers')
+        if event.get('refresh_audio', True):
+            await self.room_resources({'module':'audio'})
 
     async def room_maps(self, event):
         await self.api_changed('maps')
@@ -601,6 +614,11 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         if getattr(self, 'lobby_subscribed', False) and settings.LOBBY_READY_CHECK_ENABLED and await self.authorized():
             from gravewright.table.services import lobby
             await self.emit('lobby.state', await db(lobby)(self.campaign_id, self.user_id))
+
+    async def room_automation(self, event):
+        # Blueprint runs are GM diagnostics; other roles never learn that one ran.
+        if await self.authorized() and self.member.role == "gm":
+            await self.emit("maps.automation", {"sceneId": event["sceneId"]})
 
     async def room_zone(self,event):
         if not await self.authorized():return

@@ -42,6 +42,7 @@ export class PixiBoardRenderer {
     /** Above the tiles, so the frame and pings are never buried by a tile that lands late. */
     #marks = new Container();
     #sprites = new Map();
+    #spriteUrls = new Map();
     /** The load in flight for a key, so a tile that leaves the viewport stops costing bandwidth. */
     #inFlight = new Map();
     #shapes = new Map();
@@ -94,6 +95,12 @@ export class PixiBoardRenderer {
         this.#world.scale.set(view.scale);
         this.invalidate();
     }
+    /** Invalidate pending revisions without removing the tiles already on screen. */
+    cancelTileLoads() {
+        for (const { controller } of this.#inFlight.values())
+            controller.abort();
+        this.#inFlight.clear();
+    }
     async setTiles(tiles) {
         if (this.#destroyed)
             return [];
@@ -102,13 +109,25 @@ export class PixiBoardRenderer {
         for (const key of [...this.#sprites.keys()])
             if (!wanted.has(key))
                 this.#release(key);
-        // Whatever left the list is no longer worth the bytes still coming down the wire for it.
-        for (const [key, controller] of this.#inFlight)
-            if (!wanted.has(key))
+        // A new revision reuses the tile key, but must not reuse the previous bytes or request.
+        for (const [key, { controller, url }] of this.#inFlight)
+            if (wanted.get(key)?.url !== url) {
                 controller.abort();
+                this.#inFlight.delete(key);
+            }
         const pending = [];
         for (const [key, tile] of wanted) {
-            if (this.#sprites.has(key) || this.#inFlight.has(key))
+            const sprite = this.#sprites.get(key);
+            if (sprite && this.#spriteUrls.get(key) === tile.url) {
+                if (sprite.x !== tile.x || sprite.y !== tile.y || sprite.scale.x !== tile.scale || sprite.zIndex !== tile.depth) {
+                    sprite.position.set(tile.x, tile.y);
+                    sprite.scale.set(tile.scale);
+                    sprite.zIndex = tile.depth;
+                    this.invalidate();
+                }
+                continue;
+            }
+            if (this.#inFlight.has(key))
                 continue;
             pending.push(this.#load(key, tile));
         }
@@ -210,8 +229,7 @@ export class PixiBoardRenderer {
     clear() {
         this.#wanted = new Map();
         this.#wantedPieces = new Map();
-        for (const controller of this.#inFlight.values())
-            controller.abort();
+        this.cancelTileLoads();
         for (const key of [...this.#sprites.keys()])
             this.#release(key);
         for (const key of [...this.#pieces.keys()])
@@ -235,9 +253,7 @@ export class PixiBoardRenderer {
         cancelAnimationFrame(this.#renderFrame);
         this.#renderFrame = 0;
         this.#wanted = new Map();
-        for (const controller of this.#inFlight.values())
-            controller.abort();
-        this.#inFlight.clear();
+        this.cancelTileLoads();
         for (const key of [...this.#sprites.keys()])
             this.#release(key);
         this.#shapes.clear();
@@ -247,9 +263,10 @@ export class PixiBoardRenderer {
         // A contributed layer cannot outlive the surface it was drawn on.
         for (const { layer } of [...this.#layers.values()])
             layer.dispose();
+        // Other boards and previews share Pixi's global pools.
         try {
             if (this.#application.renderer)
-                this.#application.destroy(true, { children: true });
+                this.#application.destroy({ removeView: true, releaseGlobalResources: false }, { children: true });
         }
         catch { /* Already torn down. */ }
     }
@@ -262,28 +279,34 @@ export class PixiBoardRenderer {
      */
     async #load(key, tile) {
         const controller = new AbortController();
-        this.#inFlight.set(key, controller);
+        this.#inFlight.set(key, { controller, url: tile.url });
+        const current = () => !this.#destroyed && !controller.signal.aborted
+            && this.#inFlight.get(key)?.controller === controller && this.#wanted.get(key)?.url === tile.url;
         let bitmap;
         try {
             let blob = tileBlobCache.take(tile.url);
             if (!blob) {
                 const response = await fetch(tile.url, { signal: controller.signal, credentials: "same-origin" });
                 if (!response.ok)
-                    return key;
+                    return current() ? key : undefined;
                 blob = await response.blob();
             }
             bitmap = await createImageBitmap(blob);
             // The board may have moved on while this tile was in flight; drop it rather than painting a
             // tile nobody is looking at any more.
-            if (this.#destroyed || this.#wanted.get(key)?.url !== tile.url) {
+            if (!current()) {
                 bitmap.close();
                 return undefined;
             }
             const sprite = new Sprite(Texture.from(bitmap));
-            sprite.position.set(tile.x, tile.y);
-            sprite.scale.set(tile.scale);
-            sprite.zIndex = tile.depth;
+            const placement = this.#wanted.get(key);
+            sprite.position.set(placement.x, placement.y);
+            sprite.scale.set(placement.scale);
+            sprite.zIndex = placement.depth;
+            // Keep the previous revision visible until its replacement is fully decoded.
+            this.#release(key);
             this.#sprites.set(key, sprite);
+            this.#spriteUrls.set(key, tile.url);
             this.#tiles.addChild(sprite);
             this.invalidate();
             return undefined;
@@ -291,26 +314,30 @@ export class PixiBoardRenderer {
         catch {
             bitmap?.close();
             // An abort is this renderer's own doing, not a tile the caller should be told to ask for again.
-            return controller.signal.aborted ? undefined : key;
+            return current() ? key : undefined;
         }
         finally {
-            if (this.#inFlight.get(key) === controller)
+            if (this.#inFlight.get(key)?.controller === controller)
                 this.#inFlight.delete(key);
         }
     }
-    /** Builds a piece, or repositions the one already standing there when only its numbers changed. */
+    /** Ordinary motion reuses a piece; a teleport replaces only its rendered root. */
     async #showPiece(key, piece) {
         const standing = this.#pieces.get(key);
-        if (standing && standing.imageUrl === piece.imageUrl) {
+        if (standing && standing.imageUrl === piece.imageUrl &&
+            standing.teleportVersion === (piece.teleportVersion ?? 0)) {
             this.#placePiece(standing, piece);
             return;
         }
-        if (standing)
+        // Acquisition retains synchronously, keeping cached art alive when the old root is removed.
+        const pendingTexture = piece.imageUrl ? this.#pieceTexture(piece.imageUrl) : undefined;
+        if (standing && standing.teleportVersion !== (piece.teleportVersion ?? 0))
             this.#releasePiece(key);
-        const texture = piece.imageUrl ? await this.#pieceTexture(piece.imageUrl) : undefined;
+        const texture = pendingTexture ? await pendingTexture : undefined;
         // The board may have moved on while the art loaded: another placement, or a scene change.
         const latest = this.#wantedPieces.get(key);
-        if (this.#destroyed || !latest || latest.imageUrl !== piece.imageUrl) {
+        if (this.#destroyed || !latest || latest.imageUrl !== piece.imageUrl ||
+            (latest.teleportVersion ?? 0) !== (piece.teleportVersion ?? 0)) {
             if (piece.imageUrl && texture)
                 pieceAssets.release(piece.imageUrl);
             return;
@@ -318,12 +345,15 @@ export class PixiBoardRenderer {
         // Another update may have finished loading this same image while we awaited it.
         // Reuse that view and release this call's extra asset reference, never orphan a root.
         const loaded = this.#pieces.get(key);
-        if (loaded) {
+        if (loaded && loaded.imageUrl === latest.imageUrl &&
+            loaded.teleportVersion === (latest.teleportVersion ?? 0)) {
             if (piece.imageUrl && texture)
                 pieceAssets.release(piece.imageUrl);
             this.#placePiece(loaded, latest);
             return;
         }
+        if (loaded)
+            this.#releasePiece(key);
         piece = latest;
         const root = new Container();
         const ring = new Graphics();
@@ -336,6 +366,7 @@ export class PixiBoardRenderer {
         root.addChild(ring, art, details, conditions, label);
         const view = {
             root, ring, details, conditions, art, label,
+            teleportVersion: piece.teleportVersion ?? 0,
             ...(piece.imageUrl ? { imageUrl: piece.imageUrl } : {}),
             ...(piece.imageUrl && texture ? { retainedImageUrl: piece.imageUrl } : {}),
         };
@@ -434,6 +465,7 @@ export class PixiBoardRenderer {
     }
     #release(key) {
         const sprite = this.#sprites.get(key);
+        this.#spriteUrls.delete(key);
         if (!sprite)
             return;
         this.#sprites.delete(key);

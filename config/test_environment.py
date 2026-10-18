@@ -110,7 +110,9 @@ class EnvironmentTests(unittest.TestCase):
 
     def test_launcher_uses_configured_address(self):
         from main import main
-        with patch.dict(os.environ, {'DJANGO_SETTINGS_MODULE': 'config.settings'}), patch(
+        # On Windows without UTF-8 mode the launcher re-executes itself; replacing
+        # the test process would start a real server and end the whole suite.
+        with patch('os.execv'), patch.dict(os.environ, {'DJANGO_SETTINGS_MODULE': 'config.settings'}), patch(
             'django.core.management.execute_from_command_line'
         ) as execute, patch('sys.argv', ['main.py', '--dev', '--noreload']), patch(
             'django.conf.settings.GRAVEWRIGHT_HOST', '::1'

@@ -26,7 +26,7 @@ from gravewright.campaigns.forms import CampaignForm
 from gravewright.campaigns.views import authenticated, validate_campaign_form
 from .responses import navigate
 
-TEXT = json.loads(Path(__file__).with_name('inside_messages.json').read_text())
+TEXT = json.loads(Path(__file__).with_name('inside_messages.json').read_text(encoding='utf-8'))
 SECTIONS = {'campaigns', 'settings', 'privacy', 'systems', 'addons', 'marketplace', 'administration'}
 
 

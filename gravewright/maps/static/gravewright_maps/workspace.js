@@ -5,6 +5,8 @@ import { mountFormTabs, modalText } from '/static/gravewright_table/form-modal.j
 import '/static/gravewright_table/realtime.js';
 import { initialContent, sceneRestored, afterContentReady } from '/static/gravewright_table/content-state.js';
 import { directoryView } from "./directory.js";
+import { openUniversalVtt } from './universal-vtt.js';
+import { createTranslator } from '/static/gravewright_modules/i18n.js';
 import {
   mergePatch,
   getPath,
@@ -12,6 +14,8 @@ import {
 const panel = document.getElementById("maps-panel");
 const workspace = document.getElementById("table-workspace");
 const campaign = workspace.dataset.tableId;
+const interchangeTranslator = createTranslator();
+const interchangeText = key => interchangeTranslator.t(key);
 const labels = JSON.parse(
   document.getElementById("map-text")?.textContent || "{}",
 );
@@ -54,6 +58,8 @@ const sceneText = {
   preparing: modalText('Preparing', 'Em preparação'),
   loading: modalText('Preloading', 'Pré-carregando'),
   ready: modalText('Preloaded', 'Pré-carregada'),
+  editBuilder: modalText('Edit with MapBuilder', 'Editar com MapBuilder'),
+  exportUniversal: interchangeText('Export Universal VTT'),
 };
 let preloadTask, preloadAbort, preloadGeneration = 0, preparing, prepared, preparedTimer;
 function cancelPreparation() {
@@ -178,6 +184,21 @@ function csrf() {
       .slice(1)
       .join("=") || ""
   );
+}
+function createScene(groupId = "") {
+  if (!state.is_gm) return;
+  if (dialog?.close) dialog.close(); else dialog?.remove();
+  const el = clone("create");
+  dialog = el;
+  el.querySelector("header button").onclick = () => el.close();
+  el.querySelector('[data-map-create="upload"]').onclick = () => upload(groupId);
+  el.querySelector('[data-map-create="uvtt"]').onclick = () => {
+    el.close(); dialog = openUniversalVtt({ campaignId: campaign, folderId: groupId, t: interchangeText });
+  };
+  const builder = new URL(`/game/${campaign}/map-builder`, window.location.origin);
+  if (groupId) builder.searchParams.set("folder", groupId);
+  el.querySelector('[data-map-create="builder"]').href = builder.href;
+  mountModal(el);
 }
 function upload(groupId = "") {
   const el = form(
@@ -344,16 +365,22 @@ function folderForm(parentId = "", existing) {
 function context(event, items) {
   event.preventDefault();
   event.stopPropagation();
-  menu?.remove();
-  const element = document.createElement("menu");
+  menu?.close();
+  const source = event.currentTarget;
+  const owner = source.ownerDocument;
+  const view = owner.defaultView;
+  const bounds = source.getBoundingClientRect();
+  const x = Number.isFinite(event.clientX) ? event.clientX : bounds.left + 16;
+  const y = Number.isFinite(event.clientY) ? event.clientY : bounds.bottom;
+  const element = owner.createElement("menu");
   menu = element;
   element.className = "gw-folder-menu directory-context-menu";
   element.style.zIndex = "1500";
   element.setAttribute("role", "menu");
   element.style.left =
-    Math.max(8, Math.min(event.clientX, window.innerWidth - 205)) + "px";
+    Math.max(8, Math.min(x, view.innerWidth - 205)) + "px";
   element.style.top =
-    Math.max(8, Math.min(event.clientY, window.innerHeight - 170)) + "px";
+    Math.max(8, Math.min(y, view.innerHeight - 170)) + "px";
   const icons = {
     "Add subfolder": "FolderPlus",
     "Edit folder": "PencilSimple",
@@ -365,12 +392,14 @@ function context(event, items) {
     [sceneText.activate]: 'Broadcast',
     [sceneText.preload]: 'DownloadSimple',
     [labels.editScene]: "PencilSimple",
+    [sceneText.editBuilder]: "PencilSimple",
     [labels.removeScene]: "Trash",
   };
-  for (const [label, action] of items) {
-    const button = document.createElement("button");
+  for (const [label, action, hook] of items) {
+    const button = owner.createElement("button");
     button.type = "button";
     button.setAttribute("role", "menuitem");
+    if (hook) button.dataset[hook] = '';
     if (icons[label])
       button.append(
         document
@@ -384,7 +413,7 @@ function context(event, items) {
     button.onclick = async (e) => {
       e.stopPropagation();
       try {
-        if ((await action(button)) !== false) element.remove();
+        if ((await action(button)) !== false) element.close();
       } catch (cause) {
         error(cause.message);
       }
@@ -397,13 +426,14 @@ function context(event, items) {
   };
   element.onkeydown = (e) => {
     if (e.key === "Escape") {
-      element.remove();
+      element.close();
+      source.focus();
       e.stopPropagation();
     }
     if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
       e.preventDefault();
       const buttons = [...element.querySelectorAll("button")],
-        index = buttons.indexOf(document.activeElement);
+        index = buttons.indexOf(owner.activeElement);
       buttons[
         e.key === "Home"
           ? 0
@@ -414,18 +444,27 @@ function context(event, items) {
       ].focus();
     }
   };
-  document.body.append(element);
+  element.close = () => {
+    owner.removeEventListener('click', element.close);
+    view.removeEventListener('pagehide', element.close);
+    element.remove();
+    if (menu === element) menu = undefined;
+  };
+  owner.addEventListener('click', element.close);
+  view.addEventListener('pagehide', element.close, {once: true});
+  owner.body.append(element);
   const rect = element.getBoundingClientRect();
   element.style.left =
     Math.max(
       8,
-      Math.min(parseFloat(element.style.left), innerWidth - rect.width - 8),
+      Math.min(parseFloat(element.style.left), view.innerWidth - rect.width - 8),
     ) + "px";
   element.style.top =
     Math.max(
       8,
-      Math.min(parseFloat(element.style.top), innerHeight - rect.height - 8),
+      Math.min(parseFloat(element.style.top), view.innerHeight - rect.height - 8),
     ) + "px";
+  element.querySelector('button')?.focus({preventScroll: true});
 }
 function deleteFolder(folder, source) {
   const el = clone("folder-delete"),
@@ -488,12 +527,12 @@ function tree() {
         );
       const buttons = el.querySelectorAll(".gw-folder__actions button");
       buttons[0].title = labels.newScene;
-      buttons[0].onclick = () => upload(f.id);
+      buttons[0].onclick = () => createScene(f.id);
       buttons[1].hidden = depth >= 2;
       buttons[1].onclick = () => folderForm(f.id);
       toggle.oncontextmenu = (e) =>
         context(e, [
-          [labels.newScene, () => upload(f.id)],
+          [labels.newScene, () => createScene(f.id)],
           ...(depth < 2 ? [["Add subfolder", () => folderForm(f.id)]] : []),
           ["Edit folder", () => folderForm(f.parentId, f)],
           ["Permissions", () => openPermissions('scene-folders', f.id)],
@@ -510,6 +549,15 @@ function tree() {
       el.dataset.sceneId = map.id;
       el.onclick = () => navigate(map);
       el.querySelector("strong").textContent = map.name;
+      el.querySelector("strong").title = map.name;
+      const builderProjectId = state.is_gm ? map.builderProjectId : null;
+      if (builderProjectId) {
+        el.dataset.sceneBuilderOrigin = '';
+        const icon = el.querySelector('svg');
+        icon.removeAttribute('aria-hidden');
+        icon.setAttribute('role', 'img');
+        icon.setAttribute('aria-label', 'MapBuilder');
+      }
       show(el.querySelector("[data-broadcast]"), map.id === state.activeMapId);
       el.querySelector('[data-broadcast]').textContent = modalText('Active for players', 'Ativa para jogadores');
       el.querySelector('[data-navigating]').textContent = sceneText.preparing;
@@ -537,6 +585,12 @@ function tree() {
           [sceneText.preview, () => navigate(map)],
           [sceneText.preload, () => prepare(map)],
           [labels.editScene, () => settings(map)],
+          [sceneText.exportUniversal, () => openUniversalVtt({ campaignId: campaign, sceneId: map.id, t: interchangeText })],
+          ...(builderProjectId ? [[sceneText.editBuilder, () => {
+            const url = new URL(`/game/${campaign}/map-builder`, window.location.origin);
+            url.searchParams.set('project', builderProjectId);
+            window.location.assign(url.href);
+          }, 'sceneBuilderEdit']] : []),
           ["Permissions", () => openPermissions('scenes', map.id)],
           [
             labels.removeScene,
@@ -550,6 +604,11 @@ function tree() {
             },
           ],
         ]);
+      el.onkeydown = event => {
+        if (event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey) {
+          el.oncontextmenu(event);
+        }
+      };
       list.append(el);
     }
   }
@@ -602,8 +661,8 @@ async function navigate(map, privateView = true) {
       return response.json();
     };
     const [manifest, layerState, {createBoard}, {createLayers}, {createTokens}] = await Promise.all([
-      read('manifest'), read('state'), import('./vendor/board.js?v=scene-preparation-1'), import('./layers.js'),
-      import('/static/gravewright_tokens/workspace.js'),
+      read('manifest'), read('state'), import('./vendor/board.js?v=ingame-perf-1'), import('./layers.js'),
+      import('/static/gravewright_tokens/workspace.js?v=ingame-perf-1'),
     ]);
     if (version !== generation) return;
     const grid = {
@@ -686,7 +745,7 @@ async function navigate(map, privateView = true) {
 if (panel) {
   panel.onclick = (e) => {
     const action = e.target.closest("[data-map-panel]")?.dataset.mapPanel;
-    if (action === "create") upload();
+    if (action === "create") createScene();
     if (action === "folder") folderForm();
     if (action === "close") mergePatch({ _mapsOpen: false });
     if (action === "minimize") panel.classList.toggle("game-panel--minimized");
@@ -720,7 +779,7 @@ if (panel) {
 }
 window.gravewrightMaps = {
   createScene() {
-    if (panel) upload();
+    if (panel) createScene();
   },
   showDirectory() {
     if (popup && !popup.closed) { popup.focus(); return; }
@@ -758,7 +817,7 @@ window.addEventListener("gravewright:map-ping", (event) => {
   if (p.mapId === current?.id)
     board?.ping({ x: p.x, y: p.y }, p.focus, p.color);
 });
-window.addEventListener("click", () => menu?.remove());
+window.addEventListener("click", () => menu?.close());
 window.addEventListener("gravewright:connected", () => {
   if (panel) window.gravewrightRealtime.mapsSubscribe();
 });
@@ -794,6 +853,7 @@ window.addEventListener("gravewright:access-revoked", () => {
   popup?.close();
 });
 window.addEventListener("pagehide", () => {
+  menu?.close();
   clearTimeout(preparedTimer);
   cancelPreparation();
   calibration?.();
@@ -802,6 +862,11 @@ window.addEventListener("pagehide", () => {
     layers?.destroy();
   board?.destroy();
   popup?.close();
+});
+window.addEventListener('pageshow', event => {
+  // The table renderer and module lifetimes were disposed on pagehide.
+  // Rebuild the document when history restores its cached DOM.
+  if (event.persisted) window.location.reload();
 });
 window.addEventListener("click", () => {
   if (board) void board.update({ tool: getPath("_tool") });

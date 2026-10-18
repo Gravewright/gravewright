@@ -27,6 +27,74 @@ def projection(row):
     return dict(id=str(row.pk),name=row.name,kind=row.kind,src=f'/game/audio/{row.pk}',duration=row.duration,volume=row.volume,loop=row.loop,version=row.version)
 
 
+def play_effects(target, effects):
+    """Apply validated object effects to the existing per-scene transport.
+
+    The owning domain must authorize the trigger and hold the campaign write
+    transaction. A sound has one transport voice; retriggering restarts it.
+    """
+    if not isinstance(effects, list) or not 1 <= len(effects) <= 1024:
+        raise MapError('Invalid object sound effects.')
+    clean = []
+    for effect in effects:
+        if not isinstance(effect, dict):
+            raise MapError('Invalid object sound effect.')
+        clean.append({'trackId': str(identifier(effect.get('trackId'))),
+                      'volume': number(effect.get('volume'), 0, 1)})
+    tracks = {str(row.pk): row for row in Track.objects.filter(
+        campaign_id=target.campaign_id, pk__in={row['trackId'] for row in clean})}
+    if set(tracks) != {row['trackId'] for row in clean}:
+        raise MapError('An object sound is missing from this campaign.')
+    playback, _ = Playback.objects.get_or_create(scene=target)
+    data = deepcopy(playback.data)
+    ambient = data.setdefault('ambient', [])
+    for effect in clean:
+        ambient[:] = [row for row in ambient if row.get('trackId') != effect['trackId']]
+        ambient.append({**effect, 'status': 'playing', 'position': 0,
+                        'startedAt': time.time(), 'playId': uuid.uuid4().hex, 'loop': False})
+    if len(ambient) > 256:
+        raise MapError('The scene has too many simultaneous sounds.')
+    playback.data = data
+    playback.version += 1
+    playback.save(update_fields=['data', 'version'])
+    return playback.version
+
+
+def control_effects(target, controls):
+    """Stop a scene sound or change its volume for validated object actions.
+
+    Only sounds already in the scene transport change; a control for a sound
+    that is not playing does nothing. Returns whether the transport changed.
+    """
+    if not isinstance(controls, list) or not 1 <= len(controls) <= 1024:
+        raise MapError('Invalid object sound controls.')
+    playback = Playback.objects.filter(scene=target).first()
+    if playback is None:
+        return False
+    data = deepcopy(playback.data)
+    changed = False
+    for control in controls:
+        if not isinstance(control, dict) or control.get('action') not in ('stop', 'volume'):
+            raise MapError('Invalid object sound control.')
+        track_id = str(identifier(control.get('trackId')))
+        for entry in data.get('ambient', []):
+            if entry.get('trackId') != track_id:
+                continue
+            if control['action'] == 'stop' and entry.get('status') != 'stopped':
+                entry.update(status='stopped', position=0)
+                changed = True
+            elif control['action'] == 'volume':
+                volume = number(control.get('volume'), 0, 1)
+                if entry.get('volume') != volume:
+                    entry['volume'] = volume
+                    changed = True
+    if changed:
+        playback.data = data
+        playback.version += 1
+        playback.save(update_fields=['data', 'version'])
+    return changed
+
+
 def state(who,scene_id=None,preview_token_id=None):
     now=time.time();playback={};revision=0;sources=[]
     if scene_id:
@@ -71,6 +139,10 @@ def command(who,action,p):
         row=track(p.get('id'),who);version(row,p)
         if action=='track-delete':
             from django.db import transaction
+            from gravewright.maps.builder_services import detach_project_sound
+            from gravewright.maps.blueprint_runtime import detach_scene_sound
+            detach_project_sound(who.campaign_id, row.pk)
+            detach_scene_sound(who.campaign_id, row.pk)
             storage,path=row.file.storage,row.file.name
             SceneObject.objects.filter(scene__campaign_id=who.campaign_id,kind='spatialSounds',data__trackId=str(row.pk)).delete()
             for session in Playback.objects.filter(scene__campaign_id=who.campaign_id):

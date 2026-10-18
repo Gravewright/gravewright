@@ -23,6 +23,8 @@
 <link rel="stylesheet" href="{{ static('gravewright_table/table-tools.css') }}">
 <script type="module" src="{{ static('gravewright_table/table-tools.js') }}"></script>
 <script type="module" src="{{ static('gravewright_table/preferences.js') }}"></script>
+<link rel="stylesheet" href="{{ static('gravewright_maps/automation-presentation.css') }}">
+<script type="module" src="{{ static('gravewright_maps/automation-presentation.js') }}"></script>
 <script type="module" src="{{ static('gravewright_table/campaign-controls.js') }}"></script>
 <script type="module" src="{{ static('gravewright_modules/workspace.js') }}"></script>
 <link rel="stylesheet" href="{{ static('gravewright_modules/modules.css') }}" />
@@ -47,6 +49,6 @@
 {% include 'gravewright_dice/tray.html' %}
 {% include 'gravewright_journals/workspace.html' %}
 {% if not detached_chat %}{% include 'gravewright_maps/workspace.html' %}{% include 'gravewright_actors/workspace.html' %}
-{% include 'gravewright_maps/native.html' %}{% endif %}
+{% include 'gravewright_maps/native.html' %}{% if member_role == 'gm' %}{% include 'gravewright_maps/automation_log.html' %}{% endif %}{% endif %}
 </main>
 {% endblock %}

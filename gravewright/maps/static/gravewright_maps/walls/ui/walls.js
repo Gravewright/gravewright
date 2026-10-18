@@ -71,7 +71,7 @@ var wallPresets = [
   }, presentation: "invisible", behavior: { movement: "block", vision: "pass", light: "pass", sound: "pass" } }
 ];
 function wallPayload(w) {
-  return { kind: w.kind, x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, presentation: w.presentation ?? "normal", behavior: { movement: w.movement_behavior ?? "block", vision: w.vision_behavior ?? "block", light: w.light_behavior ?? "block", sound: w.sound_behavior ?? "block" }, vertical: { bottom: w.vertical_bottom ?? null, top: w.vertical_top ?? null } };
+  return { kind: w.kind, x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, presentation: w.presentation ?? "normal", behavior: { movement: w.movement_behavior ?? "block", vision: w.vision_behavior ?? "block", light: w.light_behavior ?? "block", sound: w.sound_behavior ?? "block" }, vertical: { bottom: w.vertical_bottom ?? null, top: w.vertical_top ?? null }, ...w.asset_id ? { asset_id: w.asset_id, thickness: w.thickness } : {}, ...w.blueprint ? { blueprint: structuredClone(w.blueprint), ...w.thickness !== void 0 ? { thickness: w.thickness } : {} } : {} };
 }
 function project(p, w) {
   const dx = w.x2 - w.x1, dy = w.y2 - w.y1, t = Math.max(0, Math.min(1, ((p.x - w.x1) * dx + (p.y - w.y1) * dy) / (dx * dx + dy * dy || 1)));
@@ -129,7 +129,7 @@ function wallController(element, options) {
     }
     return selected.value.includes(w.id) ? { ...w, x1: w.x1 + offset.value.x, y1: w.y1 + offset.value.y, x2: w.x2 + offset.value.x, y2: w.y2 + offset.value.y } : w;
   }));
-  async function run(area, action2, data, after) {
+  async function run(area, action2, data, after, { refreshOnError = false } = {}) {
     queue = queue.then(async () => {
       if (closed)
         return;
@@ -145,9 +145,17 @@ function wallController(element, options) {
           emit("changed", state);
           after?.(result);
         }
-      } catch {
-        if (!closed)
-          error.value = text("Could not save the wall. Check the data and try again.");
+      } catch (cause) {
+        if (!closed) {
+          error.value = refreshOnError && cause?.message ? text(cause.message) : text("Could not save the wall. Check the data and try again.");
+          if (refreshOnError) {
+            try {
+              const state = await reader.state(scope.container, scope.block);
+              if (!closed) emit("changed", state);
+            } catch {
+            }
+          }
+        }
       } finally {
         if (!closed) {
           busy.value = false;
@@ -327,9 +335,17 @@ function wallController(element, options) {
     cancel();
     void run("walls", "split", { wall_id: w.id, x: p.x, y: p.y });
   }
-  function operate(w, lock = false) {
+  function setDoorState(w, doorState) {
     context.value = void 0;
-    void run("walls", "door", { wall_id: w.id, door_state: lock ? w.door_state === "locked" ? "closed" : "locked" : w.door_state === "open" ? "closed" : "open" });
+    void run("walls", "update", { wall_id: w.id, version: w.version, door_state: doorState }, void 0, { refreshOnError: true });
+  }
+  function operate(w, lock = false) {
+    if (lock) {
+      setDoorState(w, w.door_state === "locked" ? "closed" : "locked");
+      return;
+    }
+    context.value = void 0;
+    void run("walls", "door", { wall_id: w.id, door_state: w.door_state === "open" ? "closed" : "open" });
   }
   function double(e) {
     const p = point(e), w = hitWall(p, props.state.walls, 8 / props.viewport.scale);
@@ -398,7 +414,7 @@ function wallController(element, options) {
       return { selected: selected.value, clipboard: clipboard.value, choice: choice.value, picker: picker.value, editing: editing.value, busy: busy.value, error: error.value, clearConfirm: clearConfirm.value, context: context.value, start: start.value, cursor: cursor.value, preset: preset.value, rendered: rendered.value, marquee: marquee.value };
     },
     call(name, ...args) {
-      const methods = { action, choose, edit, copy, paste, remove, split, operate, double, cancel, run, closePicker: () => picker.value = false, closeEditor: () => editing.value = void 0, closeMenu: () => context.value = void 0, closeClear: () => clearConfirm.value = false };
+      const methods = { action, choose, edit, copy, paste, remove, split, operate, setDoorState, double, cancel, run, closePicker: () => picker.value = false, closeEditor: () => editing.value = void 0, closeMenu: () => context.value = void 0, closeClear: () => clearConfirm.value = false };
       const result = methods[name](...args);
       repaint();
       return result;

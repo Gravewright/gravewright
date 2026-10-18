@@ -1,0 +1,236 @@
+{% extends 'gravewright_web/base.html' %}
+{% block styles %}{{ super() }}<link rel="stylesheet" href="{{ static('gravewright_table/permissions.css') }}"><link rel="stylesheet" href="{{ static('gravewright_table/window-polish.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/tools.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/walls.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/builder/workspace.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/builder/blueprint-editor.css') }}">{% endblock %}
+{% block extra_head %}<script type="module" src="{{ static('gravewright_maps/builder/workspace.js') }}"></script>{% endblock %}
+{% macro builder_icon(name) -%}
+<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+  {% if name == 'select' %}<path d="M5 2v20l5-6 4 7 4-2-4-7h8Z"/>
+  {% elif name == 'floor' %}<path d="M2 2h8v9H2Zm10 0h10v9H12ZM2 13h8v9H2Zm10 0h10v9H12Z"/>
+  {% elif name == 'wall' %}<path d="M2 3h6v5H2Zm7 0h6v5H9Zm7 0h6v5h-6ZM2 9h10v5H2Zm11 0h9v5h-9ZM2 15h6v5H2Zm7 0h6v5H9Zm7 0h6v5h-6Z"/>
+  {% elif name == 'door' %}<path fill-rule="evenodd" d="M6 2h13v20h-3V5h-7v15l5-2v3l-8 2V2Z"/>
+  {% elif name == 'object' %}<path d="m12 1 10 5-10 5L2 6Z"/><path d="m2 8 9 5v10l-9-5Z" opacity=".9"/><path d="m13 13 9-5v10l-9 5Z" opacity=".65"/>
+  {% elif name == 'light' %}<path d="M12 5a6 6 0 0 0-4 10.5V19h8v-3.5A6 6 0 0 0 12 5Zm-4 15h8v2H8Z"/><path d="M11 0h2v3h-2ZM2 10h3v2H2Zm17 0h3v2h-3ZM3.5 3.5 5 2l2 2-1.5 1.5ZM17 4l2-2 1.5 1.5-2 2Z"/>
+  {% elif name == 'particle' %}<path d="m12 1 2.4 7.6L22 11l-7.6 2.4L12 21l-2.4-7.6L2 11l7.6-2.4ZM3 2h3v3H3Zm16 16h3v3h-3Z"/>
+  {% elif name == 'shader' %}<path fill-rule="evenodd" d="m12 1 11 11-11 11L1 12Zm0 5-6 6 6 6 6-6Zm0 3 3 3-3 3-3-3Z"/>
+  {% elif name == 'layers' %}<path d="m12 1 11 6-11 6L1 7Zm-9 9 9 5 9-5 2 2-11 6L1 12Zm0 5 9 5 9-5 2 2-11 6L1 17Z"/>
+  {% elif name == 'fit' %}<path d="M3 3h6v2H5v4H3Zm12 0h6v6h-2V5h-4ZM3 15h2v4h4v2H3Zm16 0h2v6h-6v-2h4Z"/>
+  {% endif %}
+</svg>
+{%- endmacro %}
+{% block content %}
+<main class="map-builder" data-map-builder data-campaign-id="{{ campaign.pk }}" data-folder-id="{{ folder.pk if folder else '' }}" data-project-id="{{ request.GET.get('project', '') }}">
+  {% include 'gravewright_maps/wall_editor.html' %}
+  {% include 'gravewright_maps/native.html' %}
+  <header class="map-builder__header">
+    <a class="map-builder__back" href="{{ back_url }}" title="Back to game">{{ icon('ArrowLeft') }}<span>Back to game</span></a>
+    <div class="map-builder__identity"><span class="map-builder__brand" translate="no">Gravewright</span><h1>Map Builder</h1><input class="map-builder__quick-name" data-builder-title data-builder-quick-name type="text" aria-label="Map name" maxlength="120" value="{{ tr('Untitled map') }}" autocomplete="off" translate="no" required></div>
+    <div class="map-builder__quick-tools" role="group" aria-label="Drawing tools">
+      <button type="button" data-builder-quick-tool="select" aria-pressed="false" aria-label="Select" title="Select (V) · Shift-click or drag to select multiple objects.">{{ builder_icon('select') }}</button>
+      <div class="map-builder__quick-paint">
+        <label class="map-builder__editing-mode"><span class="map-builder__sr-only">Map editing mode</span><select data-builder-editing-mode aria-label="Map editing mode"><option value="tiles">Tiles</option><option value="paint">Painting</option></select></label>
+        <button type="button" data-builder-quick-tool="paint" aria-pressed="false" aria-label="Paint" title="Paint (F)">{{ icon('PaintBrush') }}</button>
+        <label class="map-builder__quick-brush"><span class="map-builder__sr-only">Brush size (cells)</span><input type="number" data-builder-quick-brush-size aria-label="Brush size (cells)" title="Shift + left-drag: resize the brush. Right increases; left decreases." min="1" max="20" step="1" value="1" inputmode="decimal"></label>
+      </div>
+      <button type="button" data-builder-quick-tool="erase" aria-pressed="false" aria-label="Erase objects" title="Erase objects (E)">{{ icon('Eraser') }}</button>
+    </div>
+    <div class="map-builder__header-actions" role="group" aria-label="Project actions">
+      <div class="map-builder__history-tools" role="group" aria-label="History"><button type="button" class="map-builder__icon-button" data-builder-undo title="Undo (Ctrl+Z)" aria-label="Undo">{{ icon('ArrowCounterClockwise') }}</button><button type="button" class="map-builder__icon-button" data-builder-redo title="Redo (Ctrl+Shift+Z)" aria-label="Redo">{{ icon('ArrowClockwise') }}</button></div>
+      <button type="button" class="map-builder__save-state" data-builder-save title="Autosave" aria-label="Autosave">{{ icon('Check') }}<span data-builder-save-state role="status" aria-live="polite">Not saved</span></button>
+      <button type="button" data-builder-test title="Test behavior" aria-label="Test behavior">{{ icon('CaretRight') }}<span>Test behavior</span></button>
+      <button type="button" data-builder-preview aria-pressed="false">Preview</button>
+      <button type="button" data-builder-update hidden>Update scene</button>
+      <button type="button" class="map-builder__generate" data-builder-generate>Generate scene</button>
+    </div>
+  </header>
+  <div class="map-builder__body">
+    <section class="map-builder__workspace" data-builder-region="workspace" aria-label="Map workspace">
+      <div class="map-builder__canvas-wrap">
+        <button type="button" class="map-builder__layers-toggle" data-builder-sidebar-tab="layers" aria-pressed="false" aria-expanded="false" aria-controls="builder-editor-panels" title="Editor panels">{{ icon('SlidersHorizontal') }}<span>Panels</span></button>
+        <button type="button" class="map-builder__first-layer" data-builder-create-first-layer hidden>{{ icon('Plus') }}<span>Create your first layer</span></button>
+        <span class="map-builder__map-name" data-builder-map-name translate="no" aria-hidden="true">{{ tr('Untitled map') }}</span>
+        <div class="map-builder__viewport" data-builder-viewport tabindex="0" role="region" aria-label="Map preview" aria-describedby="builder-navigation-help">
+          <svg data-builder-canvas aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <defs data-builder-defs><pattern id="builder-grid" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M 1 0 L 0 0 0 1" fill="none" stroke="currentColor" stroke-width="0.015"/></pattern></defs>
+            <rect data-builder-paper x="0" y="0" width="40" height="30" fill="#253038"/>
+            <g data-builder-background-image pointer-events="none"></g>
+            <g class="map-builder__stage" data-builder-stage><g data-builder-floors></g><g data-builder-regions></g><g data-builder-decorations></g><rect data-builder-grid x="0" y="0" width="40" height="30" fill="url(#builder-grid)" pointer-events="none"/><g data-builder-walls></g><g data-builder-doors></g></g>
+            <rect class="map-builder__paper-outline" data-builder-outline x="0" y="0" width="40" height="30" fill="none" pointer-events="none" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <div class="map-builder__native-effects" data-builder-native-effects data-builder-native-preview aria-hidden="true"></div>
+          <svg class="map-builder__guides" data-builder-guides role="group" aria-label="Wall nodes" xmlns="http://www.w3.org/2000/svg"><g data-builder-lights aria-hidden="true"></g><g data-builder-particles aria-hidden="true"></g><g data-builder-shaders aria-hidden="true"></g><g data-builder-selection pointer-events="none"></g><g data-builder-ghost pointer-events="none" aria-hidden="true"></g></svg>
+        </div>
+      </div>
+      <footer class="map-builder__status">
+        <div class="map-builder__notice" data-builder-notice hidden role="status" aria-live="polite"><span data-builder-notice-text></span><div data-builder-notice-actions></div><button type="button" data-builder-dismiss aria-label="Dismiss">{{ icon('X') }}</button></div>
+        <div class="map-builder__view-controls">
+          <div class="map-builder__map-size">{{ icon('GridFour') }}<span data-builder-dimensions>40 × 30</span><span class="map-builder__object-count" data-builder-object-count>0 objects</span></div>
+          <div class="map-builder__viewport-tools" role="group" aria-label="Map view"><button type="button" data-builder-zoom="out" aria-label="Zoom out" title="Zoom out">{{ icon('Minus') }}</button><output data-builder-zoom-level aria-label="Zoom level">100%</output><button type="button" data-builder-zoom="in" aria-label="Zoom in" title="Zoom in">{{ icon('Plus') }}</button></div><button type="button" class="map-builder__fit" data-builder-fit aria-label="Fit map" title="Fit map">{{ builder_icon('fit') }}</button><button type="button" data-builder-toggle-grid hidden aria-pressed="true" title="Show grid" aria-label="Show grid">{{ icon('GridFour') }}</button>
+          <span class="map-builder__sr-only" id="builder-navigation-help">Space + drag to pan · Scroll to zoom · 0 to fit</span>
+        </div>
+      </footer>
+    </section>
+    <aside class="map-builder__library" id="builder-editor-panels" data-builder-region="library" aria-labelledby="builder-editor-panels-title" hidden>
+      <div class="map-builder__drawer-heading"><div class="map-builder__drawer-title"><span class="map-builder__drawer-icon">{{ icon('SlidersHorizontal') }}</span><div><h2 id="builder-editor-panels-title">Editor panels</h2><span data-builder-panel-context translate="no"></span></div></div><button type="button" class="map-builder__icon-button" data-builder-close-panel aria-label="Close panel" title="Close panel (Esc)">{{ icon('X') }}</button></div>
+      <nav class="map-builder__sidebar-tabs" role="tablist" aria-label="Sidebar panels">
+        {% for key, label, symbol in [('tools', 'Tools', 'SlidersHorizontal'), ('layers', 'Layers', 'Stack'), ('selection', 'Selection', 'Cursor'), ('settings', 'Settings', 'Gear'), ('projects', 'Projects', 'FolderOpen'), ('review', 'Review', 'Clipboard')] %}
+        <button type="button" id="builder-{{ key }}-tab" role="tab" aria-controls="builder-{{ key }}-panel" data-builder-sidebar-tab="{{ key }}" aria-selected="false">{{ icon(symbol) }}<span>{{ label }}</span></button>
+        {% endfor %}
+      </nav>
+      <div class="map-builder__sidebar-content">
+        <section class="map-builder__sidebar-panel map-builder__tools-panel" id="builder-tools-panel" role="tabpanel" aria-labelledby="builder-tools-tab" data-builder-sidebar-panel="tools" hidden>
+          <button type="button" data-builder-network>Scene network</button>
+          <div class="map-builder__tool-options" role="group" aria-label="Drawing tools">
+            <div class="map-builder__tool-heading"><span class="map-builder__active-tool" data-builder-active-tool>Select</span><kbd data-builder-active-shortcut hidden></kbd></div>
+            <p class="map-builder__hint" data-builder-panel-tool-help hidden></p>
+            <div class="map-builder__brush-source">
+              <label class="map-builder__brush-material" data-builder-brush-material-context><span>Material</span><span class="map-builder__material-control"><img data-builder-brush-thumbnail alt="" hidden><select data-builder-brush-material aria-label="Material"></select></span></label>
+              <label class="map-builder__native-brush" data-builder-native-brush hidden><span>Preset</span><select data-builder-native-preset aria-label="Preset"></select></label>
+              <label class="map-builder__painting-layer"><span>Paint on</span><select data-builder-active-layer-select aria-label="Active painting layer"></select><span class="map-builder__painting-layer-status" data-builder-active-layer-status role="status" aria-live="polite"></span></label>
+            </div>
+            <div class="map-builder__brush-fields">
+                    <div class="map-builder__paint-control" data-builder-brush-context="floor"><label>Operation<select data-builder-paint-operation><option value="paint">Paint</option><option value="erase">Erase floor</option></select></label></div>
+                    <div class="map-builder__paint-control" data-builder-brush-context="floor" data-builder-tile-tools><label>Paint tool<select data-builder-paint-mode><option value="brush">Freehand brush</option><option value="rectangle">Rectangle</option><option value="circle">Circle</option><option value="polygon">Polygon</option><option value="fill">Bucket fill</option></select></label></div>
+                    <div class="map-builder__paint-control" data-builder-brush-context="floor" data-builder-stamp-shape><label>Brush shape<select data-builder-brush-shape><option value="square">Square</option><option value="circle">Circle</option></select></label></div>
+                    <div class="map-builder__paint-control" data-builder-brush-context="floor" data-builder-stamp-size><label for="builder-brush-size">Brush size (cells)</label><div class="map-builder__brush-stepper"><button type="button" data-builder-brush-adjust="-1" aria-label="Decrease brush size" title="Decrease brush size">{{ icon('Minus') }}</button><input id="builder-brush-size" type="number" data-builder-brush="floorSize" min="1" max="20" step="1" value="1" inputmode="numeric"><button type="button" data-builder-brush-adjust="1" aria-label="Increase brush size" title="Increase brush size">{{ icon('Plus') }}</button></div></div>
+                    <div class="map-builder__terrain-controls" data-builder-brush-context="floor" data-builder-terrain-controls hidden><label>Edge hardness (%)<input type="number" data-builder-terrain-hardness min="0" max="100" step="1" value="50" inputmode="numeric"></label><label>Brush intensity (%)<input type="number" data-builder-terrain-intensity min="0" max="100" step="1" value="35" inputmode="numeric"></label></div>
+                    <div class="map-builder__paint-control" data-builder-brush-context="floor"><button type="button" class="map-builder__sample-material" data-builder-sample-material aria-pressed="false" title="Sample material (I)">{{ icon('Drop') }}<span>Sample</span><kbd>I</kbd></button></div>
+                    <div class="map-builder__polygon-actions" data-builder-brush-context="floor" data-builder-polygon-actions hidden><button type="button" data-builder-polygon-finish title="Finish polygon (Enter)">{{ icon('Check') }}<span>Finish</span></button><button type="button" data-builder-polygon-cancel title="Cancel polygon (Esc)">{{ icon('X') }}<span>Cancel</span></button></div>
+                    <div data-builder-brush-context="structure"><label>Thickness<input type="number" data-builder-brush="thickness" min=".05" max="2" step=".01" value=".2" inputmode="decimal"></label></div>
+                    <div class="map-builder__fields" data-builder-brush-context="decoration"><label>Width<input type="number" data-builder-brush="width" min=".05" max="100" step=".05" value="1" inputmode="decimal"></label><label>Height<input type="number" data-builder-brush="height" min=".05" max="100" step=".05" value="1" inputmode="decimal"></label></div>
+                    <label data-builder-brush-context="rotation">Rotation<input type="number" data-builder-brush="rotation" min="0" max="359" step="90" value="0" inputmode="numeric"></label>
+                    <div class="map-builder__light-brush" data-builder-brush-context="light"><div class="map-builder__fields"><label>Bright radius (cells)<input type="number" data-builder-brush="lightRadius" min="0" max="200" step=".1" value="6" inputmode="decimal"></label><label>Dim radius (cells)<input type="number" data-builder-brush="lightDimRadius" min="0" max="200" step=".1" value="10" inputmode="decimal"></label></div><div class="map-builder__fields"><label>Light color<input type="color" data-builder-brush="lightColor" value="#ffc977"></label><label>Intensity<input type="number" data-builder-brush="lightIntensity" min="0" max="1" step=".05" value=".8" inputmode="decimal"></label></div><label>Animation<select data-builder-brush="lightAnimation"><option value="none">Steady</option><option value="torch">Torch</option><option value="pulse">Pulse</option><option value="candle">Candle</option><option value="fire">Fire</option><option value="arcane">Arcane</option><option value="smoke">Smoke</option></select></label><label>Angle<input type="number" data-builder-brush="lightAngle" min="5" max="360" step="any" value="360"></label><label>Rotation<input type="number" data-builder-brush="lightRotation" min="0" max="359.999" step="any" value="0"></label><label>Elevation<input type="number" data-builder-brush="lightElevation" min="-1000000" max="1000000" step="any" value="0"></label></div>
+            </div>
+            <div class="map-builder__grid-tools" role="group" aria-label="Map view"><button type="button" class="map-builder__snap" data-builder-toggle-snap aria-pressed="true"><span class="map-builder__switch" aria-hidden="true"></span><span>Snap to the grid</span></button><select class="map-builder__snap-step" hidden data-builder-snap-step aria-label="Snap increment"><option value="1">1</option><option value="0.5">½</option><option value="0.25">¼</option><option value="0.1">0.1</option></select></div>
+            <details class="map-builder__brush-help" data-builder-brush-context="floor"><summary>{{ icon('CaretRight') }}<span>Brush help and shortcuts</span></summary><div><p>Shift + left-drag: resize the brush. Right increases; left decreases.</p><p data-builder-terrain-help hidden>Paint freely. Hold the brush to build up intensity; lower hardness softens the edges.</p></div></details>
+            <span class="map-builder__selection-label" hidden data-builder-tool-help data-builder-selection-label translate="no">{{ tr('Select an object to edit its properties.') }}</span>
+          </div>
+          <div class="map-builder__tool-palette"><h2>Change tool</h2><nav class="map-builder__tools-grid" aria-label="Map tools">
+            <button type="button" data-builder-tool="select" aria-pressed="true" title="Select (V)" aria-label="Select">{{ builder_icon('select') }}<span>Select</span></button>
+            <button type="button" data-builder-tool="floor" title="Floor brush (F)">{{ builder_icon('floor') }}<span>Floor</span></button>
+            <button type="button" data-builder-tool="wall" title="Wall brush (W)">{{ builder_icon('wall') }}<span>Wall</span></button>
+            <button type="button" data-builder-tool="door" title="Door brush (D)">{{ builder_icon('door') }}<span>Door</span></button>
+            <button type="button" data-builder-tool="erase" title="Erase objects (E)" aria-label="Erase objects">{{ icon('Eraser') }}<span>Erase</span></button>
+            <button type="button" data-builder-tool="pan" title="Pan (H)" aria-label="Pan">{{ icon('Hand') }}<span>Pan</span></button>
+            <button type="button" data-builder-tool="decoration" title="Place decoration">{{ builder_icon('object') }}<span>Object</span></button>
+            <button type="button" data-builder-empty-object title="Place an Empty Object">{{ icon('Plus') }}<span>Empty Object</span></button>
+            <button type="button" data-builder-tool="light" title="Place light">{{ builder_icon('light') }}<span>Light</span></button>
+            <button type="button" data-builder-tool="particle" title="Place particles">{{ builder_icon('particle') }}<span>Particles</span></button>
+            <button type="button" data-builder-tool="shader" title="Place shader">{{ builder_icon('shader') }}<span>Shader</span></button>
+            <button type="button" data-builder-tool="region" title="Draw region">{{ icon('Rectangle') }}<span>Region</span></button>
+          </nav></div>
+          <div class="map-builder__utility-tools" hidden><button type="button" data-builder-sidebar-tab="settings" aria-pressed="false" title="Map settings" aria-label="Map settings">{{ icon('Gear') }}</button><button type="button" data-builder-sidebar-tab="selection" aria-pressed="false" title="Selection" aria-label="Selection">{{ icon('Cursor') }}</button><button type="button" data-builder-open aria-label="Open project" title="Open project">{{ icon('FolderOpen') }}</button></div>
+        </section>
+        <section class="map-builder__sidebar-panel" id="builder-layers-panel" role="tabpanel" aria-labelledby="builder-layers-tab" data-builder-sidebar-panel="layers" hidden>
+          <div class="map-builder__panel-heading map-builder__layers-heading"><div><h2>Project layers</h2><span data-builder-layer-total></span></div>{{ icon('Stack') }}</div>
+          <div class="map-builder__layer-summary" data-builder-layer-summary role="status" aria-live="polite"></div>
+          <p class="map-builder__hint map-builder__layers-help">Layers can mix floors, walls, doors, objects and effects. Hidden or locked layers cannot be edited.</p>
+          <div class="map-builder__layer-create"><label><span class="map-builder__layer-create-label">New layer</span><input type="text" data-builder-layer-name maxlength="80" autocomplete="off" translate="no" placeholder="Layer name" required></label><button type="button" class="map-builder__icon-button" data-builder-layer-add title="Add layer" aria-label="Add layer">{{ icon('Plus') }}</button></div>
+          <div class="map-builder__layer-bulk" role="group" aria-label="Layer actions"><button type="button" data-builder-layers-show-all>{{ icon('Eye') }}<span>Show all</span></button><button type="button" data-builder-layers-unlock-all>{{ icon('LockKey') }}<span>Unlock all</span></button></div>
+          <div class="map-builder__layer-list" data-builder-layer-list role="list" aria-label="Project layers"></div>
+          <p class="map-builder__empty map-builder__layers-empty" data-builder-layers-empty hidden>No layers yet. Create a named layer to start building.</p>
+        </section>
+        <section class="map-builder__sidebar-panel map-builder__inspector" id="builder-selection-panel" role="tabpanel" aria-labelledby="builder-selection-tab" data-builder-sidebar-panel="selection" data-builder-region="inspector" aria-label="Selection" hidden>
+          <div class="map-builder__selection-actions" role="toolbar" aria-label="Selection actions"><button type="button" data-builder-select-all title="Select all (Ctrl+A)">{{ icon('Square') }}<span>Select all</span></button><button type="button" data-builder-duplicate title="Duplicate (Ctrl+D)">{{ icon('Copy') }}<span>Duplicate</span></button><button type="button" data-builder-rotate title="Rotate 90°">{{ icon('ArrowClockwise') }}<span>Rotate</span></button></div>
+          <details open data-builder-selection-panel><summary>Selection{{ icon('CaretRight') }}</summary><div class="map-builder__settings" data-builder-properties><p class="map-builder__hint">Select an object to edit its properties.</p></div></details>
+          <div class="map-builder__materials" data-builder-materials><div class="map-builder__material-heading"><h2>Material</h2><span data-builder-material-name translate="no"></span></div><div class="map-builder__material-list" data-builder-material-list></div></div>
+          <div class="map-builder__inspector-note"><strong>Walls are playable geometry</strong><p>Wall and door brushes also create movement and vision boundaries when you generate the scene.</p></div>
+        </section>
+        <section class="map-builder__sidebar-panel map-builder__inspector" id="builder-settings-panel" role="tabpanel" aria-labelledby="builder-settings-tab" data-builder-sidebar-panel="settings" hidden>
+          <details open data-builder-settings><summary>Map settings{{ icon('CaretRight') }}</summary>
+            <form id="builder-settings-form" class="map-builder__settings" data-builder-form>
+              <label>Map name<input name="name" type="text" maxlength="120" value="{{ tr('Untitled map') }}" autocomplete="off" translate="no" required></label>
+              {% if folder %}<p class="map-builder__folder" data-builder-folder><span>Folder</span><strong translate="no">{{ folder.label }}</strong></p>{% endif %}
+              <fieldset><legend>Dimensions in cells</legend><div class="map-builder__fields"><label>Width<input name="columns" type="number" min="1" max="200" step="1" required value="40" inputmode="numeric"></label><label>Height<input name="rows" type="number" min="1" max="200" step="1" required value="30" inputmode="numeric"></label></div></fieldset>
+              <div class="map-builder__fields"><label>Cell size (px)<input name="cellSize" type="number" min="16" max="256" step="1" required value="70" inputmode="numeric"></label><label>Background<input name="background" type="color" value="#253038"></label></div>
+              <div class="map-builder__view-settings"><label class="map-builder__check"><input name="grid" type="checkbox" checked>Show grid</label><label class="map-builder__check"><input name="snap" type="checkbox" checked>Snap to grid</label></div>
+            </form>
+          </details>
+          <div class="map-builder__background-settings"><button type="button" data-builder-ready-map>{{ icon('UploadSimple') }}<span>Import ready-made map</span></button><span data-builder-background-name translate="no"></span><button type="button" data-builder-background-remove hidden>Remove map image</button></div>
+          <div class="map-builder__inspector-note"><p>Generate a new private scene or update the scene linked to this project. Your project stays editable.</p></div>
+        </section>
+        <section class="map-builder__sidebar-panel" id="builder-projects-panel" role="tabpanel" aria-labelledby="builder-projects-tab" data-builder-sidebar-panel="projects" data-builder-projects-panel hidden><div class="map-builder__panel-heading"><h2>Saved projects</h2><button type="button" data-builder-new title="New project">{{ icon('Plus') }}<span>New project</span></button></div><button type="button" data-builder-ready-map>Import ready-made map</button><button type="button" data-builder-uvtt-import>Import Universal VTT</button><div class="map-builder__project-list" data-builder-projects></div><p class="map-builder__empty" data-builder-projects-empty>No saved projects yet.</p></section>
+        <section class="map-builder__sidebar-panel" id="builder-review-panel" role="tabpanel" aria-labelledby="builder-review-tab" data-builder-sidebar-panel="review" data-builder-review-panel hidden>
+          <div class="map-builder__panel-heading"><h2>Scene review</h2>{{ icon('Clipboard') }}</div><p class="map-builder__hint">Your scene will include the painted map, walls, doors, objects and lights.</p><div class="map-builder__review-summary" data-builder-review-summary></div><p class="map-builder__hint" data-builder-update-status></p><p class="map-builder__hint map-builder__section-note">Generate a new private scene or update the scene linked to this project. Your project stays editable.</p><button type="button" class="map-builder__review-update" data-builder-review-update hidden>Update scene</button><button type="button" class="map-builder__generate map-builder__review-generate" data-builder-review-generate>Generate a private scene</button>
+        </section>
+      </div>
+    </aside>
+  </div>
+  <section class="map-builder__asset-dock" data-builder-sidebar-panel="library" data-builder-assets-panel aria-label="Asset library">
+    <div class="map-builder__dock-toolbar">
+      <button type="button" class="map-builder__dock-title" data-builder-sidebar-tab="library">{{ builder_icon('object') }}<span>Library</span><span class="map-builder__sr-only" data-builder-asset-count>0</span></button>
+      <label class="map-builder__search">{{ icon('MagnifyingGlass') }}<span class="map-builder__sr-only">Search assets</span><input type="search" data-builder-search placeholder="Search assets..." autocomplete="off"></label>
+      <label class="map-builder__collection-filter"><span class="map-builder__sr-only">Collection</span><select data-builder-collection-filter aria-label="Collection"><option value="">All collections</option></select></label>
+      <div class="map-builder__import-slot"><button type="button" class="map-builder__upload" data-builder-import aria-label="Import" title="PNG, JPG, WebP or TIFF · up to 25 MB each">{{ icon('Plus') }}<span>Import</span></button></div>
+      <div class="map-builder__role-picker" data-builder-dock-tools role="group" aria-label="Map tools">
+        <button type="button" class="map-builder__dock-tool-icon" data-builder-dock-tool="select" aria-pressed="false" aria-label="Select" title="Select (V)">{{ builder_icon('select') }}</button>
+        <button type="button" class="map-builder__dock-tool-icon" data-builder-dock-tool="erase" aria-pressed="false" aria-label="Erase objects" title="Erase objects (E)">{{ icon('Eraser') }}</button>
+        <button type="button" class="map-builder__dock-tool-icon" data-builder-dock-tool="pan" aria-pressed="false" aria-label="Pan" title="Pan (H)">{{ icon('Hand') }}</button>
+        <button type="button" data-builder-role="floor" aria-pressed="false">Floor</button>
+        <button type="button" data-builder-role="wall" aria-pressed="false">Walls</button>
+        <button type="button" data-builder-role="door" aria-pressed="false">Doors</button>
+        <button type="button" data-builder-role="decoration" aria-pressed="false">Objects</button>
+        <button type="button" data-builder-dock-tool="empty" aria-pressed="false" title="Place an Empty Object">Empty Object</button>
+        <button type="button" data-builder-role="light" aria-pressed="false">Lights</button>
+        <button type="button" data-builder-role="effect" aria-pressed="false">Effects</button>
+        <button type="button" data-builder-dock-tool="region" aria-pressed="false" title="Draw region">Region</button>
+      </div>
+      <button type="button" class="map-builder__icon-button map-builder__library-toggle" data-builder-library-toggle aria-expanded="true" aria-controls="builder-library-content" aria-label="Toggle library" title="Toggle library">{{ icon('CaretRight') }}</button>
+    </div>
+    <div class="map-builder__dock-content" id="builder-library-content">
+      <div class="map-builder__asset-list" data-builder-assets></div>
+      <p class="map-builder__empty" data-builder-assets-empty>Upload your own textures and choose a brush to start.</p>
+      <p class="map-builder__hint" data-builder-library-help hidden></p>
+      <details class="map-builder__asset-details"><summary>Library settings{{ icon('CaretRight') }}</summary><div class="map-builder__asset-details-fields">
+        <div class="map-builder__asset-classify" data-builder-classify hidden><label>Asset name<input type="text" data-builder-asset-name maxlength="120" autocomplete="off" translate="no"></label><label>Collection<input type="text" data-builder-asset-collection maxlength="80" autocomplete="off" translate="no"></label><label>Use selected asset as<select data-builder-asset-role><option value="floor">Floor</option><option value="wall">Wall</option><option value="door">Door</option><option value="decoration">Object</option></select></label></div><p class="map-builder__library-note">Private campaign library</p>
+      </div></details>
+    </div>
+  </section>
+  <template data-builder-import-template>
+    <section class="table-form-modal map-builder-import" data-builder-import-modal aria-labelledby="builder-import-title">
+      <form>
+        <header><strong id="builder-import-title">Import assets</strong><button type="button" data-builder-import-close aria-label="Close">×</button></header>
+        <div class="table-form-modal__body">
+          <p role="alert" hidden></p>
+          <button type="button" data-builder-ready-map>Import ready-made map</button>
+          <label data-builder-import-files>Images<input name="files" data-builder-upload type="file" accept="image/png,image/jpeg,image/webp,image/tiff" multiple required><span class="map-builder-import__hint">PNG, JPG, WebP or TIFF · up to 25 MB each</span></label>
+          <label data-builder-import-name hidden>Asset name<input name="name" maxlength="120" data-builder-import-name-input translate="no" autocomplete="off"></label>
+          <label>Asset type<select name="role" data-builder-import-role required><option value="floor">Floor</option><option value="wall">Wall</option><option value="door">Door</option><option value="decoration">Object</option></select></label>
+          <label>Asset family<input name="family" data-builder-import-family maxlength="80" autocomplete="off" translate="no" placeholder="Choose an existing family or enter a new name"><datalist data-builder-import-families></datalist></label>
+          <p class="map-builder-import__hint">Leave the family empty to use images individually. All images in a family use the same asset type.</p>
+          <label>Collection<input name="collection" data-builder-import-collection maxlength="80" autocomplete="off" translate="no"><datalist data-builder-import-collections></datalist></label>
+        </div>
+        <footer><button type="button" class="map-builder-import__remove" data-builder-asset-remove hidden>Remove asset</button><button type="button" data-builder-import-cancel>Cancel</button><button type="submit" data-builder-import-submit>Import</button></footer>
+      </form>
+    </section>
+  </template>
+  <template data-builder-map-import-template>
+    <section class="table-form-modal map-builder-import" data-builder-map-import-modal aria-labelledby="builder-map-import-title">
+      <form>
+        <header><strong id="builder-map-import-title">Import ready-made map</strong><button type="button" data-builder-map-import-close aria-label="Close">×</button></header>
+        <div class="table-form-modal__body">
+          <p class="map-builder-import__hint">Use a finished map as the background, then add walls, objects, lights and behaviors over it.</p>
+          <p role="alert" hidden></p>
+          <label>Map image<input data-builder-map-upload type="file" accept="image/png,image/jpeg,image/webp,image/tiff"><span class="map-builder-import__hint">PNG, JPG, WebP or TIFF · up to 25 MB each</span></label>
+          <label>Or choose an existing image<select data-builder-map-asset><option value="">Choose an image</option></select></label>
+          <img class="map-builder-import__preview" data-builder-map-preview alt="Map image preview" hidden>
+          <div class="map-builder__fields"><label>Width (cells)<input name="columns" type="number" min="1" max="200" step="1" required></label><label>Height (cells)<input name="rows" type="number" min="1" max="200" step="1" required></label></div>
+          <label>Cell size (px)<input name="cellSize" type="number" min="16" max="256" step="1" required></label>
+          <p class="map-builder-import__hint">The image fills the map area. Adjust the grid dimensions to match your map. Existing objects stay in place.</p>
+        </div>
+        <footer><button type="button" data-builder-map-import-cancel>Cancel</button><button type="submit" data-builder-map-import-submit>Use map image</button></footer>
+      </form>
+    </section>
+  </template>
+  <template data-builder-asset-remove-template>
+    <section class="table-form-modal map-builder-import" data-builder-asset-remove-confirm aria-labelledby="builder-asset-remove-title">
+      <form>
+      <header><strong id="builder-asset-remove-title">Remove asset?</strong><button type="button" data-builder-asset-remove-close aria-label="Close">×</button></header>
+      <div class="table-form-modal__body">
+        <p data-builder-asset-remove-message></p>
+        <p role="alert" hidden></p>
+      </div>
+      <footer><button type="button" data-builder-asset-remove-cancel>Cancel</button><button type="button" class="map-builder-import__remove" data-builder-asset-remove-submit>Remove asset</button></footer>
+      </form>
+    </section>
+  </template>
+</main>
+{% endblock %}

@@ -1,0 +1,38 @@
+<link rel="stylesheet" href="{{ static('gravewright_maps/automation-log.css') }}">
+<template id="automation-log-window">
+  <section data-movable data-window-key="automation-log" class="gw-window automation-log" role="dialog" aria-labelledby="automation-log-title">
+    <header class="gw-window__titlebar" data-move-handle>
+      <strong id="automation-log-title">Automation</strong>
+      <div class="gw-window__controls">
+        <button class="gw-window__control" type="button" data-automation-minimize aria-label="Minimize">{{ icon('Minus') }}</button>
+        <button class="gw-window__control" type="button" data-automation-close aria-label="Close">{{ icon('X') }}</button>
+      </div>
+    </header>
+    <div class="gw-window__body automation-log__body">
+      <div class="automation-log__toolbar">
+        <div class="automation-log__views" role="group" aria-label="View">
+          <button type="button" data-automation-view="runs" aria-pressed="true">Runs</button>
+          <button type="button" data-automation-view="doors" aria-pressed="false">Elements</button>
+          <button type="button" data-automation-view="variables" aria-pressed="false">Variables</button>
+          <button type="button" data-automation-view="memory" aria-pressed="false">Node memory</button>
+          <button type="button" data-automation-view="delays" aria-pressed="false">Waiting</button>
+        </div>
+        <button type="button" data-automation-network>Scene network</button>
+        <button type="button" class="automation-log__pause" data-automation-pause aria-pressed="false">Pause automation</button>
+      </div>
+      <p class="automation-log__paused" data-automation-paused-note hidden></p>
+      <div class="automation-log__filters" role="group" aria-label="Show">
+        <button type="button" data-automation-filter="all" aria-pressed="true">All runs</button>
+        <button type="button" data-automation-filter="problems" aria-pressed="false">Problems</button>
+      </div>
+      <p class="automation-log__status" role="status" data-automation-status></p>
+      <ol class="automation-log__runs" data-automation-runs aria-live="polite"></ol>
+      <div data-automation-controls hidden></div>
+      <ol class="automation-log__runs" data-automation-variables hidden></ol>
+      <ol class="automation-log__runs" data-automation-memory hidden></ol>
+      <ol class="automation-log__runs" data-automation-delays hidden></ol>
+    </div>
+  </section>
+</template>
+<template id="automation-log-locate">{{ icon('Crosshair') }}</template>
+<script type="module" src="{{ static('gravewright_maps/automation-log.js') }}"></script>

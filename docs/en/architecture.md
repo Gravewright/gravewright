@@ -100,6 +100,11 @@ Client-side controls are a convenience, not the permission boundary.
 scene visible does not make it readable. The same lookup protects manifests, tiles,
 tokens and scene-context chat.
 
+The GM's explicit `maps.activate` command sets player visibility and the broadcast
+in the same transaction. A visibility change advances the scene revision;
+activating an already player-visible scene keeps its revision. Map Builder
+generation and private navigation do not publish a scene.
+
 ## Commands, retries and revisions
 
 Most persistent tabletop resource commands follow this sequence:

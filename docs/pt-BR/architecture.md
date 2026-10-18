@@ -101,6 +101,11 @@ ter `visibility='players'` e ser o `Broadcast` atual da campanha. Marcar uma cen
 inativa como visível não a torna acessível. A mesma resolução protege manifestos,
 blocos de imagem, tokens e chat associado à cena.
 
+O comando explícito `maps.activate` do mestre define a visibilidade para jogadores
+e a transmissão na mesma transação. A mudança de visibilidade avança a revisão
+da cena; ativar uma cena já visível mantém sua revisão. Gerar no Map Builder
+e navegar em particular não publicam a cena.
+
 ## Comandos, tentativas repetidas e revisões
 
 A maioria dos comandos persistentes de recursos da mesa segue esta sequência:

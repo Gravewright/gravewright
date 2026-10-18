@@ -14,6 +14,18 @@ assert.equal(middle[0].version, 2);
 assert.equal(interpolateTokens(middle, target, 0)[0].gridX, middle[0].gridX);
 assert.deepEqual(interpolateTokens([a, b], [], .5), []);
 assert.deepEqual(interpolateTokens([], target, .5), target);
+const teleported = { ...a, version: 3, gridX: 12, gridY: 9, teleportVersion: 3 };
+for (const progress of [0, .5, 1])
+    assert.deepEqual(interpolateTokens([a], [teleported], progress), [teleported],
+        'teleports appear at their destination without intermediate positions');
+const afterTeleport = { ...teleported, version: 4, gridX: 13 };
+assert.ok(interpolateTokens([teleported], [afterTeleport], .5)[0].gridX > 12,
+    'normal movement after a teleport still animates');
+assert.ok(interpolateTokens([teleported], [afterTeleport], .5)[0].gridX < 13);
+const mixed = interpolateTokens([a, b], [teleported, { ...b, gridX: 8 }], .5);
+assert.deepEqual(mixed[0], teleported);
+assert.ok(mixed[1].gridX > b.gridX && mixed[1].gridX < 8,
+    'another token can animate while the teleported token is replaced');
 const free = position(a, { x: 21, y: 7 }, 70, 1400, 900, false);
 assert.ok(Math.abs(free.gridX - 2.3) < 1e-8);
 assert.equal(position({ ...a, ...free }, { x: 0, y: 0 }, 70, 1400, 900, true).gridX, 2);

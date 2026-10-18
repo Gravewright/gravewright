@@ -3,6 +3,9 @@ import Drawing from '../features/drawing/ui/DrawingWorkspace.native.js';
 import Measurement from '../features/measurement/ui/MeasurementWorkspace.native.js';
 import Images from '../features/images/ui/ImageWorkspace.native.js';
 import {previewBoardImage} from '../features/images/model/image-preview.js';
+import {createLeverControls} from '../features/images/ui/lever-controls.js';
+import {imageInWorkspace} from '../features/images/model/image-layer.js';
+import {openRegionEditor} from '../features/regions/ui/region-editor.js';
 import Sources from '../features/scene-layers/ui/SceneSourcesWorkspace.native.js';
 import Library from '../features/table-library/ui/AssetUploadLibrary.native.js';
 import { vMovableResizable } from '../shared/lib/dom/movable-resizable.js';
@@ -24,7 +27,7 @@ class HttpClient {
     upload(url, body, progress) { progress?.(0); return this.request(url, body).then(value => { progress?.(100); return value; }); }
 }
 export function createTools(surface, board, map, gm, api, stateAPI) {
-    let state = api.state, drawing, images, effects, library, libraryHost, closed = false;
+    let state = api.state, drawing, images, effects, library, libraryHost, regionEditor, closed = false;
     const hosts = { drawing: document.createElement('div'), images: document.createElement('div'), effects: document.createElement('div'), measurement: document.createElement('div'), markers: document.createElement('div') };
     for (const host of Object.values(hosts)) {
         host.style.display = 'contents';
@@ -33,6 +36,7 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
     const common = { HttpClient, command: api.command, read: api.read };
     const base = () => ({ viewport: board.viewport(), containerId: map.containerId, blockId: map.blockId, cell: map.gridSize * map.imageScale, grid: map.gridVisible });
     let measureRows=[],selection;
+    const levers = createLeverControls(surface, board, gm, api, stateAPI);
     const measurement = Measurement(hosts.measurement, { ...common, props: { ...base(), active: false, maxRows: state.capabilities?.maxMeasurements, measureValue: map.measureValue, measureUnit: map.measureUnit }, emit(type, value) { if(type==='change')measureRows=value; if (type === 'close') {
             stateAPI.mergePatch({ _tool: 'select' });
             sync();
@@ -51,6 +55,8 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
         if (closed || !board.viewport())
             return;
         const layer = stateAPI.getPath('_layer'), tool = stateAPI.getPath('_tool');
+        board.editingLayer?.(layer || 'game');
+        levers.update(state);
         selection?.update(state);
         const measure = ['measure', 'templates'].includes(tool);
         markers.update({...base(),active:tool==='templates',shared:true,rows:state.markers||[],maxRows:state.capabilities?.maxMarkers,measureValue:map.measureValue,measureUnit:map.measureUnit});
@@ -69,8 +75,9 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
         else
             drawing?.update({ ...base(), document: state.drawings, audience: layer === 'gm' ? 'gm' : 'campaign' });
         const compose = gm && layer === 'composition' && !measure;
+        const editableImages = state.images.filter(image => imageInWorkspace(image, layer));
         if (compose && !images)
-            images = Images(hosts.images, { ...common, props: { ...base(), images: state.images, tool }, emit(type, value) { if (type === 'refresh')
+            images = Images(hosts.images, { ...common, props: { ...base(), images: editableImages, tool }, emit(type, value) { if (type === 'refresh')
                     void api.read(); if (type === 'preview')
                     void previewBoardImage(board, state, value); } });
         else if (!compose && images) {
@@ -78,7 +85,7 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
             images = undefined;
         }
         else
-            images?.update({ ...base(), images: state.images, tool });
+            images?.update({ ...base(), images: editableImages, tool });
         const effect = gm && layer === 'effects' && !measure;
         if (effect && !effects)
             effects = Sources(hosts.effects, { ...common, props: { ...base(), state, layer: 'effects', tool }, emit(type, value) { if (type === 'changed')
@@ -121,6 +128,18 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
         vMovableResizable.mounted(libraryHost);
     }
     function editSelection({detail:{object,event}}){
+        if(gm&&object.kind==='zone'&&object.data.region){
+            regionEditor?.close();
+            regionEditor=openRegionEditor(object.data,{campaignId:map.containerId,sceneId:map.id,save:async patch=>{
+                try {
+                    await api.command('zones','update',{zone_id:object.id,expected_version:object.data.version,patch});
+                } catch(error) {
+                    if(!closed)await api.read().catch(()=>{});
+                    throw error;
+                }
+                if(!closed)await api.read();
+            }});
+        }
         if(object.kind==='drawing'){stateAPI.mergePatch({_layer:object.data.audience==='gm'?'gm':'game',_tool:'draw'});sync();drawing?.call('editId',object.id);}
         if(object.kind==='measure'){stateAPI.mergePatch({_layer:'game',_tool:'measure'});sync();measurement.call('editId',object.id);}
         if(['shader','particle'].includes(object.kind)){stateAPI.mergePatch({_layer:'effects',_tool:'select'});sync();effects?.call('doubleClick',event);}
@@ -149,7 +168,7 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
     window.addEventListener('click', click);
     window.addEventListener('gravewright:map-viewport', sync);
     sync();
-    return { update, setMap(next) { Object.assign(map, next); sync(); }, destroy() { closed = true; window.removeEventListener('gravewright:selection-edit',editSelection); selection?.destroy(); drawing?.destroy(); images?.destroy(); effects?.destroy(); measurement.destroy();markers.destroy(); library?.destroy(); if (libraryHost) {
+    return { update, setMap(next) { Object.assign(map, next); sync(); }, destroy() { closed = true; regionEditor?.close(true); window.removeEventListener('gravewright:selection-edit',editSelection); levers.destroy(); selection?.destroy(); drawing?.destroy(); images?.destroy(); effects?.destroy(); measurement.destroy();markers.destroy(); library?.destroy(); if (libraryHost) {
             vMovableResizable.unmounted(libraryHost);
             libraryHost.remove();
         } for (const host of Object.values(hosts))

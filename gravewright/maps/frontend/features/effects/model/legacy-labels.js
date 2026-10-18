@@ -58,7 +58,7 @@ export const effectLabels = {
     get "lighting.particles.enabled"() { return gwText('Active'); },
     get "lighting.particles.remove"() { return gwText('Delete emitter'); },
     get "lighting.particles.density_hint"() { return gwText('Quantity controls performance: lower it if the scene slows down.'); },
-    get "lighting.particles.hint"() { return gwText('Scene effect: does not emit light.'); },
+    get "lighting.particles.hint"() { return gwText('Scene effect: can receive and emit light.'); },
     get "lighting.shaders.presets.title"() { return gwText('Preset library (50)'); },
     get "lighting.shaders.presets.hint"() { return gwText('Choose a preset. Applying it replaces the code and adjusts this shader\'s controls.'); },
     get "lighting.shaders.presets.search"() { return gwText('Search presets...'); },

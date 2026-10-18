@@ -204,9 +204,9 @@ class ArchiveTests(SimpleTestCase):
             with instance_lock(data), self.assertRaises(OSError):
                 recover_source(project, data)
             self.assertEqual(recover_source(project, data), 'previous-python')
-            self.assertEqual((project / 'scripts/gravewright_runner.py').read_text(), 'old runnable code')
+            self.assertEqual((project / 'scripts/gravewright_runner.py').read_text(encoding='utf-8'), 'old runnable code')
             self.assertFalse((project / 'new-file').exists())
-            self.assertEqual((project / '.env').read_text(), 'private')
+            self.assertEqual((project / '.env').read_text(encoding='utf-8'), 'private')
             self.assertTrue(transaction.exists())  # Data recovery still has to commit.
 
     def test_external_startup_recovery_accepts_aliases_without_touching_private_data(self):
@@ -232,10 +232,10 @@ class ArchiveTests(SimpleTestCase):
             # Windows short paths and macOS /var -> /private/var, without
             # requiring privileges to create directory symlinks on Windows.
             self.assertEqual(recover_source(project / '..' / 'app', data / '..' / 'data'), 'previous-python')
-            self.assertEqual((project / 'module.py').read_text(), 'previous source')
+            self.assertEqual((project / 'module.py').read_text(encoding='utf-8'), 'previous source')
             self.assertFalse((project / 'incoming.py').exists())
-            self.assertEqual((project / '.env').read_text(), 'private configuration')
-            self.assertEqual((project / 'data/campaign').read_text(), 'private campaign')
+            self.assertEqual((project / '.env').read_text(encoding='utf-8'), 'private configuration')
+            self.assertEqual((project / 'data/campaign').read_text(encoding='utf-8'), 'private campaign')
             self.assertTrue(transaction.exists())
 
     def test_external_startup_recovery_rejects_escapes_through_aliases(self):
@@ -261,8 +261,8 @@ class ArchiveTests(SimpleTestCase):
                     write(data / 'updates/transaction.json', journal)
                     with self.assertRaisesRegex(ValueError, 'Invalid recovery'):
                         recover_source(project / '..' / 'app', data / '..' / 'data')
-                    self.assertEqual(outside.read_text(), 'outside must survive')
-                    self.assertEqual((project / 'module.py').read_text(), 'interrupted source')
+                    self.assertEqual(outside.read_text(encoding='utf-8'), 'outside must survive')
+                    self.assertEqual((project / 'module.py').read_text(encoding='utf-8'), 'interrupted source')
 
     def test_project_replacement_and_recovery_preserve_private_files(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -282,15 +282,15 @@ class ArchiveTests(SimpleTestCase):
             self.assertNotIn('data/private', previous)
             copy_files(origin, root / 'backup', previous)
             replace_files(release, origin, names, previous)
-            self.assertEqual((origin / 'Install Windows.bat').read_text(), 'new')
+            self.assertEqual((origin / 'Install Windows.bat').read_text(encoding='utf-8'), 'new')
             self.assertFalse((origin / 'removed.py').exists())
             self.assertFalse((origin / '__pycache__').exists())
             replace_files(root / 'backup', origin, previous, names)
-            self.assertEqual((origin / 'Install Windows.bat').read_text(), 'old')
+            self.assertEqual((origin / 'Install Windows.bat').read_text(encoding='utf-8'), 'old')
             self.assertTrue((origin / 'removed.py').exists())
             self.assertFalse((origin / 'added.py').exists())
-            self.assertEqual((origin / '.env').read_text(), 'private secret')
-            self.assertEqual((origin / 'data/private').read_text(), 'campaign')
+            self.assertEqual((origin / '.env').read_text(encoding='utf-8'), 'private secret')
+            self.assertEqual((origin / 'data/private').read_text(encoding='utf-8'), 'campaign')
 
     def test_traversal_and_private_paths_rejected(self):
         for member in ['../escape', '/escape', 'root/.env', 'root/.git/config', 'root/data/db', 'C:/escape']:
@@ -333,7 +333,7 @@ class ArchiveTests(SimpleTestCase):
             self.assertFalse((media / 'new-file').exists())
             self.assertEqual(read(supervisor.state / 'progress.json')['stage'], 'rolled_back')
             self.assertFalse((supervisor.state / 'transaction.json').exists())
-            self.assertEqual((supervisor.origin / 'Install Windows.bat').read_text(), 'original installer')
+            self.assertEqual((supervisor.origin / 'Install Windows.bat').read_text(encoding='utf-8'), 'original installer')
             self.assertFalse((supervisor.origin / 'new-file.txt').exists())
 
 

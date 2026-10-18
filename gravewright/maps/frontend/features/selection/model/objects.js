@@ -1,9 +1,13 @@
 import { text as gwText } from '../../../shared/config/i18n/text.js';
 import { bounds as drawingBounds, hit as hitDrawing } from '../../drawing/model/drawing.js';
+import { imageComponentKeys } from '../../images/model/image-components.js';
+import { containsRegion } from '../../regions/model/regions.js';
 export function rotate(p, c, degrees) { const a = degrees * Math.PI / 180, dx = p.x - c.x, dy = p.y - c.y; return { x: c.x + dx * Math.cos(a) - dy * Math.sin(a), y: c.y + dx * Math.sin(a) + dy * Math.cos(a) }; }
 export function transformedPoint(p, center, dx, dy, rotation) { const q = rotate(p, center, rotation); return { x: q.x + dx, y: q.y + dy }; }
 export function corners(o) { return [{ x: o.x - o.width / 2, y: o.y - o.height / 2 }, { x: o.x + o.width / 2, y: o.y - o.height / 2 }, { x: o.x + o.width / 2, y: o.y + o.height / 2 }, { x: o.x - o.width / 2, y: o.y + o.height / 2 }].map(p => rotate(p, o, o.rotation)); }
 export function hit(o, p, tolerance = 5) {
+    if (o.kind === 'zone')
+        return containsRegion(o.data.geometry, p, tolerance);
     if (o.kind === 'drawing')
         return hitDrawing(o.data, p, tolerance);
     if (o.kind === 'measure') {
@@ -29,19 +33,22 @@ export function hit(o, p, tolerance = 5) {
 export function centerOf(rows) { const points = rows.flatMap(corners); return { x: (Math.min(...points.map(p => p.x)) + Math.max(...points.map(p => p.x))) / 2, y: (Math.min(...points.map(p => p.y)) + Math.max(...points.map(p => p.y))) / 2 }; }
 export function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0, y: 0 }) {
     const out = [];
+    const components = new Set(state.images.flatMap(imageComponentKeys));
     function add(kind, data, x, y, width = 18, height = 18, rotation = 0, rank = 10, label = kind, points) { out.push({ key: `${kind}:${data.id}`, id: data.id, kind, data, x, y, width, height, rotation, rank, label, points }); }
     for (const t of tokens.filter(t => gm || t.canControl))
         add('token', t, origin.x + (t.gridX + t.cells / 2) * cell, origin.y + (t.gridY + (t.heightCells ?? t.cells) / 2) * cell, t.cells * cell, (t.heightCells ?? t.cells) * cell, 0, 30, t.name);
     for (const c of state.cards.filter(c => c.can_manage))
         add('card', c, c.x, c.y, 56 * c.scale, 80 * c.scale, c.rotation, 25, c.card?.face_state === 'face_up' ? c.card?.name || gwText('Card') : gwText('Card (back)'));
     if (gm) {
-        for (const i of state.images)
-            add('image', i, i.x, i.y, i.natural_width * i.scale, i.natural_height * i.scale, i.rotation, 5, gwText('Image'));
+        for (const i of state.images.filter(row => !row.surfacePlane || row.surface))
+            add('image', i, i.x, i.y, i.natural_width * i.scale, i.natural_height * i.scale, i.rotation, 5,
+                gwText(i.empty === true ? 'Empty Object' : 'Image'));
         for (const w of state.walls)
             add('wall', w, (w.x1 + w.x2) / 2, (w.y1 + w.y2) / 2, Math.hypot(w.x2 - w.x1, w.y2 - w.y1), 4, Math.atan2(w.y2 - w.y1, w.x2 - w.x1) * 180 / Math.PI, 15, gwText('Wall'), [{ x: w.x1, y: w.y1 }, { x: w.x2, y: w.y2 }]);
         for (const [kind, list] of [['light', state.lights], ['particle', state.particles], ['shader', state.shaders], ['sound', state.spatialSounds]])
             for (const o of list)
-                add(kind, o, o.x, o.y, 18, 18, 0, 35, ({ get light() { return gwText('Light'); }, get particle() { return gwText('Particles'); }, shader: 'Shader', get sound() { return gwText('Audio'); } })[kind]);
+                if (!components.has(`${kind}:${o.id}`))
+                    add(kind, o, o.x, o.y, 18, 18, 0, 35, ({ get light() { return gwText('Light'); }, get particle() { return gwText('Particles'); }, shader: 'Shader', get sound() { return gwText('Audio'); } })[kind]);
         for (const d of state.drawings?.rows ?? []) {
             const b = drawingBounds(d), anchor = d.points[0], center = rotate({ x: b.x + b.width / 2, y: b.y + b.height / 2 }, anchor, d.rotation ?? 0);
             add('drawing', d, center.x, center.y, b.width, b.height, d.rotation ?? 0, 10, gwText('Drawing'));
@@ -51,7 +58,7 @@ export function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0,
             if (!points.length)
                 continue;
             const xs = points.map(p => p.x), ys = points.map(p => p.y);
-            add('zone', z, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 0, 4, gwText('Zone'));
+            add('zone', z, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 0, 4, z.region?.name || gwText('Zone'));
         }
     }
     for (const m of measures) {

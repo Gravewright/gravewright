@@ -131,6 +131,56 @@ def state(request, campaign_id):
 
 
 @require_GET
+def automation(request, map_id):
+    """Recent object blueprint runs for the scene's game masters only."""
+    from .blueprint_runtime import automation_doors, automation_memory, automation_paused, automation_runs, automation_variables
+    from .blueprint_delays import pending_delays
+
+    row = authorized(request, map_id)
+    try:
+        services.manage(member(row.campaign_id, request.user.pk))
+    except services.MapError, JournalError:
+        raise Http404 from None
+    response = JsonResponse({"sceneId": str(row.pk), "paused": automation_paused(row),
+                             "doors": automation_doors(row), "runs": automation_runs(row),
+                             "variables": automation_variables(row), "memory": automation_memory(row),
+                             "delays": pending_delays(row)})
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@require_GET
+def automation_network(request, map_id):
+    from . import blueprint_network
+    row = authorized(request, map_id)
+    try:
+        result = blueprint_network.state(row.campaign_id, request.user.pk, row.pk)
+    except (services.MapError, JournalError):
+        raise Http404 from None
+    response = JsonResponse(result)
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@require_POST
+def automation_network_element(request, map_id, element_id):
+    from . import blueprint_network
+    row = authorized(request, map_id)
+    try:
+        if len(request.body) > 1024 * 1024:
+            raise services.MapError("The scene network command is too large.")
+        result = blueprint_network.save(row.campaign_id, request.user.pk, row.pk, element_id, json.loads(request.body))
+        response = JsonResponse(result)
+    except (ValueError, UnicodeDecodeError, RecursionError):
+        response = JsonResponse({"error": "Invalid scene network command."}, status=400)
+    except (services.MapError, JournalError) as error:
+        code = getattr(error, "code", "invalid_input")
+        response = JsonResponse({"error": str(error), "code": code}, status={"conflict": 409, "forbidden": 403, "not_found": 404}.get(code, 400))
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@require_GET
 def layers(request, map_id):
     from .objects import layer_state
 

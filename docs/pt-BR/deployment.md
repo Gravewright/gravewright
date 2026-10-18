@@ -115,6 +115,36 @@ Para mapas maiores, instale as dependências opcionais do libvips no ambiente qu
 
 A geração é serializada por processo; vários workers ASGI ainda podem somar uso de memória e disco. Libvips processa mapas comuns em faixas, enquanto rotações e alguns codecs exigem recursos adicionais. Reserve espaço com permissão de escrita em `data/runner/tmp/` dentro da instalação para a fonte codificada, o conjunto completo de tiles preparados e os arquivos temporários nativos, além do armazenamento final de mídia. Overrides explícitos da raiz do Runner ou da pasta temporária de uploads Django mantêm a prioridade documentada. Meça formatos, transparências e orientações representativos no servidor de destino antes de elevar limites; essa mudança não acrescenta processamento em segundo plano nem uma cota global de memória.
 
+## Esperas persistentes do Blueprint
+
+A aplicação ASGI inicia automaticamente o executor de Delay quando o reactor do
+Daphne começa. Isso inclui o Runner habitual; não exige comando separado nem
+navegador conectado. Outros hosts ASGI precisam ativar lifespan de início e
+encerramento. WSGI não fornece esse ciclo de vida. Comandos comuns de
+gerenciamento do Django não iniciam o executor. O sinalizador de manutenção
+existente do atualizador conserva a fila durante a verificação de saúde do
+servidor até confirmar ou reverter a atualização.
+
+Aplique as migrações antes da inicialização. Continuações pendentes ficam no
+mesmo banco privado da cena, sobrevivem ao reinício dos processos e ficam
+disponíveis ao vencer o prazo. Automação pausada na cena as conserva pendentes
+até retomar. O executor consulta a cada 250 ms, em lotes de 20; a execução depende
+da carga e da disponibilidade. O encerramento aguarda a transação atual terminar.
+Se o processo terminar durante uma transação, a continuação não gravada permanece
+pendente para uma tentativa futura. Consulte os logs do servidor para falhas de
+banco e **Automação → Aguardando** para trabalho pendente.
+
+Cada processo ASGI pode manter seu executor; transações do banco serializam a
+tomada das tarefas e os efeitos, evitando aplicação duplicada entre executores
+concorrentes. `GRAVEWRIGHT_AUTOMATION_WORKER_ENABLED=false` desativa o executor
+daquele processo sem apagar esperas. Exportações, snapshots e clones de campanha
+omitem continuações pendentes; um backup completo do banco as inclui. Assim, um
+banco restaurado pode retomar trabalho vencido na inicialização. Use a opção de
+executor desativado ao inspecionar uma cópia de recuperação, antes de ativar sua
+automação de forma intencional. Veja
+[configuração](configuration.md#executor-de-delay-do-blueprint) e
+[Delay persistente](map-builder.md#delay-persistente).
+
 ## Vários processos
 
 Todos os workers precisam compartilhar banco, arquivos, chave secreta, configuração de confiança dos módulos e camada Redis. As configurações padrão do servidor exigem `GRAVEWRIGHT_REDIS_URL` com debug desativado, mesmo em um único processo. O executor local possui um perfil separado e não pode ser usado para essa implantação. Channels em memória não entrega eventos entre workers.

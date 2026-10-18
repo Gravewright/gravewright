@@ -42,3 +42,47 @@ test('shrinking and crossing the fixed corner never flips the image or exceeds s
         near(anchor(result, corner).y, anchor(image, corner).y);
     }
 });
+
+test('tiny and large state images retain their exact lever box scale during native resizing', () => {
+    const corner = { x: 1, y: 1 }, start = { x: 0, y: 0 };
+    for (const [natural_width, natural_height, scale] of [[1, 1, 192], [32768, 32768, 64 / 32768 / 8], [16, 32, 2]]) {
+        const lever = { ...image, natural_width, natural_height, scale,
+            lever: { state: 'on', width: natural_width * scale, height: natural_height * scale * 2 } };
+        const still = resizeImage(lever, corner, start, start);
+        assert.equal(still.scale, scale, 'starting a resize must not jump to the ordinary image limit');
+        const resized = resizeImage(lever, corner, start, { x: natural_width * scale, y: natural_height * scale });
+        near(resized.scale, scale * 2);
+        near(anchor(resized, corner).x, anchor(lever, corner).x);
+        near(anchor(resized, corner).y, anchor(lever, corner).y);
+        assert.deepEqual(resized.lever, lever.lever, 'the server owns changes to the authored box');
+    }
+});
+
+test('lever resize limits constrain both authored dimensions, including space around state art', () => {
+    const corner = { x: -1, y: 1 }, start = { x: 0, y: 0 };
+    for (const [boxWidth, boxHeight] of [[192, 384], [400, 200], [.001, 1e6], [1e6, .001]]) {
+        const lever = { ...image, natural_width: 1, natural_height: 1, scale: Math.min(boxWidth, boxHeight),
+            lever: { state: 'on', width: boxWidth, height: boxHeight } };
+        for (const distance of [-1e15, 1e15]) {
+            const resized = resizeImage(lever, corner, start, { x: -distance, y: distance });
+            const ratio = resized.scale / lever.scale;
+            assert.ok(boxWidth * ratio >= .001 && boxHeight * ratio >= .001);
+            assert.ok(boxWidth * ratio <= 1e6 && boxHeight * ratio <= 1e6);
+            assert.ok(resized.scale >= 1e-12 && resized.scale <= 1e6);
+            near(anchor(resized, corner).x, anchor(lever, corner).x);
+            near(anchor(resized, corner).y, anchor(lever, corner).y);
+        }
+    }
+});
+
+test('torch artwork uses the composed authored box while preserving independent state and component references', () => {
+    const original = { ...image, natural_width: 1, natural_height: 1, scale: 192,
+        torch: { state: 'on', lit: false, width: 192, height: 384, components: { lights: { id: 'light' } } } };
+    const corner = { x: 1, y: 1 }, start = { x: 0, y: 0 };
+    assert.equal(resizeImage(original, corner, start, start).scale, 192);
+    const resized = resizeImage(original, corner, start, { x: 192, y: 192 });
+    near(resized.scale, 384);
+    near(anchor(resized, corner).x, anchor(original, corner).x);
+    near(anchor(resized, corner).y, anchor(original, corner).y);
+    assert.deepEqual(resized.torch, original.torch);
+});

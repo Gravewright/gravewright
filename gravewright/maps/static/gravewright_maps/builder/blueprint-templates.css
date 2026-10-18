@@ -1,0 +1,32 @@
+.ownership-modal-overlay > .table-form-modal.blueprint-templates {
+  display: flex; flex-direction: column; width: min(960px, calc(100vw - 32px)); max-width: none;
+  height: min(760px, calc(100dvh - 32px)); max-height: calc(100dvh - 32px); color: var(--text); font: 14px/1.4 var(--font);
+}
+.blueprint-templates > header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--border); }
+.blueprint-templates__body { display: flex; flex-direction: column; min-height: 0; padding: var(--space-3); gap: var(--space-3); }
+.blueprint-templates__toolbar, .blueprint-templates__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.blueprint-templates__panes { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(0, 3fr); gap: var(--space-3); min-height: 0; }
+.blueprint-templates__list, .blueprint-templates__content { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; overflow: auto; }
+.blueprint-templates__content { padding: var(--space-0) var(--space-2); }
+.blueprint-templates :is(p,h3) { margin: var(--space-0); overflow-wrap: anywhere; }
+.blueprint-templates h3 { font-size: 14px; }
+.blueprint-templates__hint { color: var(--text-muted); font-size: 12px; }
+.blueprint-templates__status { color: var(--text-muted); font-size: 12px; }
+.blueprint-templates__status:empty { display: none; }
+.table-form-modal.blueprint-templates button { min-height: 32px; padding: var(--space-1) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; white-space: normal; overflow-wrap: anywhere; }
+.table-form-modal.blueprint-templates button:disabled { opacity: .55; cursor: default; }
+.table-form-modal.blueprint-templates button[aria-pressed=true], .table-form-modal.blueprint-templates .blueprint-templates__primary { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--surface)); }
+.blueprint-templates__item { text-align: left; flex-shrink: 0; }
+.blueprint-templates label { display: grid; gap: var(--space-1); color: var(--text-muted); font-size: 12px; min-width: 0; overflow-wrap: anywhere; }
+.blueprint-templates :is(input,select,textarea) { box-sizing: border-box; width: 100%; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; }
+.blueprint-templates :is(input,select) { min-height: 32px; }
+.blueprint-templates input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; accent-color: var(--accent); }
+.blueprint-templates textarea { min-height: 72px; resize: vertical; }
+.blueprint-templates :is(input,button,select,textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.blueprint-templates__parameter { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: var(--space-2); }
+@media (max-width: 600px) {
+  .ownership-modal-overlay > .table-form-modal.blueprint-templates { width: calc(100vw - 16px); height: calc(100dvh - 16px); max-height: calc(100dvh - 16px); }
+  .blueprint-templates__panes { grid-template-columns: minmax(0, 1fr); overflow: auto; }
+  .blueprint-templates__list { max-height: 160px; }
+  .blueprint-templates__content { overflow: visible; }
+}

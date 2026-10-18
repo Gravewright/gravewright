@@ -1,0 +1,45 @@
+.scene-controls { display: grid; grid-template-rows: auto auto minmax(48px, 1fr) auto auto; flex: 1; gap: var(--space-2); min-width: 0; min-height: 0; overflow: hidden; color: var(--text); font-size: 12px; }
+.scene-controls.is-inspecting { grid-template-rows: auto auto minmax(48px, 1fr) auto minmax(64px, 1.4fr); }
+.scene-controls[hidden] { display: none; }
+.scene-controls :is(button, input, select) { box-sizing: border-box; min-height: 30px; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; }
+.scene-controls :is(button, select) { cursor: pointer; }
+.scene-controls button { padding: var(--space-1) var(--space-2); }
+.scene-controls :is(input:not([type=checkbox]), select) { padding: var(--space-1) var(--space-2); }
+.scene-controls :is(button, input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.scene-controls button:hover:not(:disabled) { border-color: var(--accent); }
+.scene-controls :is(button, input, select):disabled { opacity: .55; cursor: default; }
+.scene-controls__toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }
+.scene-controls__toolbar input { grid-column: 1 / -1; width: 100%; min-width: 0; }
+.scene-controls__toolbar select { min-width: 0; width: 100%; }
+.scene-controls__status { margin: var(--space-0); color: var(--text-muted); overflow-wrap: anywhere; }
+.scene-controls__status.is-error { color: var(--danger); }
+.scene-controls__list { display: grid; align-content: start; gap: var(--space-1); min-height: 0; margin: var(--space-0); padding: var(--space-0); overflow-y: auto; list-style: none; }
+.scene-controls__list li { min-width: 0; }
+.scene-controls .scene-controls__element { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); width: 100%; padding: var(--space-2) var(--space-3); text-align: left; }
+.scene-controls__element[aria-pressed=true] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-field)); }
+.scene-controls__element strong { font-weight: 600; overflow-wrap: anywhere; }
+.scene-controls__element span { color: var(--text-muted); overflow-wrap: anywhere; }
+.scene-controls__pagination, .scene-controls__tools, .scene-controls__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+.scene-controls__pagination { justify-content: space-between; }
+.scene-controls__pagination[hidden] { display: none; }
+.scene-controls__pagination span { color: var(--text-muted); }
+.scene-controls__inspector { display: grid; align-content: start; gap: var(--space-2); min-height: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-raised); overflow-y: auto; }
+.scene-controls__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); min-width: 0; }
+.scene-controls__head strong { min-width: 0; overflow-wrap: anywhere; }
+.scene-controls__kind { color: var(--text-muted); }
+.scene-controls__hint { margin: var(--space-0); color: var(--text-muted); overflow-wrap: anywhere; }
+.scene-controls .scene-controls__check { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-0); }
+.scene-controls .scene-controls__check input { flex-shrink: 0; width: 16px; height: 16px; min-height: 16px; margin: var(--space-0); padding: var(--space-0); accent-color: var(--accent); }
+.scene-controls__material { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.scene-controls__material label { display: grid; flex-basis: 100%; gap: var(--space-1); min-width: 0; }
+.scene-controls__material select { width: 100%; min-width: 0; }
+
+/* Host the same transactional game editors without requiring Builder workspace CSS. */
+.map-builder-native-editor.table-modal-window { width: min(377px, calc(100vw - 32px)); max-width: calc(100vw - 32px); padding: var(--space-0); border: 0; background: transparent; box-shadow: none; color-scheme: dark; color: var(--text); font: 14px/1.4 var(--font); }
+.map-builder-native-editor[data-builder-native-editor=shaders] { width: min(760px, calc(100vw - 32px)); }
+.map-builder-native-editor__host { width: 100%; min-width: 0; }
+.map-builder-native-editor :is(.light-editor, .effect-editor) { position: relative; top: auto; left: auto; width: 100%; min-width: 0; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); box-sizing: border-box; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
+.map-builder-native-editor [hidden] { display: none !important; }
+.map-builder-native-editor :is(input, select, textarea, button) { font: inherit; }
+.map-builder-native-editor :is(.light-editor, .effect-editor) footer { justify-content: flex-end; }
+.map-builder-native-editor :is(.light-editor, .effect-editor) footer button:last-child { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast, #11171d); }

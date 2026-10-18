@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import test from 'node:test';
 import {applySelection,transformMeasures} from './selection-commands.js';
 const calls=[];
 const api={command:async(_c,_b,area,action,data)=>{calls.push({area,action,data});if(data.placement_id==='stale')throw Error('conflict');}};
@@ -17,3 +18,16 @@ assert.deepEqual(calls.find(c=>c.area==='walls').data,{wall_id:'w',x1:70,y1:70,x
 assert.equal(calls.find(c=>c.area==='zones').data.patch.geometry.shape,'polygon');
 assert.equal(transformMeasures([{id:'m',origin:{x:1,y:2},direction:0}],['m'],'delete',{x:0,y:0},0,0,0).length,0);
 console.log('Mixed transforms preserve grid origin, revisions and partial failures');
+
+test('returning a mixed GM selection to the image layer leaves Empty Objects private', async () => {
+  const commands = [], adapter = { command: async (...args) => commands.push(args) };
+  const objects = [
+    { key: 'image:empty', id: 'empty', kind: 'image', data: { empty: true, layer: 'gm-image-layer', version: 4 } },
+    { key: 'image:art', id: 'art', kind: 'image', data: { layer: 'gm-image-layer', version: 7 } },
+  ];
+  const result = await applySelection(adapter, {}, 'campaign', 'block', 'scene', 70, {}, objects,
+    'show', { x: 0, y: 0 });
+  assert.deepEqual(commands, [['campaign', 'block', 'images', 'update',
+    { placement_id: 'art', layer: 'map', expected_version: 7 }]]);
+  assert.deepEqual(result, { failed: [], done: ['image:art'] });
+});

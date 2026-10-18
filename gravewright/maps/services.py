@@ -165,7 +165,7 @@ def view(row):
         "viewportLimits": {"width":django_settings.SCENE_VIEWPORT_MAX_WIDTH_CHUNKS,"height":django_settings.SCENE_VIEWPORT_MAX_HEIGHT_CHUNKS,"area":django_settings.SCENE_VIEWPORT_MAX_AREA_CHUNKS},
         "groupId": str(row.folder_id) if row.folder_id else None,
         "visibility": row.visibility,
-        **row.settings,
+        **{key: value for key, value in row.settings.items() if key != "automationVariables"},
         "version": row.version,
         "createdAt": int(row.created_at.timestamp() * 1000),
         "updatedAt": int(row.updated_at.timestamp() * 1000),
@@ -188,6 +188,22 @@ def state(campaign_id, user_id):
         if who.role == "gm"
         else ([broadcast] if broadcast else [])
     )
+    builder_projects = {}
+    if who.role == "gm":
+        from .models import MapBuilderProject
+        # Only the currently linked scene can be updated from this source.
+        # Read IDs together, without loading private documents for each scene.
+        for scene_id, project_id in MapBuilderProject.objects.filter(
+            campaign_id=who.campaign_id, scene__campaign_id=who.campaign_id
+        ).order_by("-updated_at", "id").values_list("scene_id", "id"):
+            builder_projects.setdefault(scene_id, str(project_id))
+    projected_maps = []
+    for row in maps:
+        projected = view(row)
+        projected.pop("builderProjectId", None)
+        if row.pk in builder_projects:
+            projected["builderProjectId"] = builder_projects[row.pk]
+        projected_maps.append(projected)
     folders = Folder.objects.filter(campaign_id=campaign_id) if who.role == "gm" else []
     navigation = (
         SceneNavigation.objects.filter(
@@ -198,7 +214,7 @@ def state(campaign_id, user_id):
     active_id = str(broadcast.pk) if broadcast else None
     return {
         "is_gm": who.role == "gm",
-        "maps": [view(row) for row in maps],
+        "maps": projected_maps,
         "activeMapId": active_id,
         "navigatingMapId": str(navigation.scene_id) if navigation else active_id,
         "followingActiveMap": navigation is None,
@@ -236,7 +252,7 @@ def manifest(row):
             }
             for lod in range(row.max_lod + 1)
         ],
-        "tileUrlTemplate": f"/api/maps/{row.pk}/tiles/{{lod}}/{{x}}/{{y}}.webp",
+        "tileUrlTemplate": f"/api/maps/{row.pk}/tiles/{{lod}}/{{x}}/{{y}}.webp?v={row.version}",
     }
 
 
@@ -245,6 +261,41 @@ def command(campaign_id, user_id, action, payload, request_id):
     if not isinstance(action, str) or not isinstance(payload, dict):
         raise MapError("Invalid command.")
     rid = identifier(request_id)
+    try:
+        return _command(campaign_id, user_id, action, payload, rid)
+    except MapError as error:
+        run = getattr(error, "automation_run", None)
+        if run is not None:
+            record_failed_run(campaign_id, user_id, payload, run)
+        raise
+
+
+def record_failed_run(campaign_id, user_id, payload, run):
+    """Log a refused or failed element run after its transaction rolled back.
+
+    Only the diagnostic row is written; none of the failed effects persist. A
+    failure to write the log never replaces the original error.
+    """
+    import logging
+    from django.db import DatabaseError
+    from gravewright.journals.services import JournalError
+    from .blueprint_runtime import elements, record_run
+    try:
+        with transaction.atomic():
+            who = member(campaign_id, user_id)
+            scene_row = scene(payload.get("mapId"), who)
+            data = payload.get("data") or {}
+            id_key = "image_id" if payload.get("area") == "images" else "zone_id" if payload.get("area") == "zones" else "wall_id"
+            element_id = run.get("elementId") or data.get(id_key, data.get("placement_id", data.get("id")))
+            door = elements(scene_row).select_related("scene").filter(
+                pk=identifier(element_id)).first()
+            if door is not None:
+                record_run(door.scene, who, door, "failed", run)
+    except (MapError, JournalError, DatabaseError, TypeError, ValueError):
+        logging.getLogger(__name__).exception("Could not record a failed automation run.")
+
+
+def _command(campaign_id, user_id, action, payload, rid):
     with transaction.atomic():
         Campaign.objects.select_for_update().get(pk=campaign_id)
         who = member(campaign_id, user_id)
@@ -252,7 +303,8 @@ def command(campaign_id, user_id, action, payload, request_id):
         writable(who)
         if not (
             action == "objects"
-            and (payload.get("area") == "markers" or payload.get("area") == "walls" and payload.get("action") == "door")
+            and (payload.get("area") == "markers" or payload.get("area") == "walls" and payload.get("action") == "door"
+                 or payload.get("area") == "images" and payload.get("action") in ("interact", "torch-light"))
         ):
             manage(who)
         receipt = Receipt.objects.filter(
@@ -260,7 +312,9 @@ def command(campaign_id, user_id, action, payload, request_id):
         ).first()
         if receipt:
             return receipt.result
-        result = apply(who, action, payload)
+        from .blueprint_delays import automation_request
+        with automation_request(rid):
+            result = apply(who, action, payload)
         Receipt.objects.create(
             campaign_id=campaign_id, user_id=user_id, request_id=rid, result=result
         )
@@ -336,6 +390,11 @@ def apply(who, action, p):
         return {"folderId": str(row.pk)}
     row = scene(p.get("mapId"), who, write=True)
     if action == "activate":
+        # Broadcasting is the GM's explicit decision to show a prepared scene.
+        if row.visibility != "players":
+            row.visibility = "players"
+            row.version += 1
+            row.save(update_fields=["visibility", "version", "updated_at"])
         Broadcast.objects.update_or_create(
             campaign_id=who.campaign_id, defaults={"scene": row}
         )
@@ -364,9 +423,13 @@ def apply(who, action, p):
             row.visibility = raw["visibility"]
         if "groupId" in raw:
             row.folder = folder(raw["groupId"], who)
+        previous_grid = tuple(row.settings.get(key, DEFAULTS[key]) for key in ("gridSize", "gridOffsetX", "gridOffsetY", "imageScale"))
         row.settings = settings(raw, row.settings)
         row.version += 1
         row.save()
+        if previous_grid != tuple(row.settings[key] for key in ("gridSize", "gridOffsetX", "gridOffsetY", "imageScale")):
+            from .regions import rebaseline
+            rebaseline(row)
     elif action == "move":
         row.folder = folder(p.get("groupId"), who)
         row.version += 1

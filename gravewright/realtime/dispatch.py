@@ -34,7 +34,16 @@ def changed(campaign_id, user_id, resource, action, request_id, result=None):
     result = deepcopy(result or {})
     events = []
     if resource in ('actors', 'tokens'):
-        events = [{'type': name} for name in ('room.actors','room.tokens','room.map_layers')]
+        # Presence handlers may change artwork and lights in the same operation.
+        # The following token refresh also delivers the final spatial audio.
+        events = [{'type': 'room.map_layers', 'refresh_audio': False}]
+        if resource != 'tokens' or action not in ('move', 'teleport'):
+            events.append({'type': 'room.actors'})
+        events.append({'type': 'room.tokens'})
+        if resource == 'tokens' and action in ('move', 'teleport'):
+            events[-1]['refresh_combat'] = False
+        if resource == 'tokens' and result.get('teleports'):
+            events[-1].update(mapId=result['mapId'], teleports=result['teleports'])
         if resource == 'actors' or action in ('condition-add', 'condition-remove', 'remove', 'hidden', 'configure'):
             events.append({'type': 'room.resources', 'module': 'combat'})
     elif resource == 'maps':

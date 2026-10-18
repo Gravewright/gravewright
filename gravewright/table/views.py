@@ -14,9 +14,9 @@ from gravewright.campaigns.services import get_campaign
 from gravewright.web.responses import navigate
 
 ROOT = Path(__file__).parent
-DOCK = json.loads((ROOT / "dock.json").read_text())
-TOOL_TEXT = json.loads((ROOT / 'tool_messages.json').read_text())
-TEXT = json.loads((ROOT / "messages.json").read_text())
+DOCK = json.loads((ROOT / "dock.json").read_text(encoding="utf-8"))
+TOOL_TEXT = json.loads((ROOT / 'tool_messages.json').read_text(encoding='utf-8'))
+TEXT = json.loads((ROOT / "messages.json").read_text(encoding="utf-8"))
 
 
 @require_GET

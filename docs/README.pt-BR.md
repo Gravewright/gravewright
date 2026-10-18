@@ -2,7 +2,7 @@
 
 [English](README.md) · [Português (Brasil)](README.pt-BR.md) · [Página do projeto](../README.pt-BR.md)
 
-Inglês é o idioma principal da documentação. Cada guia tem uma versão correspondente em português; identificadores, nomes de APIs e comandos permanecem iguais. A documentação descreve a implementação deste checkout, inclusive suas limitações atuais.
+Inglês é o idioma principal da documentação. Cada guia tem uma versão correspondente em português; identificadores, nomes de APIs e comandos permanecem iguais. Os guias descrevem a implementação deste checkout, inclusive suas limitações atuais. Documentos de direção identificam separadamente as capacidades propostas.
 
 | Guia | O que explica |
 | --- | --- |
@@ -11,6 +11,9 @@ Inglês é o idioma principal da documentação. Cada guia tem uma versão corre
 | [Executor macOS](pt-BR/macos-runner.md) | Instalação Intel/Apple Silicon, launcher pelo Finder, ferramentas privadas e execução local |
 | [Primeiros passos](pt-BR/getting-started.md) | Dependências, configuração, migrações e primeiro acesso |
 | [Guia de uso](pt-BR/user-guide.md) | Campanhas, cenas, fichas, diários e fluxos da mesa |
+| [Map Builder](pt-BR/map-builder.md) | Estúdio, projetos editáveis, assets próprios e geração de paredes e portas nativas |
+| [Universal VTT](pt-BR/universal-vtt.md) | Importação e exportação de cenas nativas, campos aceitos e limitações do formato |
+| [Direção dos Objetos Inteligentes](pt-BR/smart-objects-direction.md) | Proposta de editor de nós, capacidades dos elementos, referências e ordem de entrega |
 | [Arquitetura](pt-BR/architecture.md) | Requisições, persistência, autorização e tempo real |
 | [Mapa do código](pt-BR/code-map.md) | Responsabilidade de cada domínio e onde alterar |
 | [Desenvolvimento](pt-BR/development.md) | Fluxo de contribuição, convenções e contratos |

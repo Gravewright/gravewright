@@ -5,6 +5,7 @@ import {effects,translatedCopies} from '../../effects/model/effects.js';
 import {resizeImage} from '../../images/model/image-transform.js';
 import {previewBoardImage} from '../../images/model/image-preview.js';
 import {text as gwText} from '../../../shared/config/i18n/text.js';
+import {imageInWorkspace,isGMImage,canMoveImageToGame} from '../../images/model/image-layer.js';
 
 // This controller observes the shared surface in capture phase. Token-only
 // gestures continue to reach the existing token controller, including Ctrl paths.
@@ -15,7 +16,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  let state=api.state,selected=[],drag,preview,resizePreview,busy=false,menu,dialog,timer,pingTimer,clipboard=[],lastPoint={x:0,y:0};
  const cell=()=>map.gridSize*map.imageScale,origin=()=>({x:(map.gridOffsetX||0)*map.imageScale,y:(map.gridOffsetY||0)*map.imageScale});
  const active=()=>stateAPI.getPath('_tool')==='select'&&!document.querySelector('.grid-calibration-panel')&&document.querySelector('#table-workspace')?.dataset.role!=='streamer';
- const all=()=>sceneObjects(state,(window.gravewrightTokenState?.tokens||[]).filter(t=>gm||(t.layer||(t.hidden?'gm':'game'))===(stateAPI.getPath('_layer')||'game')),cell(),gm,measurements.rows(),origin()).filter(o=>o.kind!=='image'||!['gm','gm-image-layer'].includes(o.data.layer)||stateAPI.getPath('_layer')==='composition');
+ const all=()=>sceneObjects(state,(window.gravewrightTokenState?.tokens||[]).filter(t=>gm||(t.layer||(t.hidden?'gm':'game'))===(stateAPI.getPath('_layer')||'game')),cell(),gm,measurements.rows(),origin()).filter(o=>o.kind!=='image'||imageInWorkspace(o.data,stateAPI.getPath('_layer')||'game'));
  const chosen=()=>all().filter(o=>selected.includes(o.key));
  const mixed=()=>chosen().some(o=>o.kind!=='token');
  const point=e=>{const b=surface.getBoundingClientRect(),v=board.viewport();return {x:(e.clientX-b.left-v.x)/v.scale,y:(e.clientY-b.top-v.y)/v.scale};};
@@ -41,7 +42,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  function select(keys){selected=keys;window.dispatchEvent(new CustomEvent('gravewright:mixed-selection',{detail:{ids:chosen().filter(o=>o.kind==='token').map(o=>o.id),mixed:mixed()}}));paint();}
  function cancel(){clearTimeout(timer);clearTimeout(pingTimer);if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);drag=undefined;preview=undefined;if(resizePreview){resizePreview=undefined;void previewBoardImage(board,state);}menu?.remove();menu=undefined;publish();}
  // Dedicated image controls own their gestures; capture listeners must let them through.
- const ignored=e=>e.target.closest('button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.image-workspace,.card-placement');
+ const ignored=e=>e.target.closest('button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.smart-image-controls,.image-workspace,.card-placement');
  function down(e){
   if(!active()||busy||e.button!==0||ignored(e))return;
   const p=point(e),handle=e.target.closest('[data-image-resize]');
@@ -97,10 +98,10 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
   function add(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{menu?.remove();fn();};menu.append(b);}
   if(chosen().some(o=>['light','particle','shader'].includes(o.kind)))add('Copy lights and effects',copy);
   if(clipboard.length)add('Paste lights and effects',()=>void paste());
-  if(chosen().length===1&&!['image','card','zone'].includes(o.kind))add('Edit',()=>editObject(o,e));
+  if(chosen().length===1&&(!['image','card','zone'].includes(o.kind)||o.kind==='zone'&&o.data.region))add(gwText('Edit'),()=>editObject(o,e));
   add('Rotate selection −90°',()=>rotate(-90));add('Rotate selection +90°',()=>rotate(90));
-  if(chosen().some(o=>o.kind==='image'&&!['gm','gm-image-layer'].includes(o.data.layer)))add(modalText('Move to GM image layer','Mover para camada de imagens do GM'),()=>void execute('hide'));
-  if(chosen().some(o=>o.kind==='image'&&['gm','gm-image-layer'].includes(o.data.layer)))add(modalText('Move to image layer','Mover para camada de imagens'),()=>void execute('show'));
+  if(chosen().some(o=>o.kind==='image'&&!isGMImage(o.data)))add(modalText('Move to GM image layer','Mover para camada de imagens do GM'),()=>void execute('hide'));
+  if(chosen().some(o=>o.kind==='image'&&isGMImage(o.data)&&canMoveImageToGame(o.data)))add(modalText('Move to image layer','Mover para camada de imagens'),()=>void execute('show'));
   if(chosen().some(o=>o.kind==='card'))add('Flip selected cards',()=>void execute('flip'));
   add('Delete selection',confirmDelete);document.body.append(menu);
  }

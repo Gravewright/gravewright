@@ -29,7 +29,7 @@ class FrontendApiTests(TestCase):
                 result = self.call(domain, 'state', {'sceneId': str(self.scene.pk)})
                 self.assertEqual(result.status_code, 200, result.content)
         root = Path(__file__).resolve().parents[2] / 'modules'
-        generated = (root / 'static/gravewright_modules/frontend-contract.js').read_text()
+        generated = (root / 'static/gravewright_modules/frontend-contract.js').read_text(encoding='utf-8')
         self.assertEqual(generated.split('export const FRONTEND_CONTRACT = ', 1)[1], json.dumps(CONTRACT, indent=2) + ';\n')
 
     def test_actor_writes_publish_hooks_after_commit_and_replay_once(self):

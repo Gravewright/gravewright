@@ -1,4 +1,5 @@
 import { transformedPoint } from "./objects.js";
+import { canMoveImageToGame } from '../../images/model/image-layer.js';
 async function applySelection(api, tokens, container, block, map, cell, state, objects, action, center, dx = 0, dy = 0, angle = 0, origin = { x: 0, y: 0 }) {
   const failed = [], done = [];
   const drawings = objects.filter((o) => o.kind === "drawing");
@@ -8,7 +9,7 @@ async function applySelection(api, tokens, container, block, map, cell, state, o
     const d = o.data, p = point(o);
     try {
       if (["hide", "show"].includes(action)) {
-        if (o.kind !== "image") continue;
+        if (o.kind !== "image" || action === "show" && !canMoveImageToGame(d)) continue;
         await command("images", "update", { placement_id: o.id, layer: action === "hide" ? "gm-image-layer" : "map", expected_version: d.version });
       } else if (action === "flip") {
         if (o.kind !== "card") continue;

@@ -10,3 +10,17 @@ assert.equal(enclosed(w, { x: 100, y: 100 }, { x: 10, y: 10 }), true);
 assert.equal(enclosed(w, { x: 10, y: 10 }, { x: 30, y: 30 }), false, 'both endpoints must be enclosed');
 assert.equal(wallPayload(w).behavior.movement, 'pass');
 assert.deepEqual(wallPayload(w).vertical, { bottom: 0, top: 3 });
+assert.equal(wallPayload({ ...w, asset_id: 'door-art', thickness: 12 }).asset_id, 'door-art');
+assert.equal(wallPayload({ ...w, asset_id: 'door-art', thickness: 12 }).thickness, 12);
+assert.equal(Object.hasOwn(wallPayload(w), 'blueprint'), false, 'legacy wall payload stays unchanged');
+const blueprint = { version: 1, kind: 'door', states: { closed: { appearance: 'inherit' } },
+    graphs: { 'enter:closed': { nodes: [{ id: 'event', type: 'event' }], edges: [] } } };
+const copied = wallPayload({ ...w, kind: 'door', blueprint });
+assert.deepEqual(copied.blueprint, blueprint, 'native door copies retain the authored graph');
+copied.blueprint.states.closed.appearance = 'hidden';
+copied.blueprint.graphs['enter:closed'].nodes[0].id = 'changed';
+assert.equal(blueprint.states.closed.appearance, 'inherit');
+assert.equal(blueprint.graphs['enter:closed'].nodes[0].id, 'event', 'nested graph edits cannot mutate the original door');
+const alternateOnly = wallPayload({ ...w, kind: 'door', blueprint, thickness: 42 });
+assert.equal(alternateOnly.thickness, 42, 'blueprint-only state images preserve the authored door thickness');
+assert.equal(Object.hasOwn(alternateOnly, 'asset_id'), false);

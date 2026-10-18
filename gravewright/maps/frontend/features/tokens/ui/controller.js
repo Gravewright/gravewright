@@ -1,7 +1,9 @@
 import { text as gwText, formatNumber, } from "../../../shared/config/i18n/text.js";
 import { suggestTokenRoute } from "../model/token-pathfinding.js";
 import { routeMeasurements, routeLengths, routePosition, ROUTE_CELLS_PER_SECOND, MAX_ROUTE_POINTS, } from "../model/token-route.js";
-import { interpolateTokens, TOKEN_SETTLE_MS } from "../model/token-motion.js";
+import { interpolateTokens, tokenTeleported, TOKEN_SETTLE_MS } from "../model/token-motion.js";
+export { createTokenTeleports } from "../model/token-teleports.js";
+export { createTokenSnapshots } from "../model/token-snapshots.js";
 import { renderingPreferences } from "../../../shared/rendering/render-profile.js";
 import { LONG_PRESS_MS } from "../../../widgets/game-board/model/board-input.js";
 import { hitToken, inMarquee, position, movementBlocked, } from "../model/token-interaction.js";
@@ -46,6 +48,7 @@ export function tokenController(element, options) {
         const from = rows.map((t) => {
             const old = previous.get(t.id);
             return old &&
+                !tokenTeleported(old, t) &&
                 old.hidden === t.hidden &&
                 !movementBlocked(old, t, props.walls, props.cell)
                 ? old
@@ -160,7 +163,6 @@ export function tokenController(element, options) {
             for (const p of remote.values())
                 if (p.stream === key)
                     p.expires = performance.now() + 700;
-            emit("refresh");
         }
         else
             return;
@@ -331,11 +333,13 @@ export function tokenController(element, options) {
   const selection = derive(() => props.tokens.filter((t) => onLayer(t) && selected.value.includes(t.id)));
     const interactive = derive(() => props.tool === "select");
     let closed = false, queue = Promise.resolve(), drag;
+    function accepted(result) {
+        if (!closed) emit("changed", result.tokens);
+        return result;
+    }
     const abort = new AbortController(), reader = { list: () => options.read() }, writer = {
-        command: (_a, _b, action, data) => options.command(action, data),
-        move: (_a, id, data) => options
-            .command("move", { id, ...data })
-            .then((r) => r.tokens.find((t) => t.id === id)),
+        command: (_a, _b, action, data) => options.command(action, data).then(accepted),
+        move: (_a, id, data) => options.command("move", { id, ...data }).then(accepted),
     }, scope = {
         container: props.containerId,
         block: props.blockId,
@@ -366,26 +370,32 @@ export function tokenController(element, options) {
                 return;
             busy.value = true;
             error.value = "";
+            let recover = false;
             try {
-                await operation();
+                const result = await operation();
+                recover = result?.recover === true;
+                if (!closed && !recover) animate(remoteRows());
             }
             catch (e) {
+                recover = true;
                 if (!closed)
                     error.value = gwText("Could not complete the action. Check permissions or reload the scene state.");
             }
             finally {
                 if (!closed) {
-                    try {
-                        const rows = await reader.list(scope.container, scope.map);
-                        if (!closed) {
-                            emit("changed", rows);
-                            animate(remoteRows(rows));
-                            emit("refresh");
+                    if (recover) {
+                        try {
+                            const rows = await reader.list(scope.container, scope.map);
+                            if (!closed) {
+                                emit("changed", rows);
+                                animate(remoteRows(rows));
+                                emit("refresh");
+                            }
                         }
-                    }
-                    catch {
-                        if (!closed)
-                            animate(remoteRows());
+                        catch {
+                            if (!closed)
+                                animate(remoteRows());
+                        }
                     }
                     if (!closed) {
                         finishBroadcast(error.value ? "cancel" : "end");
@@ -412,11 +422,11 @@ export function tokenController(element, options) {
             });
             if (closed)
                 return;
-            emit("changed", result.tokens);
             editor.value = undefined;
             confirm.value = false;
             if (result.createdIds.length)
                 selected.value = result.createdIds;
+            return result;
         });
     }
     function down(e) {
@@ -641,16 +651,22 @@ export function tokenController(element, options) {
             emit("preview", undefined);
     }
     function saveMoves(from, to, paths, record, after) {
+        to = to.filter(t => {
+            const old = from.find(value => value.id === t.id);
+            return old && (old.gridX !== t.gridX || old.gridY !== t.gridY ||
+                (paths.get(t.id) ?? []).some(point => point.gridX !== old.gridX || point.gridY !== old.gridY));
+        });
+        if (!to.length) {
+            finishBroadcast("cancel");
+            after?.();
+            return;
+        }
         animate(merged(to));
         void run(async () => {
             const accepted = [], starts = [];
             let failed = 0;
             for (const t of to) {
                 const old = from.find((v) => v.id === t.id);
-                if (old.gridX === t.gridX &&
-                    old.gridY === t.gridY &&
-                    !(paths.get(t.id) ?? []).some((p) => p.gridX !== old.gridX || p.gridY !== old.gridY))
-                    continue;
                 try {
                     const result = await writer.move(scope.container, t.id, {
                         gridX: t.gridX,
@@ -658,8 +674,11 @@ export function tokenController(element, options) {
                         expectedVersion: old.version,
                         path: paths.get(t.id),
                     });
-                    accepted.push(result);
-                    starts.push(old);
+                    const moved = result.tokens.find(token => token.id === t.id);
+                    if (moved) {
+                        accepted.push(moved);
+                        starts.push(old);
+                    }
                 }
                 catch {
                     failed++;
@@ -678,6 +697,7 @@ export function tokenController(element, options) {
                 ];
                 redo.value = [];
             }
+            return { recover: failed > 0 };
         });
     }
     function history(back) {

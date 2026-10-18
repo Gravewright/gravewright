@@ -26,6 +26,9 @@ const common = {
   results.push(await esbuild.build({...common,entryPoints:[source+"/native/table-modules.js"],outfile:app+"/../table/static/gravewright_table/media-workspace.js"}));
   results.push(await esbuild.build({...common, entryPoints:[source+'/shared/rendering/render-profile.js'], outfile:output+'/render-profile.js'}));
   results.push(await esbuild.build({...common,entryPoints:[source+"/native/tools.js"],outfile:output+"/tools.js"}));
+  results.push(await esbuild.build({...common,entryPoints:[source+"/native/builder-catalog.js"],outfile:output+"/builder-catalog.js"}));
+  results.push(await esbuild.build({...common,entryPoints:[source+"/native/builder-editors.js"],outfile:output+"/builder-editors.js"}));
+  results.push(await esbuild.build({...common,entryPoints:[source+"/native/builder-preview.js"],outfile:output+"/builder-native.js",minify:true}));
   results.push(
     await esbuild.build({
       ...common,

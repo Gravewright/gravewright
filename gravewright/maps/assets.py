@@ -7,7 +7,7 @@ from channels.layers import get_channel_layer
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
@@ -29,19 +29,46 @@ def who(request, campaign_id, write=False):
     return member
 
 
+def visible_door_art(scene_id, asset_id=None):
+    """Expose only door images already visible in the audience's active scene."""
+    from .blueprint_runtime import appearance
+
+    doors = SceneObject.objects.filter(scene_id=scene_id, kind="walls", data__kind="door").filter(
+        Q(data__presentation__in=["normal", "window", "bars"]) | Q(data__discovered=True)
+    )
+    if asset_id is not None:
+        asset_id = str(asset_id)
+        doors = doors.filter(
+            Q(data__asset_id=asset_id)
+            | Q(data__blueprint__states__closed__assetId=asset_id)
+            | Q(data__blueprint__states__open__assetId=asset_id)
+            | Q(data__blueprint__states__locked__assetId=asset_id)
+            | Q(data__sprite__assetId=asset_id)
+        )
+    result = set()
+    for data in doors.values_list("data", flat=True):
+        art = appearance(data)
+        if art["visible"] and art["assetId"]:
+            result.add(art["assetId"])
+    return result
+
+
+def active_scene(member):
+    active = Broadcast.objects.filter(
+        campaign_id=member.campaign_id, scene__visibility="players"
+    ).values_list("scene_id", flat=True).first()
+    if active is not None:
+        services.scene(active, member)
+    return active
+
+
 @require_GET
 def state(request, campaign_id):
     try:
         member = who(request, campaign_id)
-        assets = MapAsset.objects.filter(campaign_id=campaign_id)
+        assets = MapAsset.objects.filter(campaign_id=campaign_id, generated_for__isnull=True)
         if member.role != "gm":
-            active = (
-                Broadcast.objects.filter(
-                    campaign_id=campaign_id, scene__visibility="players"
-                )
-                .values_list("scene_id", flat=True)
-                .first()
-            )
+            active = active_scene(member)
             ids = [
                 r["asset_id"]
                 for r in SceneObject.objects.filter(
@@ -49,6 +76,7 @@ def state(request, campaign_id):
                 ).values_list("data", flat=True)
                 if r.get("layer") not in {"gm", "gm-image-layer"}
             ]
+            ids.extend(visible_door_art(active))
             assets = assets.filter(pk__in=ids)
         result = []
         for a in assets:
@@ -181,20 +209,51 @@ def command(request, campaign_id, action):
                 from gravewright.audio.models import Track
                 asset_id = identifier(p.get("asset_id"))
                 asset = MapAsset.objects.filter(campaign_id=campaign_id, pk=asset_id).first()
+                if asset is not None and asset.generated_for_id is not None:
+                    raise services.MapError("Generated map surfaces are managed by their scene.")
                 if asset is None:
                     asset = Track.objects.filter(campaign_id=campaign_id, pk=asset_id).first()
                 if asset is None:
                     from gravewright.actors.models import Asset
                     asset = Asset.objects.get(campaign_id=campaign_id,pk=asset_id,kind="pdf")
                 if action == "delete":
+                    scenes = []
+                    if isinstance(asset, MapAsset):
+                        # State images leave native blueprints first, so a lever showing
+                        # one reverts to its own image instead of being deleted below.
+                        from .blueprint_runtime import detach_scene_art
+                        scenes.extend(detach_scene_art(campaign_id, asset.pk))
                     # All placements disappear with the image, including inactive scenes.
                     placements = SceneObject.objects.filter(
                         scene__campaign_id=campaign_id,
                         kind="spatialSounds" if isinstance(asset, Track) else "images",
-                        **{"data__trackId" if isinstance(asset, Track) else "data__asset_id": str(asset.pk)},
                     )
-                    scenes = list(placements.values_list("scene_id", flat=True))
+                    if isinstance(asset, Track):
+                        placements = placements.filter(data__trackId=str(asset.pk))
+                    else:
+                        placements = placements.filter(Q(data__asset_id=str(asset.pk))
+                            | Q(data__lever__baseAssetId=str(asset.pk)) | Q(data__torch__baseAssetId=str(asset.pk))
+                            | Q(data__sprite__assetId=str(asset.pk)) | Q(data__spriteBase__assetId=str(asset.pk)))
+                        from .torches import delete_group
+                        for placement in placements:
+                            delete_group(placement)
+                    scenes.extend(placements.values_list("scene_id", flat=True))
                     placements.delete()
+                    if isinstance(asset, MapAsset):
+                        from .builder_services import detach_project_art
+                        detach_project_art(campaign_id, asset.pk)
+                        # Removing art must never remove the door's collision or
+                        # expose a passage that is still closed in the table.
+                        for door in SceneObject.objects.filter(
+                            scene__campaign_id=campaign_id, kind="walls",
+                            data__asset_id=str(asset.pk),
+                        ):
+                            door.data.pop("asset_id", None)
+                            if "blueprint" not in door.data:
+                                door.data.pop("thickness", None)
+                            door.version += 1
+                            door.save(update_fields=["data", "version"])
+                            scenes.append(door.scene_id)
                     SceneState.objects.filter(scene_id__in=scenes).update(
                         version=F("version") + 1
                     )
@@ -243,19 +302,17 @@ def file(request, asset_id):
         asset = MapAsset.objects.get(pk=asset_id)
         member = who(request, asset.campaign_id)
         if member.role != "gm":
-            active = (
-                Broadcast.objects.filter(
-                    campaign_id=asset.campaign_id, scene__visibility="players"
-                )
-                .values_list("scene_id", flat=True)
-                .first()
-            )
-            if (
-                not SceneObject.objects.filter(
-                    scene_id=active, kind="images", data__asset_id=str(asset.pk)
+            active = active_scene(member)
+            if asset.generated_for_id is not None and str(asset.generated_for_id) != str(active):
+                raise Http404
+            if not (
+                SceneObject.objects.filter(
+                    Q(data__asset_id=str(asset.pk)) | Q(data__surface__maskId=str(asset.pk))
+                    | Q(data__surface__materialId=str(asset.pk)), scene_id=active, kind="images"
                 )
                 .exclude(data__layer__in=["gm", "gm-image-layer"])
                 .exists()
+                or str(asset.pk) in visible_door_art(active, asset.pk)
             ):
                 raise Http404
         response = FileResponse(asset.file.open("rb"), content_type="image/png")

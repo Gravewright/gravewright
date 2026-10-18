@@ -58,6 +58,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `COMMAND_PALETTE_ENABLED` | `true` | Ativa paleta de comandos da mesa |
 | `LOBBY_READY_CHECK_ENABLED` | `true` | Ativa controles de prontidão do lobby |
 | `DYNAMIC_LIGHTING_ENABLED` | `true` | Ativa iluminação dinâmica |
+| `GRAVEWRIGHT_AUTOMATION_WORKER_ENABLED` | `true` | Executa em segundo plano no ASGI as continuações persistentes Delay do Blueprint; false conserva esperas pendentes sem executá-las |
 | `SCENE_VIEWPORT_MAX_WIDTH_CHUNKS` | `16` | Largura máxima do viewport transmitido em chunks |
 | `SCENE_VIEWPORT_MAX_HEIGHT_CHUNKS` | `16` | Altura máxima do viewport transmitido em chunks |
 | `SCENE_VIEWPORT_MAX_AREA_CHUNKS` | `256` | Área máxima do viewport transmitido em chunks |
@@ -92,6 +93,27 @@ Duas opções comentadas também são reconhecidas:
 | `DJANGO_SECURE_COOKIES` | `false` | Ativa cookies seguros; origem pública HTTPS configurada sempre os ativa. A opção não configura TLS nem a origem WebSocket |
 
 `GRAVEWRIGHT_CONTAINER` é lido pela descoberta de releases para identificar formato de instalação quando vale `1`, `true` ou `yes`; não configura contêiner nem oferece atualização automática. `DJANGO_SETTINGS_MODULE` seleciona o módulo Python de configuração; os pontos de entrada usam `config.settings` por padrão.
+
+## Executor de Delay do Blueprint
+
+O host ASGI inicia automaticamente o executor de Delay. Daphne usa os hooks de
+início/encerramento do reactor, inclusive no Runner habitual; outros hosts ASGI
+precisam enviar eventos lifespan de início/encerramento. Importar Django ou
+executar um comando de gerenciamento não inicia um agendador. O executor consulta
+as entradas vencidas no banco a cada 250 ms e processa até 20 por passagem; a
+execução pode ocorrer depois do prazo sob carga ou após indisponibilidade. Ele
+não exige navegadores conectados, consultas HTTP, tarefas Redis ou um processo
+iniciado separadamente.
+
+Esperas pendentes ficam no SQLite configurado e sobrevivem ao reinício do
+servidor. `GRAVEWRIGHT_AUTOMATION_WORKER_ENABLED=false` desativa o processamento
+naquele processo sem descartar a fila. **Pausar automação** da cena conserva
+somente as esperas daquela cena até retomar. O sinalizador de manutenção existente
+do atualizador conserva a fila durante a verificação de saúde até confirmar ou
+reverter a atualização. Aplique as migrações habituais antes
+de iniciar o host; falhas de banco aparecem nos logs do servidor e geram novas
+tentativas, sem fingir execução bem-sucedida. Veja
+[Delay persistente](map-builder.md#delay-persistente) para cancelamento e cópia.
 
 ## Geração de tiles e imagens grandes
 

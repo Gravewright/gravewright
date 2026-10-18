@@ -1,0 +1,17 @@
+<template id="map-wall-editor">
+  <section class="wall-editor gw-window" data-movable role="dialog" aria-label="Configure wall">
+    <header class="wall-editor__header" data-move-handle><strong>Configure wall</strong><button type="button" aria-label="Close editor">{{ icon('X') }}</button></header>
+    <form class="wall-editor__body"><fieldset>
+      <label>Type<select name="preset" aria-label="Type"></select></label>
+      <div class="wall-editor__channels">{% for key, label in [('movement', 'Movement'), ('vision', 'Vision'), ('light', 'Light'), ('sound', 'Sound')] %}<label>{{ label }}<select name="{{ key }}" aria-label="{{ label }}"><option value="block">Block</option><option value="pass">Allow</option>{% if key == 'sound' %}<option value="attenuate">Attenuate</option>{% endif %}</select></label>{% endfor %}</div>
+      <label class="wall-editor__check"><input name="finite" type="checkbox" aria-label="Limit by elevation">Limit by elevation</label>
+      <div class="wall-editor__channels" data-finite><label>Lower height<input name="bottom" type="number" aria-label="Lower height" min="-1000000" max="1000000" step="any" required></label><label>Upper height<input name="top" type="number" aria-label="Upper height" min="-1000000" max="1000000" step="any" required></label></div>
+      <small data-finite>Uses token elevation units. Outside this range, the wall does not block.</small>
+      <label class="wall-editor__check" data-secret><input name="discovered" type="checkbox" aria-label="Revealed to players">Revealed to players</label>
+      <label class="wall-editor__check" data-player-interaction><input name="interactionEnabled" type="checkbox" aria-label="Player interaction">Player interaction</label>
+      <small data-player-interaction>The GM can always operate and edit this element.</small>
+      <p role="alert" hidden></p>
+      <footer><button type="button" data-native-editor-cancel hidden>Cancel</button><button type="submit" data-native-editor-save>{{ icon('FloppyDisk') }}Save</button></footer>
+    </fieldset></form>
+  </section>
+</template>

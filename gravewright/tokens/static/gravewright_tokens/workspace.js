@@ -1,5 +1,5 @@
 import { onForeignDrop } from "/static/gravewright_actors/tree-drag.js";
-import { tokenController } from "./controller.js";
+import { tokenController, createTokenTeleports, createTokenSnapshots } from "./controller.js?v=token-saving-1";
 import { getPath } from "/static/gravewright_web/vendor/datastar-1.0.3.js";
 import { node, patchSVG } from "/static/gravewright_maps/layers.js";
 import { clone, icon, context } from "/static/gravewright_actors/workspace.js";
@@ -7,6 +7,8 @@ import { openSheet } from "/static/gravewright_actors/sheet.js";
 import { openPermissions } from '/static/gravewright_table/permissions.js';
 import { quickControls, conditionLayout, conditionTooltip, conditionDurationFields } from './quick-controls.js';
 export function createTokens(surface, board, map, gm, initial) {
+  const teleports = createTokenTeleports();
+  const snapshots = createTokenSnapshots();
   const campaign = document.getElementById("table-workspace").dataset.tableId,
     svg = node("svg", {
       class: "token-workspace",
@@ -14,6 +16,7 @@ export function createTokens(surface, board, map, gm, initial) {
     }),
     status = document.createElement("p");
   status.className = "token-workspace__status";
+  status.hidden = true;
   const conditionTip = document.createElement('div');
   conditionTip.className = 'token-condition-tooltip';
   conditionTip.id = 'token-condition-tooltip';
@@ -53,7 +56,17 @@ export function createTokens(surface, board, map, gm, initial) {
     lastRender = "",
     lastViewport,
     frame = 0,
-    selectionPreview;
+    selectionPreview,
+    lastStatus;
+  function setStatus(message, error = false) {
+    const hidden = !message, role = error ? 'alert' : 'status';
+    if (status.hidden !== hidden) status.hidden = hidden;
+    if (status.getAttribute('role') !== role) status.setAttribute('role', role);
+    if (lastStatus !== message) {
+      lastStatus = message;
+      status.textContent = message;
+    }
+  }
   const repaint = () => {
     if (closed || queued) return;
     queued = true;
@@ -111,16 +124,25 @@ export function createTokens(surface, board, map, gm, initial) {
     if (!r.ok) throw Error("Tokens unavailable.");
     const value = await r.json();
     if (!closed && revision === readRevision) {
-      rows = value.tokens;
+      rows = teleports.apply(snapshots.accept(value.tokens), value.teleports);
       controller.update({ tokens: rows });
     }
     return rows;
   }
-  const command = (action, data) =>
-    window.gravewrightRealtime.resourceCommand("tokens", action, {
-      ...data,
-      mapId: map.id,
-    });
+  const command = async (action, data) => {
+    const pending = snapshots.begin();
+    try {
+      const result = await window.gravewrightRealtime.resourceCommand("tokens", action, {
+        ...data,
+        mapId: map.id,
+      });
+      if (closed) return result;
+      readRevision++;
+      return { ...result, tokens: teleports.apply(snapshots.confirm(pending, result.tokens), result.teleports) };
+    } finally {
+      snapshots.cancel(pending);
+    }
+  };
   const quick = quickControls(surface, { campaign, gm, command, read, repaint,
     openSheet: token => controller.call('openSheet', token) });
   const conditionsChanged = () => repaint();
@@ -686,17 +708,16 @@ export function createTokens(surface, board, map, gm, initial) {
     patchSVG(svg, fragment);
     if (activeBadge && (!activeBadge.isConnected || !activeBadge.hasAttribute('data-condition-label'))) hideConditionTip();
     else if (activeBadge) conditionTip.textContent = activeBadge.dataset.conditionLabel;
-    status.hidden = !(v.error || v.busy || v.route.length);
-    status.setAttribute("role", v.error ? "alert" : "status");
-    status.textContent =
+    setStatus(
       v.error ||
       (v.walking
         ? "Following the route…"
         : v.route.length
           ? (v.routeBlocked ? "This route crosses a wall. Choose a suggested route or change the points. " : "") + "Ctrl+click adds points. Hold Ctrl to choose a suggestion; release to walk. Esc cancels."
-          : "Saving…");
+          : ""), !!v.error);
     const pieces = v.displayed.map((t) => ({
       key: t.id,
+      teleportVersion: t.teleportVersion,
       x: g.x + (t.gridX + t.cells / 2) * g.cell,
       y: g.y + (t.gridY + (t.heightCells ?? t.cells) / 2) * g.cell,
       size: t.cells * g.cell,
@@ -753,7 +774,7 @@ export function createTokens(surface, board, map, gm, initial) {
     snapshot = (e) => {
       if (e.detail.mapId !== map.id) return;
       readRevision++;
-      rows = e.detail.tokens;
+      rows = teleports.apply(snapshots.accept(e.detail.tokens), e.detail.teleports);
       controller.update({ tokens: rows });
     },
     layers = (e) => {
@@ -825,9 +846,7 @@ export function createTokens(surface, board, map, gm, initial) {
         gridY: Math.max(0, snap((point.y - g.y) / g.cell)),
       });
     } catch (error) {
-      status.hidden = false;
-      status.textContent = error.message;
-      status.setAttribute("role", "alert");
+      setStatus(error.message, true);
     }
   }
   const stopForeign = onForeignDrop((event) => {
@@ -846,17 +865,14 @@ export function createTokens(surface, board, map, gm, initial) {
       gridX: Math.max(0, snap((point.x - g.x) / g.cell)),
       gridY: Math.max(0, snap((point.y - g.y) / g.cell)),
     }).catch((error) => {
-      status.hidden = false;
-      status.textContent = error.message;
-      status.setAttribute("role", "alert");
+      setStatus(error.message, true);
     });
   });
   surface.addEventListener("dragover", dragover);
   surface.addEventListener("drop", drop);
   window.gravewrightRealtime.tokensSubscribe(map.id);
   read().catch((e) => {
-    status.hidden = false;
-    status.textContent = e.message;
+    setStatus(e.message, true);
   });
   return {
     setMap(next) {
@@ -870,6 +886,8 @@ export function createTokens(surface, board, map, gm, initial) {
     destroy() {
       if (closed) return;
       closed = true;
+      teleports.clear();
+      snapshots.clear();
       quick.destroy();
       window.removeEventListener('storage', conditionsChanged);
       window.removeEventListener('gravewright:combat-state', combatChanged);

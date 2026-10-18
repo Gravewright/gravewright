@@ -1,0 +1,9 @@
+.ownership-modal-overlay > .table-form-modal.automation-presentation { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
+.automation-presentation > header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--border); }
+.automation-presentation button { min-height: 32px; padding: var(--space-1) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.automation-presentation button:hover { border-color: var(--accent); }
+.automation-presentation button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.automation-presentation__messages { min-height: 0; overflow: auto; padding: var(--space-3); }
+.automation-presentation__messages p { margin: var(--space-0) var(--space-0) var(--space-3); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; }
+.automation-presentation__messages p:last-child { margin-bottom: var(--space-0); }
+.house-menu__preference-row input[data-automation-camera-preference] { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: var(--space-0); }

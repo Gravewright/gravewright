@@ -22,7 +22,7 @@ export function wallController(element, options) {
         }
         return selected.value.includes(w.id) ? { ...w, x1: w.x1 + offset.value.x, y1: w.y1 + offset.value.y, x2: w.x2 + offset.value.x, y2: w.y2 + offset.value.y } : w;
     }));
-    async function run(area, action, data, after) {
+    async function run(area, action, data, after, { refreshOnError = false } = {}) {
         queue = queue.then(async () => {
             if (closed)
                 return;
@@ -39,9 +39,17 @@ export function wallController(element, options) {
                     after?.(result);
                 }
             }
-            catch {
-                if (!closed)
-                    error.value = gwText('Could not save the wall. Check the data and try again.');
+            catch (cause) {
+                if (!closed) {
+                    error.value = refreshOnError && cause?.message ? gwText(cause.message)
+                        : gwText('Could not save the wall. Check the data and try again.');
+                    if (refreshOnError) {
+                        try {
+                            const state = await reader.state(scope.container, scope.block);
+                            if (!closed) emit('changed', state);
+                        } catch { /* Keep the original command diagnostic; never replay an uncertain write. */ }
+                    }
+                }
             }
             finally {
                 if (!closed) {
@@ -210,7 +218,15 @@ export function wallController(element, options) {
         cancel();
         void run('walls', 'split', { wall_id: w.id, x: p.x, y: p.y });
     }
-    function operate(w, lock = false) { context.value = undefined; void run('walls', 'door', { wall_id: w.id, door_state: lock ? (w.door_state === 'locked' ? 'closed' : 'locked') : (w.door_state === 'open' ? 'closed' : 'open') }); }
+    function setDoorState(w, doorState) {
+        context.value = undefined;
+        void run('walls', 'update', { wall_id: w.id, version: w.version, door_state: doorState }, undefined, { refreshOnError: true });
+    }
+    function operate(w, lock = false) {
+        if (lock) { setDoorState(w, w.door_state === 'locked' ? 'closed' : 'locked'); return; }
+        context.value = undefined;
+        void run('walls', 'door', { wall_id: w.id, door_state: w.door_state === 'open' ? 'closed' : 'open' });
+    }
     function double(e) {
         const p = point(e), w = hitWall(p, props.state.walls, 8 / props.viewport.scale);
         if (!w)
@@ -260,7 +276,7 @@ export function wallController(element, options) {
     const keyboard = (e) => { key(e); repaint(); };
     window.addEventListener('keydown', keyboard);
     return { get view() { return { selected: selected.value, clipboard: clipboard.value, choice: choice.value, picker: picker.value, editing: editing.value, busy: busy.value, error: error.value, clearConfirm: clearConfirm.value, context: context.value, start: start.value, cursor: cursor.value, preset: preset.value, rendered: rendered.value, marquee: marquee.value }; },
-        call(name, ...args) { const methods = { action, choose, edit, copy, paste, remove, split, operate, double, cancel, run, closePicker: () => picker.value = false, closeEditor: () => editing.value = undefined, closeMenu: () => context.value = undefined, closeClear: () => clearConfirm.value = false }; const result = methods[name](...args); repaint(); return result; },
+        call(name, ...args) { const methods = { action, choose, edit, copy, paste, remove, split, operate, setDoorState, double, cancel, run, closePicker: () => picker.value = false, closeEditor: () => editing.value = undefined, closeMenu: () => context.value = undefined, closeClear: () => clearConfirm.value = false }; const result = methods[name](...args); repaint(); return result; },
         update(next) { if (next.tool !== undefined && next.tool !== props.tool) {
             cancel();
             context.value = undefined;

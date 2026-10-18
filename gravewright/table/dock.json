@@ -203,6 +203,13 @@
         "key": "D"
       },
       {
+        "id": "automation",
+        "label": "Automation",
+        "icon": "MagicWand",
+        "key": "",
+        "panel": "automation"
+      },
+      {
         "id": "clear-walls",
         "label": "Clear all scene walls",
         "icon": "Trash",

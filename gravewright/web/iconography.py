@@ -20,5 +20,5 @@ def icon(name, weight='regular', css='', scope=''):
         raise ValueError('Unknown icon')
     if scope not in {'', 'data-v-gwcondition', 'data-v-gwaudio', 'data-v-gwdice', 'data-v-gwpreset', 'data-v-gwtoolbar', 'data-v-gwentry'}:
         raise ValueError('Unknown scope')
-    svg = (Path(__file__).with_name('icons') / f'{name}-{weight}.svg').read_text()
+    svg = (Path(__file__).with_name('icons') / f'{name}-{weight}.svg').read_text(encoding='utf-8')
     return Markup(svg.replace('<svg ', f'<svg {scope} aria-hidden="true" class="{escape(css)}" ', 1))

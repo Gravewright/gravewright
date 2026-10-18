@@ -115,6 +115,35 @@ For larger maps, install the optional libvips dependencies into the environment 
 
 Generation is serialized per process; multiple ASGI workers can still add their memory and disk use. Libvips streams ordinary maps, while rotations and some codecs require additional resources. Reserve writable installation-local `data/runner/tmp/` space for the encoded source, the complete staged tile set and native spill files, in addition to final media storage. Explicit Runner-root or Django upload-temp overrides retain their documented precedence. Measure representative formats, transparency and orientations on the intended server before raising limits; this change does not add background jobs or a global memory quota.
 
+## Persistent Blueprint waits
+
+The ASGI application starts a database-backed Delay worker automatically when
+Daphne's reactor starts. This includes the normal Runner launch; no separate
+worker command or browser connection is needed. Other ASGI hosts must enable
+lifespan startup/shutdown. WSGI does not supply this lifecycle. Standard Django
+management commands do not start the worker. The existing managed updater
+maintenance flag holds the queue during server health verification until the
+update is committed or rolled back.
+
+Apply migrations before startup. Pending continuations live in the same private
+database as the scene, survive process restarts and become eligible when their
+deadline passes. A scene's paused automation keeps them pending until resumed.
+The worker checks at 250 ms intervals in batches of 20; timing is subject to load
+and availability. Shutdown waits for the current transaction to finish. If a
+process ends during a transaction, its uncommitted continuation remains pending
+for a later claim. Check server logs for database failures and the GM's
+**Automation → Waiting** view for pending work.
+
+Every ASGI process may run its own worker; database transactions serialize
+claims and effects, preventing duplicate application across competing workers.
+`GRAVEWRIGHT_AUTOMATION_WORKER_ENABLED=false` disables that process's worker
+without deleting waits. Campaign exports, snapshots and clones omit pending
+continuations; a full database backup includes them. A restored database can
+therefore resume overdue work on startup. Use the disabled-worker setting while
+inspecting a recovery copy before intentionally enabling its automation. See
+[configuration](configuration.md#blueprint-delay-worker) and
+[Persistent Delay](map-builder.md#persistent-delay).
+
 ## Multiple processes
 
 All workers need the same database, media files, secret, module trust configuration and Redis channel layer. Standard server settings require `GRAVEWRIGHT_REDIS_URL` with debug disabled, even for one process. The dedicated local runner is a separate profile and cannot be used for this deployment. In-memory Channels cannot exchange events between workers.

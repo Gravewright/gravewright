@@ -17,7 +17,7 @@ from gravewright.accounts.views import read_json
 from gravewright.campaigns.views import authenticated
 from .packages import ModuleFailure
 
-CONTRACT = json.loads((Path(__file__).parent / 'contracts/frontend.json').read_text())
+CONTRACT = json.loads((Path(__file__).parent / 'contracts/frontend.json').read_text(encoding='utf-8'))
 DOMAINS = {'actors': actors, 'tokens': tokens, 'maps': maps, 'journals': journals}
 RESOURCE_DOMAINS = {'items', 'combat', 'cards', 'audio', 'compendiums'}
 

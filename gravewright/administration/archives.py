@@ -7,6 +7,7 @@ import re
 import stat
 import uuid
 import zipfile
+from copy import deepcopy
 from pathlib import PurePosixPath
 
 from django.apps import apps
@@ -32,6 +33,7 @@ GROUPS = {
         "gravewright_maps.tile",
         "gravewright_maps.scenestate",
         "gravewright_maps.sceneobject",
+        "gravewright_maps.mapbuilderproject",
     ],
     "actors": [
         "gravewright_actors.folder",
@@ -50,6 +52,7 @@ GROUPS = {
     "cards": ["gravewright_cards.cardasset", "gravewright_cards.deckdefinition", "gravewright_cards.deck", "gravewright_cards.card"],
     "combat": ["gravewright_combat.encounter"],
     "compendiums": ["gravewright_compendiums.pack", "gravewright_compendiums.entry", "gravewright_compendiums.entryasset", "gravewright_compendiums.contentaccess"],
+    "blueprintTemplates": ["gravewright_maps.blueprinttemplate"],
 }
 SNAPSHOT_MODELS = {
     "gravewright_table.documentaccess",
@@ -108,7 +111,16 @@ def records(campaign, selected, *, snapshot=False):
         for record in serializers.serialize(
             "python", model.objects.filter(**{lookup: campaign})
         ):
+            if not selected["audio"] and label in {
+                "gravewright_maps.sceneobject", "gravewright_maps.mapbuilderproject"
+            }:
+                record["fields"] = deepcopy(record["fields"])
+                omit_blueprint_audio(record)
             data = record["fields"]
+            if label in {"gravewright_maps.sceneobject", "gravewright_maps.mapbuilderproject"}:
+                data = record["fields"] = deepcopy(data)
+                for field in ("data", "generation"):
+                    discard_area_presence(label, field, data.get(field))
             if not snapshot:
                 data.pop("permissions", None)
                 if record['model']=='gravewright_cards.card':
@@ -120,6 +132,47 @@ def records(campaign, selected, *, snapshot=False):
                         data[key] = None
             result.append(record)
     return result
+
+
+def discard_area_presence(model, field, value):
+    """Occupancy is recomputed from scene geometry, never exported as token IDs."""
+    if not isinstance(value, dict):
+        return
+    if model == "gravewright_maps.sceneobject" and field == "data":
+        value.pop("areaPresence", None)
+    elif model == "gravewright_maps.mapbuilderproject" and field == "generation":
+        for record in value.get("objects", []):
+            if isinstance(record, dict) and isinstance(record.get("data"), dict):
+                record["data"].pop("areaPresence", None)
+
+
+def omit_blueprint_audio(record):
+    """Remove excluded audio dependencies from exported graph copies only."""
+    from gravewright.maps.blueprint_runtime import detach_blueprint_sound
+    from gravewright.maps.services import MapError
+
+    data = record["fields"]
+    if record["model"] == "gravewright_maps.sceneobject":
+        candidates = [data.get("data", {})]
+    else:
+        candidates = [*data.get("document", {}).get("doors", []), *data.get("document", {}).get("decorations", []),
+                      *data.get("document", {}).get("regions", [])]
+        candidates.extend(row.get("data", {}) for row in data.get("generation", {}).get("objects", []))
+        generated = data.get("generation", {}).get("dynamicDocument", {})
+        candidates.extend(row for kind in ("doors", "decorations", "regions") for row in generated.get(kind, []))
+    for candidate in candidates:
+        blueprint = candidate.get("blueprint")
+        if not isinstance(blueprint, dict):
+            continue
+        tracks = {
+            node["trackId"] for graph in blueprint.get("graphs", {}).values()
+            for node in graph["nodes"] if node.get("type") in ("sound", "soundControl")
+        }
+        for track_id in tracks:
+            try:
+                detach_blueprint_sound(blueprint, track_id)
+            except MapError as error:
+                raise AuthError("blueprint_audio_cleanup_limit") from error
 
 
 def export_campaign(campaign, selected=None, *, include_files=True, snapshot=False, resource=None):
@@ -289,6 +342,163 @@ def rewrite(value, identifiers, paths):
     return value
 
 
+def preserve_shader_text(record, field_name, rewritten):
+    """Shader names and GLSL are authored text, not embedded resource references."""
+    original = record["fields"][field_name]
+    candidates = []
+    if (record["model"] == "gravewright_maps.sceneobject" and field_name == "data"
+            and record["fields"].get("kind") == "shaders"):
+        candidates.append((original, rewritten))
+    elif record["model"] == "gravewright_maps.mapbuilderproject" and isinstance(original, dict) and isinstance(rewritten, dict):
+        if field_name == "document":
+            candidates.extend(zip(original.get("shaders", []), rewritten.get("shaders", [])))
+        elif field_name == "generation":
+            candidates.extend((before.get("data"), after.get("data"))
+                              for before, after in zip(original.get("objects", []), rewritten.get("objects", []))
+                              if isinstance(before, dict) and isinstance(after, dict) and before.get("kind") == "shaders")
+            candidates.extend(zip(original.get("dynamicDocument", {}).get("shaders", []),
+                                  rewritten.get("dynamicDocument", {}).get("shaders", [])))
+    for before, after in candidates:
+        if isinstance(before, dict) and isinstance(after, dict):
+            for key in ("name", "source"):
+                if isinstance(before.get(key), str):
+                    after[key] = before[key]
+
+
+def preserve_blueprint_values(before, after):
+    """Typed values and signal names are authored text, never resource IDs."""
+    if isinstance(before, list) and isinstance(after, list):
+        for original, rewritten in zip(before, after):
+            preserve_blueprint_values(original, rewritten)
+    elif isinstance(before, dict) and isinstance(after, dict):
+        if "automationMemory" in before:
+            from gravewright.maps.blueprint_memory import clean_memory
+            from gravewright.maps.services import MapError
+            try:
+                after["automationMemory"] = clean_memory(before["automationMemory"])
+            except MapError:
+                raise AuthError("invalid_archive") from None
+        if "automationVariables" in before:
+            from gravewright.maps.blueprint_variables import clean_store
+            from gravewright.maps.services import MapError
+            try:
+                after["automationVariables"] = clean_store(before["automationVariables"])
+            except MapError:
+                raise AuthError("invalid_archive") from None
+        if before.get("type") in ("getVariable", "setVariable", "compareValue", "emitEvent", "timer", "switch", "elementGroup"):
+            if "name" in before:
+                after["name"] = before["name"]
+            if before.get("valueType") == "text":
+                for key in ("default", "value", "expected"):
+                    if key in before:
+                        after[key] = before[key]
+                if before.get("type") == "switch" and isinstance(before.get("cases"), list):
+                    after["cases"] = deepcopy(before["cases"])
+        if isinstance(before.get("graphs"), dict) and isinstance(after.get("graphs"), dict):
+            # A signal name may itself contain text resembling a UUID.
+            after["graphs"] = {key: rewrite_graph for key, rewrite_graph in
+                               zip(before["graphs"], after["graphs"].values())}
+            # Node identities are local authored labels. Rewriting UUID-looking
+            # substrings would disconnect them from their preserved progress.
+            for original, rewritten in zip(before["graphs"].values(), after["graphs"].values()):
+                if not isinstance(original, dict) or not isinstance(rewritten, dict):
+                    continue
+                for source, target in zip(original.get("nodes", []), rewritten.get("nodes", [])):
+                    if isinstance(source, dict) and isinstance(target, dict) and "id" in source:
+                        target["id"] = source["id"]
+                for source, target in zip(original.get("edges", []), rewritten.get("edges", [])):
+                    if isinstance(source, dict) and isinstance(target, dict):
+                        for key in ("from", "to"):
+                            if key in source:
+                                target[key] = source[key]
+        if before.get("type") == "event" and isinstance(before.get("event"), str):
+            after["event"] = before["event"]
+        if before.get("type") == "showMessage" and isinstance(before.get("text"), str):
+            after["text"] = before["text"]
+        for key, value in before.items():
+            if key not in ("automationVariables", "automationMemory") and key in after:
+                preserve_blueprint_values(value, after[key])
+
+
+def remap_omitted_bindings(record, field_name, rewritten, model_ids, inert_ids):
+    """Keep excluded typed resources inert without rewriting authored text."""
+    original = record["fields"].get(field_name)
+    candidates = []
+    source_destinations = {}
+    if record["model"] == "gravewright_maps.sceneobject" and field_name == "data":
+        candidates.append((original, rewritten, False))
+    elif (record["model"] == "gravewright_maps.mapbuilderproject"
+          and isinstance(original, dict) and isinstance(rewritten, dict)):
+        if field_name == "document":
+            source_destinations = {before["id"]: after["id"] for before, after in
+                                   zip(original.get("regions", []), rewritten.get("regions", []))}
+            for kind in ("doors", "decorations", "regions"):
+                candidates.extend((before, after, kind == "regions")
+                                  for before, after in zip(original.get(kind, []), rewritten.get(kind, [])))
+        elif field_name == "generation":
+            source_destinations = {before["id"]: after["id"] for before, after in zip(
+                original.get("dynamicDocument", {}).get("regions", []), rewritten.get("dynamicDocument", {}).get("regions", []))}
+            candidates.extend((before.get("data"), after.get("data"), False)
+                              for before, after in zip(original.get("objects", []), rewritten.get("objects", []))
+                              if isinstance(before, dict) and isinstance(after, dict))
+            for kind in ("doors", "decorations", "regions"):
+                candidates.extend((before, after, kind == "regions") for before, after in zip(
+                    original.get("dynamicDocument", {}).get(kind, []), rewritten.get("dynamicDocument", {}).get(kind, [])))
+
+    def binding(identifier, model):
+        try:
+            key = (model, str(uuid.UUID(identifier)))
+        except (ValueError, TypeError, AttributeError):
+            return identifier
+        if key in model_ids:
+            return str(model_ids[key])
+        if key not in inert_ids:
+            inert_ids[key] = str(uuid.uuid4())
+        return inert_ids[key]
+
+    for before, after, source_region in candidates:
+        if not isinstance(before, dict) or not isinstance(after, dict):
+            continue
+        blueprint, copied = before.get("blueprint"), after.get("blueprint")
+        if isinstance(blueprint, dict) and isinstance(copied, dict):
+            graphs, copied_graphs = blueprint.get("graphs"), copied.get("graphs")
+            for graph, copy in zip(graphs.values() if isinstance(graphs, dict) else (),
+                                   copied_graphs.values() if isinstance(copied_graphs, dict) else ()):
+                if not isinstance(graph, dict) or not isinstance(copy, dict):
+                    continue
+                for node, cloned in zip(graph.get("nodes", []), copy.get("nodes", [])):
+                    if not isinstance(node, dict) or not isinstance(cloned, dict):
+                        continue
+                    if node.get("type") == "soundReference":
+                        cloned["trackId"] = binding(node.get("trackId"), "gravewright_audio.track")
+                    elif (node.get("type") == "elementGroup" and node.get("memberType") == "sound"
+                          and isinstance(node.get("targetIds"), list)):
+                        cloned["targetIds"] = [binding(identifier, "gravewright_audio.track")
+                                               for identifier in node.get("targetIds", [])]
+                    elif node.get("type") == "teleport":
+                        cloned["destinationId"] = source_destinations.get(node.get("destinationId")) or binding(
+                            node.get("destinationId"), "gravewright_maps.sceneobject")
+                    elif node.get("type") == "showHandout":
+                        cloned["journalId"] = binding(node.get("journalId"), "gravewright_journals.journal")
+                    if node.get("type") in ("showMessage", "showHandout", "cameraFocus"):
+                        audience = node.get("audience", {})
+                        if audience.get("scope") == "users" and isinstance(audience.get("userIds"), list):
+                            cloned["audience"]["userIds"] = [binding(identifier, "gravewright_accounts.user")
+                                                              for identifier in audience["userIds"]]
+        region, copied_region = (before, after) if source_region else (before.get("region"), after.get("region"))
+        if not isinstance(region, dict) or not isinstance(copied_region, dict):
+            continue
+        if isinstance(region.get("arrivalGates"), list):
+            copied_region["arrivalGates"] = [str(model_ids[("gravewright_tokens.token", identifier)])
+                                             for identifier in region["arrivalGates"]
+                                             if ("gravewright_tokens.token", identifier) in model_ids]
+        filters, copied_filters = region.get("filters"), copied_region.get("filters")
+        if isinstance(filters, dict) and isinstance(copied_filters, dict):
+            for key, model in (("actorIds", "gravewright_actors.actor"), ("tokenIds", "gravewright_tokens.token")):
+                if isinstance(filters.get(key), list):
+                    copied_filters[key] = [binding(identifier, model) for identifier in filters[key]]
+
+
 def import_campaign(raw, user, title="", *, target=None, merge=False):
     """Import a validated content graph, remapping identifiers and stored file paths."""
     payload, blobs = read_archive(raw)
@@ -343,6 +553,7 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                         if target and not merge
                         else str(uuid.uuid4())
                     )
+            inert_ids = {}
             paths = {}
             for old, archive_path in payload["files"].items():
                 suffix = PurePosixPath(old).suffix.lower()
@@ -389,7 +600,10 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             else:
                                 key = (label, str(value))
                                 if key not in model_ids:
-                                    if field.null:
+                                    if (record["model"] == "gravewright_maps.mapasset"
+                                            and field_name == "generated_for"):
+                                        raise AuthError("invalid_archive")
+                                    elif field.null:
                                         value = None
                                     else:
                                         raise AuthError("invalid_archive")
@@ -406,8 +620,28 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             kwargs[field_name] = paths.get(value, "")
                         elif field_name == "permissions":
                             kwargs[field_name] = value if target and not merge else {}
+                        elif record["model"] == "gravewright_maps.blueprinttemplate" and field_name == "definition":
+                            from gravewright.maps.blueprint_templates import clean_definition
+                            from gravewright.maps.services import MapError
+                            try:
+                                kwargs[field_name] = clean_definition(value)
+                            except MapError:
+                                raise AuthError("invalid_archive") from None
                         else:
                             kwargs[field_name] = rewrite(value, identifiers, paths)
+                            preserve_shader_text(record, field_name, kwargs[field_name])
+                            if record["model"] in ("gravewright_maps.scene", "gravewright_maps.sceneobject",
+                                                   "gravewright_maps.mapbuilderproject"):
+                                preserve_blueprint_values(value, kwargs[field_name])
+                                remap_omitted_bindings(record, field_name, kwargs[field_name], model_ids, inert_ids)
+                                discard_area_presence(record["model"], field_name, kwargs[field_name])
+                            if (record["model"] == "gravewright_maps.mapbuilderproject"
+                                    and field_name == "document" and isinstance(value, dict)
+                                    and isinstance(value.get("assets"), list)):
+                                # Family names are authored labels, even when they contain an ID.
+                                for original, rewritten in zip(value["assets"], kwargs[field_name]["assets"]):
+                                    if isinstance(original, dict) and isinstance(original.get("family"), str):
+                                        rewritten["family"] = original["family"]
                     if defer:
                         continue
                     pkfield = model._meta.pk
@@ -436,6 +670,27 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                     progress = True
                 if not progress:
                     raise AuthError("invalid_archive")
+            from gravewright.maps.surface_validation import validate_campaign_surfaces
+            from gravewright.maps.blueprint_actions import validate_campaign_sprites
+            from gravewright.maps.builder_services import validate_imported_projects
+            from gravewright.maps.services import MapError
+            try:
+                validate_campaign_surfaces(campaign)
+                validate_campaign_sprites(campaign)
+                validate_imported_projects(campaign)
+                from gravewright.maps.models import Scene
+                from gravewright.maps.regions import MAX_REGIONS, baseline, presence_rows
+                imported_scenes = [pk for (model, _), pk in model_ids.items() if model == "gravewright_maps.scene"]
+                for scene in Scene.objects.filter(campaign=campaign, pk__in=imported_scenes):
+                    listeners = presence_rows(scene)
+                    objects = [row for row in listeners if row.kind == "images"]
+                    if objects and len(listeners) > MAX_REGIONS:
+                        raise MapError("The scene has too many presence regions.")
+                    for row in baseline(scene, objects):
+                        row.version += 1
+                        row.save(update_fields=["data", "version"])
+            except MapError:
+                raise AuthError("invalid_archive") from None
             if merge:
                 campaign.imported_references=model_ids
                 root=payload.get('resource')

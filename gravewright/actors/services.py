@@ -203,6 +203,16 @@ def save_sheet(who, data):
         from django.db.models import F
 
         row.tokens.filter(linked=True).update(version=F("version") + 1)
+    old_hints = old.get("token") if isinstance(old.get("token"), dict) else {}
+    new_hints = clean.get("token") if isinstance(clean.get("token"), dict) else {}
+    if old_hints.get("size", 1) != new_hints.get("size", 1):
+        from gravewright.maps.regions import rebaseline
+        if token:
+            scenes = {token.scene_id: token.scene}
+        else:
+            scenes = {entry.scene_id: entry.scene for entry in row.tokens.filter(linked=True).select_related("scene")}
+        for scene in scenes.values():
+            rebaseline(scene)
     return {"sheetVersion": target.sheet_version, "version": row.version}
 
 
@@ -245,6 +255,10 @@ def command(campaign, user, action, data, request_id):
         elif action in {"actor.update", "actor.delete", "actor.permissions"}:
             row = get(data.get("id"), who, True)
             if action == "actor.delete":
+                from gravewright.maps.regions import remove_actor_tokens
+                from gravewright.maps.blueprint_delays import automation_request
+                with automation_request(request_id):
+                    remove_actor_tokens(Actor.objects.filter(pk=row.pk), who)
                 row.delete()
             elif action == "actor.permissions":
                 from gravewright.table.ownership import validate
@@ -273,13 +287,17 @@ def command(campaign, user, action, data, request_id):
             if action == "folder.delete":
 
                 def remove(f):
-                    for child in Folder.objects.filter(parent=f):
+                    for child in Folder.objects.filter(parent=f).order_by("id"):
                         remove(child)
                     if data.get("recursive"):
+                        from gravewright.maps.regions import remove_actor_tokens
+                        remove_actor_tokens(Actor.objects.filter(folder=f), who)
                         Actor.objects.filter(folder=f).delete()
                     f.delete()
 
-                remove(row)
+                from gravewright.maps.blueprint_delays import automation_request
+                with automation_request(request_id):
+                    remove(row)
             else:
                 if "parentId" in data:
                     parent = folder(data["parentId"], who)

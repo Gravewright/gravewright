@@ -19,7 +19,7 @@ def seeded(seed):
 
 class PythonEngineTests(TestCase):
     def test_legacy_grammar_results_facts_spans_and_limits(self):
-        cases = json.loads(Path(__file__).with_name("legacy_results.json").read_text())
+        cases = json.loads(Path(__file__).with_name("legacy_results.json").read_text(encoding="utf-8"))
         for case in cases:
             with self.subTest(expression=case["expression"], seed=case["seed"]):
                 if "error" in case:

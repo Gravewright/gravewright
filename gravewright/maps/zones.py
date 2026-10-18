@@ -65,7 +65,15 @@ class Geometry:
             return (x-g["x"])**2+(y-g["y"])**2<=g["radius"]**2
         pts=([{"x":g["x"],"y":g["y"]},{"x":g["x"]+g["width"],"y":g["y"]},{"x":g["x"]+g["width"],"y":g["y"]+g["height"]},{"x":g["x"],"y":g["y"]+g["height"]}] if g["shape"]=="rect" else g["points"])
         def side(p,q,r): return (q["x"]-p["x"])*(r[1]-p["y"])-(q["y"]-p["y"])*(r[0]-p["x"])
-        return any(side(pts[i],pts[(i+1)%len(pts)],a)*side(pts[i],pts[(i+1)%len(pts)],b)<=0 and side({"x":a[0],"y":a[1]},{"x":b[0],"y":b[1]},(pts[i]["x"],pts[i]["y"]))*side({"x":a[0],"y":a[1]},{"x":b[0],"y":b[1]},(pts[(i+1)%len(pts)]["x"],pts[(i+1)%len(pts)]["y"]))<=0 for i in range(len(pts)))
+        def intersects(p,q):
+            # Collinear segments intersect only when their finite bounds overlap.
+            if (max(a[0],b[0]) < min(p["x"],q["x"]) or min(a[0],b[0]) > max(p["x"],q["x"])
+                    or max(a[1],b[1]) < min(p["y"],q["y"]) or min(a[1],b[1]) > max(p["y"],q["y"])):
+                return False
+            start,end={"x":a[0],"y":a[1]},{"x":b[0],"y":b[1]}
+            return (side(p,q,a)*side(p,q,b)<=0
+                    and side(start,end,(p["x"],p["y"]))*side(start,end,(q["x"],q["y"]))<=0)
+        return any(intersects(pts[i],pts[(i+1)%len(pts)]) for i in range(len(pts)))
 
 
 def visible(data,who):
@@ -73,7 +81,7 @@ def visible(data,who):
     return who.role=='gm' or audience['kind']=='campaign' or audience['kind']=='users' and str(who.user_id) in audience.get('ids',[])
 
 
-def clean(raw,who,previous=None):
+def clean(raw,who,previous=None, *, scene_id=None):
     if not isinstance(raw,dict):raise MapError('Invalid zone.')
     data={**(previous or {}),**raw}
     try:geometry,_=Geometry._normalize_geometry(data.get('geometry'))
@@ -92,29 +100,74 @@ def clean(raw,who,previous=None):
     if bottom is not None and top is not None and bottom>top:raise MapError('Invalid zone elevation.')
     tags=data.get('tags',[])
     if not isinstance(tags,list) or len(tags)>32 or any(not isinstance(t,str) or len(t)>64 for t in tags):raise MapError('Invalid zone tags.')
-    return dict(geometry=geometry,type=str(data.get('type') or 'standard')[:64],
+    result = dict(geometry=geometry,type=str(data.get('type') or 'standard')[:64],
         audience={'kind':kind,**({'ids':list(dict.fromkeys(ids))} if ids else {})},
         vertical={'bottom':bottom,'top':top},enabled=boolean(data.get('enabled',True)),tags=list(dict.fromkeys(tags)),
         packageProvenance=(previous or {}).get('packageProvenance',{'packageId':'core','providerId':None}))
+    if 'region' in data:
+        region = data['region']
+        authored = raw.get('region', {})
+        if isinstance(region, dict):
+            region = {**(previous or {}).get('region', {}), **region}
+        if (not isinstance(region, dict) or not isinstance(authored, dict) or set(authored) - {'name', 'filters'}
+                or not isinstance(region.get('name'), str) or not region['name'].strip()
+                or len(region['name']) > 120 or '\x00' in region['name'] or geometry['shape'] != 'rect'):
+            raise MapError('Invalid presence region.')
+        result['audience'] = {'kind': 'gm'}
+        result['region'] = {'name': region['name'].strip(), 'state': 'empty', 'occupants': []}
+        if previous and 'arrivalGates' in previous.get('region', {}):
+            from copy import deepcopy
+            result['region']['arrivalGates'] = deepcopy(previous['region']['arrivalGates'])
+        # Authored settings are patched independently of the private occupancy ledger.
+        filters = authored.get('filters', (previous or {}).get('region', {}).get('filters'))
+        if filters is not None:
+            from .regions import clean_filters
+            result['region']['filters'] = clean_filters(filters, campaign_id=who.campaign_id, scene_id=scene_id)
+        elif 'filters' in authored:
+            raise MapError('Invalid region filters.')
+        if data.get('blueprint') is not None:
+            from .blueprint_runtime import clean_native_blueprint
+            result['blueprint'] = clean_native_blueprint(data['blueprint'], who.campaign_id, scene_id, kind='region')
+    elif 'blueprint' in raw:
+        raise MapError('Only presence regions can have a blueprint.')
+    from .blueprint_variables import copy_runtime
+    return copy_runtime(previous, result)
 
 
 def apply(scene,who,action,p):
     manage(who)
     if action=='create':
         if scene.elements.count()>=5000:raise MapError('Scene object limit reached.')
-        obj=SceneObject.objects.create(scene=scene,kind='zones',data=clean(p,who))
+        data = clean(p,who,scene_id=scene.pk)
+        if 'region' in data:
+            from .regions import MAX_REGIONS, presence_rows
+            if len(presence_rows(scene)) >= MAX_REGIONS:
+                raise MapError('The scene has too many presence regions.')
+        obj=SceneObject(scene=scene,kind='zones',data=data)
     elif action in ('update','delete'):
         obj=get_object(scene,p.get('zone_id',p.get('id')),'zones')
         version=p.get('expected_version',p.get('version'))
         if type(version) is not int or obj.version!=version:raise MapError('This zone changed. Refresh before editing.','conflict')
         if action=='delete':
-            rid=str(obj.pk);obj.delete();return {'id':rid,'deleted':True}
-        obj.data=clean(p.get('patch',{}),who,obj.data);obj.version+=1;obj.save()
+            from .blueprint_lifecycle import destroy_objects
+            rid=str(obj.pk);destroy_objects(scene,who,[obj]);return {'id':rid,'deleted':True}
+        was_region = 'region' in obj.data
+        obj.data=clean(p.get('patch',{}),who,obj.data,scene_id=scene.pk);obj.version+=1
+        if not was_region and 'region' in obj.data:
+            from .regions import MAX_REGIONS, presence_rows
+            if len(presence_rows(scene)) >= MAX_REGIONS:
+                raise MapError('The scene has too many presence regions.')
     else:raise MapError('Unknown zone command.')
+    if 'region' in obj.data:
+        from .regions import baseline, projection
+        baseline(scene, [obj])
+        obj.save()
+        return {**projection(entry(obj)), 'sceneId':str(scene.pk)}
+    obj.save()
     return {**entry(obj),'sceneId':str(scene.pk)}
 
 
-def movement_events(scene, token, before):
+def movement_events(scene, token, before, *, teleport=False):
     """Emit enter/leave/cross events only after the authoritative move commits."""
     from django.db import transaction
     from asgiref.sync import async_to_sync
@@ -125,11 +178,13 @@ def movement_events(scene, token, before):
     start=(ox+(before[0]+size/2)*cell,oy+(before[1]+size/2)*cell)
     end=(ox+(token.grid_x+size/2)*cell,oy+(token.grid_y+size/2)*cell)
     for obj in scene.elements.filter(kind='zones'):
+        # Pressure plates use private Blueprint diagnostics, not legacy signals.
+        if 'region' in obj.data:continue
         if not obj.data['enabled']:continue
         zone={**obj.data,'vertical_bottom':obj.data['vertical']['bottom'],'vertical_top':obj.data['vertical']['top']}
         was=Geometry.contains(zone,*start,before[2]);now=Geometry.contains(zone,*end,token.elevation)
         within=(zone['vertical_bottom'] is None or token.elevation>=zone['vertical_bottom']) and (zone['vertical_top'] is None or token.elevation<=zone['vertical_top'])
-        crossing=within and not was and not now and Geometry.crosses(zone,start,end,token.elevation)
+        crossing=not teleport and within and not was and not now and Geometry.crosses(zone,start,end,token.elevation)
         event='zone.entered' if not was and now else 'zone.left' if was and not now else 'zone.crossed' if crossing else None
         if not event:continue
         payload={'type':'room.zone','event':event,'sceneId':str(scene.pk),'zoneId':str(obj.pk),'tokenId':str(token.pk),'schema_version':1}

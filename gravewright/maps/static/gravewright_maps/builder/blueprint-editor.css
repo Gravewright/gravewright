@@ -1,0 +1,268 @@
+.ownership-modal-overlay > .table-form-modal.smart-object {
+  --wire-next: #d7bd85; --wire-true: #6db386; --wire-false: #d2796b;
+  --state-open: #68d391; --state-closed: #e8c45a; --state-locked: #ef7474;
+  --value-state: #b9a2f2; --value-boolean: #5ec4d6; --value-door: #e0a96d; --value-number: #87c6dc; --value-text: #e2b0cf;
+  --node-surface: #1c252d; --node-border: #3e4b57; --graph-surface: #10171d; --graph-dot: #2f3b46;
+  display: flex; flex-direction: column; width: min(1320px, calc(100vw - 32px)); height: min(860px, calc(100dvh - 32px));
+  max-width: none; max-height: calc(100dvh - 32px); color: var(--text); font: 14px/1.4 var(--font);
+}
+.smart-object [hidden] { display: none !important; }
+.smart-object > header { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+.smart-object__title { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); min-width: 0; }
+.smart-object__title > strong { font-size: 16px; }
+.smart-object__subtitle { color: var(--text-muted); font-size: 12px; }
+.smart-object .smart-object__close { min-width: 32px; width: 32px; padding: var(--space-0); font-size: 20px; }
+.smart-object__body { display: flex; flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-3); }
+.table-form-modal.smart-object button { min-height: 32px; padding: var(--space-1) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.table-form-modal.smart-object button:disabled { opacity: .55; cursor: default; }
+.table-form-modal.smart-object button:hover:not(:disabled) { border-color: var(--accent); }
+.table-form-modal.smart-object .smart-object__primary { border-color: var(--accent-dark); background: color-mix(in srgb, var(--accent) 20%, var(--surface)); color: var(--text-bright); }
+.table-form-modal.smart-object button[aria-pressed=true] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, var(--surface)); }
+.smart-object :is(input,select) { width: 100%; min-width: 0; height: 30px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background-color: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; }
+.smart-object label { display: grid; min-width: 0; gap: var(--space-1); color: var(--text-muted); font-size: 12px; }
+.smart-object :is(button,input,select,[tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.smart-object h3 { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-0); color: var(--text-bright); font-size: 13px; }
+.smart-object__hint { margin: var(--space-0); font-size: 12px; color: var(--text-muted); }
+.smart-object__layout { display: grid; flex: 1; grid-template-columns: 196px minmax(0, 1fr) 248px; gap: var(--space-3); min-width: 0; min-height: 0; }
+
+/* Event list: every state and trigger with its node count. */
+.smart-object__events { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; min-height: 0; overflow-y: auto; }
+.smart-object__events > h3 { padding: var(--space-1) var(--space-1) var(--space-0); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.smart-object__event-group { display: grid; gap: var(--space-half); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-raised); }
+.smart-object__event-state { display: flex; align-items: center; gap: var(--space-2); min-width: 0; padding: var(--space-0) var(--space-1) var(--space-1); color: var(--text-bright); font-size: 13px; font-weight: 600; }
+.table-form-modal.smart-object .smart-object__event { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); width: 100%; min-height: 30px; padding: var(--space-1) var(--space-2); border-color: transparent; background: transparent; color: var(--text-muted); text-align: left; }
+.table-form-modal.smart-object .smart-object__event:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text); }
+.table-form-modal.smart-object .smart-object__event[aria-pressed=true] { border-color: var(--accent-dark); color: var(--text-bright); }
+.smart-object__event-columns { display: none; }
+.smart-object__verb-events { display: grid; gap: var(--space-2); }
+.table-form-modal.smart-object .smart-object__verb-event { min-height: 56px; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-raised); }
+.smart-object__verb-event .smart-object__event-label { display: grid; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
+.smart-object__verb-event .smart-object__event-label strong { font-size: 13px; }
+.smart-object__verb-event code, .smart-object__event-code { color: var(--text-muted); font-size: 12px; }
+.smart-object__event-help { padding: var(--space-1); }
+.smart-object__state-events { border-top: 1px solid var(--border); padding-top: var(--space-2); }
+.smart-object__state-events > summary { cursor: pointer; color: var(--text-muted); font-size: 12px; padding: var(--space-1); }
+.smart-object__state-events > .smart-object__event-group { margin-top: var(--space-2); }
+.smart-object__badge { flex-shrink: 0; min-width: 22px; padding: var(--space-0) var(--space-1); border-radius: var(--radius-pill); background: var(--surface-field); color: var(--text); font-size: 12px; line-height: 20px; text-align: center; }
+.smart-object__badge[data-empty] { color: var(--text-faint); }
+.smart-object__state-mark { display: inline-block; flex-shrink: 0; width: 10px; height: 10px; border-radius: var(--radius-circle); background: var(--text-faint); }
+.smart-object__state-mark--open, .smart-object__state-mark--on, .smart-object__state-mark--occupied { background: var(--state-open); }
+.smart-object__state-mark--closed, .smart-object__state-mark--off, .smart-object__state-mark--empty { background: var(--state-closed); }
+.smart-object__state-mark--locked { background: var(--state-locked); }
+
+/* Graph stage */
+.smart-object__stage { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; min-height: 0; }
+.smart-object__tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.smart-object__tools-gap { flex: 1; }
+.smart-object__viewport { position: relative; flex: 1; min-height: 320px; }
+.smart-object__canvas { position: absolute; inset: 0; overflow: hidden; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background-color: var(--graph-surface); background-image: radial-gradient(circle, var(--graph-dot) 1.2px, transparent 1.4px); touch-action: none; overscroll-behavior: contain; }
+.smart-object__canvas.is-panning { cursor: grabbing; }
+/* Dragging nodes and wires must not select their labels; fields stay editable. */
+.smart-object__canvas { -webkit-user-select: none; user-select: none; }
+.smart-object__canvas :is(input, select, textarea) { -webkit-user-select: text; user-select: text; }
+.smart-object__surface { position: relative; }
+.smart-object__plane { position: absolute; transform-origin: 0 0; }
+.smart-object__wires, .smart-object__nodes { position: absolute; inset: 0; pointer-events: none; }
+.smart-object__wires { overflow: visible; }
+.smart-object__guide { position: absolute; top: var(--space-2); left: var(--space-2); max-width: calc(100% - 16px); margin: var(--space-0); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--graph-surface) 82%, transparent); color: var(--text-muted); font-size: 12px; pointer-events: none; }
+.smart-object__view-controls { position: absolute; right: var(--space-2); bottom: var(--space-2); display: flex; gap: var(--space-1); padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
+.table-form-modal.smart-object .smart-object__view-controls button { min-width: 30px; min-height: 28px; padding: var(--space-0) var(--space-2); }
+.table-form-modal.smart-object .smart-object__zoom-level { min-width: 52px; font-variant-numeric: tabular-nums; }
+.smart-object__minimap { position: absolute; left: var(--space-2); bottom: var(--space-2); width: 168px; height: 112px; border: 1px solid var(--border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: var(--shadow-sm); cursor: pointer; touch-action: none; }
+.smart-object__minimap rect { fill: color-mix(in srgb, var(--text-muted) 55%, transparent); }
+.smart-object__minimap rect[data-node-type=door], .smart-object__minimap rect[data-node-type=lever] { fill: var(--accent-dark); }
+.smart-object__minimap rect.is-selected { fill: var(--accent); }
+.smart-object__minimap .smart-object__minimap-view { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 1.5px; }
+.smart-object__marquee { position: absolute; border: 1px dashed var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); pointer-events: none; }
+
+/* Wires */
+.smart-object__wires g { --wire: var(--wire-next); cursor: pointer; pointer-events: auto; outline: none; }
+.smart-object__wires [data-wire-kind=true] { --wire: var(--wire-true); }
+.smart-object__wires [data-wire-kind=false] { --wire: var(--wire-false); }
+.smart-object__wires [data-wire-kind=open], .smart-object__wires [data-wire-kind=on], .smart-object__wires [data-wire-kind=occupied] { --wire: var(--state-open); }
+.smart-object__wires [data-wire-kind=closed], .smart-object__wires [data-wire-kind=off], .smart-object__wires [data-wire-kind=empty] { --wire: var(--state-closed); }
+.smart-object__wires [data-wire-kind=locked] { --wire: var(--state-locked); }
+.smart-object__wires [data-wire-kind=change] { --wire: var(--state-closed); }
+.smart-object__wires [data-wire-kind=interact], .smart-object__wires [data-wire-kind="presence:enter"] { --wire: var(--state-open); }
+.smart-object__wires [data-wire-kind=destroy], .smart-object__wires [data-wire-kind="presence:exit"] { --wire: var(--state-locked); }
+.smart-object__wires [data-wire-kind^="signal:"] { --wire: var(--value-state); }
+.smart-object__wires [data-wire-kind=state] { --wire: var(--value-state); }
+.smart-object__wires [data-wire-kind=boolean] { --wire: var(--value-boolean); }
+.smart-object__wires [data-wire-kind=number] { --wire: var(--value-number); }
+.smart-object__wires [data-wire-kind=text] { --wire: var(--value-text); }
+.smart-object__wires [data-wire-kind=door], .smart-object__wires [data-wire-kind=element] { --wire: var(--value-door); }
+.smart-object__wires g.is-data .smart-object__wire { stroke-width: 2px; stroke-dasharray: 6 4; }
+.smart-object__wire, .smart-object__wires [data-blueprint-wire-preview], .smart-object__context-wire { fill: none; stroke: var(--wire, var(--wire-next)); stroke-width: 3px; stroke-linecap: round; }
+.smart-object__wire-hit { fill: none; stroke: transparent; stroke-width: 16px; pointer-events: stroke; }
+.smart-object__wires g:is(:hover, :focus-visible) .smart-object__wire { stroke-width: 5px; filter: brightness(1.25); }
+.smart-object__wires g:focus-visible .smart-object__wire { stroke-dasharray: 10 4; }
+.smart-object__wires g.is-executed .smart-object__wire { stroke-width: 5px; filter: drop-shadow(0 0 4px var(--wire)); }
+.smart-object__wires [data-blueprint-wire-preview] { stroke-dasharray: 8 6; pointer-events: none; }
+.smart-object__context-wire { stroke-width: 2px; stroke-dasharray: 2 7; opacity: .6; pointer-events: none; }
+
+/* Nodes */
+.smart-object__node { --node-accent: #3d6585; position: absolute; width: 220px; border: 1px solid var(--node-border); border-radius: var(--radius-md); background: var(--node-surface); box-shadow: var(--shadow-md); pointer-events: auto; }
+.smart-object__node--event { --node-accent: #8f4b56; }
+.smart-object__node--condition, .smart-object__node--all, .smart-object__node--any { --node-accent: #8a6d32; }
+.smart-object__node--light { --node-accent: #4f6f3a; }
+.smart-object__node--sprite { --node-accent: #3e6f73; }
+.smart-object__node--sequence { --node-accent: #6d5a3a; }
+.smart-object__node--property, .smart-object__node--compare { --node-accent: #574a86; }
+.smart-object__node--reference { --node-accent: #7a5a32; }
+.smart-object__node--reveal { --node-accent: #3e6f73; }
+.smart-object__node--barrier { --node-accent: #6b4f3a; }
+.smart-object__node--soundControl { --node-accent: #3d6585; }
+.smart-object__node.is-missing { border-color: var(--danger); }
+.smart-object__hint--warning { color: var(--danger-text, var(--danger)); }
+.smart-object__node.is-selected, .smart-object__node.is-dragging { z-index: 1; }
+.smart-object__node.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow-md); }
+.smart-object__node.is-executed { border-color: var(--success); box-shadow: 0 0 0 2px var(--success), var(--shadow-md); }
+.smart-object__node.is-dragging { box-shadow: var(--shadow-lg); }
+.smart-object__node-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 32px; padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3); border-radius: var(--radius-md) var(--radius-md) 0 0; background: color-mix(in srgb, var(--node-accent) 62%, var(--node-surface)); color: var(--text-bright); cursor: grab; touch-action: none; }
+.smart-object__node-heading strong { min-width: 0; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.table-form-modal.smart-object .smart-object__node-delete { flex-shrink: 0; width: 26px; min-width: 26px; height: 26px; min-height: 26px; padding: var(--space-0); border: 0; background: transparent; color: var(--text-bright); font-size: 16px; }
+.table-form-modal.smart-object .smart-object__node-delete:hover { background: color-mix(in srgb, var(--danger) 30%, transparent); }
+.smart-object__node-content { display: grid; gap: var(--space-2); padding: var(--space-0) var(--space-3) var(--space-3); font-size: 12px; }
+.smart-object__node-content:empty { display: none; }
+.smart-object__node-content .smart-object__event-state { padding: var(--space-0); font-size: 12px; }
+.smart-object__sockets { display: flex; justify-content: space-between; align-items: start; gap: var(--space-2); padding: var(--space-2) var(--space-0); }
+.smart-object__inputs { display: flex; flex-direction: column; align-items: start; gap: var(--space-1); }
+.smart-object__outputs { display: flex; flex-direction: column; align-items: end; gap: var(--space-1); }
+.table-form-modal.smart-object .smart-object__socket { --socket: var(--wire-next); display: inline-flex; align-items: center; gap: var(--space-2); min-height: 24px; padding: var(--space-0) var(--space-2); border: 0; background: transparent; color: var(--text-muted); touch-action: none; cursor: crosshair; }
+.table-form-modal.smart-object .smart-object__socket:hover { color: var(--text-bright); }
+.table-form-modal.smart-object .smart-object__socket--input { margin-left: -8px; padding-left: var(--space-0); }
+.table-form-modal.smart-object .smart-object__socket--output { margin-right: -8px; padding-right: var(--space-0); }
+.table-form-modal.smart-object .smart-object__socket--true { --socket: var(--wire-true); }
+.table-form-modal.smart-object .smart-object__socket--false { --socket: var(--wire-false); }
+.table-form-modal.smart-object .smart-object__socket[aria-pressed=true] { background: transparent; color: var(--accent); }
+[data-blueprint-socket-dot] { display: block; flex-shrink: 0; width: 16px; height: 16px; border: 3px solid var(--node-surface); border-radius: var(--radius-circle); background: var(--socket, var(--wire-next)); box-shadow: 0 0 0 1px var(--socket, var(--wire-next)); }
+.smart-object__socket:hover [data-blueprint-socket-dot], .smart-object__socket[aria-pressed=true] [data-blueprint-socket-dot] { box-shadow: 0 0 0 3px color-mix(in srgb, var(--socket) 45%, transparent); }
+.table-form-modal.smart-object .smart-object__socket--data[data-port-type=state] { --socket: var(--value-state); }
+.table-form-modal.smart-object .smart-object__socket--data[data-port-type=boolean] { --socket: var(--value-boolean); }
+.table-form-modal.smart-object .smart-object__socket--data[data-port-type=number] { --socket: var(--value-number); }
+.table-form-modal.smart-object .smart-object__socket--data[data-port-type=text] { --socket: var(--value-text); }
+.table-form-modal.smart-object .smart-object__socket--data[data-port-type=door],
+.table-form-modal.smart-object .smart-object__socket--data[data-port-type=element] { --socket: var(--value-door); }
+.smart-object__socket--data [data-blueprint-socket-dot] { width: 14px; height: 14px; margin: var(--space-px); border-radius: var(--radius-sm); transform: rotate(45deg); }
+
+/* Door instance */
+.smart-object__node--door { width: 264px; border-color: var(--accent-dark); }
+.smart-object__node--door .smart-object__node-heading { flex-direction: column; align-items: start; justify-content: center; gap: var(--space-0); min-height: 44px; padding: var(--space-1) var(--space-3); background: var(--surface-raised-2); }
+.smart-object__node--door .smart-object__node-heading strong { max-width: 100%; font-size: 14px; }
+.smart-object__node-kind { color: var(--text-muted); font-size: 12px; }
+.smart-object__node--door .smart-object__node-content { padding-top: var(--space-2); color: var(--text-muted); }
+.smart-object__instance-ports { display: grid; gap: var(--space-1); padding: var(--space-2) var(--space-0) var(--space-2) var(--space-3); border-top: 1px solid var(--border); }
+.table-form-modal.smart-object .smart-object__state-port { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; min-height: 0; margin-right: calc(-1 * (var(--space-2) + var(--space-px))); padding: var(--space-1) var(--space-0); border: 0; background: transparent; color: var(--text-muted); touch-action: none; cursor: crosshair; }
+.table-form-modal.smart-object .smart-object__state-port:hover, .table-form-modal.smart-object .smart-object__state-port[aria-pressed=true] { background: transparent; color: var(--text-bright); }
+.smart-object__port-labels { display: flex; flex-direction: column; align-items: start; min-width: 0; text-align: left; }
+.smart-object__state-label { max-width: 100%; overflow-wrap: anywhere; font-size: 12px; }
+.smart-object__state-port [data-blueprint-state-dot] { display: block; flex-shrink: 0; width: 18px; height: 18px; border: 3px solid var(--node-surface); border-radius: var(--radius-circle); background: currentColor; box-shadow: 0 0 0 1px currentColor; }
+.smart-object__state-port--open [data-blueprint-state-dot], .smart-object__state-port--on [data-blueprint-state-dot], .smart-object__state-port--occupied [data-blueprint-state-dot] { color: var(--state-open); }
+.smart-object__state-port--closed [data-blueprint-state-dot], .smart-object__state-port--off [data-blueprint-state-dot], .smart-object__state-port--empty [data-blueprint-state-dot] { color: var(--state-closed); }
+.smart-object__state-port--locked [data-blueprint-state-dot] { color: var(--state-locked); }
+.smart-object__state-port--change [data-blueprint-state-dot] { color: var(--state-closed); }
+.smart-object__state-port--interact [data-blueprint-state-dot], .smart-object__state-port--presence-enter [data-blueprint-state-dot] { color: var(--state-open); }
+.smart-object__state-port--presence-exit [data-blueprint-state-dot], .smart-object__state-port--destroy [data-blueprint-state-dot] { color: var(--state-locked); }
+.smart-object__state-port[class*="smart-object__state-port--signal-"] [data-blueprint-state-dot] { color: var(--value-state); }
+.smart-object__state-port[aria-pressed=true] [data-blueprint-state-dot] { box-shadow: 0 0 0 1px currentColor, 0 0 0 5px color-mix(in srgb, currentColor 30%, transparent); }
+
+/* Node chooser */
+.smart-object__node-picker { position: fixed; z-index: 2; display: flex; flex-direction: column; gap: var(--space-2); width: min(300px, calc(100vw - 32px)); max-height: min(520px, calc(100dvh - 16px)); padding: var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); font-size: 12px; }
+.smart-object__node-picker > strong { color: var(--text-bright); font-size: 13px; }
+.smart-object__picker-list { display: grid; gap: var(--space-3); min-height: 0; overflow-y: auto; }
+.smart-object__picker-group { display: grid; gap: var(--space-1); }
+.smart-object__picker-heading { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.table-form-modal.smart-object .smart-object__pick { --node-accent: #3d6585; display: grid; gap: var(--space-half); padding: var(--space-2) var(--space-3); border-left: 3px solid var(--node-accent); text-align: left; }
+.table-form-modal.smart-object :is(.smart-object__pick--condition, .smart-object__pick--all, .smart-object__pick--any) { --node-accent: #8a6d32; }
+.table-form-modal.smart-object .smart-object__pick--light { --node-accent: #4f6f3a; }
+.table-form-modal.smart-object .smart-object__pick--sprite { --node-accent: #3e6f73; }
+.table-form-modal.smart-object .smart-object__pick--sequence { --node-accent: #6d5a3a; }
+.table-form-modal.smart-object :is(.smart-object__pick--property, .smart-object__pick--compare) { --node-accent: #574a86; }
+.table-form-modal.smart-object .smart-object__pick--reference { --node-accent: #7a5a32; }
+.table-form-modal.smart-object .smart-object__pick--reveal { --node-accent: #3e6f73; }
+.table-form-modal.smart-object .smart-object__pick--barrier { --node-accent: #6b4f3a; }
+.smart-object__trace-value { color: var(--text-muted); }
+.smart-object__pick-name { color: var(--text-bright); font-size: 13px; }
+.smart-object__pick-description { color: var(--text-muted); font-size: 12px; white-space: normal; }
+
+/* Properties */
+.smart-object__inspector { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; min-height: 0; overflow-y: auto; }
+.smart-object__panel { display: grid; align-content: start; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-raised); }
+.smart-object__preview { display: grid; place-items: center; height: 96px; padding: var(--space-3); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); font-size: 12px; color: var(--text-muted); }
+.smart-object__preview img { max-width: 100%; max-height: 72px; object-fit: contain; }
+.smart-object__trace { display: grid; gap: var(--space-1); max-height: 180px; overflow-y: auto; margin: var(--space-0); padding-left: var(--space-5); font-size: 12px; }
+.smart-object__trace:empty { display: none; }
+.smart-object > footer { display: flex; flex-shrink: 0; align-items: center; justify-content: end; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); }
+.smart-object__autosave { flex: 1 1 180px; margin: var(--space-0); color: var(--text-muted); font-size: 12px; }
+.smart-object__autosave[data-state=saved] { color: var(--success, #68d391); }
+.smart-object__autosave:is([data-state=error], [data-state=conflict], [data-state=blocked]) { color: var(--danger, #ef9b91); }
+.smart-object [role=alert] { flex: 1 1 200px; margin: var(--space-0); color: var(--danger, #ef9b91); font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .ownership-modal-overlay > .table-form-modal.smart-object { height: calc(100dvh - 32px); }
+  .smart-object__layout { grid-template-columns: 180px minmax(0, 1fr); grid-template-rows: minmax(360px, 1fr) auto; }
+  .smart-object__inspector { grid-column: 1 / -1; flex-direction: row; overflow: visible; }
+  .smart-object__inspector > * { flex: 1; min-width: 0; }
+}
+@media (max-width: 760px) {
+  .smart-object__minimap { display: none; }
+  .ownership-modal-overlay > .table-form-modal.smart-object { width: calc(100vw - 16px); height: auto; max-height: calc(100dvh - 16px); }
+  .smart-object__body { display: block; padding: var(--space-2); }
+  .smart-object__layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  /* State × trigger matrix: one row per state, one count button per trigger. */
+  .smart-object__events { gap: var(--space-1); overflow: visible; }
+  .smart-object__event-columns, .smart-object__event-group { display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(var(--event-trigger-count, 3), minmax(0, 1fr)); align-items: center; gap: var(--space-1); }
+  .smart-object__event-columns { align-items: end; padding: var(--space-0) var(--space-1); color: var(--text-muted); font-size: 12px; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+  .smart-object__event-group { padding: var(--space-1); }
+  .smart-object__event-state { padding: var(--space-0) var(--space-1); }
+  .smart-object__event-state > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+  .table-form-modal.smart-object .smart-object__event { justify-content: center; min-height: 34px; padding: var(--space-1); border-color: var(--border); }
+  .smart-object__event-label { display: none; }
+  .smart-object__presence-event .smart-object__event-label { display: inline; }
+  .smart-object__verb-events { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .smart-object__verb-event .smart-object__event-label { display: grid; }
+  .table-form-modal.smart-object .smart-object__verb-event { justify-content: space-between; text-align: left; padding: var(--space-2); }
+  .smart-object__tools > button { flex: 1 1 calc(50% - 4px); }
+  .smart-object__tools-gap { display: none; }
+  .smart-object__viewport { display: grid; flex: none; gap: var(--space-2); min-height: 0; }
+  .smart-object__canvas { position: relative; inset: auto; height: 320px; }
+  .smart-object__guide { position: static; grid-row: 1; max-width: none; padding: var(--space-0); background: none; }
+  .smart-object__view-controls { bottom: var(--space-2); }
+  .smart-object__inspector { flex-direction: column; }
+}
+.table-form-modal.smart-object .smart-object__pick-map { justify-self: start; min-height: 28px; }
+.smart-object__signals { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--border); min-width: 0; }
+.smart-object__signal-row { display: grid; grid-template-columns: minmax(0, 1fr) 30px; gap: var(--space-1); }
+.table-form-modal.smart-object [data-blueprint-signal-remove] { padding: var(--space-0); min-width: 30px; }
+.smart-object__signal-event { min-width: 0; }
+.smart-object__signal-event > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.smart-object__simulation-variables { min-width: 0; font-size: 12px; }
+.smart-object__simulation-variables summary { cursor: pointer; color: var(--text-bright); }
+.smart-object__simulation-variables > div { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+.smart-object__simulation-variables label { overflow-wrap: anywhere; }
+.table-form-modal.smart-object :is(.smart-object__pick--getVariable, .smart-object__pick--compareValue) { --node-accent: #574a86; }
+.smart-object__node--getVariable, .smart-object__node--compareValue { --node-accent: #574a86; }
+.smart-object__node--counter, .smart-object__node--once, .smart-object__node--cooldown, .smart-object__node--delay, .smart-object__node--timer,
+.table-form-modal.smart-object :is(.smart-object__pick--counter, .smart-object__pick--once, .smart-object__pick--cooldown, .smart-object__pick--delay, .smart-object__pick--timer) { --node-accent: #8a6d32; }
+.smart-object__hint[data-blueprint-timer-event] { overflow-wrap: anywhere; }
+.smart-object__node--switch, .smart-object__node--random,
+.table-form-modal.smart-object :is(.smart-object__pick--switch, .smart-object__pick--random) { --node-accent: #8a6d32; }
+.smart-object__choice-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--space-2); min-width: 0; }
+.smart-object__choice-row label { min-width: 0; overflow-wrap: anywhere; }
+.smart-object__members { display: grid; gap: var(--space-1); max-height: 192px; overflow-y: auto; margin: var(--space-0); padding: var(--space-0); list-style: none; }
+.smart-object__members li { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 26px); align-items: center; gap: var(--space-1); }
+.smart-object__members li > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smart-object__members li.is-missing { color: var(--danger-text, var(--danger)); }
+.table-form-modal.smart-object .smart-object__members button { min-width: 26px; min-height: 26px; padding: var(--space-0); }
+.smart-object__node--elementGroup { width: 280px; }
+.smart-object__node--elementGroup, .smart-object__node--lightReference, .smart-object__node--soundReference,
+.table-form-modal.smart-object :is(.smart-object__pick--elementGroup, .smart-object__pick--lightReference, .smart-object__pick--soundReference) { --node-accent: #7a5a32; }
+.smart-object__node--eventContext, .table-form-modal.smart-object .smart-object__pick--eventContext { --node-accent: #574a86; }
+.smart-object__wires :is([data-wire-kind=elementset], [data-wire-kind=light], [data-wire-kind=lightset], [data-wire-kind=sound], [data-wire-kind=soundset]) { --wire: var(--value-door); }
+.table-form-modal.smart-object .smart-object__socket--data:is([data-port-type=elementset], [data-port-type=light], [data-port-type=lightset], [data-port-type=sound], [data-port-type=soundset]) { --socket: var(--value-door); }
+.smart-object__audience { display: grid; gap: var(--space-1); max-height: 128px; overflow-y: auto; }
+.table-form-modal.smart-object .smart-object__audience label { display: flex; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+.smart-object__audience label span { overflow-wrap: anywhere; }
+.smart-object__audience input[type=checkbox] { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: var(--space-0); padding: var(--space-0); }
+.smart-object__node textarea { max-width: 100%; min-width: 0; resize: vertical; font-size: 12px; }
+.table-form-modal.smart-object .smart-object__choice-remove { min-width: 28px; padding: var(--space-0) var(--space-1); font-size: 16px; }

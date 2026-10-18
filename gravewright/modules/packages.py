@@ -157,10 +157,10 @@ def safe_path(name: str) -> PurePosixPath:
 class Contracts:
     """Load the checked-in SDK registry and validate its JSON data boundaries."""
     def __init__(self):
-        self.registry = json.loads((CONTRACTS / "registry.json").read_text())
+        self.registry = json.loads((CONTRACTS / "registry.json").read_text(encoding="utf-8"))
         self.validators = {}
         for path in (CONTRACTS / "schemas").glob("*.json"):
-            schema = json.loads(path.read_text())
+            schema = json.loads(path.read_text(encoding="utf-8"))
             Draft202012Validator.check_schema(schema)
             self.validators["schemas/" + path.name] = Draft202012Validator(schema)
 

@@ -1,7 +1,18 @@
 from django.urls import path
-from . import views, assets
+from . import views, assets, builder, testing_views, universal_vtt_views
 
 urlpatterns = [
+    path('api/containers/<uuid:campaign_id>/universal-vtt/import', universal_vtt_views.import_map),
+    path('api/maps/<uuid:map_id>/universal-vtt', universal_vtt_views.export_map),
+    path('game/<uuid:campaign_id>/map-builder', builder.page, name='map-builder'),
+    path('api/containers/<uuid:campaign_id>/map-builder', builder.state, name='map-builder-state'),
+    path('api/containers/<uuid:campaign_id>/map-builder/testing-catalog', testing_views.catalog),
+    path('api/containers/<uuid:campaign_id>/map-builder/test', testing_views.draft),
+    path('api/containers/<uuid:campaign_id>/map-builder/templates', builder.templates, name='blueprint-templates'),
+    path('api/containers/<uuid:campaign_id>/map-builder/templates/<uuid:template_id>', builder.template, name='blueprint-template'),
+    path('api/containers/<uuid:campaign_id>/map-builder/projects/<uuid:project_id>', builder.document, name='map-builder-project'),
+    path('api/containers/<uuid:campaign_id>/map-builder/projects/<uuid:project_id>/generate', builder.generate, name='map-builder-generate'),
+    path('api/containers/<uuid:campaign_id>/map-builder/projects/<uuid:project_id>/update', builder.update, name='map-builder-update'),
     path('api/containers/<uuid:campaign_id>/library/asset-state', assets.state),
     path('api/containers/<uuid:campaign_id>/library/upload', assets.upload),
     path('api/containers/<uuid:campaign_id>/library/assets/<str:action>', assets.command),
@@ -10,6 +21,11 @@ urlpatterns = [
     path("api/containers/<uuid:campaign_id>/scene-upload", views.upload),
     path("api/containers/<uuid:campaign_id>/scenes", views.state),
     path("api/maps/<uuid:map_id>/state", views.layers),
+    path("api/maps/<uuid:map_id>/automation", views.automation),
+    path("api/maps/<uuid:map_id>/automation/network", views.automation_network),
+    path("api/maps/<uuid:map_id>/automation/network/<uuid:element_id>", views.automation_network_element),
+    path("api/maps/<uuid:map_id>/automation/test/<uuid:element_id>", testing_views.scene),
+    path("api/maps/<uuid:map_id>/automation/control/<uuid:element_id>", testing_views.control),
     path("api/maps/<uuid:map_id>/manifest", views.manifest),
     path("api/maps/<uuid:map_id>/tiles/<int:lod>/<int:x>/<int:y>", views.tile),
 ]

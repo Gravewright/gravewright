@@ -1433,7 +1433,7 @@
   "lighting.particles.enabled": "Active",
   "lighting.particles.remove": "Delete emitter",
   "lighting.particles.density_hint": "Amount is the performance dial: lower it if the scene drags.",
-  "lighting.particles.hint": "Scene dressing: they light nothing.",
+  "lighting.particles.hint": "Scene effect: can receive and emit light.",
   "lighting.editor.anim_none": "Steady",
   "lighting.editor.anim_candle": "Candle",
   "lighting.editor.anim_fire": "Bonfire",

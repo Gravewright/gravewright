@@ -1403,6 +1403,10 @@ var SoundtrackPanel_native_default = widget([{ "tag": "section", "attrs": { "cla
   return { gwText: text, PhPlay, PhPause, PhStop, PhSkipForward, PhSkipBack, PhPlus, PhTrash, PhArrowUp, PhArrowDown, HttpClient, props, emit, scope, http, base: base2, lists, state, editing, kind, name, mode, fade, repeat, chosen, busy, error, entries, timer, probes, time, refresh: refresh2, definitions, add, save, command: command2, create };
 });
 
+// gravewright/maps/static/gravewright_maps/region-filters.js
+var regionFilterDispositions = Object.freeze(["friendly", "neutral", "hostile", "unknown"]);
+var regionFilterVisibility = Object.freeze(["any", "visible", "hidden"]);
+
 // gravewright/maps/frontend/features/selection/model/objects.js
 function rotate(p, c, degrees) {
   const a = degrees * Math.PI / 180, dx = p.x - c.x, dy = p.y - c.y;

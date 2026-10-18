@@ -3,6 +3,7 @@ export class AssetReferencePool {
     load;
     unload;
     #references = new Map();
+    #unloads = new Map();
     constructor(load, unload) {
         this.load = load;
         this.unload = unload;
@@ -10,6 +11,10 @@ export class AssetReferencePool {
     async acquire(url) {
         this.#references.set(url, (this.#references.get(url) ?? 0) + 1);
         try {
+            // Pixi unload awaits its cached load before destroying the texture.
+            // A new owner must not borrow that cached texture in the meantime.
+            const unloading = this.#unloads.get(url);
+            if (unloading) await unloading;
             return await this.load(url);
         }
         catch {
@@ -26,6 +31,9 @@ export class AssetReferencePool {
             return;
         }
         this.#references.delete(url);
-        void this.unload(url).catch(() => { });
+        const unloading = Promise.resolve().then(() => this.unload(url)).catch(() => { }).finally(() => {
+            if (this.#unloads.get(url) === unloading) this.#unloads.delete(url);
+        });
+        this.#unloads.set(url, unloading);
     }
 }
