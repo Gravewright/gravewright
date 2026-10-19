@@ -665,7 +665,7 @@ It offers these actions and conditions:
 | **Light reference** | Value node: connect a native light to a compatible **Target** input |
 | **Sound reference** | Value node: connect a campaign sound to a compatible **Target** input |
 | **Move object** | Move each target by an X/Y offset in cells |
-| **Rotate object** | Add an angle around each target's own center |
+| **Rotate object** | Add an angle around each target's own center or a door's rotation anchor |
 | **Set interaction** | Enable or disable direct player interaction with doors, levers and torches |
 | **Set region** | Enable or disable presence detection for a region |
 | **Event context** | Value node: read trusted trigger identity, token metadata, event or state |
@@ -926,7 +926,8 @@ text, including UUID-like text, stay unchanged.
 
 **Move object** uses relative X/Y cell offsets, each from −1,000 to 1,000.
 **Rotate object** adds an angle from −36,000 to 36,000 degrees around each
-target's own center. Without Target, these act on the owning element; connected
+target's own center; a door with a **Rotation anchor point** pivots on that
+anchor. Without Target, these act on the owning element; connected
 targets may be an Element, Light or their typed groups. Native image/door/light
 validators still apply. Presence rectangles rotate only in multiples of 90
 degrees; incompatible geometry fails the command rather than approximating it.

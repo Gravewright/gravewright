@@ -696,7 +696,7 @@ oferece estas ações e condições:
 | **Referência de luz** | Nó de valor: conectar uma luz nativa a uma entrada **Alvo** compatível |
 | **Referência de som** | Nó de valor: conectar um som da campanha a uma entrada **Alvo** compatível |
 | **Mover objeto** | Mover cada alvo por um deslocamento X/Y em células |
-| **Girar objeto** | Somar um ângulo em torno do centro de cada alvo |
+| **Girar objeto** | Somar um ângulo em torno do centro de cada alvo ou do ponto de ancoragem da porta |
 | **Definir interação** | Habilitar ou desabilitar a interação direta de jogadores com portas, alavancas e tochas |
 | **Definir região** | Habilitar ou desabilitar a detecção de presença de uma região |
 | **Contexto do evento** | Nó de valor: ler identidade da origem, dados do token, evento ou estado validados pelo servidor |
@@ -971,7 +971,8 @@ escalares autorados, inclusive os semelhantes a UUIDs, permanecem intactos.
 
 **Mover objeto** usa deslocamentos X/Y relativos em células, cada um de −1.000
 a 1.000. **Girar objeto** soma um ângulo de −36.000 a 36.000 graus em torno do
-centro de cada alvo. Sem Alvo, atuam no elemento proprietário; alvos conectados
+centro de cada alvo; uma porta com **Ponto de ancoragem da rotação** gira em
+torno desse ponto. Sem Alvo, atuam no elemento proprietário; alvos conectados
 podem ser Elemento, Luz ou seus grupos tipados. Os validadores nativos de imagem,
 porta e luz continuam valendo. Regiões retangulares só giram em múltiplos de
 90 graus; geometria incompatível faz o comando falhar, sem aproximações. A

@@ -1791,7 +1791,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             }
             content.append(node('p', { class: 'smart-object__hint' }, t(item.type === 'move'
                 ? 'Moves live objects relative to their current position. One cell follows the scene grid.'
-                : 'Each target rotates around its center. Regions use multiples of 90 degrees.')),
+                : 'Each target rotates around its center; doors use their rotation anchor. Regions use multiples of 90 degrees.')),
             node('p', { class: 'smart-object__hint' }, t('Generating or updating from the project restores authored positions.')));
         }
         if (item.type === 'setInteraction') content.append(parameter(item, 'Player interaction', 'enabled', [['true', t('Enabled')], ['false', t('Disabled')]]),

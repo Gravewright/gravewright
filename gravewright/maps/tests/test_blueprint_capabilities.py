@@ -267,6 +267,19 @@ class CapabilityRuntimeTests(TestCase):
         self.assertEqual({key: self.door_object.data[key] for key in ("x1", "y1", "x2", "y2")},
                          {key: initial[key] for key in ("x1", "y1", "x2", "y2")})
 
+    def test_rotation_pivots_on_the_door_anchor(self):
+        self.doc["doors"][0]["rotationAnchor"] = "start"
+        self.doc["doors"][0]["blueprint"] = graph_with(node("rotate", "rotate", degrees=90),
+                                                       edges=[execution("event", "rotate")])
+        self.generated()
+        initial = deepcopy(self.door_object.data)
+        self.command("closed")
+        self.door_object.refresh_from_db()
+        data = self.door_object.data
+        self.assertEqual((data["x1"], data["y1"]), (initial["x1"], initial["y1"]))
+        self.assertAlmostEqual(data["x2"], initial["x1"] - (initial["y2"] - initial["y1"]))
+        self.assertAlmostEqual(data["y2"], initial["y1"] + (initial["x2"] - initial["x1"]))
+
     def test_prior_manual_geometry_conflict_is_not_adopted_by_automation(self):
         self.doc["doors"][0]["blueprint"] = graph_with(node("move", "move", dx=1, dy=0), edges=[execution("event", "move")])
         self.generated()

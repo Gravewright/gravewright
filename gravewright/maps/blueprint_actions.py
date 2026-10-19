@@ -91,7 +91,9 @@ def transform(scene, who, row, action):
     else:
         degrees = action["degrees"]
         if row.kind == "walls":
-            cx, cy = (before["x1"] + before["x2"]) / 2, (before["y1"] + before["y2"]) / 2
+            offset = {"start": 0, "end": 1}.get(before.get("rotationAnchor"), .5)
+            cx = before["x1"] + (before["x2"] - before["x1"]) * offset
+            cy = before["y1"] + (before["y2"] - before["y1"]) * offset
             c, s = math.cos(math.radians(degrees)), math.sin(math.radians(degrees))
             patch = {}
             for index in (1, 2):

@@ -2590,7 +2590,7 @@
   "Offset Y (cells)": "Deslocamento Y (células)",
   "Angle (degrees)": "Ângulo (graus)",
   "Moves live objects relative to their current position. One cell follows the scene grid.": "Move objetos em relação à posição atual. Uma célula segue a grade da cena.",
-  "Each target rotates around its center. Regions use multiples of 90 degrees.": "Cada alvo gira ao redor do próprio centro. Regiões usam múltiplos de 90 graus.",
+  "Each target rotates around its center; doors use their rotation anchor. Regions use multiples of 90 degrees.": "Cada alvo gira ao redor do próprio centro; portas usam seu ponto de ancoragem da rotação. Regiões usam múltiplos de 90 graus.",
   "Generating or updating from the project restores authored positions.": "Gerar ou atualizar pelo projeto restaura as posições definidas no editor.",
   "Allow or block direct player interaction. The GM can still operate the mechanism.": "Permita ou bloqueie a interação direta dos jogadores. O mestre continua podendo operar o mecanismo.",
   "Player interaction": "Interação dos jogadores",
