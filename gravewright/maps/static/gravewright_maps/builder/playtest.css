@@ -26,4 +26,6 @@
 .playtest__results dd { margin: var(--space-0); }
 .playtest__results ol { padding-left: var(--space-4); }
 .playtest__warning { color: var(--accent); }
+.playtest__facts { margin: var(--space-2) var(--space-0); padding-left: var(--space-4); }
+.playtest__results .playtest__technical { border-bottom: 0; padding-bottom: var(--space-0); color: var(--text-muted); font-size: 12px; }
 @media (max-width: 650px) { .playtest__form, .playtest__layout { grid-template-columns: minmax(0, 1fr); } .playtest__results { max-height: none; } .playtest__map { min-height: 180px; } }

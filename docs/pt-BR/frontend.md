@@ -471,7 +471,8 @@ estado anterior, estados referenciados e variáveis tipadas conservam os valores
 do início do evento mesmo na primeira leitura após uma espera; a memória dos
 controles é consultada no momento da retomada. Tomada da tarefa, efeitos,
 conclusão e recibo da continuação são gravados juntos. Os limites atravessam
-todos os trechos: 32 operações de elemento, quatro operações por elemento,
+todos os trechos: 32 operações de elemento, 256 entregas de sinal de cena,
+quatro operações por elemento,
 1.024 ações e 32 retomadas temporizadas. Delay e Temporizador compartilham 64
 tarefas pendentes por cena e 256 por campanha.
 Retomar uma continuação não consome outra operação de elemento.

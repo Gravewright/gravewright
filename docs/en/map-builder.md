@@ -680,9 +680,13 @@ directly in the current sequence; a state change does not start another graph.
 **Interact with object** and **Emit event** queue the target's graph. Their
 **Next** output continues the source sequence before that queued graph runs,
 within the same command. A chain is limited to 32 element
-operations and 4 on the same element; repeating chains fail the
-whole command without persisting anything, and the automation log shows the
-chain. A chain started by a player never locks or unlocks a door unless the
+operations and 4 on the same element. Receivers of a Scene-scope signal use a
+separate budget of 256 deliveries, so one broadcast can reach many listeners;
+each receiver still counts toward its 4 operations. Exceeding any bound fails
+the whole command without persisting anything, and the automation log shows the
+chain with the bound that was reached: an element that ran more than 4 times
+(a repeating chain), more than 32 element operations (a long chain) or more than
+256 scene-signal deliveries. A chain started by a player never locks or unlocks a door unless the
 GM sets that **Change state** action's **Locks** option to **Players may lock or
 unlock**: then a lever operated by a player can unlock another door, and an
 interaction graph on a locked door can open it. Without the option the operation
@@ -1105,8 +1109,9 @@ segment that fails commits none of its effects and records a diagnostic, while
 effects committed before the wait remain.
 
 Delay and Timer share a queue of 64 pending jobs per scene and 256 per campaign.
-A root chain keeps its existing limits across waits: 32 element operations, four
-operations per element and 1,024 actions, plus at most 32 timed resumptions.
+A root chain keeps its existing limits across waits: 32 element operations, 256
+scene-signal deliveries, four operations per element and 1,024 actions, plus at
+most 32 timed resumptions.
 Resuming a Delay continuation does not consume another element-operation slot.
 Pending continuations are private runtime work; campaign exports, snapshots and
 copies do not carry them.
@@ -1160,8 +1165,8 @@ again. Effects, completion and the receipt commit together; failure rolls back
 that expiry's effects and records a diagnostic. Earlier committed effects remain.
 
 Timers and Delays share the 64-per-scene/256-per-campaign pending limits and
-the original chain's 32 timed resumptions, 32 element operations, four operations
-per element and 1,024 actions. A Timer expiry consumes a new element operation;
+the original chain's 32 timed resumptions, 32 element operations, 256 scene-signal
+deliveries, four operations per element and 1,024 actions. A Timer expiry consumes a new element operation;
 a Delay continuation does not. Rearming from a receiving graph keeps those
 limits, so this is not an unbounded repeating scheduler. Running timers are
 private work and do not enter campaign exports, snapshots or copies.
@@ -1174,7 +1179,12 @@ simulate that receiver separately, and use a real scene to verify expiry.
 
 Choose **Test behavior** in the Builder to rehearse the current unsaved document.
 The selected starting event runs against the current configuration without an
-implicit comparison. The result shows state before and after its action sequence.
+implicit comparison. The result shows the element's state before the event and
+after the test settles, including presence changes caused by a teleport or move.
+Each changed element is listed by name with readable facts, such as a door going
+from **Closed** to **Opened**, a region going from **Occupied** to **Empty** with
+the token that left, or a teleport naming the token, destination and cell.
+Raw stored values remain under a collapsed **Technical details** entry.
 Select an element, one of its defined events and, optionally, a **Test actor**.
 The server builds a temporary native scene and runs the real engine, including
 cross-element actions, signals, variables, native effects and token transport.

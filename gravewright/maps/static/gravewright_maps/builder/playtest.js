@@ -1,5 +1,6 @@
 import { mountModal } from '/static/gravewright_table/modal.js';
 import { blueprintEventLabel, blueprintVerbEventsFor, isBlueprintSignalEvent } from './blueprint-model.js';
+import { createRunFormatter } from './run-format.js';
 
 /** Every run rehearses the current configuration through the server, then discards it. */
 export function openPlaytest({ elements, actors = [], tokens = [], draft = false, initialElement, t, execute, preview, onClose }) {
@@ -29,15 +30,6 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
     const ownerSelect = select('Element', 'element'), eventSelect = select('Event', 'event');
     const contextSelect = select(draft ? 'Test actor' : 'Test token', draft ? 'actor' : 'token');
     const kindNames = { door: 'Door', lever: 'Lever', torch: 'Torch', region: 'Region', image: 'Object' };
-    const stateNames = { closed: 'Closed', open: 'Opened', locked: 'Locked', on: 'Activated', off: 'Deactivated', empty: 'Empty', occupied: 'Occupied' };
-    const stepNames = { event: 'Event', state: 'Change state', interact: 'Interact with object', light: 'Set light', sound: 'Play sound', sprite: 'Change sprite',
-        condition: 'Check state', sequence: 'Sequence', reference: 'Element reference', property: 'Get property', compare: 'Compare state',
-        reveal: 'Reveal', barrier: 'Set barrier', flame: 'Set flame', soundControl: 'Control sound', all: 'All conditions', any: 'Any condition',
-        getVariable: 'Get variable', setVariable: 'Set variable', compareValue: 'Compare value', emitEvent: 'Emit event', counter: 'Counter',
-        once: 'Once', cooldown: 'Cooldown', delay: 'Delay', timer: 'Timer', switch: 'Switch', random: 'Random', elementGroup: 'Element group',
-        lightReference: 'Light reference', soundReference: 'Sound reference', eventContext: 'Event context', move: 'Move object', rotate: 'Rotate object',
-        setInteraction: 'Set interaction', setRegion: 'Set region', setVisibility: 'Set visibility', setAppearance: 'Set appearance',
-        showMessage: 'Show message', showHandout: 'Show handout', cameraFocus: 'Focus camera', teleport: 'Teleport token' };
     for (const [index, owner] of owners.entries()) ownerSelect.append(make('option', { value: owner.id, translate: 'no' },
         owner.name || `${t(owner.empty ? 'Empty Object' : kindNames[owner.kind] || 'Element')} ${index + 1}`));
     if (owners.some(owner => owner.id === initialElement)) ownerSelect.value = initialElement;
@@ -69,9 +61,23 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
     function line(label, value) {
         const row = make('p'); row.append(make('strong', {}, `${t(label)}: `), make('span', { translate: 'no' }, String(value))); results.append(row);
     }
-    function report(result) {
+    function technical(rows) {
+        const block = make('details', { class: 'playtest__technical', 'data-playtest-technical': '' });
+        const values = make('dl');
+        for (const [key, value] of rows) values.append(make('dt', { translate: 'no' }, key), make('dd', { translate: 'no' }, value));
+        block.append(make('summary', {}, t('Technical details')), values);
+        return block;
+    }
+    function report(result, testToken) {
         results.replaceChildren();
-        if (result.run) line('State', `${t(stateNames[result.run.stateBefore] || result.run.stateBefore)} → ${t(stateNames[result.run.stateAfter] || result.run.stateAfter)}`);
+        const nativeNames = Object.fromEntries((result.changes?.elements || [])
+            .map(change => [change.id, change.after?.data?.name || change.before?.data?.name]).filter(([, name]) => name));
+        const format = createRunFormatter({ t, elements: () => elements, resolve: id => result.sourceIds?.[id] || id,
+            fallbackName: id => nativeNames[id],
+            tokenName: id => (result.testTokenId && id === result.testTokenId ? testToken : undefined)
+                || tokens.find(entry => entry.id === id)?.name });
+        const state = result.state || result.run;
+        if (state) line('State', `${format.stateName(state.stateBefore ?? state.before, result.elementId)} → ${format.stateName(state.stateAfter ?? state.after, result.elementId)}`);
         if (result.error) results.append(make('p', { role: 'alert' }, t(result.error.message)));
         const warnings = {
             'timing-not-advanced': 'Timers and waits are scheduled in this test; time does not advance.',
@@ -82,21 +88,23 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
         };
         for (const code of result.warnings || []) results.append(make('p', { class: 'playtest__warning' }, t(warnings[code] || code)));
         for (const change of result.changes?.elements || []) {
-            const data = change.after?.data || {}, before = change.before?.data || {};
-            const label = owners.find(owner => owner.id === (change.sourceId || change.id))?.name || t(({ walls: 'Door', images: 'Object', lights: 'Light', zones: 'Region' })[change.kind] || 'Element');
-            const block = make('details', { 'data-playtest-change': change.id, open: '' }); block.append(make('summary', { translate: 'no' }, label));
-            if (change.after === null) {
+            const summary = format.describeChange(change);
+            const block = make('details', { 'data-playtest-change': change.id, open: '' }); block.append(make('summary', { translate: 'no' }, summary.title));
+            if (summary.removed) {
                 block.setAttribute('data-playtest-removed', ''); block.append(make('p', {}, t('Removed for this test')));
                 results.append(block); continue;
             }
-            const values = make('dl');
-            for (const key of Object.keys(data)) if (JSON.stringify(data[key]) !== JSON.stringify(before[key]) && !['src', 'blueprint'].includes(key)) {
-                values.append(make('dt', { translate: 'no' }, key), make('dd', { translate: 'no' }, JSON.stringify(data[key])));
-            }
-            block.append(values); results.append(block);
+            const facts = make('ul', { class: 'playtest__facts' });
+            for (const fact of summary.facts) facts.append(make('li', { translate: 'no' }, fact));
+            if (summary.facts.length) block.append(facts);
+            if (summary.details.length) block.append(technical(summary.details));
+            results.append(block);
         }
-        for (const change of result.changes?.tokens || []) line('Token destination', `${change.after?.grid_x}, ${change.after?.grid_y}`);
-        if (JSON.stringify(result.changes?.sceneVariables?.before) !== JSON.stringify(result.changes?.sceneVariables?.after)) line('Variables', JSON.stringify(result.changes.sceneVariables.after));
+        for (const change of result.changes?.tokens || []) if (change.after) {
+            line('Token destination', `${format.tokenLabel(change.id)} · ${change.after.grid_x}, ${change.after.grid_y}`);
+        }
+        const variables = format.variableChanges(result.changes?.sceneVariables?.before, result.changes?.sceneVariables?.after, t('Scene'));
+        if (variables.length) line('Variables', variables.join(' · '));
         if (JSON.stringify(result.changes?.audio?.before) !== JSON.stringify(result.changes?.audio?.after)) line('Sound', t('Playback would change'));
         for (const job of result.scheduled || []) {
             const row = job.after || job.before || {};
@@ -106,19 +114,14 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
             ? [result.run, ...(result.runs || []).filter(entry => entry.elementId !== result.elementId)]
             : result.runs?.length ? result.runs : result.run ? [result.run] : [];
         for (const entry of trace) for (const event of entry.events || []) {
-            const block = make('details', { 'data-playtest-trace': '', open: '' }); block.append(make('summary', { translate: 'no' }, event.event));
+            const block = make('details', { 'data-playtest-trace': '', open: '' });
+            block.append(make('summary', { translate: 'no' }, format.eventTitle({ ...event, doorId: event.doorId || entry.elementId })));
             const steps = make('ol');
-            for (const step of event.steps || []) {
-                const row = make('li', { 'data-step-type': step.type });
-                row.append(make('strong', {}, t(stepNames[step.type] || step.type)));
-                if (step.unsupportedIds?.length) {
-                    const names = step.unsupportedIds.map(id => elements.find(element => element.id === (result.sourceIds?.[id] || id))?.name || t('Element'));
-                    row.append(make('span', { 'data-playtest-unsupported-targets': '' }, ` · ${t('Unsupported targets')}: ${names.join(', ')}`));
-                }
-                for (const [key, value] of Object.entries(step)) if (!['type', 'id', 'nodeId', 'unsupportedIds'].includes(key)) row.append(make('span', { translate: 'no' }, ` · ${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`));
-                steps.append(row);
-            }
-            block.append(steps); results.append(block);
+            for (const step of event.steps || []) steps.append(make('li', { 'data-step-type': step.type, translate: 'no' }, format.stepText(step)));
+            block.append(steps);
+            if (event.steps?.length) block.append(technical(event.steps.map((step, index) => [`${index + 1}. ${step.type}`,
+                JSON.stringify(Object.fromEntries(Object.entries(step).filter(([key]) => !['type', 'id'].includes(key))))])));
+            results.append(block);
         }
         if (!results.children.length) results.append(make('p', {}, t('No changes were predicted.')));
     }
@@ -133,7 +136,7 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
             const result = await execute(owner, eventSelect.value, contextSelect.value || null, requestId, signal);
             if (disposed) return;
             requestId = undefined; status.textContent = t(result.ok ? 'Test completed. All changes were discarded.' : 'Test failed. All changes were discarded.');
-            report(result); draw(result);
+            report(result, contextSelect.value ? contextSelect.selectedOptions[0]?.textContent : undefined); draw(result);
         } catch (error) {
             if (disposed || error.name === 'AbortError') return;
             status.textContent = t(error.status === 409 ? 'The object changed. Close this test and refresh the scene.' : error.message || 'Could not run the test.');

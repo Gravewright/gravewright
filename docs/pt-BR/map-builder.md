@@ -711,8 +711,13 @@ diretamente na sequência atual; mudar o estado não inicia outro grafo.
 **Interagir com objeto** e **Emitir evento** enfileiram o grafo do alvo. A saída
 **Próximo** continua a sequência de origem antes desse grafo enfileirado executar,
 dentro do mesmo comando. Uma cadeia é limitada a 32 operações de elemento e 4
-no mesmo elemento; cadeias que se repetem fazem o comando inteiro falhar sem
-persistir nada, e o registro de automação mostra a cadeia. Uma cadeia iniciada por
+no mesmo elemento. Os receptores de um sinal com escopo Cena usam um orçamento
+separado de 256 entregas, de modo que uma única transmissão pode alcançar muitos
+ouvintes; cada receptor ainda conta para as suas 4 operações. Ultrapassar
+qualquer limite faz o comando inteiro falhar sem persistir nada, e o registro de
+automação mostra a cadeia com o limite atingido: um elemento que executou mais
+de 4 vezes (cadeia que se repete), mais de 32 operações de elemento (cadeia
+longa) ou mais de 256 entregas de sinal de cena. Uma cadeia iniciada por
 um jogador nunca tranca nem destranca uma porta, a menos que o mestre ajuste a
 opção **Trancas** daquela ação **Mudar estado** para **Jogadores podem trancar ou
 destrancar**: aí uma alavanca operada por um jogador pode destrancar outra porta, e
@@ -1162,7 +1167,8 @@ diagnóstico; efeitos gravados antes da espera permanecem.
 
 Delay e Temporizador compartilham uma fila de 64 tarefas pendentes por cena e
 256 por campanha. A cadeia original mantém seus limites entre esperas: 32
-operações de elemento, quatro operações por elemento e 1.024 ações, além de no
+operações de elemento, 256 entregas de sinal de cena, quatro operações por
+elemento e 1.024 ações, além de no
 máximo 32 retomadas temporizadas. Retomar uma continuação de Delay não consome
 outra operação de elemento. Continuações pendentes são trabalho
 privado de execução; exportações, snapshots e cópias de campanha não as levam.
@@ -1222,7 +1228,8 @@ registra um diagnóstico. Efeitos anteriores já confirmados permanecem.
 
 Temporizador e Delay compartilham os limites de 64 tarefas pendentes por cena,
 256 por campanha e, na cadeia original, 32 retomadas temporizadas, 32 operações
-de elemento, quatro operações por elemento e 1.024 ações. Um vencimento de
+de elemento, 256 entregas de sinal de cena, quatro operações por elemento e
+1.024 ações. Um vencimento de
 Temporizador consome outra operação de elemento; uma continuação de Delay não.
 Reiniciar a contagem pelo grafo receptor conserva esses limites; não cria uma
 agenda recorrente ilimitada. Temporizadores ativos são trabalho privado e não
@@ -1244,7 +1251,12 @@ mudanças devolvidas a uma cópia separada do mapa, sem alterar fonte, históric
 de seleção ou projeto salvo. Não exige geração, renderização de imagem nem
 novos arquivos de mídia.
 O evento de início escolhido executa sobre a configuração atual, sem comparação
-implícita. O resultado mostra o estado antes e depois da sequência de ações.
+implícita. O resultado mostra o estado do elemento antes do evento e depois que
+o teste se assenta, incluindo mudanças de presença causadas por teleporte ou
+movimento. Cada elemento alterado aparece pelo nome com fatos legíveis, como uma
+porta indo de **Fechada** para **Aberta**, uma região indo de **Ocupada** para
+**Vazia** com o token que saiu, ou um teleporte com token, destino e célula. Os
+valores armazenados ficam em **Detalhes técnicos**, recolhido.
 
 Na mesa, **Automação → Elementos → Testar comportamento** ensaia o elemento
 selecionado na cena atual. O **Token de teste** opcional precisa pertencer a essa

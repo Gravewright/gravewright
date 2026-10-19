@@ -440,7 +440,8 @@ Sequence order and preventing replay at convergent nodes. State, previous state,
 reference states and typed variables retain their original event snapshot even
 when first read after a wait; control-node memory is read live on resume. Claim,
 effects, completion and the continuation receipt commit atomically. Chain budgets
-span every segment: 32 element operations, four operations per element, 1,024
+span every segment: 32 element operations, 256 scene-signal deliveries, four
+operations per element, 1,024
 actions and 32 timed resumptions. Delay and Timer share 64 pending jobs per scene
 and 256 per campaign.
 Resuming a continuation does not consume a new element-operation slot.

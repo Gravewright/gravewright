@@ -745,6 +745,10 @@ def automation_command(scene, action, data):
 
 
 MAX_CHAIN_OPERATIONS = 32
+# Scene-scope signal receivers use their own budget: one broadcast may reach
+# many listeners without repeating anything. The per-element bound still
+# detects repetition and the action bound still caps total work.
+MAX_BROADCAST_DELIVERIES = 256
 MAX_ELEMENT_OPERATIONS = 4
 REFUSED = "This door cannot be operated."
 
@@ -803,6 +807,7 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
     blueprints, sound_names, light_changes, audio, traces = {}, {}, {}, [], []
     inherited = deepcopy(resume.data["budget"]) if resume is not None else {}
     counters = {"actions": inherited.get("actions", 0), "operations": inherited.get("operations", 0),
+                "deliveries": inherited.get("deliveries", 0),
                 "delays": inherited.get("delays", 0) + int(resume is not None),
                 "randomDraws": inherited.get("randomDraws", 0),
                 "randomRoot": inherited.get("randomRoot", 0) if resume is not None else next_chain_ordinal()}
@@ -830,6 +835,27 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
         if context is not None:
             run["context"] = context
     context = trigger_context(who, root, context, resumed=resume is not None)
+    resources = _resources_for(scene.campaign_id, scene.pk)
+    torch_lights = None
+
+    def known_track(identifier):
+        # The chain's shared inventory already lists every campaign track.
+        try:
+            return str(uuid.UUID(str(identifier))) in resources.references()[2]
+        except ValueError:
+            return False
+
+    def light_owner(name):
+        # Torch sync moves and gates its children but never relinks them, so
+        # one light-to-torch index serves every light action in the chain.
+        nonlocal torch_lights
+        if torch_lights is None:
+            torch_lights = {}
+            for candidate in doors.values():
+                identifier = candidate.data.get("torch", {}).get("components", {}).get("lights", {}).get("id")
+                if identifier is not None:
+                    torch_lights.setdefault(identifier, candidate)
+        return torch_lights.get(name)
 
     def blueprint_of(key):
         if key not in blueprints:
@@ -874,13 +900,21 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
             door.data["blocks_sight"] = int(mode == "block")
         return True
 
-    def operate_door(key, desired, *, interact, first, allowed=False, signal=None, checkpoint=None):
+    def operate_door(key, desired, *, interact, first, allowed=False, signal=None, checkpoint=None,
+                     broadcast=False):
         door = doors[key]
         if checkpoint is None:
-            counters["operations"] += 1
+            budget = "deliveries" if broadcast else "operations"
+            counters[budget] += 1
             per_door[key] = per_door.get(key, 0) + 1
-            if counters["operations"] > MAX_CHAIN_OPERATIONS or per_door[key] > MAX_ELEMENT_OPERATIONS:
-                raise MapError("The object blueprints form a repeating chain between doors.")
+            # Repetition is checked first: it is the specific cause of a loop,
+            # while the chain bounds describe a long or wide but finite chain.
+            if per_door[key] > MAX_ELEMENT_OPERATIONS:
+                raise MapError("The object blueprints form a repeating chain: one element ran more than 4 times.")
+            if broadcast and counters[budget] > MAX_BROADCAST_DELIVERIES:
+                raise MapError("A scene signal reached more than 256 receiving elements in one chain.")
+            if not broadcast and counters[budget] > MAX_CHAIN_OPERATIONS:
+                raise MapError("The object blueprint chain exceeded 32 element operations.")
         touch(key)
         blueprint = blueprint_of(key)
         kind = element_kind(door)
@@ -1061,7 +1095,7 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                         recipient_blueprint = blueprint_of(recipient)
                         applied.setdefault(node["id"], []).append(recipient)
                         if recipient_blueprint is not None and event_name in recipient_blueprint["graphs"]:
-                            queue.append((recipient, None, False, event_name))
+                            queue.append((recipient, None, False, event_name, node["scope"] == "scene"))
                     continue
                 if node["type"] == "interact":
                     identifier = aim or key
@@ -1072,7 +1106,7 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                     # This explicit action starts the target's authored handler.
                     # Keep it in this chain's queue, budget and transaction rather
                     # than opening an independent runtime with fresh limits.
-                    queue.append((identifier, None, False, "interact"))
+                    queue.append((identifier, None, False, "interact", False))
                     aimed[node["id"]] = identifier
                     applied.setdefault(node["id"], []).append(identifier)
                     continue
@@ -1132,8 +1166,7 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                     if name not in light_changes:
                         light_changes[name] = [deepcopy(light.data), None]
                     light.data["enabled"] = node["enabled"]
-                    owner = next((candidate for candidate in doors.values()
-                                  if candidate.data.get("torch", {}).get("components", {}).get("lights", {}).get("id") == name), None)
+                    owner = light_owner(name)
                     if owner is not None:
                         owner_key = str(owner.pk)
                         touch(owner_key)
@@ -1148,7 +1181,7 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                     applied.setdefault(node["id"], []).append(name)
                 elif node["type"] == "sound":
                     track_id = aim if aim is not None else node["trackId"]
-                    if not Track.objects.filter(pk=track_id, campaign_id=scene.campaign_id).exists():
+                    if not known_track(track_id):
                         missing.add(node["id"])
                         missing_ids.setdefault(node["id"], []).append(track_id)
                         continue
@@ -1156,7 +1189,7 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                     applied.setdefault(node["id"], []).append(track_id)
                 elif node["type"] == "soundControl":
                     track_id = aim if aim is not None else node["trackId"]
-                    if not Track.objects.filter(pk=track_id, campaign_id=scene.campaign_id).exists():
+                    if not known_track(track_id):
                         missing.add(node["id"])
                         missing_ids.setdefault(node["id"], []).append(track_id)
                         continue
@@ -1215,10 +1248,10 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                                signal=resume.event if resume is not None and resume.kind == "timer" else None,
                                checkpoint=resume.data["continuation"] if resume is not None and resume.kind == "delay" else None)
         while queue:
-            key, desired, allowed, signal = queue.popleft()
+            key, desired, allowed, signal, broadcast = queue.popleft()
             interaction = signal == "interact"
             operate_door(key, desired, interact=interaction, first=False, allowed=allowed,
-                         signal=None if interaction else signal)
+                         signal=None if interaction else signal, broadcast=broadcast)
     except MapError as error:
         error.automation_run = {**run, "stateAfter": run["stateBefore"], "message": str(error)}
         raise

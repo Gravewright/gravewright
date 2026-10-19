@@ -896,8 +896,8 @@ das referências entre elementos.
   operada executa seus grafos, e cada ação dirigida a outro elemento entra numa
   fila. As operações da fila rodam em ordem depois que o elemento atual termina,
   e cada uma aplica apenas as ações solicitadas, sem emitir eventos de estado. A cadeia é
-  limitada: no máximo 32 operações de elementos, 4 operações no mesmo elemento e
-  1.024 ações. Ultrapassar um limite, como duas portas que se reabrem sem parar,
+  limitada: no máximo 32 operações de elementos, 256 entregas de sinal de cena,
+  4 operações no mesmo elemento e 1.024 ações. Ultrapassar um limite, como duas portas que se reabrem sem parar,
   faz a cadeia inteira falhar: nada persiste, e o registro de automação mostra a
   cadeia que se repetiu.
 - **Retratos, não atualizações no meio do grafo.** Os nós leem o estado dos

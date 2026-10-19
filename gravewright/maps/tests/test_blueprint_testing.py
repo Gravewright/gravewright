@@ -308,6 +308,12 @@ class BlueprintTestingTests(TestCase):
         self.assertTrue(with_actor["ok"], with_actor)
         self.assertEqual(with_actor["changes"]["tokens"][0]["after"]["grid_x"], 5)
         self.assertNotIn("missing-test-token", with_actor["warnings"])
+        # The run ends while the token is still inside; the presence pass after the
+        # teleport empties the departure region, and the test reports that end state.
+        self.assertEqual(with_actor["run"]["stateAfter"], "occupied")
+        self.assertEqual(with_actor["state"], {"before": "occupied", "after": "empty"})
+        self.assertEqual(with_actor["testTokenId"], with_actor["changes"]["tokens"][0]["id"])
+        self.assertNotIn("testTokenId", without)
         self.assertEqual(self.snapshot(), before)
 
     def test_draft_rejects_foreign_actor_and_player_without_creating_a_scene(self):

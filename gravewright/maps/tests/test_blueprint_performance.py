@@ -118,6 +118,47 @@ class EventPerformanceTests(TestCase):
         queries = self.sample("eightObjectChain", command, verify)
         self.assert_inventory_queries(queries)
 
+    def test_sound_and_light_actions_reuse_chain_inventory(self):
+        for index in range(200):
+            values = deepcopy(self.targets["lever"].data)
+            values.update(name=f"Idle {index + 1}", x=64 + index, y=640)
+            SceneObject.objects.create(scene=self.scene, kind="images", data=values)
+        chain = [self.targets["lever"]]
+        for index in range(7):
+            values = deepcopy(chain[0].data)
+            values.update(name=f"Media link {index + 2}", x=96 + index * 64, y=400)
+            chain.append(SceneObject.objects.create(scene=self.scene, kind="images", data=values))
+        for index, row in enumerate(chain):
+            following = chain[index + 1] if index + 1 < len(chain) else None
+            values = [node("event", "event", event="interact")]
+            for step in range(14):
+                values.append(node(f"sound{step}", "sound", trackId=str(self.sound.pk), volume=.5))
+                values.append(node(f"light{step}", "light", targetId=str(self.light_object.pk), enabled=step % 2 == 1))
+            references = []
+            if following is not None:
+                values.append(node("interact", "interact"))
+                references = [node("target", "reference", targetId=str(following.pk))]
+            edges = [execution(a["id"], b["id"]) for a, b in zip(values, values[1:])]
+            if following is not None:
+                edges.append(data("target", "door", "interact", "target"))
+            self.author(row, {"interact": {"nodes": [*values, *references], "edges": edges}})
+
+        def command():
+            services.command(self.campaign.pk, self.gm.pk, "objects", {
+                "mapId": str(self.scene.pk), "area": "images", "action": "interact",
+                "data": {"image_id": str(chain[0].pk)}}, uuid.uuid4())
+
+        def verify():
+            self.light_object.refresh_from_db()
+            self.assertTrue(self.light_object.data["enabled"])
+            run = AutomationRun.objects.filter(scene=self.scene).latest("created_at")
+            self.assertEqual(sum(step["type"] == "sound" for event in run.data["events"]
+                                 for step in event["steps"]), 8 * 14)
+
+        queries = self.sample("soundAndLightChain", command, verify)
+        tracks = [query for query in queries if query.startswith("SELECT ") and 'FROM "gravewright_audio_track"' in query]
+        self.assertEqual(len(tracks), 2, "One shared inventory and one batched playback lookup, for 112 sound actions.")
+
     def assert_inventory_queries(self, queries):
         reads = Counter(query.split(" FROM ")[1].split(" WHERE ")[0]
                         for query in queries if query.startswith("SELECT ") and " FROM " in query)

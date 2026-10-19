@@ -3,13 +3,14 @@
 from copy import deepcopy
 from datetime import timedelta
 import json
+from unittest import mock
 import uuid
 
 from django.test import SimpleTestCase, TestCase, override_settings
 
 from gravewright.audio.models import Playback, Track
 from gravewright.campaigns.models import Membership
-from gravewright.maps import builder_services, objects
+from gravewright.maps import blueprint_runtime, builder_services, objects
 from gravewright.maps.blueprints import clean_blueprint, data_outputs, evaluate_graph
 from gravewright.maps.models import AutomationDelay, AutomationRun, Scene, SceneObject
 from gravewright.maps.services import MapError
@@ -183,13 +184,41 @@ class CapabilityRuntimeTests(TestCase):
             raw["graphs"].update(listener["graphs"])
             self.configure(raw)
         configure([str(row.pk) for row in others])
-        with self.assertRaisesMessage(MapError, "repeating chain"):
+        # Distinct targets make a long chain, not a loop.
+        with self.assertRaisesMessage(MapError, "exceeded 32 element operations"):
             self.command("closed")
         self.assertTrue(all(SceneObject.objects.get(pk=row.pk).data["door_state"] == "closed" for row in others))
         configure([str(row.pk) for row in others[:31]])
         self.command("closed", user=self.player)
         self.assertTrue(all(SceneObject.objects.get(pk=row.pk).data["door_state"] == "open" for row in others[:31]))
         self.assertEqual(SceneObject.objects.get(pk=others[-1].pk).data["door_state"], "closed")
+
+    def test_scene_signal_receivers_use_broadcast_budget_but_repetition_still_fails(self):
+        self.generated()
+        listener = graph_with(node("open", "state", targetState="open"), event="signal:Open",
+                              edges=[execution("event", "open")])
+        others = [SceneObject.objects.create(scene=self.scene, kind="walls", data=objects.wall({
+            "x1": 100, "y1": 100 + index, "x2": 200, "y2": 100 + index, "kind": "door",
+            "blueprint": listener}, campaign_id=self.campaign.pk, scene_id=self.scene.pk)) for index in range(48)]
+        self.configure(graph_with(node("emit", "emitEvent", scope="scene", name="Open"),
+                                  edges=[execution("event", "emit")]))
+        with mock.patch.object(blueprint_runtime, "MAX_BROADCAST_DELIVERIES", len(others) - 1):
+            with self.assertRaisesMessage(MapError, "more than 256 receiving elements"):
+                self.command("closed", user=self.player)
+        self.assertTrue(all(SceneObject.objects.get(pk=row.pk).data["door_state"] == "closed" for row in others))
+        self.command("closed", user=self.player)
+        self.assertTrue(all(SceneObject.objects.get(pk=row.pk).data["door_state"] == "open" for row in others))
+        repeating = graph_with(node("close", "state", targetState="closed"),
+                               node("emit", "emitEvent", scope="scene", name="Open"), event="signal:Open",
+                               edges=[execution("event", "close"), execution("close", "emit")])
+        for row in others:
+            row.refresh_from_db()
+            row.data["blueprint"] = objects.wall({**row.data, "blueprint": repeating}, campaign_id=self.campaign.pk,
+                                                 scene_id=self.scene.pk)["blueprint"]
+            row.save(update_fields=["data"])
+        with self.assertRaisesMessage(MapError, "repeating chain"):
+            self.command("closed")
+        self.assertTrue(all(SceneObject.objects.get(pk=row.pk).data["door_state"] == "open" for row in others))
 
     def test_group_transform_failure_rolls_back_earlier_native_writes(self):
         self.generated()

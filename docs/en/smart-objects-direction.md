@@ -881,7 +881,8 @@ elements were implemented.
   runs its graphs, and every action aimed at another element is queued. Queued
   operations run in order after the current element finishes, and each one runs
   only the explicitly requested actions; a state change emits no event. A chain is bounded: at most 32
-  element operations, 4 operations on the same element and 1,024 actions.
+  element operations, 256 scene-signal deliveries, 4 operations on the same
+  element and 1,024 actions.
   Exceeding a bound, such as two doors that keep reopening each other, fails the
   whole chain: nothing persists, and the automation log records the chain that
   repeated.

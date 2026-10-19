@@ -377,7 +377,9 @@ do projeto autoral durante atualização vinculada.
 públicas e os controles reais de ensaio do Builder e da cena com dados
 sintéticos. Compara snapshots da campanha/banco/mídia e observa um jogador
 conectado para detectar entrega acidental de apresentação. Os testes JavaScript
-ficam em `builder/playtest-model.test.mjs` e `scene-controls.test.mjs`. O ensaio
+ficam em `builder/playtest-model.test.mjs`, `builder/run-format.test.mjs` (resumos
+de passos e mudanças compartilhados com o registro de automação) e
+`scene-controls.test.mjs`. O ensaio
 no servidor não avança o agendador: confira vencimentos reais de Delay e
 Temporizador nos cenários separados abaixo.
 

@@ -119,9 +119,16 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
         changes = {"elements": [], "tokens": [], **{kind: {"before": before[kind], "after": before[kind]}
                     for kind in ("audio", "sceneVariables")}}
         scheduled = []
+    # The run records its chain's end; presence passes that follow a teleport or
+    # move settle afterwards, so the test reports the element's final state too.
+    current = SceneObject.objects.filter(pk=row.pk).first()
+    state = {"before": run["stateBefore"],
+             "after": run["stateAfter"] if error is not None or current is None else element_state(current)}
     result = {"ok": error is None, "dryRun": True, "sceneId": str(scene.pk), "elementId": str(row.pk),
               "event": event, "run": run, "runs": runs, "changes": changes, "scheduled": scheduled,
-              "warnings": warnings}
+              "warnings": warnings, "state": state}
+    if token is not None:
+        result["testTokenId"] = str(token.pk)
     if error is not None:
         result["error"] = {"message": str(error), "code": error.code}
     if source_ids is not None:

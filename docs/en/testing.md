@@ -361,7 +361,8 @@ restore and preservation of authored projects through a linked update.
 Builder and native rehearsal APIs and their actual controls with synthetic data.
 It compares campaign/database/media snapshots and observes a connected player
 for accidental presentation delivery. JavaScript checks live in
-`builder/playtest-model.test.mjs` and `scene-controls.test.mjs`. Server rehearsal
+`builder/playtest-model.test.mjs`, `builder/run-format.test.mjs` (trace and change
+summaries shared with the automation log) and `scene-controls.test.mjs`. Server rehearsal
 does not advance a scheduler: verify real Delay/Timer expiry with their separate
 scenarios below.
 

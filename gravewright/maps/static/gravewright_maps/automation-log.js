@@ -7,35 +7,18 @@ import { openSceneNetwork } from './builder/scene-network.js';
 import { HttpClient } from '/static/gravewright_modules/http-client.js';
 import { mountSceneControls } from './scene-controls.js';
 import { openPlaytest } from './builder/playtest.js';
-import { blueprintEventLabel, hasBlueprintEventPath } from './builder/blueprint-model.js';
+import { hasBlueprintEventPath } from './builder/blueprint-model.js';
+import { createRunFormatter, STEP_NAMES } from './builder/run-format.js';
 
 const root = document.querySelector('#table-workspace');
 const template = document.querySelector('#automation-log-window');
 if (root?.dataset.role === 'gm' && template) {
     const translator = createTranslator(), t = (key, params) => translator.t(key, params);
-    const stateNames = { closed: 'Closed', open: 'Opened', locked: 'Locked', off: 'Deactivated', on: 'Activated', empty: 'Empty', occupied: 'Occupied' };
-    const typeNames = { light: 'Set light', sound: 'Play sound', state: 'Change state', interact: 'Interact with object', condition: 'Check state',
-        sprite: 'Change sprite', sequence: 'Sequence', property: 'Get property', compare: 'Compare state',
-        reference: 'Element reference', reveal: 'Reveal', barrier: 'Set barrier', soundControl: 'Control sound', flame: 'Set flame',
-        all: 'All conditions', any: 'Any condition', getVariable: 'Get variable', setVariable: 'Set variable', compareValue: 'Compare value', emitEvent: 'Emit event',
-        counter: 'Counter', once: 'Once', cooldown: 'Cooldown', delay: 'Delay', timer: 'Timer', switch: 'Switch', random: 'Random',
-        elementGroup: 'Element group', lightReference: 'Light reference', soundReference: 'Sound reference', eventContext: 'Event context',
-        move: 'Move object', rotate: 'Rotate object', setInteraction: 'Set interaction', setRegion: 'Set region',
-        setVisibility: 'Set visibility', setAppearance: 'Set appearance', showMessage: 'Show message',
-        showHandout: 'Show handout', cameraFocus: 'Focus camera', teleport: 'Teleport token' };
-    const channelNames = { movement: 'Movement', vision: 'Vision', light: 'Light', sound: 'Sound' };
-    const modeNames = { block: 'Block', pass: 'Pass', attenuate: 'Attenuate' };
-    // Keep numbering within each element kind so a lever never renumbers doors.
-    const doorLabel = id => {
-        const row = doors.find(value => value.id === id);
-        if (!row) return t('Missing element');
-        if (row.name) return row.name;
-        const kind = row.kind || 'door', peers = doors.filter(value => (value.kind || 'door') === kind);
-        if (kind === 'region' || kind === 'image') return row.name || t(kind === 'region' ? 'Region' : 'Object');
-        return `${t(kind === 'torch' ? 'Torch' : kind === 'lever' ? 'Lever' : 'Door')} ${peers.indexOf(row) + 1}`;
-    };
-    const appearanceNames = { inherit: 'Native appearance', hidden: 'Hidden image', asset: 'Use image' };
-    const outcomeNames = { completed: 'Completed', blocked: 'Blocked by the lock', failed: 'Failed', paused: 'Automation paused', waiting: 'Waiting', cancelled: 'Cancelled' };
+    const formatter = createRunFormatter({ t, elements: () => doors });
+    const { label: doorLabel, stateName, stepText, eventTitle } = formatter;
+    const typeNames = STEP_NAMES;
+    const scalar = value => typeof value === 'boolean' ? t(value ? 'True' : 'False') : typeof value === 'string' ? JSON.stringify(value) : String(value);
+    const scopeName = value => t(value === 'scene' ? 'Scene' : 'This element');
     let panel, panelAbort, controls, childModal, unregisterEscape, sceneId = null, runs = [], doors = [], paused = false, view = 'runs', filter = 'all', request = 0, failed = false, notice = '';
     let variables = { scene: {}, elements: {} };
     let memory = { elements: {} };
@@ -47,81 +30,12 @@ if (root?.dataset.role === 'gm' && template) {
             controlsRefreshTimer = undefined; if (panel && view === 'doors') void controls?.refresh();
         }, 120);
     }
-    const stateName = (value, id) => t(doors.find(row => row.id === id)?.kind === 'torch' ? ({ off: 'Normal', on: 'Turned' }[value] || value) : stateNames[value] || value);
-    const bool = value => t(value ? 'True' : 'False');
-    const scalar = value => typeof value === 'boolean' ? bool(value) : typeof value === 'string' ? JSON.stringify(value) : String(value);
-    const scopeName = value => t(value === 'scene' ? 'Scene' : 'This element');
-    const choiceName = (type, output) => output === 'default' ? t('Default')
-        : t(type === 'switch' ? 'Case {0}' : 'Branch {0}', { 0: output.replace(/\D/g, '') });
 
     function element(tag, attrs = {}, text) {
         const node = document.createElement(tag);
         for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
         if (text !== undefined) node.textContent = text;
         return node;
-    }
-    function stepText(step) {
-        const name = t(typeNames[step.type] || step.type);
-        const detail = {
-            state: () => stateName(step.state, step.doorId),
-            sound: () => `${step.sound || t('Sound')} · ${Math.round(step.volume * 100)}%`,
-            light: () => t(step.enabled ? 'Enabled' : 'Disabled'),
-            flame: () => t(step.enabled ? 'Lit' : 'Unlit'),
-            sprite: () => t(appearanceNames[step.appearance] || step.appearance),
-            condition: () => bool(step.result),
-            counter: () => `${step.value} / ${step.target} · ${t(step.result ? 'Reached' : 'Below target')}`,
-            once: () => t(step.result ? 'First time' : 'Already used'),
-            cooldown: () => t(step.result ? 'Ready' : 'Cooling down'),
-            delay: () => t('Wait {0} seconds', { 0: step.seconds }),
-            timer: () => `${t({ start: 'Start timer', stop: 'Stop timer', restart: 'Restart timer' }[step.action])} · ${step.name}`
-                + (step.action === 'stop' ? '' : ` · ${t('Wait {0} seconds', { 0: step.seconds })}`),
-            switch: () => `${scalar(step.value)} → ${choiceName(step.type, step.output)}`,
-            random: () => `${choiceName(step.type, step.output)} · ${t('Weight')}: ${step.weight}/${step.total}`,
-            compare: () => bool(step.value),
-            all: () => bool(step.value),
-            any: () => bool(step.value),
-            compareValue: () => bool(step.value),
-            getVariable: () => `${scopeName(step.scope)} · ${step.name} = ${scalar(step.value)}`,
-            setVariable: () => `${scopeName(step.scope)} · ${step.name} = ${scalar(step.value)}`,
-            emitEvent: () => `${step.name} · ${step.scope === 'scene' ? scopeName('scene') : step.doorId ? doorLabel(step.doorId) : t('This element')}`,
-            property: () => step.value ? stateName(step.value, step.doorId) : t('Missing element'),
-            reference: () => doorLabel(step.doorId),
-            elementGroup: () => `${step.name} · ${t({ element: 'Elements', light: 'Lights', sound: 'Sounds' }[step.memberType])}: ${step.count}`,
-            lightReference: () => t('Light'),
-            soundReference: () => step.sound || t('Sound'),
-            eventContext: () => `${t({ event: 'Event', sourceId: 'Triggering element ID', userId: 'Triggering user ID', userName: 'Triggering user name',
-                tokenId: 'Triggering token ID', actorId: 'Triggering actor ID', presence: 'Presence transition', count: 'Occupancy count',
-                hasToken: 'Has triggering token', state: 'Current state', previous: 'Previous state' }[step.property])}: ${scalar(step.value)}`,
-            move: () => `${step.dx}, ${step.dy} · ${t('Cells')}`,
-            rotate: () => `${step.degrees}°`,
-            setInteraction: () => t(step.enabled ? 'Enabled' : 'Disabled'),
-            setRegion: () => t(step.enabled ? 'Enabled' : 'Disabled'),
-            setVisibility: () => t(step.visible ? 'Visible' : 'Hidden'),
-            setAppearance: () => t('Image'),
-            showMessage: () => step.text || t('Message'),
-            showHandout: () => t('Handout'),
-            cameraFocus: () => `${step.focusX}, ${step.focusY} · ${t('Cells')}`,
-            teleport: () => step.skipped ? t('Skipped') : `${step.gridX}, ${step.gridY} · ${t('Cells')}`,
-            reveal: () => step.doorId ? doorLabel(step.doorId) : t('This element'),
-            barrier: () => `${t(channelNames[step.channel])}: ${t(modeNames[step.mode])}`,
-            soundControl: () => `${step.sound || t('Sound')} · ${step.action === 'stop' ? t('Stop') : `${Math.round(step.volume * 100)}%`}`,
-        }[step.type];
-        let text = detail ? `${name}: ${detail()}` : name;
-        if (['state', 'barrier', 'flame'].includes(step.type) && step.doorId) text += ` · ${doorLabel(step.doorId)}`;
-        if (step.targetIds?.length && !step.doorId) text += ` · ${t('Targets')}: ${step.targetIds.length}`;
-        if (step.players) text += ` · ${t('Players may lock or unlock')}`;
-        if (step.unsupported) text += ` · ${t('Unsupported action for this element')}`;
-        if (step.unsupportedIds?.length) text += ` · ${t('Unsupported targets')}: ${step.unsupportedIds.map(id => doors.some(row => row.id === id) ? doorLabel(id) : t('Element')).join(', ')}`;
-        return step.missing ? `${text} · ${t('Missing target')}` : text;
-    }
-    function eventTitle(entry) {
-        const [phase, state] = entry.event.split(':');
-        const door = entry.doorId ? `${doorLabel(entry.doorId)} · ` : '';
-        const kind = doors.find(row => row.id === entry.doorId)?.kind || 'door';
-        if (phase === 'presence' || phase === 'signal') return `${door}${blueprintEventLabel(entry.event, t, kind)}`;
-        if (phase === 'refused') return `${door}${t('Skipped')}`;
-        const title = `${door}${blueprintEventLabel(entry.event, t, kind)}`;
-        return entry.previous ? `${title} · ${t('Previous state')}: ${stateName(entry.previous, entry.doorId)}` : title;
     }
     function locate(row) {
         window.gravewrightMaps?.board?.ping({ x: row.point.x, y: row.point.y }, true);
