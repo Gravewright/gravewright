@@ -1,111 +1,85 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import vm from 'node:vm';
-import { createAutosave } from './autosave.js';
-import { sameDocument } from './asset-removal.js';
+import { createProjectApi, createProjectPersistence, recoverProjectDraft } from './project-persistence.js';
+import { newDocument } from './model.js';
 
-// Exercise the workspace's actual persistence callbacks without mounting its DOM,
-// WebGL previews or a server. The transport and browser storage are the boundaries.
-const source = readFileSync(new URL('./workspace.js', import.meta.url), 'utf8');
-function section(start, end) {
-    const first = source.indexOf(start), last = source.indexOf(end, first);
-    assert.ok(first >= 0 && last > first, `Missing workspace section: ${start}`);
-    return source.slice(first, last);
+const campaignId = 'campaign';
+const draftKey = id => `gravewright.map-builder.draft.${campaignId}.${id}`;
+function memoryStorage() {
+    const values = new Map();
+    const storage = { values, getItem: key => values.get(key) ?? null,
+        setItem: (key, value) => { values.set(key, value); storage[key] = value; },
+        removeItem: key => { values.delete(key); delete storage[key]; },
+        key: index => [...values.keys()][index] ?? null, get length() { return values.size; } };
+    return storage;
 }
-function fixture(t, respond = () => undefined) {
-    const state = {
-        id: '00000000-0000-4000-8000-000000000001', version: 1, folderId: null,
-        document: { name: 'Saved map', decorations: [{ id: 'owner', blueprint: { value: 1 } }] },
-        pending: new Map(), projects: [], assetRemovals: [],
-    };
-    state.saved = JSON.stringify(state.document);
-    const values = new Map(), calls = [], receipts = new Map();
-    const storage = {
-        getItem: key => values.get(key) ?? null,
-        setItem: (key, value) => values.set(key, value),
-        removeItem: key => values.delete(key),
-    };
-    const noop = () => {};
-    let version = state.version;
-    const context = vm.createContext({
-        state, crypto, TextEncoder, clone: structuredClone, sameDocument,
-        sessionStorage: storage, draftPrefix: 'draft.', latestDraftKey: 'draft.latest', discardDraft: false,
-        dirty: () => state.saved !== JSON.stringify(state.document),
-        createAutosave: options => createAutosave({ ...options, delay: 0, retryDelays: [] }),
-        autosave: undefined, autosaveEpoch: 0, projectWrite: undefined, disposed: false,
-        ready: true, busy: false, saveBarrier: false, gesture: null, brushResize: null,
-        floorPainter: null, terrainPainter: null, wallControls: null,
-        form: { checkValidity: () => true }, selectionFieldsValid: () => true, applySettings: () => true,
-        updateSaveState: noop, projectMetadata: noop, updateURL: noop, renderProjects: noop,
-        notify: noop, hideNotice: noop, openProject: noop, saveCopy: noop, t: value => value,
-        $: () => ({ dataset: { source: '' } }),
-        target: { kind: 'decorations', id: 'owner' }, itemFor: () => state.document.decorations[0],
-        editable: () => true, renderCanvas: noop, renderProperties: noop,
-        commit: () => context.autosave.schedule(),
+function deferred() {
+    let resolve;
+    const promise = new Promise(yes => { resolve = yes; });
+    return { promise, resolve };
+}
+function fixture(t, { respond = () => undefined, state, storage = memoryStorage(), server } = {}) {
+    state ??= { id: crypto.randomUUID(), version: 1, folderId: null, document: newDocument('Saved map'),
+        pending: new Map(), projects: [], assetRemovals: [] };
+    state.saved ??= JSON.stringify(state.document);
+    server ??= { version: state.version, document: structuredClone(JSON.parse(state.saved)), receipts: new Map() };
+    const calls = [], acknowledgements = [];
+    function commit(payload) {
+        if (!server.receipts.has(payload.request_id)) {
+            assert.equal(payload.expected_version, server.version, 'a new operation must use the acknowledged revision');
+            server.document = structuredClone(payload.document);
+            server.receipts.set(payload.request_id, { project: {
+                id: state.id, version: ++server.version, document: structuredClone(payload.document),
+            } });
+        }
+        return server.receipts.get(payload.request_id);
+    }
+    const saver = createProjectPersistence({ state, campaignId, storage, canSave: () => true,
+        autosaveOptions: { delay: 0, retryDelays: [] }, onSaved: project => acknowledgements.push(project),
         api: async (path, payload) => {
             calls.push(structuredClone(payload));
-            const result = await respond(payload, calls.length);
-            if (result) return result;
-            if (!receipts.has(payload.request_id)) receipts.set(payload.request_id, {
-                project: { id: state.id, version: ++version, document: structuredClone(payload.document) },
-            });
-            return receipts.get(payload.request_id);
+            return await respond(payload, calls.length, commit) || commit(payload);
         },
     });
-    const key = source.split('\n').find(line => line.includes('const projectKey ='));
-    assert.ok(key);
-    vm.runInContext([
-        section('    function rememberDraft()', '    function updateSaveState()'), key,
-        section('    function startAutosave()', '    function setBusy('),
-        section('    async function operation(', '    async function loadFilterCatalog('),
-        section('    async function saveCurrent(', '    function saveCopy()'),
-    ].join('\n'), context);
-    context.startAutosave();
-    t.after(() => context.autosave.dispose());
-    return { state, calls, values, context, saver: context.autosave,
-        get draft() { return JSON.parse(storage.getItem('draft.' + state.id)); } };
+    saver.start(); t.after(() => saver.dispose());
+    return { state, calls, storage, server, saver, acknowledgements,
+        get draft() { return JSON.parse(storage.getItem(draftKey(state.id))); } };
 }
 
-test('Undo after a definitive project rejection removes its body and receipt before reload', async t => {
+test('Undo after a definitive rejection removes its body and receipt before reload', async t => {
     const invalid = Object.assign(new Error('Invalid shader source.'), { status: 400 });
-    const f = fixture(t, () => { throw invalid; });
+    const f = fixture(t, { respond: () => { throw invalid; } });
     const baseline = structuredClone(f.state.document);
     f.state.document.name = 'Rejected draft';
     await assert.rejects(f.saver.flush(), /Invalid shader/);
-    assert.equal(f.state.pending.size, 0);
-    assert.equal(f.state.saveAttempt, null);
+    assert.equal(f.state.pending.size, 0); assert.equal(f.state.saveAttempt, null);
     assert.equal(f.draft.document.name, 'Rejected draft', 'the rejected authored document remains recoverable');
-
     f.state.document = baseline;
     f.saver.schedule(); await f.saver.flush();
-    assert.equal(f.saver.state.status, 'saved');
-    assert.equal(f.calls.length, 1, 'Undo to the acknowledged document needs no replacement write');
+    assert.equal(f.saver.state.status, 'saved'); assert.equal(f.calls.length, 1);
     assert.equal(f.draft, null, 'reload cannot replay the rejected body or infer an uncertain receipt');
 });
 
-test('repairing a rejected project saves normally and leaves no false recovery conflict', async t => {
-    const f = fixture(t, (payload, attempt) => {
+test('repairing a rejected project leaves no false recovery conflict', async t => {
+    const f = fixture(t, { respond: (payload, attempt) => {
         if (attempt === 1) throw Object.assign(new Error('Invalid document.'), { status: 400 });
-    });
+    } });
     f.state.document.name = 'Rejected draft';
     await assert.rejects(f.saver.flush(), /Invalid document/);
     f.state.document.name = 'Corrected draft';
     f.saver.schedule(); await f.saver.flush();
     assert.equal(f.saver.state.status, 'saved');
     assert.equal(JSON.parse(f.state.saved).name, 'Corrected draft');
-    assert.equal(f.state.pending.size, 0);
-    assert.equal(f.state.saveAttempt, null);
-    assert.equal(f.draft, null);
-    assert.notEqual(f.calls[0].request_id, f.calls[1].request_id, 'the corrected document is a new logical operation');
+    assert.equal(f.state.pending.size, 0); assert.equal(f.state.saveAttempt, null); assert.equal(f.draft, null);
+    assert.notEqual(f.calls[0].request_id, f.calls[1].request_id, 'the correction is a new logical operation');
 });
 
 for (const [name, error] of [
     ['transport failure', new Error('Offline')],
     ['server failure', Object.assign(new Error('Unavailable'), { status: 503 })],
     ['unreadable response', Object.assign(new Error('Invalid JSON'), { retryable: true })],
-]) test(`${name} preserves its exact receipt and body before saving newer edits`, async t => {
-    const f = fixture(t, (payload, attempt) => { if (attempt === 1) throw error; });
+]) test(`${name} retains its receipt and body before saving newer edits`, async t => {
+    const f = fixture(t, { respond: (payload, attempt) => { if (attempt === 1) throw error; } });
     f.state.document.name = 'Uncertain draft';
     await assert.rejects(f.saver.flush(), error);
     assert.equal(f.state.pending.size, 1);
@@ -113,54 +87,152 @@ for (const [name, error] of [
     f.state.document.name = 'Newer draft'; f.saver.schedule();
     f.saver.retry(); await f.saver.flush();
     assert.equal(f.calls.length, 3);
-    assert.deepEqual(f.calls[0], f.calls[1], 'retry confirms the original operation without changing its UUID or revision');
+    assert.deepEqual(f.calls[0], f.calls[1], 'retry preserves the original UUID, revision and document');
     assert.notEqual(f.calls[1].request_id, f.calls[2].request_id);
-    assert.equal(f.calls[2].expected_version, 2);
-    assert.equal(f.calls[2].document.name, 'Newer draft');
+    assert.equal(f.calls[2].expected_version, 2); assert.equal(f.calls[2].document.name, 'Newer draft');
     assert.equal(f.state.pending.size, 0); assert.equal(f.draft, null);
 });
 
-function behaviorSave(f, network) {
-    const body = network
-        ? section("    $('[data-builder-network]').addEventListener", '    function openBehavior(')
-            .match(/save: async \(owner, blueprint\) => \{([\s\S]*?)\r?\n            \}, discard:/)
-        : section('    function openBehavior(', '    async function refreshLibrary(')
-            .match(/onSave: async blueprint => \{([\s\S]*?)\r?\n            \}, onDiscard:/);
-    assert.ok(body, 'Missing Smart Object project callback');
-    const callback = vm.runInContext(`async (${network ? 'owner, blueprint' : 'blueprint'}) => {${body[1]}}`, f.context);
-    return network ? blueprint => callback({ sourceKind: 'decorations', id: 'owner' }, blueprint) : callback;
-}
+test('a revision conflict stays paused through edits without rebasing the local guard', async t => {
+    const conflict = Object.assign(new Error('Changed elsewhere'), { status: 409, conflict: true });
+    const f = fixture(t, { respond: () => { throw conflict; } });
+    f.state.document.name = 'Local revision';
+    await assert.rejects(f.saver.flush(), /Changed elsewhere/);
+    f.state.document.name = 'Later local edit'; f.saver.rememberDraft(); f.saver.schedule();
+    await assert.rejects(f.saver.flush(), /Changed elsewhere/);
+    assert.equal(f.calls.length, 1); assert.equal(f.state.version, 1);
+    assert.equal(f.saver.state.status, 'conflict');
+    assert.equal(f.state.pending.size, 0); assert.equal(f.state.saveAttempt, null);
+    assert.equal(f.draft.document.name, 'Later local edit');
+});
 
-for (const network of [false, true]) {
-    const label = network ? 'scene network' : 'direct Smart Object editor';
-    test(`${label} retries the paused project write after the connection recovers`, async t => {
-        let online = false;
-        const f = fixture(t, () => { if (!online) throw new Error('Offline'); });
-        const onSave = behaviorSave(f, network), blueprint = { value: 2 };
-        const modal = createAutosave({ initialKey: JSON.stringify({ value: 1 }), delay: 0, retryDelays: [],
-            read: () => ({ key: JSON.stringify(blueprint), payload: blueprint }),
-            save: snapshot => onSave(structuredClone(snapshot.payload)),
-        });
-        t.after(() => modal.dispose());
-        await assert.rejects(modal.flush(), /Offline/);
-        assert.equal(f.saver.state.status, 'error');
-        online = true;
-        modal.retry(); await modal.flush();
-        assert.equal(f.calls.length, 2);
-        assert.deepEqual(f.calls[0], f.calls[1], 'retry retains the project operation receipt');
-        assert.equal(modal.state.status, 'saved'); assert.equal(f.saver.state.status, 'saved');
-        assert.equal(JSON.parse(f.state.saved).decorations[0].blueprint.value, 2);
-    });
+test('an acknowledgement preserves newer document references and flush waits for their revision', async t => {
+    const started = deferred(), response = deferred();
+    const f = fixture(t, { respond: async (payload, attempt) => {
+        if (attempt === 1) { started.resolve(); await response.promise; }
+    } });
+    f.state.document.name = 'First write';
+    const flushed = f.saver.flush(); await started.promise;
+    assert.ok(f.saver.pendingWrite);
+    const authored = f.state.document;
+    authored.name = 'Newer edit'; f.saver.schedule(); response.resolve(); await flushed;
+    assert.equal(f.state.document, authored);
+    assert.equal(f.state.document.name, 'Newer edit'); assert.equal(f.server.document.name, 'Newer edit');
+    assert.deepEqual(f.calls.map(payload => payload.expected_version), [1, 2]);
+    assert.deepEqual(f.acknowledgements.map(project => project.document.name), ['First write', 'Newer edit']);
+    assert.equal(f.saver.pendingWrite, null); assert.equal(f.draft, null);
+});
 
-    test(`${label} keeps revision conflicts paused when the modal retries`, async t => {
-        const conflict = Object.assign(new Error('Changed elsewhere'), { status: 409, conflict: true });
-        const f = fixture(t, () => { throw conflict; });
-        const onSave = behaviorSave(f, network);
-        await assert.rejects(onSave({ value: 2 }), /Changed elsewhere/);
-        await assert.rejects(onSave({ value: 2 }), /Changed elsewhere/);
-        assert.equal(f.calls.length, 1);
-        assert.equal(f.saver.state.status, 'conflict');
-        assert.equal(f.state.pending.size, 0); assert.equal(f.state.saveAttempt, null);
-        assert.equal(f.draft.document.decorations[0].blueprint.value, 2, 'the conflicted local graph remains recoverable');
+test('reload confirms a committed receipt before saving an Undo against its new revision', async t => {
+    const started = deferred(), response = deferred();
+    const f = fixture(t, { respond: async (payload, attempt, commit) => {
+        const result = commit(payload); started.resolve(); await response.promise; return result;
+    } });
+    const baseline = structuredClone(f.state.document);
+    f.state.document.name = 'Committed without reply';
+    const stopped = assert.rejects(f.saver.flush(), error => error.name === 'AbortError');
+    await started.promise;
+    f.state.document = baseline; f.saver.schedule(); f.saver.rememberDraft();
+    const { recovered } = recoverProjectDraft({ campaignId, projectId: f.state.id, folderId: null, storage: f.storage });
+    f.saver.dispose(); await stopped;
+    assert.equal(recovered.version, 1); assert.equal(f.server.version, 2);
+    assert.equal(recovered.document.name, 'Saved map');
+    const reopened = fixture(t, { state: recovered, storage: f.storage, server: f.server });
+    await reopened.saver.flush();
+    assert.equal(reopened.calls.length, 2);
+    assert.deepEqual(reopened.calls[0], f.calls[0], 'reopening confirms the original body and receipt');
+    assert.equal(reopened.calls[1].expected_version, 2);
+    assert.equal(reopened.calls[1].document.name, 'Saved map'); assert.equal(f.server.version, 3);
+    response.resolve(); await f.saver.pendingWrite;
+    assert.equal(f.acknowledgements.length, 0, 'disposed clients ignore their late acknowledgement');
+    assert.equal(reopened.draft, null);
+});
+
+test('legacy recovery retains unconfirmed revisions and rejects another folder', () => {
+    const storage = memoryStorage(), id = crypto.randomUUID();
+    const legacy = { id, version: 3, folderId: 'folder', document: newDocument('Private draft'),
+        pending: [['/projects/' + id + ':unconfirmed', 'receipt-id']] };
+    storage.setItem(`gravewright.map-builder.draft.${campaignId}`, JSON.stringify(legacy));
+    const { recovered } = recoverProjectDraft({ campaignId, projectId: id, folderId: null, storage });
+    assert.equal(recovered.version, 3); assert.equal(recovered.pending.get('/projects/' + id + ':unconfirmed'), 'receipt-id');
+    assert.equal(recovered.saveAttempt, undefined, 'recovery must not invent the missing sent body');
+    assert.equal(storage.getItem(`gravewright.map-builder.draft.${campaignId}`), null);
+    assert.ok(storage.getItem(draftKey(id)));
+    assert.equal(recoverProjectDraft({ campaignId, folderId: 'other-folder', storage }).recovered, undefined);
+    assert.equal(recoverProjectDraft({ campaignId, folderId: 'folder', storage }).recovered.id, id);
+});
+
+test('invalid recovered content stays in storage for explicit recovery', () => {
+    const storage = memoryStorage(), id = crypto.randomUUID(), document = newDocument('Recoverable');
+    document.floors.push({ id: 'floor', name: '' });
+    const original = JSON.stringify({ id, document }); storage.setItem(draftKey(id), original);
+    const result = recoverProjectDraft({ campaignId, projectId: id, folderId: null, storage });
+    assert.match(result.recoveryError, /name/); assert.equal(result.recovered, undefined);
+    assert.equal(storage.getItem(draftKey(id)), original);
+});
+
+test('draft discard affects only this project and later authoring can retain another draft', t => {
+    const f = fixture(t), otherId = crypto.randomUUID();
+    f.storage.setItem(draftKey(otherId), 'Other project data');
+    f.state.document.name = 'Unsaved'; f.saver.rememberDraft();
+    assert.equal(f.draft.document.name, 'Unsaved');
+    f.saver.discardDraft(); assert.equal(f.saver.discarded, true); assert.equal(f.draft, null);
+    assert.equal(f.storage.getItem(draftKey(otherId)), 'Other project data');
+    f.saver.keepDraft(); f.saver.rememberDraft();
+    assert.equal(f.saver.discarded, false); assert.equal(f.draft.document.name, 'Unsaved');
+});
+
+test('asset reconciliation updates only readable campaign drafts and retains every revision guard', t => {
+    const f = fixture(t), otherId = crypto.randomUUID();
+    f.state.document.name = 'Local draft'; f.saver.rememberDraft();
+    f.storage.setItem(draftKey(otherId), JSON.stringify({ version: 7, document: newDocument('Other draft') }));
+    f.storage.setItem(draftKey('broken'), 'Unreadable draft');
+    f.storage.setItem(draftKey('without-document'), '{"private":"preserve"}');
+    const foreignKey = 'gravewright.map-builder.draft.another-campaign.project';
+    const foreign = JSON.stringify({ document: newDocument('Another campaign') });
+    f.storage.setItem(foreignKey, foreign);
+    f.saver.updateDrafts(draft => { draft.document.name += ' reconciled'; });
+    assert.equal(f.draft.document.name, 'Local draft reconciled'); assert.equal(f.draft.version, 1);
+    const other = JSON.parse(f.storage.getItem(draftKey(otherId)));
+    assert.equal(other.document.name, 'Other draft reconciled'); assert.equal(other.version, 7);
+    assert.equal(f.storage.getItem(draftKey('broken')), 'Unreadable draft');
+    assert.equal(f.storage.getItem(draftKey('without-document')), '{"private":"preserve"}');
+    assert.equal(f.storage.getItem(foreignKey), foreign);
+    assert.equal(f.storage.getItem(`gravewright.map-builder.draft.${campaignId}.latest`), f.state.id);
+});
+
+const translate = (key, params = {}) => key.replace('{status}', String(params.status));
+test('the API keeps CSRF and cancellation local and preserves JSON and upload boundaries', async () => {
+    const requests = [], controller = new AbortController();
+    const api = createProjectApi({ base: '/api/containers/c/map-builder', signal: controller.signal, t: translate,
+        fetch: async (url, options) => {
+            requests.push({ url, options });
+            return { ok: true, json: async () => url === '/__gravewright/csrf'
+                ? { header: 'X-CSRF', token: 'private-token' } : { saved: true } };
+        },
     });
-}
+    await api(); await api('/projects/p', { document: {} });
+    const upload = new FormData(); upload.append('file', new Blob(['synthetic']));
+    await api('/api/containers/c/library/upload', upload);
+    assert.equal(requests.filter(request => request.url === '/__gravewright/csrf').length, 1);
+    assert.equal(requests[0].options.headers['X-CSRF'], undefined);
+    assert.equal(requests[2].options.headers['X-CSRF'], 'private-token');
+    assert.equal(requests[2].options.headers['Content-Type'], 'application/json');
+    assert.deepEqual(JSON.parse(requests[2].options.body), { document: {} });
+    assert.equal(requests[3].options.body, upload); assert.equal(requests[3].options.headers['Content-Type'], undefined);
+    assert.ok(requests.every(request => request.options.signal === controller.signal
+        && request.options.credentials === 'same-origin' && request.options.cache === 'no-store'));
+});
+
+test('unreadable replies remain uncertain while a parsed rejection carries its conflict status', async () => {
+    let readable = false;
+    const api = createProjectApi({ base: '/api/map-builder', t: translate,
+        fetch: async () => ({ ok: false, status: 409, json: async () => {
+            if (!readable) throw new SyntaxError('Truncated response');
+            return { error: 'Changed elsewhere' };
+        } }),
+    });
+    await assert.rejects(api(), error => error.retryable === true && error.status === undefined && !error.conflict);
+    readable = true;
+    await assert.rejects(api(), error => error.status === 409 && error.conflict && error.message === 'Changed elsewhere');
+});

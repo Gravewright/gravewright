@@ -85,9 +85,25 @@ through image/selection previews without recreating GPU resources. The domain's
 `torches.py` validates scene-local ownership, applies authoritative transforms
 and flame gating, and keeps native group operations within map transactions.
 
-Entry is read-only. The Studio editor owns its project, library and selection
-in `workspace.js`; `model.js` owns cell-space geometry and undo history, and
-`viewport.js` owns the independent SVG camera. Camera listeners, pointer capture,
+Entry is read-only. The Studio's `workspace.js` composes the editor controllers,
+navigation and drawing gestures. Its directly served sibling modules own these
+boundaries:
+
+| Module under `static/gravewright_maps/builder/` | Responsibility |
+| --- | --- |
+| `project-persistence.js` | Draft recovery/storage, HTTP/CSRF, receipt identities and the save queue |
+| `workspace-library.js` | Campaign asset catalog, brush choices and material controls |
+| `workspace-import.js` | Asset import/edit modals and their listener lifetime |
+| `inspector-controller.js` | Selection properties and region/torch configuration |
+| `layer-controller.js` | Layer controls, contents, selection and drag listeners |
+| `canvas-renderer.js` | SVG artwork, selection overlays and disposable terrain/wall caches |
+
+Controllers receive explicit state and callbacks rather than importing the
+workspace or sharing globals. Persistence tests import its public factory;
+they do not extract function text from `workspace.js`. A disposed save owner
+cannot write a late acknowledgement over a recovered draft.
+`model.js` owns cell-space geometry and undo history, and `viewport.js` owns the
+independent SVG camera. Camera listeners, pointer capture,
 requests and resize observation end on `pagehide`; history restoration remounts
 the editor. `builder_services.py` owns campaign-scoped project revisions, retry
 receipts, validation, scene generation and updates. See [Map Builder](map-builder.md) for
@@ -660,7 +676,7 @@ Most app-specific JavaScript files under `static/` are directly served source. S
 
 | Editable entry/source | Generated destination |
 | --- | --- |
-| `maps/frontend/widgets/game-board/ui/board.js` | `maps/static/gravewright_maps/vendor/` board bundle/chunks |
+| `maps/frontend/widgets/game-board/ui/board.js` | `maps/static/gravewright_maps/vendor/board.js` and named `runtime/` modules |
 | `maps/frontend/shared/rendering/render-profile.js` | `maps/static/gravewright_maps/render-profile.js` |
 | `maps/frontend/native/tools.js` | `maps/static/gravewright_maps/tools.js` |
 | `maps/frontend/native/builder-catalog.js`, `builder-preview.js` | `maps/static/gravewright_maps/builder-catalog.js`, `builder-native.js` |
@@ -674,6 +690,16 @@ Most app-specific JavaScript files under `static/` are directly served source. S
 | `pdf_system/frontend/controller.js` | `pdf_system/static/gravewright_pdf_system/controller.js` |
 
 Paths in this table are relative to `gravewright/`. Edit the source and rebuild these destinations. Do not make one-off fixes in minified board chunks or vendored libraries.
+
+Tools, the board, Builder catalogs, editors and preview retain their public
+entry URLs while importing named ES modules from `gravewright_maps/runtime/`,
+following the source's feature paths. Shared modules have one browser identity;
+PixiJS and its unsafe-eval adapter are emitted once as `vendor/pixi.js`. Preview
+and editor imports stay lazy, and the visibility worker keeps its relative
+resource URL plus the existing public worker entry. The Runner manifest includes
+every emitted module and license notice. Ship the complete generated graph.
+This layout uses more small requests while avoiding repeated bundled copies;
+artifact sizes alone do not establish a browser performance improvement.
 
 From the repository root:
 

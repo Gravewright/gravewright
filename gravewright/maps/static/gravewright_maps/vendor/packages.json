@@ -15,14 +15,14 @@
     "license": "MIT"
   },
   {
-    "name": "ismobilejs",
-    "version": "1.1.1",
-    "license": "MIT"
-  },
-  {
     "name": "earcut",
     "version": "3.2.3",
     "license": "ISC"
+  },
+  {
+    "name": "ismobilejs",
+    "version": "1.1.1",
+    "license": "MIT"
   },
   {
     "name": "parse-svg-path",

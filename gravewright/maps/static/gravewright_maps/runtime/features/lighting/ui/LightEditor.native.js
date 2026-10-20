@@ -1,0 +1,39 @@
+// gravewright/maps/frontend/features/lighting/ui/LightEditor.native.js
+import { text as gwText } from "../../../shared/config/i18n/text.js";
+import { vMovableResizable } from "../../../shared/lib/dom/movable-resizable.js";
+import { widget, model } from "../../../native/widget.js";
+var PhX = "PhX";
+var PhTrash = "PhTrash";
+var LightEditor_native_default = widget([{ "tag": "section", "attrs": { "class": "gw-window light-editor", "role": "dialog" }, "bind": { "aria-label": "(gwText('Light source'))", "role": "(transactional ? 'group' : 'dialog')" }, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "wheel", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "light-editor__header", "data-move-handle": "" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Light source'))" }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": "(gwText('Close'))", "disabled": "(transactional && busy)" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "div", "attrs": { "class": "light-editor__body" }, "bind": { "inert": "(transactional && busy)" }, "events": [], "children": [{ "tag": "template", "attrs": {}, "bind": { "key": "(range.key)" }, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.name)" }] }, { "tag": "div", "attrs": { "class": "light-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range" }, "bind": { "min": "(range.min)", "max": "(Math.max(range.max, draft[range.key]))", "step": "(range.step)", "disabled": "(range.key === 'dim_radius' && draft.dim_radius === 0)", "aria-label": "(range.name)" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft[range.key])", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.key === 'dim_radius' && draft.dim_radius === 0 ? '\u221E' : draft[range.key])" }, { "value": "(['angle', 'rotation'].includes(range.key) ? '\xB0' : '')" }] }] }], "when": "(range.key !== 'rotation' || draft.angle < 360)" }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "checked": "(draft.dim_radius === 0)" }, "events": [{ "event": "change", "code": "unlimited;", "mods": [] }], "children": [] }, { "value": "(gwText('Unlimited'))" }], "when": "(range.key === 'dim_radius')" }], "each": { "names": ["range"], "value": "(ranges)" } }, { "tag": "div", "attrs": { "class": "light-editor__pair" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Animation'))" }] }, { "tag": "select", "attrs": {}, "bind": { "aria-label": "(gwText('Animation'))" }, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [{ "tag": "option", "attrs": { "value": "none" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Steady'))" }] }, { "tag": "option", "attrs": { "value": "torch" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Torch'))" }] }, { "tag": "option", "attrs": { "value": "pulse" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Pulse'))" }] }, { "tag": "option", "attrs": {}, "bind": { "value": "(draft.animation)" }, "events": [], "children": [{ "value": "(draft.animation)" }], "when": "(!['none', 'torch', 'pulse'].includes(draft.animation))" }], "model": { "path": "(draft.animation)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(gwText('Color'))" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }] }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "aria-label": "(gwText('On'))" }, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(gwText('On'))" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Radii use grid cells. Walls block light.'))" }] }, { "tag": "p", "attrs": { "role": "alert" }, "bind": {}, "events": [], "children": [{ "value": "(props.error)" }], "when": "(props.error)" }, { "tag": "footer", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": { "role": "status" }, "bind": {}, "events": [], "children": [{ "value": "(busy ? gwText('Saving\u2026') : gwText('Changes saved automatically'))" }], "when": "(!transactional)" }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('remove');", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove'))" }], "when": "(!transactional)" }, { "tag": "button", "attrs": { "type": "button", "data-native-editor-cancel": "" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "value": "(gwText('Cancel'))" }], "when": "(transactional)" }, { "tag": "button", "attrs": { "type": "button", "data-native-editor-save": "" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('save');", "mods": [] }], "children": [{ "value": "(gwText('Save'))" }], "when": "(transactional)" }] }] }], "movable": true }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
+  const HttpClient = options.HttpClient;
+  const BlockStateApi = class {
+    command(_c, _b, a, b, p) {
+      return options.command(a, b, p);
+    }
+    state() {
+      return options.read();
+    }
+  };
+  const props = options.props;
+  const draft = model(options);
+  const emit = options.emit;
+  const ranges = [{ key: "bright_radius", get name() {
+    return gwText("Bright radius");
+  }, max: 30, step: 0.5, min: 0 }, { key: "dim_radius", get name() {
+    return gwText("Dim radius");
+  }, max: 60, step: 0.5, min: 0 }, { key: "intensity", get name() {
+    return gwText("Intensity");
+  }, max: 1, step: 0.05, min: 0 }, { key: "angle", get name() {
+    return gwText("Cover");
+  }, max: 360, step: 5, min: 5 }, { key: "rotation", get name() {
+    return gwText("Direction");
+  }, max: 355, step: 5, min: 0 }];
+  function unlimited(e) {
+    draft.value.dim_radius = e.target.checked ? 0 : Math.max(6, draft.value.bright_radius);
+    emit("change");
+  }
+  return { gwText, PhX, PhTrash, vMovableResizable, props, draft, ranges, unlimited, emit: options.emit };
+});
+export {
+  LightEditor_native_default as default
+};

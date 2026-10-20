@@ -66,11 +66,29 @@ def check_browser(base, seed, output, executable):
 
         def generate(project_id):
             builder_workspace(page)
-            with page.expect_response(lambda response: response.url.endswith('/generate')) as generated:
+            previous = review.save()
+            assert previous['id'] == project_id
+            linked = bool(previous['sceneId'])
+            action = 'update' if linked else 'generate'
+            endpoint = review.api + '/projects/' + project_id + '/' + action
+            with page.expect_response(lambda response: response.request.method == 'POST'
+                                      and response.url.endswith(endpoint)) as generated:
+                # The header action becomes Update scene after generation while
+                # retaining its selector; the handler chooses the linked route.
                 page.locator('[data-builder-generate]').click()
             assert generated.value.ok, generated.value.text()
+            request = generated.value.request.post_data_json
+            assert request['expected_version'] == previous['version'], request
+            if linked:
+                assert request['expected_scene_version'] == previous['sceneVersion'], request
             page.wait_for_url(f'{base}/game/{campaign}')
             project = review.project(project_id)
+            assert project['document'] == previous['document']
+            if linked:
+                assert project['sceneId'] == previous['sceneId']
+                assert project['sceneVersion'] > previous['sceneVersion']
+            else:
+                assert project['sceneId'] and project['sceneVersion'] > 0
             response = page.request.get(f"/api/maps/{project['sceneId']}/state")
             assert response.ok, response.text()
             return project, response.json()
@@ -191,8 +209,8 @@ def check_browser(base, seed, output, executable):
             light_id = with_graph['lights'][0]['id']
             with_graph['doors'][0]['blueprint'] = {'version': 2, 'kind': 'door',
                 'states': {state: {'appearance': 'inherit'} for state in ('open', 'closed', 'locked')},
-                'graphs': {'enter:open': {'nodes': [
-                    {'id': 'event', 'type': 'event', 'event': 'enter:open', 'x': 0, 'y': 0},
+                'graphs': {'interact': {'nodes': [
+                    {'id': 'event', 'type': 'event', 'event': 'interact', 'x': 0, 'y': 0},
                     {'id': 'lamp', 'type': 'light', 'targetId': light_id, 'enabled': True, 'x': 300, 'y': 0}],
                     'edges': [{'from': 'event', 'output': 'next', 'to': 'lamp', 'kind': 'execution'}]}}}
             project = review.store(project['id'], project['version'], project['folderId'], with_graph)
@@ -209,7 +227,7 @@ def check_browser(base, seed, output, executable):
                 assert all(copied[key] == old[key] + 1 for key in coordinates), (kind, old, copied)
             copied_light = next(row for row in cloned['lights'] if row['layerId'] == clone_layer)
             copied_door = next(row for row in cloned['doors'] if row['layerId'] == clone_layer)
-            assert copied_door['blueprint']['graphs']['enter:open']['nodes'][1]['targetId'] == copied_light['id']
+            assert copied_door['blueprint']['graphs']['interact']['nodes'][1]['targetId'] == copied_light['id']
             page.locator('[data-builder-undo]').click()
             assert saved() == project['document']
             page.locator('[data-builder-redo]').click()
@@ -275,7 +293,7 @@ def check_browser(base, seed, output, executable):
             assert generated['document'] == project['document']
             assert len(native['lights']) == len(native['particles']) == len(native['shaders']) == 2
             assert len([row for row in native['walls'] if row['kind'] == 'door']) == 2
-            records.append({'case': 'save-reopen-preview-and-generation-preserve-manual-layers-and-native-effects'})
+            records.append({'case': 'save-reopen-preview-and-linked-scene-update-preserve-manual-layers-and-native-effects'})
 
             page.goto(review.builder + '?project=' + project['id']); wait_ready(page)
             for locale, width in (('en', 1440), ('pt-BR', 390), ('pt-BR', 320), ('es', 1024)):

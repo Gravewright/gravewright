@@ -23,17 +23,17 @@ class BuilderReview:
         self.campaign = campaign
 
     def save(self):
-        if self.page.locator('[data-map-builder]').get_attribute('data-save-state') == 'saved':
-            project_id = self.page.evaluate("new URL(location.href).searchParams.get('project')")
-            response = self.page.request.get(self.api + '/projects/' + project_id)
-        else:
-            with self.page.expect_response(lambda response: response.request.method == 'POST'
-                                           and '/map-builder/projects/' in response.url
-                                           and not response.url.endswith(('/generate', '/update'))) as saved:
-                self.page.locator('[data-builder-save]').click()
-            response = saved.value
-        assert response.ok, response.text()
-        return response.json()['project']
+        from playwright.sync_api import expect
+
+        root = self.page.locator('[data-map-builder]')
+        if root.get_attribute('data-save-state') != 'saved':
+            self.page.locator('[data-builder-save]').click()
+        # Autosave can finish before the click, and Undo can restore an already
+        # acknowledged document. Both synchronize without another POST.
+        expect(root).to_have_attribute('data-save-state', 'saved', timeout=30_000)
+        project_id = self.page.evaluate("new URL(location.href).searchParams.get('project')")
+        assert project_id, 'Saving must establish a persisted project identity.'
+        return self.project(project_id)
 
     def stroke(self, start, end):
         from map_builder import builder_workspace

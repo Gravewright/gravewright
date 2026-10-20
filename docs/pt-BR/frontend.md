@@ -48,9 +48,25 @@ destacadas; a ação abre o editor na aba principal do jogo. O endpoint do proje
 confere novamente o papel de mestre e a campanha
 ao carregar.
 
-A entrada é uma operação de leitura. O editor Estúdio possui o projeto, a
-biblioteca e a seleção em `workspace.js`; `model.js` possui a geometria em células
-e o histórico de desfazer, e `viewport.js` possui a câmera SVG independente.
+A entrada é uma operação de leitura. O `workspace.js` do Estúdio compõe os
+controladores do editor, a navegação e os gestos de desenho. Seus módulos
+vizinhos, servidos diretamente, possuem estas responsabilidades:
+
+| Módulo em `static/gravewright_maps/builder/` | Responsabilidade |
+| --- | --- |
+| `project-persistence.js` | Recuperação/armazenamento de rascunhos, HTTP/CSRF, identidade dos recibos e fila de salvamento |
+| `workspace-library.js` | Catálogo de assets da campanha, escolha de pincéis e controles de material |
+| `workspace-import.js` | Modais de importação/edição de assets e ciclo de vida dos listeners |
+| `inspector-controller.js` | Propriedades da seleção e configuração de regiões/tochas |
+| `layer-controller.js` | Controles, conteúdo e seleção de camadas e listeners de arraste |
+| `canvas-renderer.js` | Arte SVG, marcações de seleção e caches descartáveis de terreno/parede |
+
+Os controladores recebem estado e callbacks explícitos, sem importar o workspace
+nem compartilhar globais. Os testes de persistência importam sua factory pública,
+sem extrair texto de funções do `workspace.js`. Um salvamento cujo dono foi
+descartado não sobrescreve um rascunho recuperado ao receber confirmação tardia.
+`model.js` possui a geometria em células e o histórico de desfazer, e
+`viewport.js` possui a câmera SVG independente.
 Listeners, captura de ponteiro, requisições e observação de tamanho terminam em
 `pagehide`; a restauração pelo histórico remonta o editor. `builder_services.py`
 possui as revisões de projeto por campanha, recibos de repetição, validação e
@@ -711,7 +727,7 @@ A maioria dos JavaScripts de cada app em `static/` é fonte servida diretamente.
 
 | Entrada/fonte editável | Destino gerado |
 | --- | --- |
-| `maps/frontend/widgets/game-board/ui/board.js` | Bundle/chunks em `maps/static/gravewright_maps/vendor/` |
+| `maps/frontend/widgets/game-board/ui/board.js` | `maps/static/gravewright_maps/vendor/board.js` e módulos nomeados em `runtime/` |
 | `maps/frontend/shared/rendering/render-profile.js` | `maps/static/gravewright_maps/render-profile.js` |
 | `maps/frontend/native/tools.js` | `maps/static/gravewright_maps/tools.js` |
 | `maps/frontend/native/builder-catalog.js`, `builder-preview.js` | `maps/static/gravewright_maps/builder-catalog.js`, `builder-native.js` |
@@ -725,6 +741,17 @@ A maioria dos JavaScripts de cada app em `static/` é fonte servida diretamente.
 | `pdf_system/frontend/controller.js` | `pdf_system/static/gravewright_pdf_system/controller.js` |
 
 Os caminhos da tabela são relativos a `gravewright/`. Edite fontes e reconstrua os destinos. Evite correções isoladas em chunks minificados ou bibliotecas de terceiros.
+
+Ferramentas, tabuleiro, catálogos, editores e prévia do Builder mantêm suas URLs
+públicas de entrada e importam módulos ES nomeados de `gravewright_maps/runtime/`,
+seguindo os caminhos de cada recurso nas fontes. Módulos compartilhados têm uma
+única identidade no navegador; PixiJS e seu adaptador unsafe-eval são emitidos
+uma vez em `vendor/pixi.js`. Prévia e editores continuam com imports sob demanda,
+e o worker de visibilidade mantém a URL relativa do recurso e sua entrada pública
+existente. O manifesto do Runner inclui cada módulo e aviso de licença emitido.
+Distribua o grafo gerado completo. Essa organização usa mais requisições pequenas
+e evita cópias repetidas nos bundles; tamanhos de arquivos, sozinhos, não demonstram
+melhora de desempenho no navegador.
 
 Na raiz do repositório:
 
