@@ -51,20 +51,20 @@ The existing dice grammar documents are maintained next to their implementation.
 
 ## Release identifiers
 
-The current release is **0.2.2**. Its equivalent identifiers follow the formats required by each tool:
+The current release is **0.3.0**. The application manifests use these identifiers, following the formats required by each tool:
 
 | Location | Identifier |
 | --- | --- |
-| Full public release name | `Gravewright 0.2.2 — Alpha` |
-| Application and Runner version | `0.2.2` |
-| Python project and `uv.lock` | `0.2.2` |
-| Frontend package, package lock and update API | `0.2.2` |
-| Release tag | `v0.2.2` |
-| Source release artifact | `Gravewright-0.2.2-django.zip` |
+| Full public release name | `Gravewright 0.3.0 — Alpha` |
+| Application and Runner version | `0.3.0` |
+| Python project and `uv.lock` | `0.3.0` |
+| Frontend package, package lock and update API | `0.3.0` |
+| Release tag | `v0.3.0` |
+| Source release artifact | `Gravewright-0.3.0-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) is the source of the installed version. [`gravewright/version.py`](../../gravewright/version.py) derives its public identifier and label; keep the frontend package metadata aligned when changing it. API/SDK contract versions and third-party module versions have independent lifecycles.
 
-Release `0.2.2` follows the `stable` update-discovery convention for numeric version identifiers; the project remains in Alpha. Administration displays the full release name without a channel selector. Existing host channel preferences and API compatibility are preserved.
+Release `0.3.0` follows the `stable` update-discovery convention for numeric version identifiers; the project remains in Alpha. Administration displays the full release name without a channel selector. Existing host channel preferences and API compatibility are preserved.
 
 ## Build a release archive
 

@@ -1,145 +1,244 @@
 # Map Builder
 
-[Documentação](../README.md) · [English](../en/map-builder.md) · [Frontend](frontend.md)
+[Documentação](../README.pt-BR.md) · [English](../en/map-builder.md) · [Universal VTT](universal-vtt.md) · [Frontend](frontend.md)
 
-Este guia descreve a implementação atual. A [direção dos Objetos
-Inteligentes](smart-objects-direction.md) registra a proposta de editor no estilo
-ComfyUI, o catálogo de elementos e as conexões entre objetos.
+O Map Builder é a área do mestre da campanha para projetos de mapa editáveis.
+Desenhe com materiais ou importe uma imagem pronta, acrescente paredes, portas,
+objetos, luzes e efeitos nativos e depois gere ou atualize uma cena. O projeto
+continua editável separadamente da cena usada na mesa.
 
-A **UI/UX do editor está completa**: layout da área de trabalho, painéis,
-biblioteca, seleção, controles do pincel e interações responsivas estão
-estabelecidos. O trabalho seguinte amplia as capacidades de edição e reutiliza
-as janelas de edição do jogo nessa interface; esse status não significa que
-todas as funcionalidades planejadas estejam implementadas.
+Este guia descreve o código atual que está sendo documentado para a próxima
+versão **0.3.0**; não anuncia sua publicação. A
+[direção dos Objetos Inteligentes](smart-objects-direction.md) distingue as
+capacidades implementadas das propostas.
 
-**A entrega atual de funcionalidades está concluída.** Ela inclui criação de
-mapas, luzes/efeitos e editores nativos, comportamentos de Objetos Inteligentes,
-salvamento automático, importação de mapas prontos, importação/exportação
-Universal VTT, Objetos vazios sem imagem e atualização da mesma cena do jogo.
-Este guia registra o comportamento entregue e seus limites.
+## Encontre o fluxo adequado
 
-## Rotação de portas
+| Seu ponto de partida | Onde consultar |
+| --- | --- |
+| Construir uma sala nova | [Construir a primeira sala](#construir-a-primeira-sala) |
+| Escolher entre tiles, pintura suave e imagem de mapa | [Escolher como começar](#escolher-como-começar) |
+| Organizar imagens, famílias e coleções | [Construir mapas maiores](#construir-mapas-maiores) |
+| Organizar ou selecionar objetos do projeto | [Seleção e camadas do projeto](#seleção-e-camadas-do-projeto) |
+| Recuperar um salvamento com falha ou conflito | [Salvamento automático](#salvamento-automático), depois [Solução de problemas](#solução-de-problemas) |
+| Aplicar edições à mesma cena do jogo | [Atualizar uma cena gerada](#atualizar-uma-cena-gerada) |
+| Adicionar alavanca, tocha, região ou comportamento temporizado | [Referência de Objetos Inteligentes](#referência-de-objetos-inteligentes) |
+| Importar/exportar um arquivo Universal VTT | [Intercâmbio Universal VTT](universal-vtt.md) |
+| Integrar documentos do projeto ou operações HTTP | [Referência para desenvolvimento](#referência-para-desenvolvimento) |
 
-Selecione uma porta e escolha **Ponto de ancoragem da rotação** nas propriedades
-ou no editor do jogo: **Início da porta**, **Centro da porta** ou **Fim da porta**.
-O marcador da porta selecionada mostra o pivô. **Girar** mantém esse ponto fixo;
-portas existentes usam o centro por padrão. Com uma âncora explícita, abrir gira
-a imagem em 90° ao redor desse ponto e fechar restaura a imagem. **Padrão (centro)**
-mantém o comportamento original de ocultar a imagem ao abrir. Aparências ocultas
-explícitas do Blueprint continuam ocultas. Vários objetos giram em torno do
-centro da seleção. A escolha acompanha desfazer/refazer, salvamento automático,
-duplicação e atualizações da cena gerada, e também controla a rotação de uma
-porta individual com a ferramenta Selecionar do jogo.
+## Acesso do mestre e pontos de entrada
 
-## Salvamento automático
+Abra **Cenas** na campanha e escolha **Nova cena → Map Builder**. A pasta de cenas
+selecionada acompanha o projeto e a primeira cena gerada. Somente um mestre atual
+da campanha pode abrir ou gerenciar projetos do Builder; jogadores e streamers
+não podem editá-los. Abrir o editor não muda a transmissão dos jogadores.
 
-As edições do projeto são salvas automaticamente após uma breve pausa: nome do
-mapa, traços concluídos, objetos, camadas, configurações, desfazer e refazer.
-O cabeçalho mostra se há alterações aguardando, sendo salvas ou já salvas.
-Escritas em segundo plano conservam a seleção e o histórico e não interrompem
-a pintura. O botão de estado e **Ctrl+S** continuam disponíveis para sincronizar
-imediatamente.
+Para retomar, use **Painéis → Projetos** ou clique com o botão direito em uma
+cena vinculada a um projeto e escolha **Editar com MapBuilder**. Ela tem o ícone
+de mapa vermelho no diretório do mestre. Uma cena importada como imagem comum
+ou por Universal VTT não tem projeto editável do Builder, a menos que tenha sido
+criada a partir de um projeto do Builder.
 
-Os grafos dos Objetos Inteligentes também aplicam edições válidas automaticamente.
-Não há uma etapa manual de Salvar/Cancelar: **Fechar** ou **Escape** aguarda as
-edições válidas pendentes. Campos inválidos permanecem visíveis para correção e
-impedem o fechamento. Desfazer/refazer também é salvo. Abrir ou fechar um grafo
-atual sem mudanças não cria um blueprint vazio. Grafos de eventos removidos são
-descartados ao carregar dados anteriores.
+### Projeto, prévia e cena do jogo
 
-Uma resposta perdida repete a mesma operação lógica e seu UUID; uma escrita já
-confirmada não é aplicada de novo. Um conflito de revisão pausa o salvamento
-automático e conserva o rascunho local. **Recarregar projeto salvo** adota
-explicitamente a versão atual do servidor; **Salvar uma cópia** conserva o mapa
-local com outra identidade. Uma falha mantém as edições nesta aba e oferece
-controles de recuperação. Num conflito de Objeto Inteligente em jogo, novas
-escritas ficam pausadas até reabrir o editor com a versão atual; a revisão
-anterior nunca é substituída silenciosamente. **Descartar alterações não salvas** descarta apenas mudanças ainda
-não confirmadas. Recarregar esta aba recupera uma escrita incerta confirmando
-seu recibo original antes de enviar edições locais mais recentes. Rascunhos
-antigos sem o corpo dessa escrita pausam para recarregar ou copiar explicitamente.
-Se o carregamento inicial da biblioteca ou do projeto falhar, a edição permanece
-bloqueada e **Tentar novamente** recarrega sem criar um projeto vazio substituto.
-Corrigir ou desfazer uma edição rejeitada limpa a tentativa de salvamento
-rejeitada, evitando que recarregar a aba a trate como escrita incerta. Após
-reconectar, **Tentar novamente** no editor de Objeto Inteligente também retoma
-o salvamento pendente do projeto com o recibo original; conflitos de revisão
-continuam exigindo recuperação explícita.
+| Ação | Resultado | Efeito na cena do jogo |
+| --- | --- | --- |
+| Editar, Desfazer/Refazer, salvamento automático ou **Ctrl+S** | Salvar o projeto editável | Exige **Gerar cena** ou **Atualizar cena** para aplicar à mesa |
+| **Prévia** | Inspecionar a imagem com todas as camadas do projeto | Não grava na cena; a edição pausa |
+| **Simular** no editor de Objeto Inteligente | Acompanhar um grafo local | Não executa efeitos no jogo |
+| **Testar comportamento** | Ensaiar pelo servidor e relatar alterações previstas | O ensaio é revertido |
+| **Gerar cena** | Criar a primeira cena nativa do projeto, reservada ao mestre | Abre para o mestre; preserva a transmissão anterior dos jogadores |
+| **Atualizar cena** | Aplicar o projeto à cena vinculada | Clientes que veem essa cena recebem a atualização confirmada |
+| **Ativar para jogadores** no menu da cena | Tornar a cena visível e transmiti-la | Jogadores conectados passam a vê-la |
 
-Voltar ao jogo aguarda as mudanças pendentes do projeto. Se o salvamento falhar,
-o editor permanece aberto para tentar novamente ou descartar explicitamente.
-Salvar automaticamente persiste a configuração; não gera uma cena nem executa
-ações do grafo. **Gerar cena** e **Atualizar cena** continuam sendo ações
-explícitas. Editar um elemento em jogo aplica a configuração do grafo ao dono e
-ao projeto vinculado pelas revisões existentes, sem acionar seu mecanismo.
+## Construir a primeira sala
 
-## Importar um mapa pronto
+1. Como mestre da campanha, escolha **Nova cena → Map Builder**. A pasta de cenas
+   escolhida acompanha o projeto. Entrar não altera a cena atual nem a transmissão
+   dos jogadores.
+2. Informe o nome do mapa diretamente no cabeçalho. Abra
+   **Painéis → Configurações → Configuração do mapa** para escolher dimensões,
+   tamanho da célula e fundo.
+   Volte a **Camadas** para renomear a **Camada 1** ou adicionar outra camada nomeada.
+3. Comece com o chão sólido, parede simples e porta nativa padrão, ou escolha
+   **Importar** na **Biblioteca** inferior para usar suas imagens. Na modal de importação, escolha
+   os arquivos de imagem e seu tipo: **Chão**, **Parede**, **Porta** ou **Objeto**.
+   Opcionalmente, associe as imagens a uma família de assets existente ou crie uma
+   nova. Selecione uma imagem ou família na biblioteca para usar seu pincel.
+4. Abra **Painéis → Ferramentas**. Com **Chão**, escolha pincel livre, retângulo,
+   círculo ou polígono e pinte o chão. Trace paredes e portas arrastando entre os pontos
+   de início e fim. A porta é um segmento independente e não exige uma parede.
+   Sobrepor uma parede na mesma direção substitui esse trecho.
+5. Use **Selecionar** para mover objetos e abra **Painéis → Seleção** para editar
+   suas propriedades. Pressione **E** para apagar objetos. Paredes e portas são movidas
+   e excluídas independentemente. Desfazer/refazer recupera edições, inclusive objetos
+   removidos. Segure Espaço e arraste para mover a câmera; a roda muda o zoom e
+   **0** enquadra o mapa.
+6. As alterações são salvas automaticamente; o cabeçalho mostra seu estado.
+   **Painéis → Projetos** lista os projetos salvos para reabri-los.
+   **Novo projeto** aguarda as mudanças pendentes antes de iniciar um projeto vazio.
+7. Escolha **Gerar cena**. O builder salva o projeto, renderiza a imagem, usa o
+   fluxo nativo de fatiamento e cria uma nova cena reservada ao mestre nessa pasta.
+   O mestre abre essa cena; os jogadores continuam na transmissão anterior. No
+   menu de contexto da cena, **Ativar para jogadores** torna a cena visível e
+   a transmite em uma operação, inclusive para jogadores já conectados.
 
-Escolha **Biblioteca → Importar → Importar mapa pronto**, ou use a mesma ação em
-**Painéis → Configurações** ou **Projetos**. Envie uma imagem PNG, JPEG, WebP ou TIFF
-(até 25 MB), ou escolha uma imagem já existente nesta campanha. Defina largura e
-altura em células e tamanho da célula. Um projeto vazio sugere uma grade dentro
-dos limites a partir das dimensões da imagem; confira esses valores com a grade
-original do mapa.
+No diretório **Cenas** do jogo, a cena vinculada a um projeto salvo mantém o mesmo
+ícone de mapa, em vermelho. Clique com o botão direito e escolha
+**Editar com MapBuilder**, junto da ação **Editar** normal, para reabrir
+diretamente esse projeto. Entrar no editor não altera a cena dos
+jogadores. Depois de editar, o botão principal do cabeçalho passa a ser
+**Atualizar cena** e aplica as mudanças à mesma cena, mantendo sua identidade e
+o vínculo com o projeto. Imagens importadas e cenas
+sem projeto vinculado mantêm os controles normais. O vínculo com o projeto fica
+visível somente para o mestre.
 
-A imagem preenche o mapa uma única vez, abaixo de todas as camadas. Acrescente
-paredes, portas, objetos, luzes e comportamentos sobre ela. O fundo independe das
-categorias de pincel e não se repete como textura de chão. Substituí-lo mantém os
-objetos nas posições atuais; dimensões que deixariam objetos fora do mapa são
-recusadas. **Remover imagem do mapa** em Configurações retira o fundo sem excluir
-a imagem da campanha. Importação, substituição e remoção usam desfazer/refazer e
-salvamento automático, e aparecem nas cenas geradas ou atualizadas.
+### Controles da área de trabalho
 
-## Objetos vazios
+O canvas ocupa o espaço abaixo do cabeçalho, com uma **Biblioteca** horizontal na
+parte inferior. **Painéis → Ferramentas** reúne ferramentas de desenho, material
+ativo, opções de pincel, camada ativa e encaixe na grade. Entre o nome editável
+do mapa e o histórico, o cabeçalho oferece **Selecionar**, **Pintar**, tamanho do
+pincel e **Apagar**. Em seguida ficam **Desfazer**, **Refazer**, estado do
+salvamento, **Prévia** e geração de cena. Controles de visualização e dimensões
+em células ficam abaixo do canvas.
 
-Escolha **Biblioteca → Objetos → Objeto vazio**, ou **Painéis → Ferramentas → Objeto
-vazio**, e clique ou arraste para colocar um objeto sem imagem. Em Seleção, edite
-nome, tamanho, rotação e camada. Selecionar, mover, duplicar e selecionar vários
-funcionam como nos demais objetos.
+**Selecionar (V)** permite Shift-clique e arrastar uma caixa de seleção para
+vários objetos. **Pintar (F)** retorna ao pincel livre de chão na operação de
+pintura, usando o material atual e selecionando **Chão** na biblioteca. Seu tamanho
+fica sincronizado com **Ferramentas**: em Tiles, 1–20 células com encaixe na
+grade ou 0,05–20 sem encaixe; Pintura sempre usa 0,05–20 células.
+**[ / ]** também ajusta o tamanho. O campo de tamanho fica disponível para o
+pincel livre de chão, inclusive sua borracha por área. **Apagar (E)** exclui um
+objeto inteiro ao clicar; use **Apagar chão**, em **Ferramentas**, para apagar
+apenas parte do chão.
+Os controles de edição pausam na Prévia ou durante uma operação que exige
+acesso exclusivo. O salvamento automático em segundo plano permite continuar
+editando.
 
-Dê dois cliques para editar os mesmos nós, estados, sinais e ações de Objeto
-Inteligente de um objeto comum. Os eventos apenas iniciam a sequência; os nós de
-lógica tomam as decisões. Use-o como controlador de luzes, sons e outros elementos
-sem colocar uma imagem. No jogo, ele vai diretamente para a camada **GM**. O
-mestre vê seu marcador sutil em todas as abas e o seleciona ou edita na aba
-**GM**. Continua editável no
-builder e é omitido dos dados de cena de jogadores/streamers. Cenas antigas
-recebem a mesma apresentação privada imediatamente, sem precisar gerar de novo.
-Edições nativas, cópias e atualizações mantêm o objeto no GM. Jogadores continuam
-disparando seus eventos de área ao mover tokens; ações de área/sinal com espera
-mantêm as permissões originais do jogador. Cliques diretos do jogador não o
-ativam. Ele não recebe imagem própria. O catálogo de nós é o
-mesmo para todos os tipos de elemento: **Trocar imagem** e **Definir aparência**
-podem controlar outro objeto por uma conexão explícita em **Alvo**. Nós visuais
-sem alvo compatível continuam editáveis e são ignorados com um diagnóstico na
-execução. Desfazer/refazer, salvamento
-automático e atualizações da cena mantêm sua identidade e seu comportamento.
+Com o pincel de chão ativo, segure **Shift + botão esquerdo do mouse** e arraste
+na horizontal para redimensioná-lo sem pintar. Arrastar para a direita aumenta
+o tamanho; para a esquerda diminui, com a área e o tamanho atualizados no ponto
+inicial. Solte para manter o tamanho ou pressione **Escape** para restaurá-lo.
+Funciona em Tiles e Pintura, inclusive na borracha por área; altera apenas a
+preferência do pincel, sem editar o mapa ou criar uma etapa de desfazer.
 
-Para imagens comuns, alavancas e tochas, use **Mover para camada de imagens do
-GM** no menu de contexto para ocultá-las. Vá à aba **GM**, clique com o botão
-direito no objeto e escolha **Mover para camada de imagens** para devolvê-lo ao
-jogo. A aba **Imagens** edita imagens públicas; as privadas são selecionadas em
-GM. Devolver uma seleção mista mantém Objetos vazios no GM. Imagens privadas e
-marcadores de Objetos vazios continuam visíveis para o mestre com 55% de opacidade
-em todas as abas; desenhos privados também multiplicam sua opacidade original
-por 55%. Jogadores e streamers não recebem esses elementos privados. Trocar de
-aba atualiza os controles de edição sem reconstruir a cena renderizada.
+O campo de nome no cabeçalho aplica e salva nomes válidos após uma breve pausa
+na digitação. **Enter** ou **Escape** devolve o foco ao canvas; desfazer reverte
+uma alteração de nome aceita. O campo fica sincronizado com **Configurações**.
+Os botões de histórico no cabeçalho usam **Ctrl+Z** para desfazer e **Ctrl+Shift+Z**
+ou **Ctrl+Y** para refazer.
 
-A execução de eventos reutiliza os inventários de imagens, sons, luzes e
-blueprints somente dentro de um comando e depois os descarta. Estados mutáveis e
-propriedade dos recursos são verificados novamente nos comandos seguintes. O
-trajeto aceito do token é projetado uma vez por passagem de áreas, mantendo a
-ordem dos ouvintes e o cancelamento por teleporte. Eventos de várias áreas
-conservam todos os registros, publicando uma única invalidação do histórico após
-o commit. Rollback, permissões e recibos de repetição continuam no servidor.
+### Biblioteca e barra de ferramentas
 
-Mudanças confirmadas da cena chegam ao tabuleiro antes das atualizações
-dependentes de áudio/combate. Trocar uma imagem comum substitui sua textura no
-próprio objeto, mantendo a imagem anterior até a nova ficar pronta. Imagens
-inalteradas são reutilizadas, inclusive ao reconstruir luzes/geometria na mesma
-cena. A cena possui um cache limitado de texturas usadas recentemente e o libera
-ao trocar de cena/papel ou encerrar o tabuleiro. Apenas imagens da projeção atual
-autorizada para aquele usuário são carregadas.
+A barra da biblioteca oferece busca, **Importar**, categorias por tipo e acesso
+direto a **Selecionar**, **Apagar**, **Mover vista**, **Objeto vazio** e **Região**.
+Os pincéis de chão, parede, porta, objeto e luz ficam na mesma faixa; **Efeitos**
+mantém o seletor **Partículas/Shaders**. Esses atalhos fecham o painel auxiliar e
+devolvem o foco ao mapa. Em telas menores a faixa tem rolagem horizontal própria,
+inclusive pelo foco do teclado, sem mudar de posição ao trocar categorias.
+Busca, filtros, categorias e seta de recolher mantêm suas posições ao trocar
+para luzes ou efeitos; o espaço da importação permanece reservado quando ela
+fica oculta. Filtros sem resultados mostram uma mensagem. Os checkboxes usam o
+mesmo controle nativo compacto em configurações, camadas e propriedades, com
+ativação pelo rótulo e pela tecla Espaço.
+Sua seta recolhe os cards, mantendo a barra acessível. Ao entrar, **Chão** aparece
+destacado e a galeria mostra apenas imagens classificadas como Chão neste projeto. Clicar em
+**Chão**, **Parede**, **Porta** ou **Objeto** filtra a galeria e ativa a ferramenta
+correspondente. Escolher um preset de luz ou efeito nativo ativa sua ferramenta
+de posicionamento. O seletor de material em **Ferramentas** acompanha o pincel
+ativo e inclui sua aparência padrão.
+
+### Seleção e camadas do projeto
+
+**Painéis**, no canto superior direito do mapa, abre um painel auxiliar com as abas
+**Ferramentas**, **Camadas**, **Seleção**, **Configurações**, **Projetos** e **Revisão**. Fechar o painel
+mantém a biblioteca visível. Selecionar ou pintar não abre o painel automaticamente.
+As propriedades dos objetos ficam em **Seleção**. Selecione um elemento e edite
+**Nome do elemento** (ou **Nome do objeto/Nome da região**) para nomeá-lo sem
+alterar o arquivo da imagem. Chãos, paredes, portas, objetos, luzes, partículas,
+shaders e regiões aceitam nomes de até 120 caracteres. Pressione **Enter** ou
+saia do campo para aplicar e salvar automaticamente; **Escape** descarta a edição
+pendente do campo. Camadas, alvos de comportamento, escolhas de luz/porta e a
+rede da cena mostram os nomes definidos. Limpar um nome opcional restaura o
+rótulo normal; Objetos vazios, regiões e shaders mantêm um nome obrigatório.
+Desfazer/refazer e duplicação preservam os nomes. Renomear conserva a identidade
+do elemento e as conexões dos nós; **Atualizar cena** aplica o nome à cena
+existente. Dois cliques numa porta do
+mapa abrem seu editor de comportamento na
+modal **Objeto Inteligente**. **Revisão**
+mostra o resumo do projeto e a ação de gerar cena.
+
+O cabeçalho do painel mantém o nome do mapa visível. As seis abas identificadas
+ficam disponíveis em duas linhas, inclusive em telas estreitas, e cada aba guarda
+sua própria posição de rolagem. Use as setas para trocar de aba, **Home/End**
+para ir à primeira/última, e **Escape** fora de um campo de texto para fechar o
+painel. Fechar devolve o foco ao controle que o abriu e preserva a seleção;
+clicar na aba atual a mantém aberta.
+
+**Ferramentas** coloca material atual, camada ativa e configurações do pincel
+antes da paleta compacta de ferramentas. Dureza e intensidade da Pintura aparecem
+juntas; a ajuda expansível reúne instruções e atalhos do pincel. **Seleção**
+oferece **Selecionar no mapa** quando não há objetos selecionados. **Projetos**
+mantém nomes longos legíveis, e **Revisão** agrupa mapa e contagem de objetos
+antes das ações da cena. Abrir painéis e navegar entre eles não altera o mapa.
+
+**Seleção** coloca as propriedades editáveis antes das miniaturas de materiais
+para mudar a aparência do objeto selecionado. **Camadas** organiza camadas nomeadas
+do projeto: crie, renomeie,
+reordene, oculte ou bloqueie camadas e escolha a camada ativa para novos objetos.
+Mova os objetos selecionados entre camadas em **Seleção** ou com **Mover para cá**
+na camada de destino. A lista mostra primeiro a camada superior, com contagens
+e estados de ativa, oculta e bloqueada. **Pintar em**, em **Ferramentas**, troca a
+camada ativa. **Selecionar** seleciona os objetos editáveis de uma
+camada; **Isolar** a exibe sozinha temporariamente, incluindo luzes e efeitos
+nativos. **Mostrar todas** encerra o isolamento e mostra todas as camadas;
+**Desbloquear todas** remove seus bloqueios.
+
+### Operações de camadas
+
+Arraste a alça de uma camada ou use suas setas para mudar a posição. Expanda
+**Conteúdo da camada** para selecionar um objeto. **Duplicar camada** copia uma
+camada desbloqueada e desloca todo o conteúdo exatamente uma célula à direita e
+uma abaixo. A cópia aparece imediatamente acima da original, visível e
+desbloqueada, com novos IDs e referências remapeadas entre os Objetos
+Inteligentes copiados. A operação é recusada sem alterações se a cópia sair do
+mapa, sobrepuser portas ou exceder os limites do projeto. Duplicar ocupa uma etapa
+de desfazer.
+
+**Mesclar abaixo** move uma camada visível e desbloqueada para a camada
+imediatamente inferior, também visível e desbloqueada. A ordem de pintura, as
+identidades dos objetos e as referências de Objetos Inteligentes são preservadas.
+Uma mesclagem ocupa uma etapa de desfazer. Uma camada com borrachas de terreno
+não pode ser mesclada sobre uma camada inferior com pisos, pois isso mudaria
+quais pisos essas borrachas afetam. Exclua uma camada vazia e desbloqueada
+após mover ou remover seus objetos, inclusive a última camada. Crie uma camada
+visível e desbloqueada antes de voltar a desenhar. Nomes,
+ordem, visibilidade e bloqueio são salvos com o projeto. Objetos de camadas
+ocultas ou bloqueadas não podem ser editados. Ocultar uma camada muda a vista
+do editor; a geração inclui todas as camadas do projeto.
+
+### Prévia
+
+**Prévia** mantém o mapa no lugar e oculta grade, seleção, guias do pincel e
+contorno do mapa. O desenho e a edição de propriedades ficam pausados, enquanto
+mover a vista, ajustar o zoom, salvar e gerar cena continuam disponíveis.
+A prévia mostra temporariamente todas as camadas, inclusive as ocultas no
+editor. **Voltar à edição** restaura a visibilidade anterior e retoma a edição.
+
+## Escolher como começar
+
+| Método | Quando usar | O que permanece editável |
+| --- | --- | --- |
+| **Tiles** | Salas em grade, materiais repetidos, formas precisas ou contornos definidos sem encaixe | Imagens/formas concretas do chão, paredes e demais objetos do projeto |
+| **Pintura** | Transições suaves de terreno e mistura gradual de materiais | Traços e suas máscaras, com os mesmos objetos e camadas do projeto |
+| **Importar mapa pronto** | PNG/JPEG/WebP/TIFF finalizado para traçar ou decorar | Uma imagem de fundo e os objetos colocados sobre ela |
+| **Importar Universal VTT** | `.uvtt`, `.dd2vtt` ou `.df2vtt` com grade/paredes/portas/luzes | Objetos nativos de cena; cria uma cena separada, não um projeto do Builder |
+
+Tiles e Pintura são modos do mesmo projeto; alterná-los preserva o trabalho
+existente. Um fundo de mapa pronto pode acompanhar qualquer um deles. Para
+formatos aceitos, avisos e limites de intercâmbio, siga o
+[guia do Universal VTT](universal-vtt.md).
 
 ## Tiles e Pintura
 
@@ -191,168 +290,26 @@ ou ocultas não podem ser pintadas. A Prévia pausa a edição; salvar/reabrir,
 gerar e atualizar a cena vinculada preservam as máscaras suaves e as texturas
 misturadas.
 
-## Construir a primeira sala
+## Importar um mapa pronto
 
-1. Como mestre da campanha, escolha **Nova cena → Map Builder**. A pasta de cenas
-   escolhida acompanha o projeto. Entrar não altera a cena atual nem a transmissão
-   dos jogadores.
-2. Informe o nome do mapa diretamente no cabeçalho. Abra
-   **Painéis → Configurações → Configuração do mapa** para escolher dimensões,
-   tamanho da célula e fundo.
-   Volte a **Camadas** para renomear a **Camada 1** ou adicionar outra camada nomeada.
-3. Escolha **Importar** na **Biblioteca** inferior. Na modal de importação, escolha
-   os arquivos de imagem e seu tipo: **Chão**, **Parede**, **Porta** ou **Objeto**.
-   Opcionalmente, associe as imagens a uma família de assets existente ou crie uma
-   nova. Selecione uma imagem ou família na biblioteca para usar seu pincel.
-4. Abra **Painéis → Ferramentas**. Com **Chão**, escolha pincel livre, retângulo,
-   círculo ou polígono e pinte o chão. Trace paredes e portas arrastando entre os pontos
-   de início e fim. A porta é um segmento independente e não exige uma parede.
-   Sobrepor uma parede na mesma direção substitui esse trecho.
-5. Use **Selecionar** para mover objetos e abra **Painéis → Seleção** para editar
-   suas propriedades. Pressione **E** para apagar objetos. Paredes e portas são movidas
-   e excluídas independentemente. Desfazer/refazer recupera edições, inclusive objetos
-   removidos. Segure Espaço e arraste para mover a câmera; a roda muda o zoom e
-   **0** enquadra o mapa.
-6. As alterações são salvas automaticamente; o cabeçalho mostra seu estado.
-   **Painéis → Projetos** lista os projetos salvos para reabri-los.
-   **Novo projeto** aguarda as mudanças pendentes antes de iniciar um projeto vazio.
-7. Escolha **Gerar cena**. O builder salva o projeto, renderiza a imagem, usa o
-   fluxo nativo de fatiamento e cria uma nova cena reservada ao mestre nessa pasta.
-   O mestre abre essa cena; os jogadores continuam na transmissão anterior. No
-   menu de contexto da cena, **Ativar para jogadores** torna a cena visível e
-   a transmite em uma operação, inclusive para jogadores já conectados.
+Escolha **Biblioteca → Importar → Importar mapa pronto**, ou use a mesma ação em
+**Painéis → Configurações** ou **Projetos**. Envie uma imagem PNG, JPEG, WebP ou TIFF
+(até 25 MB), ou escolha uma imagem já existente nesta campanha. Defina largura e
+altura em células e tamanho da célula. Um projeto vazio sugere uma grade dentro
+dos limites a partir das dimensões da imagem; confira esses valores com a grade
+original do mapa.
 
-No diretório **Cenas** do jogo, a cena vinculada a um projeto salvo mantém o mesmo
-ícone de mapa, em vermelho. Clique com o botão direito e escolha
-**Editar com MapBuilder**, junto da ação **Editar** normal, para reabrir
-diretamente esse projeto. Entrar no editor não altera a cena dos
-jogadores. Depois de editar, o botão principal do cabeçalho passa a ser
-**Atualizar cena** e aplica as mudanças à mesma cena, mantendo sua identidade e
-o vínculo com o projeto. Imagens importadas e cenas
-sem projeto vinculado mantêm os controles normais. O vínculo com o projeto fica
-visível somente para o mestre.
-
-O canvas ocupa o espaço abaixo do cabeçalho, com uma **Biblioteca** horizontal na
-parte inferior. **Painéis → Ferramentas** reúne ferramentas de desenho, material
-ativo, opções de pincel, camada ativa e encaixe na grade. Entre o nome editável
-do mapa e o histórico, o cabeçalho oferece **Selecionar**, **Pintar**, tamanho do
-pincel e **Apagar**. Em seguida ficam **Desfazer**, **Refazer**, estado do
-salvamento, **Prévia** e geração de cena. Controles de visualização e dimensões
-em células ficam abaixo do canvas.
-
-**Selecionar (V)** permite Shift-clique e arrastar uma caixa de seleção para
-vários objetos. **Pintar (F)** retorna ao pincel livre de chão na operação de
-pintura, usando o material atual e selecionando **Chão** na biblioteca. Seu tamanho
-fica sincronizado com **Ferramentas**: em Tiles, 1–20 células com encaixe na
-grade ou 0,05–20 sem encaixe; Pintura sempre usa 0,05–20 células.
-**[ / ]** também ajusta o tamanho. O campo de tamanho fica disponível para o
-pincel livre de chão, inclusive sua borracha por área. **Apagar (E)** exclui um
-objeto inteiro ao clicar; use **Apagar chão**, em **Ferramentas**, para apagar
-apenas parte do chão.
-Os controles de edição ficam pausados na Prévia ou durante uma requisição.
-
-Com o pincel de chão ativo, segure **Shift + botão esquerdo do mouse** e arraste
-na horizontal para redimensioná-lo sem pintar. Arrastar para a direita aumenta
-o tamanho; para a esquerda diminui, com a área e o tamanho atualizados no ponto
-inicial. Solte para manter o tamanho ou pressione **Escape** para restaurá-lo.
-Funciona em Tiles e Pintura, inclusive na borracha por área; altera apenas a
-preferência do pincel, sem editar o mapa ou criar uma etapa de desfazer.
-
-O campo de nome no cabeçalho aplica e salva nomes válidos após uma breve pausa
-na digitação. **Enter** ou **Escape** devolve o foco ao canvas; desfazer reverte
-uma alteração de nome aceita. O campo fica sincronizado com **Configurações**.
-Os botões de histórico no cabeçalho usam **Ctrl+Z** para desfazer e **Ctrl+Shift+Z**
-ou **Ctrl+Y** para refazer.
-
-A barra da biblioteca oferece busca, **Importar**, categorias por tipo e acesso
-direto a **Selecionar**, **Apagar**, **Mover vista**, **Objeto vazio** e **Região**.
-Os pincéis de chão, parede, porta, objeto e luz ficam na mesma faixa; **Efeitos**
-mantém o seletor **Partículas/Shaders**. Esses atalhos fecham o painel auxiliar e
-devolvem o foco ao mapa. Em telas menores a faixa tem rolagem horizontal própria,
-inclusive pelo foco do teclado, sem mudar de posição ao trocar categorias.
-Busca, filtros, categorias e seta de recolher mantêm suas posições ao trocar
-para luzes ou efeitos; o espaço da importação permanece reservado quando ela
-fica oculta. Filtros sem resultados mostram uma mensagem. Os checkboxes usam o
-mesmo controle nativo compacto em configurações, camadas e propriedades, com
-ativação pelo rótulo e pela tecla Espaço.
-Sua seta recolhe os cards, mantendo a barra acessível. Ao entrar, **Chão** aparece
-destacado e a galeria mostra apenas imagens classificadas como Chão neste projeto. Clicar em
-**Chão**, **Parede**, **Porta** ou **Objeto** filtra a galeria e ativa a ferramenta
-correspondente. Escolher um preset de luz ou efeito nativo ativa sua ferramenta
-de posicionamento. O seletor de material em **Ferramentas** acompanha o pincel
-ativo e inclui sua aparência padrão.
-**Painéis**, no canto superior direito do mapa, abre um painel auxiliar com as abas
-**Ferramentas**, **Camadas**, **Seleção**, **Configurações**, **Projetos** e **Revisão**. Fechar o painel
-mantém a biblioteca visível. Selecionar ou pintar não abre o painel automaticamente.
-As propriedades dos objetos ficam em **Seleção**. Selecione um elemento e edite
-**Nome do elemento** (ou **Nome do objeto/Nome da região**) para nomeá-lo sem
-alterar o arquivo da imagem. Chãos, paredes, portas, objetos, luzes, partículas,
-shaders e regiões aceitam nomes de até 120 caracteres. Pressione **Enter** ou
-saia do campo para aplicar e salvar automaticamente; **Escape** descarta a edição
-pendente do campo. Camadas, alvos de comportamento, escolhas de luz/porta e a
-rede da cena mostram os nomes definidos. Limpar um nome opcional restaura o
-rótulo normal; Objetos vazios, regiões e shaders mantêm um nome obrigatório.
-Desfazer/refazer e duplicação preservam os nomes. Renomear conserva a identidade
-do elemento e as conexões dos nós; **Atualizar cena** aplica o nome à cena
-existente. Dois cliques numa porta do
-mapa abrem seu editor de comportamento na
-modal **Objeto Inteligente**. **Revisão**
-mostra o resumo do projeto e a ação de gerar cena.
-
-O cabeçalho do painel mantém o nome do mapa visível. As seis abas identificadas
-ficam disponíveis em duas linhas, inclusive em telas estreitas, e cada aba guarda
-sua própria posição de rolagem. Use as setas para trocar de aba, **Home/End**
-para ir à primeira/última, e **Escape** fora de um campo de texto para fechar o
-painel. Fechar devolve o foco ao controle que o abriu e preserva a seleção;
-clicar na aba atual a mantém aberta.
-
-**Ferramentas** coloca material atual, camada ativa e configurações do pincel
-antes da paleta compacta de ferramentas. Dureza e intensidade da Pintura aparecem
-juntas; a ajuda expansível reúne instruções e atalhos do pincel. **Seleção**
-oferece **Selecionar no mapa** quando não há objetos selecionados. **Projetos**
-mantém nomes longos legíveis, e **Revisão** agrupa mapa e contagem de objetos
-antes das ações da cena. Abrir painéis e navegar entre eles não altera o mapa.
-
-**Seleção** coloca as propriedades editáveis antes das miniaturas de materiais
-para mudar a aparência do objeto selecionado. **Camadas** organiza camadas nomeadas
-do projeto: crie, renomeie,
-reordene, oculte ou bloqueie camadas e escolha a camada ativa para novos objetos.
-Mova os objetos selecionados entre camadas em **Seleção** ou com **Mover para cá**
-na camada de destino. A lista mostra primeiro a camada superior, com contagens
-e estados de ativa, oculta e bloqueada. **Pintar em**, em **Ferramentas**, troca a
-camada ativa. **Selecionar** seleciona os objetos editáveis de uma
-camada; **Isolar** a exibe sozinha temporariamente, incluindo luzes e efeitos
-nativos. **Mostrar todas** encerra o isolamento e mostra todas as camadas;
-**Desbloquear todas** remove seus bloqueios.
-
-Arraste a alça de uma camada ou use suas setas para mudar a posição. Expanda
-**Conteúdo da camada** para selecionar um objeto. **Duplicar camada** copia uma
-camada desbloqueada e desloca todo o conteúdo exatamente uma célula à direita e
-uma abaixo. A cópia aparece imediatamente acima da original, visível e
-desbloqueada, com novos IDs e referências remapeadas entre os Objetos
-Inteligentes copiados. A operação é recusada sem alterações se a cópia sair do
-mapa, sobrepuser portas ou exceder os limites do projeto. Duplicar ocupa uma etapa
-de desfazer.
-
-**Mesclar abaixo** move uma camada visível e desbloqueada para a camada
-imediatamente inferior, também visível e desbloqueada. A ordem de pintura, as
-identidades dos objetos e as referências de Objetos Inteligentes são preservadas.
-Uma mesclagem ocupa uma etapa de desfazer. Uma camada com borrachas de terreno
-não pode ser mesclada sobre uma camada inferior com pisos, pois isso mudaria
-quais pisos essas borrachas afetam. Exclua uma camada vazia e desbloqueada
-após mover ou remover seus objetos, inclusive a última camada. Crie uma camada
-visível e desbloqueada antes de voltar a desenhar. Nomes,
-ordem, visibilidade e bloqueio são salvos com o projeto. Objetos de camadas
-ocultas ou bloqueadas não podem ser editados. Ocultar uma camada muda a vista
-do editor; a geração inclui todas as camadas do projeto.
-
-**Prévia** mantém o mapa no lugar e oculta grade, seleção, guias do pincel e
-contorno do mapa. O desenho e a edição de propriedades ficam pausados, enquanto
-mover a vista, ajustar o zoom, salvar e gerar cena continuam disponíveis.
-A prévia mostra temporariamente todas as camadas, inclusive as ocultas no
-editor. **Voltar à edição** restaura a visibilidade anterior e retoma a edição.
+A imagem preenche o mapa uma única vez, abaixo de todas as camadas. Acrescente
+paredes, portas, objetos, luzes e comportamentos sobre ela. O fundo independe das
+categorias de pincel e não se repete como textura de chão. Substituí-lo mantém os
+objetos nas posições atuais; dimensões que deixariam objetos fora do mapa são
+recusadas. **Remover imagem do mapa** em Configurações retira o fundo sem excluir
+a imagem da campanha. Importação, substituição e remoção usam desfazer/refazer e
+salvamento automático, e aparecem nas cenas geradas ou atualizadas.
 
 ## Construir mapas maiores
+
+### Biblioteca, famílias e coleções
 
 Busque imagens pelo nome na biblioteca e escolha uma categoria para filtrar por
 tipo. Classificações, nomes, coleções e famílias opcionais pertencem ao projeto; esses
@@ -396,6 +353,8 @@ imagem da campanha inteira. A limpeza também alcança outros projetos salvos e
 cenas nativas que usam a imagem, preservando a geometria de chão, paredes e
 portas. Outras alterações não salvas no projeto atual são mantidas. Desfazer não
 recupera o arquivo excluído.
+
+### Pincéis de Tiles, borracha e amostragem
 
 Em **Tiles**, a ferramenta de chão oferece cinco formas de desenhar:
 
@@ -457,6 +416,8 @@ permanecem intactos. Abrir um projeto existente não reescreve seus pisos.
 O projeto mantém o limite combinado de 2.000
 objetos. Se um traço ou forma ultrapassaria esse limite, a operação inteira é
 rejeitada sem mudar o mapa.
+
+### Luzes, efeitos e janelas de edição nativas
 
 **Painéis → Ferramentas** controla o tamanho do carimbo de chão, a espessura
 de paredes/portas, a orientação da textura do chão e as dimensões/rotação de objetos
@@ -563,6 +524,230 @@ imagem e espessura compartilham a origem e a direção da textura, preservando o
 padrão quando um segmento é invertido. Paredes isoladas mantêm a direção autoral.
 Aberturas de portas continuam livres. Esses encontros visuais não acrescentam
 paredes de colisão nem reescrevem pontos salvos ao abrir um projeto.
+
+## Rotação de portas
+
+Selecione uma porta e escolha **Ponto de ancoragem da rotação** nas propriedades
+ou no editor do jogo: **Início da porta**, **Centro da porta** ou **Fim da porta**.
+O marcador da porta selecionada mostra o pivô. **Girar** mantém esse ponto fixo;
+portas existentes usam o centro por padrão. Com uma âncora explícita, abrir gira
+a imagem em 90° ao redor desse ponto e fechar restaura a imagem. **Padrão (centro)**
+mantém o comportamento original de ocultar a imagem ao abrir. Aparências ocultas
+explícitas do Blueprint continuam ocultas. Vários objetos giram em torno do
+centro da seleção. A escolha acompanha desfazer/refazer, salvamento automático,
+duplicação e atualizações da cena gerada, e também controla a rotação de uma
+porta individual com a ferramenta Selecionar do jogo.
+
+## Objetos vazios
+
+Escolha **Biblioteca → Objetos → Objeto vazio**, ou **Painéis → Ferramentas → Objeto
+vazio**, e clique ou arraste para colocar um objeto sem imagem. Em Seleção, edite
+nome, tamanho, rotação e camada. Selecionar, mover, duplicar e selecionar vários
+funcionam como nos demais objetos.
+
+Dê dois cliques para editar os mesmos nós, estados, sinais e ações de Objeto
+Inteligente de um objeto comum. Os eventos apenas iniciam a sequência; os nós de
+lógica tomam as decisões. Use-o como controlador de luzes, sons e outros elementos
+sem colocar uma imagem. No jogo, ele vai diretamente para a camada **GM**. O
+mestre vê seu marcador sutil em todas as abas e o seleciona ou edita na aba
+**GM**. Continua editável no
+builder e é omitido dos dados de cena de jogadores/streamers. Cenas antigas
+recebem a mesma apresentação privada imediatamente, sem precisar gerar de novo.
+Edições nativas, cópias e atualizações mantêm o objeto no GM. Jogadores continuam
+disparando seus eventos de área ao mover tokens; ações de área/sinal com espera
+mantêm as permissões originais do jogador. Cliques diretos do jogador não o
+ativam. Ele não recebe imagem própria. O catálogo de nós é o
+mesmo para todos os tipos de elemento: **Trocar imagem** e **Definir aparência**
+podem controlar outro objeto por uma conexão explícita em **Alvo**. Nós visuais
+sem alvo compatível continuam editáveis e são ignorados com um diagnóstico na
+execução. Desfazer/refazer, salvamento
+automático e atualizações da cena mantêm sua identidade e seu comportamento.
+
+Para imagens comuns, alavancas e tochas, use **Mover para camada de imagens do
+GM** no menu de contexto para ocultá-las. Vá à aba **GM**, clique com o botão
+direito no objeto e escolha **Mover para camada de imagens** para devolvê-lo ao
+jogo. A aba **Imagens** edita imagens públicas; as privadas são selecionadas em
+GM. Devolver uma seleção mista mantém Objetos vazios no GM. Imagens privadas e
+marcadores de Objetos vazios continuam visíveis para o mestre com 55% de opacidade
+em todas as abas; desenhos privados também multiplicam sua opacidade original
+por 55%. Jogadores e streamers não recebem esses elementos privados. Trocar de
+aba atualiza os controles de edição sem reconstruir a cena renderizada.
+
+## Salvamento automático
+
+As edições do projeto são salvas automaticamente após uma breve pausa: nome do
+mapa, traços concluídos, objetos, camadas, configurações, desfazer e refazer.
+O cabeçalho mostra se há alterações aguardando, sendo salvas ou já salvas.
+Escritas em segundo plano conservam a seleção e o histórico e não interrompem
+a pintura. O botão de estado e **Ctrl+S** continuam disponíveis para sincronizar
+imediatamente.
+
+Os grafos dos Objetos Inteligentes também aplicam edições válidas automaticamente.
+Não há uma etapa manual de Salvar/Cancelar: **Fechar** ou **Escape** aguarda as
+edições válidas pendentes. Campos inválidos permanecem visíveis para correção e
+impedem o fechamento. Desfazer/refazer também é salvo. Abrir ou fechar um grafo
+atual sem mudanças não cria um blueprint vazio. Grafos de eventos removidos são
+descartados ao carregar dados anteriores.
+
+Uma resposta perdida repete a mesma operação lógica e seu UUID; uma escrita já
+confirmada não é aplicada de novo. Um conflito de revisão pausa o salvamento
+automático e conserva o rascunho local. **Recarregar projeto salvo** adota
+explicitamente a versão atual do servidor; **Salvar uma cópia** conserva o mapa
+local com outra identidade. Uma falha mantém as edições nesta aba e oferece
+controles de recuperação. Num conflito de Objeto Inteligente em jogo, novas
+escritas ficam pausadas até reabrir o editor com a versão atual; a revisão
+anterior nunca é substituída silenciosamente. **Descartar alterações** descarta apenas mudanças ainda
+não confirmadas. Recarregar esta aba recupera uma escrita incerta confirmando
+seu recibo original antes de enviar edições locais mais recentes. Rascunhos
+antigos sem o corpo dessa escrita pausam para recarregar ou copiar explicitamente.
+Se o carregamento inicial da biblioteca ou do projeto falhar, a edição permanece
+bloqueada e **Tentar novamente** recarrega sem criar um projeto vazio substituto.
+Corrigir ou desfazer uma edição rejeitada limpa a tentativa de salvamento
+rejeitada, evitando que recarregar a aba a trate como escrita incerta. Após
+reconectar, **Tentar novamente** no editor de Objeto Inteligente também retoma
+o salvamento pendente do projeto com o recibo original; conflitos de revisão
+continuam exigindo recuperação explícita.
+
+Voltar ao jogo aguarda as mudanças pendentes do projeto. Se o salvamento falhar,
+o editor permanece aberto para tentar novamente ou descartar explicitamente.
+Salvar automaticamente persiste a configuração; não gera uma cena nem executa
+ações do grafo. **Gerar cena** e **Atualizar cena** continuam sendo ações
+explícitas. Editar um elemento em jogo aplica a configuração do grafo ao dono e
+ao projeto vinculado pelas revisões existentes, sem acionar seu mecanismo.
+
+## Atualizar uma cena gerada
+
+Guarde o projeto para editar o mapa depois. **Gerar cena** cria a primeira cena;
+depois disso o botão principal do cabeçalho passa a ser **Atualizar cena**.
+Reabrir o projeto pelo diretório de cenas do jogo atualiza essa mesma cena, sem
+criar outra. O botão do cabeçalho e **Painéis → Revisão → Atualizar cena**
+substituem o fundo fatiado e os recursos gerados por este
+projeto na cena vinculada. Tokens, imagens, luzes, partículas, shaders, desenhos, névoa e outros
+conteúdos inseridos manualmente permanecem no lugar. Nome, pasta, visibilidade,
+transmissão e configuração do ambiente continuam sob controle do VTT. Portas
+nativas existentes conservam seu estado aberto/fechado/trancado durante a atualização.
+Luzes, partículas e shaders também conservam seu estado de ativação durante o jogo
+quando a configuração de ativação correspondente não mudou no projeto. Uma
+mudança intencional dessa configuração no projeto é aplicada na atualização.
+A descoberta de portas secretas segue a mesma regra: a descoberta durante o
+jogo é preservada enquanto o ajuste `discovered` de autoria não mudar; uma
+alteração intencional no projeto é aplicada na atualização.
+
+Ações autorizadas de Mover/Girar reconhecem a geometria nativa no histórico de
+propriedade, conservando a fonte editável; atualizar a cena reaplica posições e
+ângulos autorados. Outras edições nativas ainda produzem conflito. Configurações
+de interação durante o jogo são preservadas quando seu padrão autorado não muda;
+uma mudança intencional na autoria é aplicada na atualização. A ativação de região
+é conservada enquanto ativação/camada autoradas não mudam; uma mudança
+intencional na autoria vence. Atualizações de configuração
+recalculam a base de ocupação sem executar grafos de presença.
+
+Atualizações exigem as revisões atuais do projeto e da cena. Se outro editor
+alterar qualquer um deles, recarregue antes de tentar novamente. Se um objeto
+gerado foi modificado ou excluído diretamente no VTT, a atualização é interrompida
+para preservar esse trabalho. Resolva essa edição antes de atualizar ou use
+**Salvar uma cópia**, quando os controles de conflito oferecerem a opção, para
+preservar um projeto independente. Mantenha
+dimensões e tamanho da célula ao atualizar cenas com conteúdo inserido manualmente.
+Projetos existentes nas versões 1/2 podem adquirir histórico de propriedade se os
+IDs originalmente gerados, dados nativos e geometria da grade ainda corresponderem
+exatamente, permitindo apenas mudanças no estado das portas durante o jogo.
+Abrir o projeto verifica a possibilidade sem gravar; salvar registra a propriedade
+comprovada antes de substituir o projeto antigo. Sem essa comprovação, a cena
+legada vinculada não pode ser atualizada por este projeto. O builder nunca deduz
+propriedade pela proximidade ou semelhança visual dos objetos. Use um projeto novo
+ao criar uma cena independente. Os assets enviados continuam na biblioteca de
+imagens da campanha.
+
+## Atalhos de teclado e ponteiro
+
+Atalhos do mapa e das ferramentas valem quando o foco está fora de um campo ou
+texto editável. Os atalhos com **Ctrl** também aceitam **Command** no macOS.
+Editores modais têm seus próprios atalhos; uma operação exclusiva em andamento
+ou a Prévia pode desabilitar a edição.
+
+| Atalho | Ação |
+| --- | --- |
+| **V / F / E** | Selecionar / pincel de chão / apagar um objeto inteiro |
+| **W / D / H** | Ferramenta de parede / porta / mover vista |
+| **Shift-clique** ou caixa de seleção | Adicionar/remover membros da seleção ou selecionar vários objetos |
+| **Ctrl+A / Ctrl+D** | Selecionar objetos editáveis / duplicar a seleção |
+| **R** | Girar a seleção em 90°; uma porta individual respeita o pivô configurado |
+| **Delete / Backspace** | Excluir a seleção |
+| **Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y** | Desfazer / refazer |
+| **Ctrl+S** | Enviar ao servidor as alterações válidas pendentes do projeto |
+| **[ / ]** | Diminuir/aumentar o pincel de chão |
+| **Shift + arrastar com o botão esquerdo** com pincel de chão | Redimensionar sem pintar; **Escape** restaura o tamanho anterior |
+| **I** ou **Alt-clique** em um chão | Amostrar imagem e rotação da textura |
+| **G** em Tiles | Preencher por balde com encaixe; preencher forma sem encaixe |
+| **Enter** ou dois cliques ao desenhar um polígono | Concluir o polígono |
+| **Escape** | Cancelar um gesto ativo; nos demais casos sair da Prévia, limpar seleção ou fechar o painel em foco, conforme o contexto |
+| **Espaço + arrastar**, arrastar com o botão central ou Mover vista | Mover a câmera |
+| Roda / **+ / -** | Ajustar o zoom no ponteiro / centro da área visível |
+| **0 / Home** | Enquadrar o mapa |
+| Setas com foco no canvas | Mover a câmera |
+
+## Limites práticos
+
+O servidor valida esses limites; uma operação que excede um orçamento é
+recusada. O [contrato para desenvolvimento](#operações-http-e-limites) lista
+limites adicionais de formas, renderização e Blueprints.
+
+| Recurso | Limite |
+| --- | --- |
+| Largura e altura do mapa | 1–200 células cada |
+| Tamanho da célula | 16–256 px |
+| Imagem do mapa gerado | 16.777.216 pixels, ou o limite menor configurado pelo host |
+| Camadas do projeto | 32 |
+| Objetos combinados do projeto | 2.000 chãos, paredes, portas, objetos, luzes, partículas, shaders e regiões |
+| Objetos nativos gerados | 5.000, incluindo segmentos de parede e superfícies gerenciadas |
+| Imagens classificadas no projeto | 256 |
+| Imagem enviada | 25 MB e 40 milhões de pixels decodificados |
+| Documento do projeto | 1 MB, com limites separados de contornos e trabalho do pincel |
+| Nomes | 120 caracteres para elementos; 80 para camadas, famílias e coleções |
+
+Largura, altura e tamanho da célula compartilham o limite da imagem: não é
+possível usar simultaneamente seus máximos individuais. Traços muito detalhados
+podem atingir os limites de forma ou pincel antes de preencher a contagem de
+objetos. Divida uma área densa em traços mais simples ou reduza suas dimensões,
+em vez de repetir a mesma edição recusada.
+
+## Solução de problemas
+
+| Sintoma | O que conferir e fazer |
+| --- | --- |
+| Desenhar não produz efeito | Saia da Prévia e escolha uma camada ativa visível e desbloqueada e uma ferramenta de desenho. Se não houver camadas, use **Crie sua primeira camada**. |
+| Uma imagem sumiu da categoria | Confira o tipo no projeto e os filtros de busca/coleção. Imagens da campanha ainda sem tipo ficam em **Ferramentas → Material**. |
+| A pintura ficou suave ou o preenchimento mudou | Confira **Tiles/Pintura**, encaixe, operação, dureza e intensidade. Apagar objeto e apagar área de chão são ferramentas separadas. |
+| Uma imagem nova de mapa desloca ou corta o trabalho | Confira Largura/Altura em células e Tamanho da célula. A substituição mantém coordenadas; dimensões que excluiriam objetos são recusadas. |
+| Um TIFF não tem miniatura | Alguns navegadores não mostram prévia de TIFF. O servidor continua validando uploads TIFF suportados; confira qualquer erro retornado. |
+| O salvamento fica pausado | Corrija o campo destacado de configurações/propriedades/grafo ou desfaça a edição rejeitada. Campos inválidos do grafo também impedem fechar o editor. |
+| O salvamento falhou após perder a conexão | Mantenha a aba atual e use **Tentar novamente** ao reconectar. Uma escrita incerta repete o recibo original; uma correção de validação usa uma nova operação. |
+| Apareceu um conflito de revisão | Use **Recarregar projeto salvo** para adotar a versão do servidor ou **Salvar uma cópia** para preservar o rascunho local. Repetir Tentar novamente não atualiza silenciosamente uma revisão antiga. |
+| A atualização informou objeto gerado alterado/excluído | Resolva a edição manual na cena antes de atualizar. Use os controles de recuperação/cópia oferecidos quando precisar de projeto independente; o projeto existente continua vinculado à cena. |
+| Os jogadores ainda veem o mapa antigo | Confirme o sucesso de **Gerar cena/Atualizar cena** e confira qual cena é transmitida. Gerar uma cena privada não a ativa para jogadores. |
+| Camadas ocultas do editor aparecem na Prévia ou na cena | Ocultar camadas ajuda a editar. Prévia e geração incluem todas as camadas; controle a privacidade durante o jogo pelas camadas GM/imagens da mesa. |
+| O comportamento não fez nada | Confira evento inicial, ações explícitas, vínculos de Alvo, permissões de portas trancadas e pausa da automação. Use **Testar comportamento** e o Registro de automação para o diagnóstico. |
+| Remover asset afetou outro mapa | **Remover asset** exclui o recurso da campanha. Para deixar de usar uma imagem só neste mapa, mude/remova seu posicionamento ou fundo. Desfazer não recupera o arquivo excluído. |
+
+## Referência de Objetos Inteligentes
+
+Comece pelo elemento que deseja operar e conecte um evento inicial a ações
+explícitas. Um grafo vazio não alterna o estado implicitamente. A configuração
+do grafo salva automaticamente; a execução no jogo é uma ação separada.
+
+| Objetivo | Referência |
+| --- | --- |
+| Criar uma alavanca ou tocha vinculada | [Alavancas](#alavancas), [Tochas compostas](#tochas-compostas) |
+| Disparar ações quando tokens entram/saem | [Regiões e placas de pressão](#regiões-e-placas-de-pressão), [Objetos vazios](#objetos-vazios) |
+| Compartilhar condições ou coordenar objetos | [Condições compostas](#condições-compostas), [Variáveis e sinais nomeados](#variáveis-e-sinais-nomeados) |
+| Esperar, contar ou limitar repetições | [Controles persistentes](#controles-de-execução-persistentes), [Delay](#delay-persistente), [Temporizador](#temporizador-persistente) |
+| Reutilizar ou inspecionar comportamento | [Modelos](#modelos-reutilizáveis-de-comportamento), [Rede da cena](#rede-da-cena), [Ensaio no servidor](#testar-comportamento-pelo-servidor) |
+| Mudar uma superfície, apresentar mensagem ou mover o token responsável | [Superfícies dinâmicas](#superfícies-dinâmicas), [Mensagens/diários](#mensagens-diários-e-foco-da-câmera), [Teleporte](#teleporte-na-mesma-cena) |
+
+A referência abaixo cobre o editor compartilhado de nós e os tipos de elemento
+suportados. A [direção de desenvolvimento](smart-objects-direction.md) registra
+propostas; não é uma lista de controles adicionais disponíveis neste código.
 
 ## Portas como Objetos Inteligentes
 
@@ -1615,47 +1800,15 @@ comandos de token validados pelo servidor. Veja
 [Limitações atuais e trabalho pendente](smart-objects-direction.md#limitações-atuais-e-trabalho-pendente)
 para a lista completa e os próximos passos.
 
-## Atualizar uma cena gerada
+## Referência para desenvolvimento
 
-Guarde o projeto para editar o mapa depois. **Gerar cena** cria a primeira cena;
-depois disso o botão principal do cabeçalho passa a ser **Atualizar cena**.
-Reabrir o projeto pelo diretório de cenas do jogo atualiza essa mesma cena, sem
-criar outra. O botão do cabeçalho e **Painéis → Revisão → Atualizar cena**
-substituem o fundo fatiado e os recursos gerados por este
-projeto na cena vinculada. Tokens, imagens, luzes, partículas, shaders, desenhos, névoa e outros
-conteúdos inseridos manualmente permanecem no lugar. Nome, pasta, visibilidade,
-transmissão e configuração do ambiente continuam sob controle do VTT. Portas
-nativas existentes conservam seu estado aberto/fechado/trancado durante a atualização.
-Luzes, partículas e shaders também conservam seu estado de ativação durante o jogo
-quando a configuração de ativação correspondente não mudou no projeto. Uma
-mudança intencional dessa configuração no projeto é aplicada na atualização.
-A descoberta de portas secretas segue a mesma regra: a descoberta durante o
-jogo é preservada enquanto o ajuste `discovered` de autoria não mudar; uma
-alteração intencional no projeto é aplicada na atualização.
+As seções seguintes descrevem documentos armazenados, projeções nativas,
+comandos HTTP e limites da execução. Para operações de uso, consulte os fluxos
+anteriores. O [guia de frontend](frontend.md#área-do-map-builder) mapeia
+controladores e assets gerados; o [guia de testes](testing.md) documenta os
+cenários isolados de regressão.
 
-Ações autorizadas de Mover/Girar reconhecem a geometria nativa no histórico de
-propriedade, conservando a fonte editável; atualizar a cena reaplica posições e
-ângulos autorados. Outras edições nativas ainda produzem conflito. Configurações
-de interação durante o jogo são preservadas quando seu padrão autorado não muda;
-uma mudança intencional na autoria é aplicada na atualização. A ativação de região
-é conservada enquanto ativação/camada autoradas não mudam; uma mudança
-intencional na autoria vence. Atualizações de configuração
-recalculam a base de ocupação sem executar grafos de presença.
-
-Atualizações exigem as revisões atuais do projeto e da cena. Se outro editor
-alterar qualquer um deles, recarregue antes de tentar novamente. Se um objeto
-gerado foi modificado ou excluído diretamente no VTT, a atualização é interrompida
-para preservar esse trabalho: restaure o objeto ou gere uma nova cena. Mantenha
-dimensões e tamanho da célula ao atualizar cenas com conteúdo inserido manualmente.
-Projetos existentes nas versões 1/2 podem adquirir histórico de propriedade se os
-IDs originalmente gerados, dados nativos e geometria da grade ainda corresponderem
-exatamente, permitindo apenas mudanças no estado das portas durante o jogo.
-Abrir o projeto verifica a possibilidade sem gravar; salvar registra a propriedade
-comprovada antes de substituir o projeto antigo. Quando essa comprovação falha,
-gere uma nova cena. O builder nunca deduz propriedade pela proximidade ou semelhança
-visual dos objetos. Os assets enviados continuam na biblioteca de imagens da campanha.
-
-## Projeto, imagem e geometria durante o jogo
+### Projeto, imagem e geometria durante o jogo
 
 `MapBuilderProject` pertence a uma campanha e contém pasta, projeto JSON versionado
 e referência à última cena gerada, além do histórico de propriedade da geração.
@@ -1834,7 +1987,25 @@ transação de escrita; permissões, revisão e propriedade dos assets são conf
 novamente antes da publicação. Arquivos gravados por uma operação que falha são
 removidos. A notificação de atualização acontece após o commit.
 
-## Operações HTTP e limites
+### Recursos de execução e atualização da cena
+
+A execução de eventos reutiliza os inventários de imagens, sons, luzes e
+blueprints somente dentro de um comando e depois os descarta. Estados mutáveis e
+propriedade dos recursos são verificados novamente nos comandos seguintes. O
+trajeto aceito do token é projetado uma vez por passagem de áreas, mantendo a
+ordem dos ouvintes e o cancelamento por teleporte. Eventos de várias áreas
+conservam todos os registros, publicando uma única invalidação do histórico após
+o commit. Rollback, permissões e recibos de repetição continuam no servidor.
+
+Mudanças confirmadas da cena chegam ao tabuleiro antes das atualizações
+dependentes de áudio/combate. Trocar uma imagem comum substitui sua textura no
+próprio objeto, mantendo a imagem anterior até a nova ficar pronta. Imagens
+inalteradas são reutilizadas, inclusive ao reconstruir luzes/geometria na mesma
+cena. A cena possui um cache limitado de texturas usadas recentemente e o libera
+ao trocar de cena/papel ou encerrar o tabuleiro. Apenas imagens da projeção atual
+autorizada para aquele usuário são carregadas.
+
+### Operações HTTP e limites
 
 Todos os endpoints abaixo ficam em `/api/containers/<campaign_id>/map-builder`:
 
@@ -1900,57 +2071,10 @@ Blueprints permitem até 32 nós e 64 conexões por grafo de evento, com no máx
 correspondente; ciclos, referências a nós inexistentes e conexões duplicadas são rejeitados. Transições de estado e
 ações executadas também têm limites no servidor.
 
-## Plano de entregas
+### Plano de entregas
 
-1. **Estúdio e primeira cena jogável.** Layout aprovado, upload dos próprios
-   assets, classificação como chão/parede/porta, pintura básica, seleção, apagar,
-   desfazer/refazer, projetos salvos, geração fatiada e paredes/portas nativas.
-   Aceite: desenhar uma sala, gerar a cena e abrir uma porta que libera passagem
-   e visão.
-2. **Ferramentas para construir mapas maiores.** Camadas, organização da biblioteca,
-   pincéis configuráveis, encaixe na grade, seleção múltipla, duplicação, rotação,
-   decoração, iluminação e atualização segura de cenas. Aceite: modificar uma
-   sala e atualizar a cena sem duplicar paredes nem apagar tokens. As entregas
-   1 e 2 estão implementadas.
-3. **Objetos Inteligentes: implementação inicial de portas.** O primeiro
-   adaptador está implementado para portas: dois cliques abrem a modal, estados
-   nativos fixos possuem aparência padrão e sequências de interação/destruição, nós se
-   conectam visualmente e a simulação local destaca a execução. Os efeitos nativos
-   usam as permissões, transações e sincronização existentes do servidor. Aceite:
-   abrir uma porta troca o asset, toca um som e acende uma luz para todos os
-   participantes. As alavancas oferecem um segundo adaptador com dois estados,
-   interação na imagem nativa e referências entre elementos. Tochas compostas
-   vinculam imagem, luz e efeitos, com mecanismo e chama independentes. Os demais
-   adaptadores permanecem planejados.
-4. **Componentes reutilizáveis e comportamentos avançados.** Agrupar nós, expor
-   parâmetros, salvar modelos na biblioteca e acrescentar comportamentos de
-   área. Variáveis tipadas, sinais nomeados, Escolher caminho, Aleatório com
-   pesos, Contador, Uma vez, Recarga, Delay persistente e Temporizador nomeado
-   estão implementados, assim como grupos ordenados, referências tipadas,
-   transformações, controles de interação/região, filtros e Contexto do evento.
-   Modelos independentes da campanha, rede da cena, superfícies dinâmicas,
-   apresentação autorizada e Teleporte na mesma cena também estão implementados;
-   grupos visuais de nós e outros adaptadores continuam futuros.
-   Aceite: reutilizar uma porta com armadilha
-   configurável sem reconstruir seu grafo.
-5. **Compatibilidade Universal VTT.** Importar/exportar o subconjunto compatível
-   de mapa, grade, paredes, portas e luzes; informar quais recursos próprios do
-   Gravewright ficam somente no projeto. Implementado para Universal VTT 0.2;
-   veja os [campos aceitos, limites e fluxo de troca](universal-vtt.md).
-
-A entrega 3 contempla portas, alavancas, tochas e regiões nomeadas de presença.
-Placas de pressão, gatilhos individuais de entrada/saída, condições compostas
-All/Any, variáveis tipadas, sinais nomeados, Escolher caminho, Aleatório com pesos
-e os controles persistentes Contador,
-Uma vez, Recarga, Delay e Temporizador estão implementados. Grupos ordenados,
-referências tipadas de luz/som, Mover/Girar, interação/ativação de regiões,
-filtros de tokens e contexto validado da origem também estão disponíveis. A entrega 4
-acrescenta modelos reutilizáveis independentes, edição atômica pela rede da cena,
-arte dinâmica, apresentação por público e transporte na mesma cena. A entrega 5
-oferece importação/exportação Universal VTT. Outros adaptadores, animação
-temporizada e viagens entre cenas/em grupo continuam planejados.
-
-Os próximos passos dos Objetos Inteligentes estão divididos em [nove etapas de
-implementação](smart-objects-direction.md#sequência-de-entrega-e-critérios): os recortes
-acima ampliam suas etapas 8 e 9. As propostas restantes mantêm contratos próprios
-de acesso, navegação e integração com pacotes de sistemas.
+Consulte a [direção dos Objetos Inteligentes](smart-objects-direction.md) para
+propostas de novos elementos, organização visual de nós, animação e transporte
+entre cenas/em grupo. Os comportamentos suportados e seus limites estão neste
+guia; planos futuros não alteram os contratos de projetos salvos, permissões
+ou pacotes de sistema.

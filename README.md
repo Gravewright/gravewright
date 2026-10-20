@@ -4,14 +4,16 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.2.3**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **0.3.0**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
 
 ## Install and run locally
 
-Version 0.2.3 lets independent modules import card images through the native
-card service and use the public host API from lifecycle and Customize contexts.
-Native floating-window controls follow the active Translator language. See the
-[0.2.3 release notes](docs/releases/0.2.3.md).
+Start with the [Map Builder guide](docs/en/map-builder.md) to create an editable
+map project or add interactive elements over a finished map image. The
+[Universal VTT guide](docs/en/universal-vtt.md) explains importing `.uvtt`,
+`.dd2vtt` and `.df2vtt` files as native scenes, exporting scenes and reviewing
+format limitations. See the [0.3.0 release notes](docs/releases/0.3.0.md)
+for the full change list.
 
 Extract the complete project into a writable folder, run the installer for your operating system, then use its generated Runner. The installer prepares tools, dependencies, the frontend and saved settings; the Runner starts the prepared application.
 
@@ -21,7 +23,7 @@ Extract the complete project into a writable folder, run the installer for your 
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/en/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/en/macos-runner.md) |
 
-The **0.2.3 package includes all three platform installers**. Hosts on 0.2.1 or 0.2.2 can upgrade normally through **Administration → Updates → Check for updates**. Back up `.env` and configured data first. For a manual upgrade, stop the Runner, replace application files while preserving configuration and data, then rerun the platform installer. See the [download and upgrade instructions](docs/releases/0.2.3.md#download-and-upgrade).
+The complete 0.3.0 release ZIP includes all three platform installers. Installations on 0.2.3 can use **Administration → Updates → Check for updates**. Back up `.env` and configured data first. For a manual upgrade, stop the Runner, replace application files while preserving configuration and data, then rerun the platform installer. See the [download and upgrade instructions](docs/releases/0.3.0.md#download-and-upgrade), including the database migrations in this update.
 
 Linux downloads use glibc-based distributions; Alpine/musl needs a compatible Node.js installation already available. The macOS installer targets macOS 13.5 or newer. Installation needs internet for missing tools/packages. Python 3.14, uv and Node.js are prepared privately when compatible tools are unavailable; no permanent PATH changes are made. All launchers use a local profile on `127.0.0.1`, with no Redis service required. See the platform guides for exact requirements and storage paths.
 
@@ -33,15 +35,15 @@ Extract the complete project and double-click **`Install Windows.bat`**. It inst
 
 The runner executes directly in **Windows CMD**. Use Windows 10 version 1803 or newer, or Windows 11, on x64; built-in `curl.exe`, `tar.exe` and `certutil.exe` handle downloads, extraction and integrity checks.
 
-The installer saves settings in the project's `.env`. Database and upload paths follow that configuration; their defaults are `data/gravewright.sqlite3` and `data/media` in the project. Runner tools, caches, logs and collected assets use `%LOCALAPPDATA%\Gravewright`. The runner listens on the local computer and does not need a Redis server. A shortcut with the Gravewright icon is created beside the launcher. See the [Windows runner guide](docs/en/windows-runner.md) for requirements, backups and troubleshooting.
+The installer saves settings in the project's `.env`. Database and upload paths follow that configuration; their defaults are `data/gravewright.sqlite3` and `data/media` in the project. Runner state, logs and collected assets stay under `data/`; managed tools, environments, caches and temporary files stay under `data/runner/` in this installation. The runner listens on the local computer and does not need a Redis server. A shortcut with the Gravewright icon is created beside the launcher. See the [Windows runner guide](docs/en/windows-runner.md) for requirements, backups and troubleshooting.
 
-Before updating, stop the application and back up the configured database, private media and `.env` together. Managed installations can use Administration → Updates after publication; source installations must install locked dependencies and run migrations. After moving or replacing a Windows project, rerun **`Install Windows.bat`** to prepare it and regenerate its runner. See [deployment and backups](docs/en/deployment.md).
+Before updating, stop the application and back up the configured database, private media and `.env` together. Managed installations can use Administration → Updates; source installations must install locked dependencies and run migrations. After moving or replacing a Windows project, rerun **`Install Windows.bat`** to prepare it and regenerate its runner. See [deployment and backups](docs/en/deployment.md).
 
 ### Linux and macOS
 
 On Linux, open a terminal in the extracted folder and run `bash "./Install Linux.sh"`. On macOS, open **`Install macOS.command`** in Finder, or run `bash "./Install macOS.command"` from that folder. Answer the configuration questions, then start **`Gravewright Runner.sh`** or **`Gravewright Runner.command`**. Keep its terminal open; Ctrl+C stops the application. Run the installer again after moving the project, updating its files or changing saved settings.
 
-Configuration remains in the project's `.env`; the default database and uploads remain `data/gravewright.sqlite3` and `data/media` in that project. Private Runner tools and state use `$XDG_DATA_HOME/Gravewright` (default `~/.local/share/Gravewright`) on Linux and `~/Library/Application Support/Gravewright` on macOS. `--data-dir` relocates Runner state, not the database/media settings in `.env`. The [Linux](docs/en/linux-runner.md) and [macOS](docs/en/macos-runner.md) guides cover unattended checks, offline reuse, permissions, updates and backups.
+Configuration remains in the project's `.env`; the default database and uploads remain `data/gravewright.sqlite3` and `data/media` in that project. Runner state, logs and collected assets stay under `data/`; managed tools, environments, caches and temporary files stay under `data/runner/` in this installation. `--data-dir` relocates Runner state, not the database/media settings in `.env`. The [Linux](docs/en/linux-runner.md) and [macOS](docs/en/macos-runner.md) guides cover unattended checks, offline reuse, permissions, updates and backups.
 
 ## Run locally from a terminal
 

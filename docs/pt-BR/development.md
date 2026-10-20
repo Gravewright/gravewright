@@ -51,20 +51,20 @@ Os documentos da gramática de dados são mantidos junto à implementação. Os 
 
 ## Identificadores da versão
 
-A versão atual é **0.2.2**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
+A release atual é **0.3.0**. Os manifests da aplicação usam estes identificadores, seguindo os formatos exigidos por cada ferramenta:
 
 | Local | Identificador |
 | --- | --- |
-| Nome público completo | `Gravewright 0.2.2 — Alpha` |
-| Versão da aplicação e do Runner | `0.2.2` |
-| Projeto Python e `uv.lock` | `0.2.2` |
-| Pacote frontend, package lock e API de atualização | `0.2.2` |
-| Tag do release | `v0.2.2` |
-| Artefato do código-fonte | `Gravewright-0.2.2-django.zip` |
+| Nome público completo | `Gravewright 0.3.0 — Alpha` |
+| Versão da aplicação e do Runner | `0.3.0` |
+| Projeto Python e `uv.lock` | `0.3.0` |
+| Pacote frontend, package lock e API de atualização | `0.3.0` |
+| Tag do release | `v0.3.0` |
+| Artefato do código-fonte | `Gravewright-0.3.0-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
 
-A release `0.2.2` segue a convenção `stable` de descoberta para identificadores numéricos; o projeto permanece em Alpha. Administração mostra o nome completo da versão, sem seletor de canal. Preferências de canal existentes e compatibilidade da API são preservadas.
+A release `0.3.0` segue a convenção `stable` de descoberta para identificadores numéricos; o projeto permanece em Alpha. Administração mostra o nome completo da versão, sem seletor de canal. Preferências de canal existentes e compatibilidade da API são preservadas.
 
 ## Gerar o pacote de uma release
 

@@ -30,63 +30,54 @@ Board tools include selection, movement, drawing, measurement, walls, fog, light
 
 ### Enter Map Builder
 
-For the campaign GM, **New scene** opens a choice between **Upload map** and
-**Map Builder**. Upload keeps the existing image-import workflow. Map Builder
-opens its own full-page workspace in the same tab, carrying the selected scene
-folder. **Back to game** returns to the campaign's selected scene; entering the
-builder leaves the players' broadcast unchanged.
+As the campaign GM, open **New scene**. Choose the workflow that matches your source:
 
-The Studio has a left tool rail, contextual brush options above the map and a
-horizontal **Library** below it. The header holds the save status button,
-**Preview** and scene generation; zoom controls and dimensions in cells sit at the bottom
-of the canvas. The library provides search, **Import** and type categories;
-its arrow collapses the cards while keeping the toolbar accessible. On entry,
-**Floor** is highlighted and shows available campaign images across all types;
-clicking a category filters them independently of the selected drawing tool.
-**Layers**, at the upper right of the map, opens an auxiliary panel for **Layers**,
-**Selection**, **Settings**, **Projects** and **Review**. Closing it leaves the
-library accessible. This panel starts closed and opens only when requested;
-selecting or painting objects does not open it. **Components** remains planned.
+| Source and goal | Action | Result |
+| --- | --- | --- |
+| An image you want to use directly as a scene | **Upload map** | A native scene with its configured grid and visibility |
+| A map you want to build or keep editing as a project | **Map Builder** | An editable project; generating a scene is a separate action |
+| A finished image you want to add walls, objects or behaviors over | **Map Builder → Library → Import → Import ready-made map** | A project background with editable elements above it |
+| A `.uvtt`, `.dd2vtt` or `.df2vtt` file | **Import Universal VTT** | A new GM-only native scene with supported walls, doors and lights |
 
-**Import** opens a modal to choose your images and their type: **Floor**, **Wall**,
-**Door** or **Object**. Optionally choose an existing asset family or enter a new
-family name to group variations of the same type. Choose a family in the library
-or the top material selector to paint with all its images; individual images
-remain selectable. Double-click an image card to edit its type or family; an
-image already used on the map keeps its type.
+Importing an image does not detect walls or reconstruct its original layers.
+Universal VTT imports do not create Builder projects. The
+[importer/exporter guide](universal-vtt.md) explains supported fields and warnings.
 
-With **Floor**, choose **Shape** in the contextual toolbar: drag freely with the
-brush, drag a rectangle between corners, or drag a circle from its center to set
-the radius. For a polygon, click at least three vertices and press **Enter** or
-double-click to finish; **Escape** cancels it. A floor family chooses an image at
-random for each cell, keeping those choices through preview, undo/redo, saving and scene
-generation. Each completed stroke or shape is one undo step. Draw walls and
-doors between two endpoints. Doors work independently
-and replace collinear wall spans when drawn over them. Select objects to move
-or edit them in **Selection**; undo/redo tracks edits. Click the header's save
-status button or press **Ctrl+S**, then use **Layers → Projects** to reopen saved work,
-including after restarting the VTT. Named project layers organize objects with
-saved visibility and locks; the active layer receives new objects. The contextual
-toolbar configures materials, brushes, grid snapping and floor/object rotation.
-Shift-click and rectangle selection build a group for moving, duplicating,
-rotating or changing layers. **Object** and **Light** in the rail place decorative
-images and native lights. **Review** shows a project summary and scene generation.
+For a first Builder project:
 
-**Preview** hides editing guides and pauses painting; pan and zoom remain
-available. It temporarily shows all layers and restores their previous visibility
-when editing resumes. **Layers** controls visibility only in the editor, so
-hidden layers still appear in the generated scene.
+1. Choose **New scene → Map Builder** and name the project in the header.
+   Entering the Builder preserves the players' current scene.
+2. Use **Panels → Settings** for map dimensions and cell size. The header chooses
+   **Tiles** or **Painting**; **Panels → Tools** holds the active brush options.
+3. Import your own images through **Library → Import**, or choose a ready-made
+   map background. Set the grid dimensions to match the image.
+4. Paint floors and add walls, doors, objects, lights or effects. **Panels → Layers**
+   controls the active layer, visibility, locks and contents. Select an element
+   and use **Panels → Selection** for its properties.
+5. Wait for the header to report that the project is saved. Edits save
+   automatically; the status button and **Ctrl+S** synchronize immediately.
+   Reopen saved work through **Panels → Projects**.
+6. Use **Preview** to inspect the map. Use **Test behavior** for an available
+   Smart Object graph; rehearsal reports predictions without committing gameplay
+   effects. See the [Map Builder guide](map-builder.md) for supported objects.
+7. Choose **Generate scene** to create a private native scene. After linking,
+   the header action becomes **Update scene** to apply later project edits to
+   that same scene. A revision conflict stops the update for explicit recovery.
+8. In **Scenes**, use **Activate for players** when the scene is ready to share.
 
-**Generate scene** saves the source, builds the tiled map and native walls and
-doors, then opens the new GM-only scene. A doorway can replace part of a wall:
-opening the native door releases movement and vision through that gap. Door
-images follow the live door state. The players' broadcast stays unchanged; use
-**Activate for players** in the scene's context menu when ready to share it.
-Each new generation creates a separate scene. **Layers → Review → Update scene** replaces the map
-and the project's generated resources in its linked scene, retaining manually
-placed tokens and content, scene settings and live door state. Conflicting edits
-stop the update; scenes with manual content keep their dimensions and cell size.
-See the [Map Builder guide](map-builder.md) for workflow, limits and the delivery plan.
+These actions have different effects:
+
+| Action | What it changes |
+| --- | --- |
+| Automatic saving / **Ctrl+S** | The editable project |
+| **Generate scene** / **Update scene** | Native scene artwork and generated resources |
+| **Activate for players** | Scene visibility and the players' broadcast |
+
+If saving fails, keep the tab open and use the recovery controls. **Reload saved
+project** adopts the server version; **Save a copy** preserves the local document
+under a new project identity. A browser draft is recovery storage, not a backup.
+The [Map Builder guide](map-builder.md) covers drawing modes, asset removal,
+layer operations, Smart Objects, shortcuts, limits and troubleshooting.
 
 ## During a game
 
@@ -113,7 +104,7 @@ Maps, music, PDFs and other uploads retain their own licenses and ownership. The
 
 ## Current limits
 
-- The application locale preference currently supports `en`; Portuguese project documentation is available, but a Portuguese UI is not implemented by these documentation changes.
+- Host catalogs include English, Portuguese (Brazil) and Spanish. English is the default when no preference is saved. Changing the interface language does not translate authored names, text or assets; installed systems provide their own translations.
 - The native PDF ruleset does not provide item types; the generic item backend should not be read as a complete native item editor/catalog.
 - The provided extension loader runs JavaScript in the main page. Install code you trust; signatures do not provide isolation.
 - Online marketplace discovery requires a catalog and trusted publisher keys. Managed hosts install core updates from Administration after the owner requests them. Django packages in Modules activate for the entire server and restart it automatically; browser modules remain table-specific.

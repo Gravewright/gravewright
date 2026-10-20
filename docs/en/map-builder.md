@@ -1,135 +1,234 @@
 # Map Builder
 
-[Documentation](../README.md) · [Português](../pt-BR/map-builder.md) · [Frontend](frontend.md)
+[Documentation](../README.md) · [Português](../pt-BR/map-builder.md) · [Universal VTT](universal-vtt.md) · [Frontend](frontend.md)
 
-This guide describes the current implementation. The [Smart Objects design
-direction](smart-objects-direction.md) records the proposed ComfyUI-style editor,
-element catalog and connections between objects.
+Map Builder is the campaign GM's workspace for editable map projects. Draw a map
+from materials or import a finished image, add native walls, doors, objects,
+lights and effects, then generate or update a scene. The project remains editable
+separately from the scene used at the table.
 
-The editor's **UI/UX is complete**: its workspace layout, panels, library,
-selection, brush controls and responsive interactions are established. Further
-work extends editing capabilities and reuses the game's editing windows within
-that interface; this status does not mean every planned feature is implemented.
+This guide describes the current checkout being documented for the next
+**0.3.0** release; it does not announce publication. The
+[Smart Objects design direction](smart-objects-direction.md) distinguishes
+implemented capabilities from proposals.
 
-**The current feature delivery is complete.** It includes map authoring, native
-lights/effects and editors, Smart Object behaviors, automatic saving, finished-map
-import, Universal VTT import/export, image-free Empty Objects and updating the linked
-game scene in place. This guide records the delivered behavior and its limits.
+## Find the right workflow
 
-## Door rotation
+| Your starting point | Where to go |
+| --- | --- |
+| Build a new room | [Build the first room](#build-the-first-room) |
+| Choose between grid tiles, soft painting and a map image | [Choose a starting method](#choose-a-starting-method) |
+| Organize images, families and collections | [Build larger maps](#build-larger-maps) |
+| Organize or select project objects | [Selection and project layers](#selection-and-project-layers) |
+| Recover a failed or conflicting save | [Automatic saving](#automatic-saving), then [Troubleshooting](#troubleshooting) |
+| Apply edits to the same game scene | [Update a generated scene](#update-a-generated-scene) |
+| Add a switch, torch, region or timed behavior | [Smart Object reference](#smart-object-reference) |
+| Import/export a Universal VTT file | [Universal VTT interchange](universal-vtt.md) |
+| Integrate with source documents or HTTP operations | [Developer reference](#developer-reference) |
 
-Select one door and choose **Rotation anchor point** in its properties or game
-editor: **Start of door**, **Center of door** or **End of door**. The marker on the
-selected door shows its pivot. **Rotate** keeps that point fixed; existing doors
-default to the center. With an explicit anchor, opening rotates the image 90°
-around that point and closing restores it. **Default (center)** retains the
-original behavior of hiding the image when open. Explicit Blueprint hidden
-appearances remain hidden. Multiple objects rotate around their selection's center.
-The choice follows Undo/Redo, automatic saving, duplication and generated scene
-updates, and also controls rotation of a single door with the game's Select tool.
+## GM access and entry points
 
-## Automatic saving
+Open the campaign's **Scenes** directory and choose **New scene → Map Builder**.
+The selected scene folder is retained for the project and its first generated
+scene. Only a current campaign GM can open or manage Builder projects; players
+and streamers cannot edit them. Opening the editor does not switch the players'
+broadcast.
 
-Project edits save automatically after a short pause: map name, completed brush
-strokes, object and layer edits, settings, Undo and Redo. The header shows whether
-changes are waiting, saving or saved. Background writes preserve the current
-selection and history and do not interrupt drawing. The status button and
-**Ctrl+S** remain available to synchronize immediately.
+To resume, use **Panels → Projects**, or right-click a scene linked to a project
+and choose **Edit with MapBuilder**. The linked scene has the red map icon in
+the GM's directory. A scene imported as an ordinary image or through Universal
+VTT has no editable Builder source unless it was created from a Builder project.
 
-Smart Object graphs also apply valid edits automatically. There is no manual
-Save/Cancel step: **Close** or **Escape** waits for pending valid edits. Invalid
-fields remain visible for correction and block closing. Undo/Redo changes are
-also saved. Opening or closing an unchanged current graph does not create an
-empty blueprint. Removed event graphs are discarded when older data is loaded.
+### Project, preview and game scene
 
-A lost response retries the same logical operation and UUID, so a confirmed write
-is not repeated. A revision conflict pauses automatic saving and preserves the
-local draft. **Reload saved project** explicitly adopts the current server
-version; **Save a copy** preserves the local map under a new identity. Failed
-saving keeps edits in the current tab and offers recovery controls. In a live
-Smart Object conflict, further writes pause until the editor is reopened with
-the current version; its stale revision guard is never replaced silently.
-**Discard unsaved changes** discards
-only changes that have not been acknowledged. Reloading this tab recovers an
-uncertain write by confirming its original receipt before sending newer local
-edits. Older drafts without that write's body pause for explicit reload or copy.
-If the initial library or project load fails, editing stays blocked and **Retry**
-reloads it without creating an empty replacement project.
-Correcting or undoing a rejected edit clears that rejected save attempt, so
-reloading does not report it as an uncertain write. After reconnecting, **Retry**
-in a Smart Object editor also resumes the pending project save with its original
-receipt; revision conflicts still require explicit recovery.
+| Action | Result | Effect on the game scene |
+| --- | --- | --- |
+| Edit, Undo/Redo, automatic saving or **Ctrl+S** | Save the editable project | Requires **Generate scene** or **Update scene** to apply to the table |
+| **Preview** | Inspect artwork with every project layer shown | No scene write; editing pauses |
+| **Simulate** in a Smart Object editor | Trace one local graph | No gameplay effects |
+| **Test behavior** | Rehearse through the server and report predicted changes | The rehearsal is rolled back |
+| **Generate scene** | Create the project's first native, GM-only scene | Opens it for the GM; the previous player broadcast remains |
+| **Update scene** | Apply project changes to the linked scene | Clients viewing that scene receive the committed update |
+| **Activate for players** in the scene context menu | Make the scene player-visible and broadcast it | Connected players switch to it |
 
-Returning to the game waits for pending project changes. If saving fails, the
-editor stays open so the GM can retry or explicitly discard. Automatic saving
-persists configuration; it does not generate a scene or execute graph actions.
-**Generate scene** and **Update scene** remain explicit actions. Editing a live
-element applies its graph configuration to that owner and linked source through
-their existing revision checks, without operating the mechanism.
+## Build the first room
 
-## Import a finished map
+1. As the campaign GM, choose **New scene → Map Builder**. The selected scene
+   folder carries into the project. Entering does not change the current scene
+   or the players' broadcast.
+2. Enter the map name directly in the header. Open
+   **Panels → Settings → Map settings** to choose dimensions, cell size and background.
+   Return to **Layers** to rename **Layer 1** or add another named layer.
+3. Start with the default solid floor, plain wall and native door, or choose
+   **Import** in the bottom **Library** for your own artwork. In the import modal,
+   choose image files and their type: **Floor**, **Wall**, **Door** or **Object**. Optionally
+   assign them to an existing asset family or create a new one. Select an image
+   or family in the library to use its brush.
+4. Open **Panels → Tools**. With **Floor**, choose freehand brush, rectangle,
+   circle or polygon and paint the floor. Draw walls and doors by dragging
+   between their start and end points. A door is an independent segment and
+   needs no existing wall. Drawing it over a collinear wall replaces that span.
+5. Use **Select** to move objects and open **Panels → Selection** to edit their
+   properties. Press **E** to erase objects. Walls and doors move and delete independently.
+   Undo/redo restores edits, including removed objects. Space-drag moves the view;
+   the wheel changes zoom, and **0** fits the map.
+6. Changes save automatically; the header shows their status.
+   **Panels → Projects** lists saved projects so you can reopen them.
+   **New project** waits for pending changes before starting a blank project.
+7. Choose **Generate scene**. The builder saves the source, renders the image,
+   runs the native tile pipeline and creates a new GM-only scene in that folder.
+   The GM opens that scene; players remain on their existing broadcast. In the
+   scene's context menu, **Activate for players** makes it player-visible and
+   broadcasts it in one operation, including to players already connected.
 
-Choose **Library → Import → Import ready-made map**, or use the same action in
-**Panels → Settings** or **Projects**. Upload one PNG, JPEG, WebP or TIFF image
-(up to 25 MB), or choose an image already in this campaign. Set its width and
-height in cells and cell size. An empty project suggests a bounded grid from the
-image dimensions; check these values against the map's authored grid.
+In the game's **Scenes** directory, a scene linked to a saved builder project
+keeps the same map icon, colored red. Right-click it and choose
+**Edit with MapBuilder**, alongside the normal **Edit** action, to reopen that
+project directly. Entering the editor does not change the
+players' scene. After editing, the primary header action becomes **Update scene**
+and applies changes to that same scene, keeping its identity and project link.
+Imported images and scenes without
+a linked source keep their normal controls. Project links are visible only to
+the GM.
 
-The image fills the map once beneath all layers. Add walls, doors, objects, lights
-and behaviors over it. It is independent of brush categories and is never tiled
-as a floor texture. Replacing it keeps existing objects in place; dimensions that
-would put objects outside the map are rejected. **Remove map image** in Settings
-removes the background without deleting its campaign image. Import, replacement
-and removal use Undo/Redo and automatic saving, and appear in generated or updated
-scenes.
+### Workspace controls
 
-## Empty Objects
+The canvas fills the space below the header, with a horizontal **Library** along
+the bottom. **Panels → Tools** contains drawing tools, the active material,
+brush options, the active layer and grid snapping. Between the editable map name
+and history, the header provides **Select**, **Paint**, brush size and **Erase**.
+**Undo**, **Redo**, save status, **Preview** and scene generation follow them.
+View controls and map dimensions in cells sit below the canvas.
 
-Choose **Library → Objects → Empty Object**, or **Panels → Tools → Empty Object**,
-then click or drag to place an image-free object. In Selection, edit its name,
-size, rotation and layer. Selection, moving, duplication and multiple selection
-work like other objects.
+**Select (V)** supports Shift-click and dragging a selection box for multiple
+objects. **Paint (F)** returns to the floor's freehand brush in paint operation,
+using its current material and selecting **Floor** in the library. Its size stays
+synchronized with **Tools**: in Tiles, 1–20 cells with grid snapping or 0.05–20
+without it; Painting always uses 0.05–20 cells. **[ / ]** also adjusts the
+size. The size field is available for the freehand floor brush, including its
+area eraser. **Erase (E)** deletes a whole clicked object; use **Erase floor** in
+**Tools** to erase only part of a floor. Editing controls pause in Preview or
+while an operation requiring exclusive access is running. Background automatic
+saving keeps editing available.
 
-Double-click it to edit the same Smart Object nodes, states, signals and actions
-as an ordinary object. Events only start the sequence; logic nodes make decisions.
-Use it as a controller for lights, sounds and other elements without placing an
-image. In the game, it is placed directly on the **GM** layer. The GM sees its
-faint marker on every tab, and selects or edits it on the **GM** tab. It remains
-editable in the builder,
-and is omitted from player/streamer scene data. Older scenes receive the same
-private presentation immediately, without requiring regeneration. Native edits,
-copies and scene updates keep it on GM. Players still trigger its authored area
-events by moving their tokens; delayed area/signal actions keep their original
-player permissions. Direct player clicks cannot activate it. It cannot receive
-its own image. The node catalog is the same for every
-element kind: **Change sprite** and **Set appearance** can control another object
-through an explicit **Target** connection. Visual nodes without a compatible
-target remain editable drafts and are skipped with a diagnostic when executed.
-Undo/Redo, automatic saving and scene updates keep
-its identity and behavior.
+With the floor brush active, hold **Shift + left mouse button** and drag
+horizontally to resize it without painting. Drag right to increase the size or
+left to decrease it; the anchored footprint and size update as you drag.
+Release to keep the size or press **Escape** to restore it. This works in Tiles
+and Painting, including area erasure; it changes only the brush preference,
+without editing the map or adding an undo step.
 
-For ordinary images, levers and torches, use **Move to GM image layer** in the
-context menu to hide them. Switch to **GM**, right-click the object and choose
-**Move to image layer** to return it to the game. The **Images** tab edits public
-images; private images are selected on GM. Returning a mixed selection leaves
-Empty Objects on GM. Private images and Empty Object markers remain visible to
-the GM at 55% opacity across tabs; private drawings also multiply their authored
-opacity by 55%. Players and streamers receive none of these private elements.
-Changing tabs updates editing controls without rebuilding the rendered scene.
+The header's name field applies and saves valid names after a short typing pause.
+**Enter** or **Escape** returns focus to the canvas; Undo reverts an accepted name
+change. The name stays synchronized with **Settings**. Header history
+buttons use **Ctrl+Z** to undo and **Ctrl+Shift+Z** or **Ctrl+Y** to redo.
 
-Event execution reuses read-only asset, sound, light and blueprint inventories
-within one command, then discards them. Mutable states and ownership are checked
-again on later commands. A token's accepted path is projected once for an area
-pass, preserving listener order and teleport cancellation. Multiple area events
-retain all their history entries while publishing one history invalidation after
-commit. Rollback, permission checks and retry receipts remain authoritative.
+### Library and tool strip
 
-Committed scene changes reach the board before dependent audio/combat refreshes.
-Changing an ordinary image replaces its texture in place, retaining the previous
-art until the replacement is ready. Unchanged art is reused, including across
-light/geometry rebuilds within the same scene. The scene owns a bounded cache of
-recently used textures and releases it on scene/role changes and disposal. It
-loads only art in the viewer's current authorized scene projection.
+The library toolbar provides search, **Import**, type categories and direct
+**Select**, **Erase**, **Pan**, **Empty Object** and **Region** tools. Floor,
+wall, door, object and light brushes stay in the same strip; **Effects** keeps
+the **Particles/Shaders** selector. These shortcuts close the auxiliary panel
+and return focus to the map. On smaller screens the strip has its own horizontal
+scrolling, including keyboard focus, without shifting when categories change.
+Search, filters, categories and the collapse arrow keep their positions when
+switching to native lights or effects; the hidden import action retains its slot.
+Empty filtered results show a message. Checkboxes use the same compact native
+control across settings, layers and object properties, with label and Space-key activation.
+Its arrow collapses the asset cards while leaving the toolbar accessible. On entry,
+**Floor** is highlighted and the gallery shows only images classified as Floor in
+this project.
+Clicking **Floor**, **Wall**, **Door** or **Object** filters the gallery and
+activates that drawing tool. Choosing a native light or effect preset activates
+its placement tool. The material selector in **Tools** follows the active brush
+and includes its default appearance.
+
+### Selection and project layers
+
+**Panels**, at the upper right of the map, opens an auxiliary panel with **Tools**,
+**Layers**, **Selection**, **Settings**, **Projects** and **Review** tabs. The panel can be closed
+without hiding the library. Selecting or painting does not open the panel automatically.
+Object properties stay in **Selection**.
+Select one element and edit **Element name** (or **Object name/Region name**)
+to name it independently of its image file. Floors, walls, doors, decorations,
+lights, particles, shaders and regions support names of up to 120 characters.
+Press **Enter** or leave the field to apply and save automatically; **Escape**
+discards the field's pending edit. Layers, behavior targets, light/door choices
+and the scene network display authored names. Clearing an optional name restores
+the normal label; Empty Objects, regions and shaders keep a required name.
+Undo/Redo and duplication preserve names. Renaming keeps the element's identity
+and node connections; **Update scene** applies it to the existing scene.
+Double-click a door on the map to open its **Smart object** behavior editor in
+a modal. **Review** shows a project summary
+and scene generation action.
+
+The panel heading keeps the current map name visible. Its six labeled tabs
+remain available in two rows, including on narrow screens, while each tab keeps
+its own scroll position. Use the arrow keys to move between tabs, **Home/End**
+to reach the first/last tab, and **Escape** outside a text field to close the
+panel. Closing restores focus to the control that opened it and preserves the
+selection; clicking the current tab keeps it open.
+
+**Tools** places the current material, active layer and brush settings before
+the compact tool palette. Painting's hardness and intensity appear together;
+expanded help contains the brush instructions and shortcuts. **Selection**
+provides a **Select on map** action when nothing is selected. **Projects** keeps
+long project names readable, and **Review** groups the map and object counts
+before the scene actions. Opening and navigating panels does not edit the map.
+
+**Selection** places editable properties before the material thumbnails used
+to change the selected object's appearance. **Layers** organizes named project
+layers: create, rename, reorder,
+hide or lock them, and choose the active layer for new objects. Move selected
+objects between layers in **Selection** or with **Move here** on the destination
+layer. The list shows the top layer first, with counts and active/hidden/locked
+states. **Paint on** in **Tools** changes the active layer. **Select** selects
+editable objects in a layer; **Solo** temporarily
+isolates it, including its native lights and effects. **Show all** ends isolation
+and reveals all layers; **Unlock all** removes their locks.
+
+### Layer operations
+
+Drag a layer's reorder handle or use its arrows to change its position. Expand
+**Layer contents** to select an individual object. **Duplicate layer** copies an
+unlocked layer and offsets all its contents exactly one cell right and one cell
+down. The copy appears immediately above the original, visible and unlocked,
+with new object IDs and remapped references between copied Smart Objects. The
+operation is refused without changes if the copy would leave the map, overlap
+doors or exceed project limits. Duplication is one undo step.
+
+**Merge down** moves a visible, unlocked layer into its adjacent visible,
+unlocked lower layer. Paint order, object identities and Smart Object references
+are preserved. A merge is one undo step. A layer containing terrain erasers
+cannot be merged over a lower layer with floors, because that would change
+which floors those erasers affect. Delete an empty, unlocked layer after
+moving or removing its objects, including the final layer. Create a visible,
+unlocked layer before drawing again. Layer names, order, visibility
+and locks are saved with the project. Objects on hidden or locked layers cannot
+be edited. Hiding a layer changes the editor view; generation includes every
+project layer.
+
+### Preview
+
+**Preview** keeps the map in place and hides the grid, selection, brush guides
+and map outline. Drawing and property editing pause, while pan, zoom, save
+and scene generation remain available. Preview temporarily shows all layers,
+including those hidden in the editor. **Back to editing** restores their
+previous visibility and resumes editing.
+
+## Choose a starting method
+
+| Method | Use it for | What remains editable |
+| --- | --- | --- |
+| **Tiles** | Grid rooms, repeated materials, precise shapes or unsnapped hard edges | Concrete floor images/shapes, walls and other project objects |
+| **Painting** | Soft terrain transitions and gradual material blending | Brush strokes and their masks, with the same project objects and layers |
+| **Import ready-made map** | A finished PNG/JPEG/WebP/TIFF to trace or decorate | One background image plus the objects you place over it |
+| **Import Universal VTT** | A `.uvtt`, `.dd2vtt` or `.df2vtt` containing grid/wall/door/light data | Native scene objects; this creates a separate scene rather than a Builder project |
+
+Tiles and Painting are modes of the same project; switching modes preserves
+existing work. A ready-made background can be used with either mode. For file
+format support, warnings and interchange limits, follow the
+[Universal VTT guide](universal-vtt.md).
 
 ## Tiles and Painting
 
@@ -178,160 +277,25 @@ stroke, including accumulated paint while holding still. Locked or hidden layers
 cannot be painted. Preview pauses editing; save/reopen, generation and linked
 scene updates preserve the soft masks and mixed textures.
 
-## Build the first room
+## Import a finished map
 
-1. As the campaign GM, choose **New scene → Map Builder**. The selected scene
-   folder carries into the project. Entering does not change the current scene
-   or the players' broadcast.
-2. Enter the map name directly in the header. Open
-   **Panels → Settings → Map settings** to choose dimensions, cell size and background.
-   Return to **Layers** to rename **Layer 1** or add another named layer.
-3. Choose **Import** in the bottom **Library**. In the import modal, choose your
-   image files and their type: **Floor**, **Wall**, **Door** or **Object**. Optionally
-   assign them to an existing asset family or create a new one. Select an image
-   or family in the library to use its brush.
-4. Open **Panels → Tools**. With **Floor**, choose freehand brush, rectangle,
-   circle or polygon and paint the floor. Draw walls and doors by dragging
-   between their start and end points. A door is an independent segment and
-   needs no existing wall. Drawing it over a collinear wall replaces that span.
-5. Use **Select** to move objects and open **Panels → Selection** to edit their
-   properties. Press **E** to erase objects. Walls and doors move and delete independently.
-   Undo/redo restores edits, including removed objects. Space-drag moves the view;
-   the wheel changes zoom, and **0** fits the map.
-6. Changes save automatically; the header shows their status.
-   **Panels → Projects** lists saved projects so you can reopen them.
-   **New project** waits for pending changes before starting a blank project.
-7. Choose **Generate scene**. The builder saves the source, renders the image,
-   runs the native tile pipeline and creates a new GM-only scene in that folder.
-   The GM opens that scene; players remain on their existing broadcast. In the
-   scene's context menu, **Activate for players** makes it player-visible and
-   broadcasts it in one operation, including to players already connected.
+Choose **Library → Import → Import ready-made map**, or use the same action in
+**Panels → Settings** or **Projects**. Upload one PNG, JPEG, WebP or TIFF image
+(up to 25 MB), or choose an image already in this campaign. Set its width and
+height in cells and cell size. An empty project suggests a bounded grid from the
+image dimensions; check these values against the map's authored grid.
 
-In the game's **Scenes** directory, a scene linked to a saved builder project
-keeps the same map icon, colored red. Right-click it and choose
-**Edit with MapBuilder**, alongside the normal **Edit** action, to reopen that
-project directly. Entering the editor does not change the
-players' scene. After editing, the primary header action becomes **Update scene**
-and applies changes to that same scene, keeping its identity and project link.
-Imported images and scenes without
-a linked source keep their normal controls. Project links are visible only to
-the GM.
-
-The canvas fills the space below the header, with a horizontal **Library** along
-the bottom. **Panels → Tools** contains drawing tools, the active material,
-brush options, the active layer and grid snapping. Between the editable map name
-and history, the header provides **Select**, **Paint**, brush size and **Erase**.
-**Undo**, **Redo**, save status, **Preview** and scene generation follow them.
-View controls and map dimensions in cells sit below the canvas.
-
-**Select (V)** supports Shift-click and dragging a selection box for multiple
-objects. **Paint (F)** returns to the floor's freehand brush in paint operation,
-using its current material and selecting **Floor** in the library. Its size stays
-synchronized with **Tools**: in Tiles, 1–20 cells with grid snapping or 0.05–20
-without it; Painting always uses 0.05–20 cells. **[ / ]** also adjusts the
-size. The size field is available for the freehand floor brush, including its
-area eraser. **Erase (E)** deletes a whole clicked object; use **Erase floor** in
-**Tools** to erase only part of a floor. Editing controls pause in Preview or
-while an operation requiring exclusive access is running. Background automatic
-saving keeps editing available.
-
-With the floor brush active, hold **Shift + left mouse button** and drag
-horizontally to resize it without painting. Drag right to increase the size or
-left to decrease it; the anchored footprint and size update as you drag.
-Release to keep the size or press **Escape** to restore it. This works in Tiles
-and Painting, including area erasure; it changes only the brush preference,
-without editing the map or adding an undo step.
-
-The header's name field applies and saves valid names after a short typing pause.
-**Enter** or **Escape** returns focus to the canvas; Undo reverts an accepted name
-change. The name stays synchronized with **Settings**. Header history
-buttons use **Ctrl+Z** to undo and **Ctrl+Shift+Z** or **Ctrl+Y** to redo.
-
-The library toolbar provides search, **Import**, type categories and direct
-**Select**, **Erase**, **Pan**, **Empty Object** and **Region** tools. Floor,
-wall, door, object and light brushes stay in the same strip; **Effects** keeps
-the **Particles/Shaders** selector. These shortcuts close the auxiliary panel
-and return focus to the map. On smaller screens the strip has its own horizontal
-scrolling, including keyboard focus, without shifting when categories change.
-Search, filters, categories and the collapse arrow keep their positions when
-switching to native lights or effects; the hidden import action retains its slot.
-Empty filtered results show a message. Checkboxes use the same compact native
-control across settings, layers and object properties, with label and Space-key activation.
-Its arrow collapses the asset cards while leaving the toolbar accessible. On entry,
-**Floor** is highlighted and the gallery shows only images classified as Floor in
-this project.
-Clicking **Floor**, **Wall**, **Door** or **Object** filters the gallery and
-activates that drawing tool. Choosing a native light or effect preset activates
-its placement tool. The material selector in **Tools** follows the active brush
-and includes its default appearance.
-**Panels**, at the upper right of the map, opens an auxiliary panel with **Tools**,
-**Layers**, **Selection**, **Settings**, **Projects** and **Review** tabs. The panel can be closed
-without hiding the library. Selecting or painting does not open the panel automatically.
-Object properties stay in **Selection**.
-Select one element and edit **Element name** (or **Object name/Region name**)
-to name it independently of its image file. Floors, walls, doors, decorations,
-lights, particles, shaders and regions support names of up to 120 characters.
-Press **Enter** or leave the field to apply and save automatically; **Escape**
-discards the field's pending edit. Layers, behavior targets, light/door choices
-and the scene network display authored names. Clearing an optional name restores
-the normal label; Empty Objects, regions and shaders keep a required name.
-Undo/Redo and duplication preserve names. Renaming keeps the element's identity
-and node connections; **Update scene** applies it to the existing scene.
-Double-click a door on the map to open its **Smart object** behavior editor in
-a modal. **Review** shows a project summary
-and scene generation action.
-
-The panel heading keeps the current map name visible. Its six labeled tabs
-remain available in two rows, including on narrow screens, while each tab keeps
-its own scroll position. Use the arrow keys to move between tabs, **Home/End**
-to reach the first/last tab, and **Escape** outside a text field to close the
-panel. Closing restores focus to the control that opened it and preserves the
-selection; clicking the current tab keeps it open.
-
-**Tools** places the current material, active layer and brush settings before
-the compact tool palette. Painting's hardness and intensity appear together;
-expanded help contains the brush instructions and shortcuts. **Selection**
-provides a **Select on map** action when nothing is selected. **Projects** keeps
-long project names readable, and **Review** groups the map and object counts
-before the scene actions. Opening and navigating panels does not edit the map.
-
-**Selection** places editable properties before the material thumbnails used
-to change the selected object's appearance. **Layers** organizes named project
-layers: create, rename, reorder,
-hide or lock them, and choose the active layer for new objects. Move selected
-objects between layers in **Selection** or with **Move here** on the destination
-layer. The list shows the top layer first, with counts and active/hidden/locked
-states. **Paint on** in **Tools** changes the active layer. **Select** selects
-editable objects in a layer; **Solo** temporarily
-isolates it, including its native lights and effects. **Show all** ends isolation
-and reveals all layers; **Unlock all** removes their locks.
-
-Drag a layer's reorder handle or use its arrows to change its position. Expand
-**Layer contents** to select an individual object. **Duplicate layer** copies an
-unlocked layer and offsets all its contents exactly one cell right and one cell
-down. The copy appears immediately above the original, visible and unlocked,
-with new object IDs and remapped references between copied Smart Objects. The
-operation is refused without changes if the copy would leave the map, overlap
-doors or exceed project limits. Duplication is one undo step.
-
-**Merge down** moves a visible, unlocked layer into its adjacent visible,
-unlocked lower layer. Paint order, object identities and Smart Object references
-are preserved. A merge is one undo step. A layer containing terrain erasers
-cannot be merged over a lower layer with floors, because that would change
-which floors those erasers affect. Delete an empty, unlocked layer after
-moving or removing its objects, including the final layer. Create a visible,
-unlocked layer before drawing again. Layer names, order, visibility
-and locks are saved with the project. Objects on hidden or locked layers cannot
-be edited. Hiding a layer changes the editor view; generation includes every
-project layer.
-
-**Preview** keeps the map in place and hides the grid, selection, brush guides
-and map outline. Drawing and property editing pause, while pan, zoom, save
-and scene generation remain available. Preview temporarily shows all layers,
-including those hidden in the editor. **Back to editing** restores their
-previous visibility and resumes editing.
+The image fills the map once beneath all layers. Add walls, doors, objects, lights
+and behaviors over it. It is independent of brush categories and is never tiled
+as a floor texture. Replacing it keeps existing objects in place; dimensions that
+would put objects outside the map are rejected. **Remove map image** in Settings
+removes the background without deleting its campaign image. Import, replacement
+and removal use Undo/Redo and automatic saving, and appear in generated or updated
+scenes.
 
 ## Build larger maps
+
+### Library, families and collections
 
 Search the library by image name and choose a type category to filter it. Asset
 classifications and optional names, collections and families belong to the project;
@@ -374,6 +338,8 @@ then deletes the image from the whole campaign. This also cleans up dependent
 saved projects and native scenes, preserving floor, wall and door geometry.
 Other unsaved changes in the current project are retained. Undo cannot restore
 the deleted file.
+
+### Tiles brushes, erasing and sampling
 
 In **Tiles**, the floor tool has five drawing options:
 
@@ -432,6 +398,8 @@ other layers remain intact. Opening an existing project does not rewrite its
 floors. The project still has a combined limit of
 2,000 objects. If a stroke or shape would exceed that limit, the whole operation
 is rejected without changing the map.
+
+### Native lights, effects and editing windows
 
 **Panels → Tools** controls floor stamp size, wall/door
 thickness, floor texture orientation and object dimensions/rotation for the active
@@ -531,6 +499,221 @@ layer, image and thickness share a texture origin and direction, preserving the
 pattern when a segment is reversed. Isolated walls retain their authored
 direction. Door openings remain clear. These visual joins do not add collision
 walls or rewrite saved endpoints when opening a project.
+
+## Door rotation
+
+Select one door and choose **Rotation anchor point** in its properties or game
+editor: **Start of door**, **Center of door** or **End of door**. The marker on the
+selected door shows its pivot. **Rotate** keeps that point fixed; existing doors
+default to the center. With an explicit anchor, opening rotates the image 90°
+around that point and closing restores it. **Default (center)** retains the
+original behavior of hiding the image when open. Explicit Blueprint hidden
+appearances remain hidden. Multiple objects rotate around their selection's center.
+The choice follows Undo/Redo, automatic saving, duplication and generated scene
+updates, and also controls rotation of a single door with the game's Select tool.
+
+## Empty Objects
+
+Choose **Library → Objects → Empty Object**, or **Panels → Tools → Empty Object**,
+then click or drag to place an image-free object. In Selection, edit its name,
+size, rotation and layer. Selection, moving, duplication and multiple selection
+work like other objects.
+
+Double-click it to edit the same Smart Object nodes, states, signals and actions
+as an ordinary object. Events only start the sequence; logic nodes make decisions.
+Use it as a controller for lights, sounds and other elements without placing an
+image. In the game, it is placed directly on the **GM** layer. The GM sees its
+faint marker on every tab, and selects or edits it on the **GM** tab. It remains
+editable in the builder,
+and is omitted from player/streamer scene data. Older scenes receive the same
+private presentation immediately, without requiring regeneration. Native edits,
+copies and scene updates keep it on GM. Players still trigger its authored area
+events by moving their tokens; delayed area/signal actions keep their original
+player permissions. Direct player clicks cannot activate it. It cannot receive
+its own image. The node catalog is the same for every
+element kind: **Change sprite** and **Set appearance** can control another object
+through an explicit **Target** connection. Visual nodes without a compatible
+target remain editable drafts and are skipped with a diagnostic when executed.
+Undo/Redo, automatic saving and scene updates keep
+its identity and behavior.
+
+For ordinary images, levers and torches, use **Move to GM image layer** in the
+context menu to hide them. Switch to **GM**, right-click the object and choose
+**Move to image layer** to return it to the game. The **Images** tab edits public
+images; private images are selected on GM. Returning a mixed selection leaves
+Empty Objects on GM. Private images and Empty Object markers remain visible to
+the GM at 55% opacity across tabs; private drawings also multiply their authored
+opacity by 55%. Players and streamers receive none of these private elements.
+Changing tabs updates editing controls without rebuilding the rendered scene.
+
+## Automatic saving
+
+Project edits save automatically after a short pause: map name, completed brush
+strokes, object and layer edits, settings, Undo and Redo. The header shows whether
+changes are waiting, saving or saved. Background writes preserve the current
+selection and history and do not interrupt drawing. The status button and
+**Ctrl+S** remain available to synchronize immediately.
+
+Smart Object graphs also apply valid edits automatically. There is no manual
+Save/Cancel step: **Close** or **Escape** waits for pending valid edits. Invalid
+fields remain visible for correction and block closing. Undo/Redo changes are
+also saved. Opening or closing an unchanged current graph does not create an
+empty blueprint. Removed event graphs are discarded when older data is loaded.
+
+A lost response retries the same logical operation and UUID, so a confirmed write
+is not repeated. A revision conflict pauses automatic saving and preserves the
+local draft. **Reload saved project** explicitly adopts the current server
+version; **Save a copy** preserves the local map under a new identity. Failed
+saving keeps edits in the current tab and offers recovery controls. In a live
+Smart Object conflict, further writes pause until the editor is reopened with
+the current version; its stale revision guard is never replaced silently.
+**Discard changes** discards
+only changes that have not been acknowledged. Reloading this tab recovers an
+uncertain write by confirming its original receipt before sending newer local
+edits. Older drafts without that write's body pause for explicit reload or copy.
+If the initial library or project load fails, editing stays blocked and **Retry**
+reloads it without creating an empty replacement project.
+Correcting or undoing a rejected edit clears that rejected save attempt, so
+reloading does not report it as an uncertain write. After reconnecting, **Retry**
+in a Smart Object editor also resumes the pending project save with its original
+receipt; revision conflicts still require explicit recovery.
+
+Returning to the game waits for pending project changes. If saving fails, the
+editor stays open so the GM can retry or explicitly discard. Automatic saving
+persists configuration; it does not generate a scene or execute graph actions.
+**Generate scene** and **Update scene** remain explicit actions. Editing a live
+element applies its graph configuration to that owner and linked source through
+their existing revision checks, without operating the mechanism.
+
+## Update a generated scene
+
+Keep the project to edit the map later. **Generate scene** creates its first
+scene; afterward the primary header action becomes **Update scene**. Reopening
+the project from the game's scene directory updates that same scene rather than
+creating another one. The header action and **Panels → Review → Update scene**
+replace the tiled background and the resources generated
+by this project in its linked scene. Manually placed tokens, images, lights,
+particles, shaders, drawings, fog and other scene content remain in place. Scene name, folder,
+visibility, broadcast and environment settings remain VTT choices. Existing
+native doors keep their live open/closed/locked state during an update.
+Lights, particles and shaders also retain their live enabled state when the
+corresponding authored enabled setting has not changed. An intentional change
+to that setting in the project applies on update.
+Secret-door discovery follows the same rule: runtime discovery is preserved
+while the authored `discovered` setting stays unchanged; an intentional project
+change is applied on update.
+
+Authorized Move/Rotate actions acknowledge their native geometry in ownership
+history while leaving the editable source unchanged; updating the scene reapplies
+authored positions and angles. Unrelated native edits still conflict. Runtime
+interaction settings are preserved when their authored default is unchanged,
+and an intentional authored change applies on update. Region enabled state stays
+live while authored enabled/layer settings remain unchanged; an intentional
+authored change wins. Configuration updates quietly baseline
+occupancy rather than firing presence graphs.
+
+Updates require both current project and scene revisions. If another editor
+changes either, reload before trying again. If a generated object was modified
+or deleted directly in the VTT, the update stops instead of overwriting that
+work. Resolve that edit before updating, or use **Save a copy** when the
+conflict controls offer it to preserve an independent project. Keep map dimensions
+and cell size unchanged when the scene contains manually placed content. Existing version
+1/2 projects can acquire ownership history if their original generated IDs,
+native data and grid geometry still match exactly, allowing only live door-state
+changes. Opening the project checks eligibility without writing; saving records
+the proven ownership before replacing its old source. Without that proof, the
+legacy linked scene cannot be updated from this project. The builder never
+infers ownership from nearby or visually similar objects. Use a new project when
+authoring an independent scene. Uploaded image assets remain in the campaign library.
+
+## Keyboard and pointer shortcuts
+
+Map and tool shortcuts apply when focus is outside an input or editable text.
+**Ctrl** shortcuts also accept **Command** on macOS. Modal editors have their
+own shortcuts; a running exclusive operation or Preview can disable editing.
+
+| Shortcut | Action |
+| --- | --- |
+| **V / F / E** | Select / floor paint brush / erase a whole object |
+| **W / D / H** | Wall / door / pan tool |
+| **Shift-click** or drag a selection box | Add/remove selection members or select several objects |
+| **Ctrl+A / Ctrl+D** | Select editable objects / duplicate the selection |
+| **R** | Rotate the selection by 90°; a single door honors its configured pivot |
+| **Delete / Backspace** | Delete the selection |
+| **Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y** | Undo / redo |
+| **Ctrl+S** | Flush valid project changes to the server |
+| **[ / ]** | Decrease/increase floor brush size |
+| **Shift + left-drag** with a floor brush | Resize the brush without painting; **Escape** restores its previous size |
+| **I** or **Alt-click** on a floor | Sample its image and texture rotation |
+| **G** in Tiles | Bucket fill with snapping; Fill shape without snapping |
+| **Enter** or double-click while drawing a polygon | Finish the polygon |
+| **Escape** | Cancel an active gesture; otherwise exit Preview, clear selection or close the focused panel as applicable |
+| **Space + drag**, middle-button drag or Pan | Move the camera |
+| Wheel / **+ / -** | Zoom around the pointer / viewport center |
+| **0 / Home** | Fit the map |
+| Arrow keys with canvas focus | Move the camera |
+
+## Practical limits
+
+The server validates these limits; an operation exceeding a budget is rejected.
+The [developer contract](#http-operations-and-limits) lists additional shape,
+rendering and Blueprint limits.
+
+| Resource | Limit |
+| --- | --- |
+| Map width and height | 1–200 cells each |
+| Cell size | 16–256 px |
+| Generated map raster | 16,777,216 pixels, or the host's lower configured limit |
+| Project layers | 32 |
+| Combined project objects | 2,000 floors, walls, doors, decorations, lights, particles, shaders and regions |
+| Generated native objects | 5,000, including wall segments and managed surfaces |
+| Classified project images | 256 |
+| Uploaded image | 25 MB and 40 million decoded pixels |
+| Project document | 1 MB, with separate contour and brush-work budgets |
+| Names | 120 characters for elements; 80 for layers, families and collections |
+
+Width, height and cell size share the raster budget: their individual maximums
+cannot all be used at once. Highly detailed strokes can reach shape or brush
+budgets before the object count is full. Separate a dense area into simpler
+strokes or reduce its dimensions rather than repeatedly submitting the same
+rejected edit.
+
+## Troubleshooting
+
+| Symptom | Check and next action |
+| --- | --- |
+| Drawing does nothing | Leave Preview; choose a visible, unlocked active layer and a drawing tool. If no layer remains, choose **Create your first layer**. |
+| An image is absent from its category | Check its project type and the search/collection filter. Unclassified campaign images are available in **Tools → Material**. |
+| Soft painting is unexpected, or the fill tool changed | Check **Tiles/Painting**, snapping, brush operation, hardness and intensity. Object erasure and floor-area erasure are separate tools. |
+| A new map image moves or crops existing work | Check Width/Height in cells and Cell size. Replacements keep object coordinates; dimensions that would exclude objects are rejected. |
+| A TIFF has no thumbnail | Some browsers cannot preview TIFF. The server still validates supported TIFF uploads; inspect any returned upload error. |
+| Saving stays blocked | Correct the highlighted settings/property/graph field, or undo the rejected edit. Graph fields with invalid values also block closing. |
+| Saving fails after a connection loss | Keep the current tab and use **Retry** after reconnecting. Retrying an uncertain write keeps its original receipt; correcting validation uses a new operation. |
+| A revision conflict appears | Use **Reload saved project** to adopt the server version or **Save a copy** to preserve the local draft. Repeated Retry does not rebase a stale revision. |
+| Update reports a changed/deleted generated object | Resolve the manual scene edit before updating. Use the offered recovery/copy controls when an independent project is needed; the existing project remains linked to its scene. |
+| Players still see the old map | Confirm that **Generate scene/Update scene** succeeded, then verify which scene is broadcast. Generating a private scene does not activate it for players. |
+| Hidden editor layers appear in Preview or the scene | Layer hiding is an editing aid. Preview and generation include all project layers; control live privacy through the game's GM/image layers. |
+| Behavior did nothing | Check its starting event, explicit actions, Target bindings, player lock permissions and automation pause state. Use **Test behavior** and the Automation log for diagnostics. |
+| Asset removal affects another map | **Remove asset** deletes the campaign resource. To stop using an image in one map, change/remove that placement or background instead. Undo cannot restore the deleted file. |
+
+## Smart Object reference
+
+Start with the element you want to operate, then connect one starting event to
+explicit actions. An empty graph does not create an implicit toggle. Graph
+configuration saves automatically; gameplay execution is a separate action.
+
+| Goal | Reference |
+| --- | --- |
+| Make a switch or linked torch | [Levers](#levers), [Composed torches](#composed-torches) |
+| Trigger actions when tokens enter/leave | [Regions and pressure plates](#regions-and-pressure-plates), [Empty Objects](#empty-objects) |
+| Share conditions or coordinate objects | [Composite conditions](#composite-conditions), [Variables and named signals](#variables-and-named-signals) |
+| Wait, count or restrict repetition | [Persistent execution controls](#persistent-execution-controls), [Delay](#persistent-delay), [Timer](#persistent-timer) |
+| Reuse or inspect behavior | [Templates](#reusable-behavior-templates), [Scene network](#scene-network), [Server rehearsal](#test-behavior-through-the-server) |
+| Change a surface, present a message or move the triggering token | [Dynamic surfaces](#dynamic-surfaces), [Messages/handouts](#messages-handouts-and-camera-focus), [Teleport](#same-scene-teleport) |
+
+The following reference covers the shared node editor and its supported element
+adapters. The [design direction](smart-objects-direction.md) records proposals;
+it is not a list of additional controls available in this checkout.
 
 ## Door Smart Objects
 
@@ -1534,46 +1717,14 @@ region events require authoritative token commands. See
 [Current limitations and pending work](smart-objects-direction.md#current-limitations-and-pending-work)
 for the full list and the next steps.
 
-## Update a generated scene
+## Developer reference
 
-Keep the project to edit the map later. **Generate scene** creates its first
-scene; afterward the primary header action becomes **Update scene**. Reopening
-the project from the game's scene directory updates that same scene rather than
-creating another one. The header action and **Panels → Review → Update scene**
-replace the tiled background and the resources generated
-by this project in its linked scene. Manually placed tokens, images, lights,
-particles, shaders, drawings, fog and other scene content remain in place. Scene name, folder,
-visibility, broadcast and environment settings remain VTT choices. Existing
-native doors keep their live open/closed/locked state during an update.
-Lights, particles and shaders also retain their live enabled state when the
-corresponding authored enabled setting has not changed. An intentional change
-to that setting in the project applies on update.
-Secret-door discovery follows the same rule: runtime discovery is preserved
-while the authored `discovered` setting stays unchanged; an intentional project
-change is applied on update.
+The sections below describe stored documents, native projections, HTTP commands
+and execution boundaries. For user operations, use the workflows above. The
+[frontend guide](frontend.md#map-builder-workspace) maps controllers and generated
+assets; the [testing guide](testing.md) documents isolated regression scenarios.
 
-Authorized Move/Rotate actions acknowledge their native geometry in ownership
-history while leaving the editable source unchanged; updating the scene reapplies
-authored positions and angles. Unrelated native edits still conflict. Runtime
-interaction settings are preserved when their authored default is unchanged,
-and an intentional authored change applies on update. Region enabled state stays
-live while authored enabled/layer settings remain unchanged; an intentional
-authored change wins. Configuration updates quietly baseline
-occupancy rather than firing presence graphs.
-
-Updates require both current project and scene revisions. If another editor
-changes either, reload before trying again. If a generated object was modified
-or deleted directly in the VTT, the update stops instead of overwriting that
-work: restore the object or generate a new scene. Keep map dimensions and cell
-size unchanged when the scene contains manually placed content. Existing version
-1/2 projects can acquire ownership history if their original generated IDs,
-native data and grid geometry still match exactly, allowing only live door-state
-changes. Opening the project checks eligibility without writing; saving records
-the proven ownership before replacing its old source. If that proof fails,
-generate a new scene. The builder never infers ownership from nearby or visually
-similar objects. Uploaded image assets remain in the campaign library.
-
-## Source, raster and live geometry
+### Source, raster and live geometry
 
 `MapBuilderProject` belongs to one campaign and contains its folder, versioned
 JSON source, last generated scene reference and generation ownership history.
@@ -1745,7 +1896,23 @@ before the write transaction; permissions, source revision and asset ownership
 are checked again before publication. Storage written for a failed operation is
 removed. Realtime invalidation happens after commit.
 
-## HTTP operations and limits
+### Runtime resources and scene refresh
+
+Event execution reuses read-only asset, sound, light and blueprint inventories
+within one command, then discards them. Mutable states and ownership are checked
+again on later commands. A token's accepted path is projected once for an area
+pass, preserving listener order and teleport cancellation. Multiple area events
+retain all their history entries while publishing one history invalidation after
+commit. Rollback, permission checks and retry receipts remain authoritative.
+
+Committed scene changes reach the board before dependent audio/combat refreshes.
+Changing an ordinary image replaces its texture in place, retaining the previous
+art until the replacement is ready. Unchanged art is reused, including across
+light/geometry rebuilds within the same scene. The scene owns a bounded cache of
+recently used textures and releases it on scene/role changes and disposal. It
+loads only art in the viewer's current authorized scene projection.
+
+### HTTP operations and limits
 
 All endpoints below are under `/api/containers/<campaign_id>/map-builder`:
 
@@ -1810,48 +1977,9 @@ Blueprints allow up to 32 nodes and 64 connections per event graph, with at most
 cycles, references to missing graph nodes and duplicate connections are rejected. State transitions and executed
 actions are also bounded on the server.
 
-## Delivery plan
+### Delivery plan
 
-1. **Studio and first playable scene.** Approved layout, own-asset uploads,
-   floor/wall/door classification, basic painting, selection, erase, undo/redo,
-   saved projects, tiled generation and native walls/doors. Acceptance: draw a
-   room, generate it and open a door that releases movement and vision.
-2. **Tools for larger maps.** Layers, library organization, configurable brushes,
-   grid snapping, multiple selection, duplication, rotation, decorations, lighting
-   and safe scene updates. Acceptance: change a room and update its scene without
-   duplicating walls or deleting tokens. Deliveries 1 and 2 are implemented.
-3. **Smart Objects: initial door implementation.** The first adapter is
-   implemented for doors: double-click opens the modal, fixed native states own
-   default appearance settings and interaction/destruction sequences, nodes connect visually,
-   and local simulation highlights execution. Native effects use the server's
-   existing permissions, transactions and synchronization. Acceptance: opening a
-   door changes its image, plays a sound and turns on a light for all participants.
-   Levers provide a second adapter with two states, native image interaction and
-   cross-element references. Composed torches link image, light and effects, with
-   independent mechanism and flame state. Other element adapters remain planned.
-4. **Reusable components and advanced behaviors.** Group nodes, expose parameters,
-   save library templates and add more area behaviors. Typed variables and named
-   signals, Switch, weighted Random, Counter, Once, Cooldown, persistent Delay and
-   named Timer, ordered groups, typed resources, transforms, interaction gates,
-   presence filters and Event context are implemented. Campaign snapshot templates,
-   scene-network editing, dynamic surfaces, authorized presentation and same-scene
-   Teleport are also implemented; visual node groups and further adapters remain future work.
-   Acceptance: reuse a configurable trapped door without rebuilding its graph.
-5. **Universal VTT compatibility.** Import/export the compatible subset of map,
-   grid, walls, doors and lights; explain which Gravewright-specific features
-   remain only in the project. Implemented for Universal VTT 0.2; see the
-   [supported fields, limits and interchange workflow](universal-vtt.md).
-
-Delivery 3 currently covers doors, levers, torches and named presence regions.
-Pressure plates, per-token entry/exit triggers, All/Any composite conditions,
-typed variables, named signals, Switch, weighted Random and persistent
-Counter/Once/Cooldown/Delay/Timer controls are implemented. Ordered groups, typed
-light/sound references, Move/Rotate, interaction/region gates, token filters and
-trusted trigger context are also available. Delivery 4 adds independent reusable
-templates, atomic scene-network editing, dynamic surface artwork, audience-based
-presentation and same-scene transport. Delivery 5 provides Universal VTT interchange.
-Other element adapters, timed animation and cross-scene/group travel remain planned.
-
-The next Smart Objects steps follow the [nine-stage implementation roadmap](smart-objects-direction.md#delivery-order-and-acceptance):
-the scoped deliveries above extend its stages 8 and 9. Remaining proposals retain
-their own access, navigation and system-package contracts.
+Use the [Smart Objects design direction](smart-objects-direction.md) for proposed
+adapters, visual node organization, animation and cross-scene/group transport.
+The supported behaviors and their limits are documented in this guide; future
+plans do not change saved project, permission or system-package contracts.

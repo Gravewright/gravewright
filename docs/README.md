@@ -11,8 +11,8 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | [macOS runner](en/macos-runner.md) | Intel/Apple Silicon installation, Finder launcher, private tools and local execution |
 | [Getting started](en/getting-started.md) | Dependencies, configuration, migrations and first login |
 | [User guide](en/user-guide.md) | Campaigns, scenes, sheets, journals and table workflows |
-| [Map Builder](en/map-builder.md) | Studio, editable projects, user assets and native wall/door generation |
-| [Universal VTT](en/universal-vtt.md) | Import and export native scenes, supported fields and format limitations |
+| [Map Builder](en/map-builder.md) | First project, Tiles/Painting, finished-map backgrounds, layers, saving, Smart Objects and scene updates |
+| [Universal VTT importer/exporter](en/universal-vtt.md) | Import workflows, native maps/walls/doors/lights, warnings and error recovery |
 | [Smart Objects direction](en/smart-objects-direction.md) | Proposed node editor, element capabilities, references and delivery order |
 | [Architecture](en/architecture.md) | Request flow, persistence, authorization and realtime |
 | [Code map](en/code-map.md) | What each domain does and where to make changes |
@@ -29,4 +29,4 @@ Project policies: [contributing](../CONTRIBUTING.md), [security](../SECURITY.md)
 
 For the dice implementation, see the existing [grammar architecture](../gravewright/dice/grammar/ARCHITECTURE.md) and [notation reference](../gravewright/dice/grammar/notation/GRAMMAR.md). Machine-readable module contracts live in [contracts/](../gravewright/modules/contracts/); the [transport note](../gravewright/modules/contracts/transport.md) accompanies them.
 
-Current release: [Gravewright 0.2.3 — Alpha](releases/0.2.3.md), with generic card-image imports, public host calls in module lifecycle and Customize contexts, and translated native window controls. Includes Windows, Linux and macOS installers. Hosts on 0.2.1 or 0.2.2 can use the normal managed update workflow. [0.2.2 notes](releases/0.2.2.md) retain the preceding release history.
+Current release: [Gravewright 0.3.0 — Alpha](releases/0.3.0.md), with Map Builder, Smart Objects, Universal VTT interchange and rendering improvements. The guides describe the available workflows; the release notes cover installation, upgrading from 0.2.3 and data migrations. [0.2.3 notes](releases/0.2.3.md) retain the preceding release history.

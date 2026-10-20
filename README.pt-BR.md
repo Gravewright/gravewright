@@ -4,14 +4,16 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **0.2.3**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **0.3.0**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
 ## Instalar e executar localmente
 
-A versão 0.2.3 permite que módulos independentes importem imagens pelo serviço
-nativo de cartas e usem a API pública do host na inicialização e em Personalizar.
-Os controles nativos das janelas acompanham o idioma ativo do Translator.
-Consulte as [notas da release](docs/releases/0.2.3.md).
+Comece pelo [guia do Map Builder](docs/pt-BR/map-builder.md) para criar um projeto
+de mapa editável ou colocar elementos interativos sobre uma imagem de mapa pronto.
+O [guia do Universal VTT](docs/pt-BR/universal-vtt.md) explica como importar
+arquivos `.uvtt`, `.dd2vtt` e `.df2vtt` como cenas nativas, exportar cenas e conferir
+os limites do formato. As [notas da 0.3.0](docs/releases/0.3.0.md)
+reúnem as mudanças.
 
 Extraia o projeto completo para uma pasta gravável, execute o instalador do seu sistema operacional e depois use o Runner gerado. O instalador prepara ferramentas, dependências, frontend e configurações; o Runner inicia a aplicação já preparada.
 
@@ -21,7 +23,7 @@ Extraia o projeto completo para uma pasta gravável, execute o instalador do seu
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/pt-BR/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/pt-BR/macos-runner.md) |
 
-O **pacote 0.2.3 inclui os instaladores das três plataformas**. Hosts na 0.2.1 ou 0.2.2 podem atualizar normalmente por **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env` e dados configurados antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração e dados e execute novamente o instalador da plataforma. Veja as [instruções de download e atualização](docs/releases/0.2.3.md#download-e-atualização).
+O ZIP completo da release 0.3.0 inclui os instaladores das três plataformas. Instalações na 0.2.3 podem usar **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env` e dados configurados antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração e dados e execute novamente o instalador da plataforma. Veja as [instruções de download e atualização](docs/releases/0.3.0.md#download-e-atualização), incluindo as migrações de banco desta atualização.
 
 Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
 
@@ -33,13 +35,13 @@ Extraia o projeto completo e dê dois cliques em **`Install Windows.bat`**. Ele 
 
 O executor funciona diretamente no **CMD do Windows**. Use Windows 10 versão 1803 ou superior, ou Windows 11, em x64; `curl.exe`, `tar.exe` e `certutil.exe` nativos cuidam dos downloads, extração e verificação de integridade.
 
-O instalador salva configurações no `.env` do projeto. Os caminhos do banco e uploads seguem essa configuração; os padrões são `data/gravewright.sqlite3` e `data/media` no projeto. Ferramentas, caches, logs e arquivos estáticos coletados do Runner ficam em `%LOCALAPPDATA%\Gravewright`. O executor atende apenas este computador e dispensa Redis. Um atalho com o ícone do Gravewright é criado ao lado do launcher. Veja o [guia do executor Windows](docs/pt-BR/windows-runner.md) para requisitos e solução de problemas, e o guia de [implantação e backups](docs/pt-BR/deployment.md).
+O instalador salva configurações no `.env` do projeto. Os caminhos do banco e uploads seguem essa configuração; os padrões são `data/gravewright.sqlite3` e `data/media` no projeto. O estado, os logs e os arquivos estáticos coletados do Runner ficam em `data/`; ferramentas gerenciadas, ambientes, caches e arquivos temporários ficam em `data/runner/` nesta instalação. O executor atende apenas este computador e dispensa Redis. Um atalho com o ícone do Gravewright é criado ao lado do launcher. Veja o [guia do executor Windows](docs/pt-BR/windows-runner.md) para requisitos e solução de problemas, e o guia de [implantação e backups](docs/pt-BR/deployment.md).
 
 ### Linux e macOS
 
 No Linux, abra um terminal na pasta extraída e execute `bash "./Install Linux.sh"`. No macOS, abra **`Install macOS.command`** pelo Finder ou use `bash "./Install macOS.command"` nessa pasta. Responda às perguntas e depois inicie **`Gravewright Runner.sh`** ou **`Gravewright Runner.command`**. Mantenha o terminal aberto; Ctrl+C encerra a aplicação. Execute o instalador novamente após mover o projeto, atualizar seus arquivos ou alterar configurações salvas.
 
-O `.env` permanece no projeto; os padrões de banco e uploads continuam `data/gravewright.sqlite3` e `data/media` dentro dele. Ferramentas e estado privados do Runner usam `$XDG_DATA_HOME/Gravewright` (padrão `~/.local/share/Gravewright`) no Linux e `~/Library/Application Support/Gravewright` no macOS. `--data-dir` muda o estado do Runner, não os caminhos do banco/mídias no `.env`. Os guias [Linux](docs/pt-BR/linux-runner.md) e [macOS](docs/pt-BR/macos-runner.md) explicam verificações sem perguntas, reaproveitamento offline, permissões, atualização e backups.
+O `.env` permanece no projeto; os padrões de banco e uploads continuam `data/gravewright.sqlite3` e `data/media` dentro dele. O estado, os logs e os arquivos estáticos coletados do Runner ficam em `data/`; ferramentas gerenciadas, ambientes, caches e arquivos temporários ficam em `data/runner/` nesta instalação. `--data-dir` muda o estado do Runner, não os caminhos do banco/mídias no `.env`. Os guias [Linux](docs/pt-BR/linux-runner.md) e [macOS](docs/pt-BR/macos-runner.md) explicam verificações sem perguntas, reaproveitamento offline, permissões, atualização e backups.
 
 ## Executar localmente pelo terminal
 

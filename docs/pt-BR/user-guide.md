@@ -30,67 +30,55 @@ As ferramentas incluem seleção, movimento, desenho, medição, paredes, neblin
 
 ### Entrar no Map Builder
 
-Para o mestre da campanha, **Nova cena** abre a escolha entre **Enviar mapa** e
-**Map Builder**. Enviar mapa mantém o fluxo de importação de imagem. Map Builder
-abre uma área própria em tela inteira, na mesma aba, preservando a pasta de
-cenas escolhida. **Voltar ao jogo** retorna à cena selecionada da campanha;
-entrar no builder mantém a transmissão dos jogadores.
+Como mestre da campanha, abra **Nova cena**. Escolha o fluxo conforme sua origem:
 
-O Estúdio possui uma barra de ferramentas esquerda, opções contextuais do pincel
-acima do mapa e uma **Biblioteca** horizontal abaixo dele. O cabeçalho reúne o botão
-de estado do salvamento, **Prévia** e geração de cena; controles de zoom e dimensões em células
-ficam na parte inferior da área de desenho. A biblioteca oferece busca, **Importar**
-e categorias por tipo; sua seta recolhe os cards, mantendo a barra acessível.
-Ao entrar, **Chão** aparece destacado e mostra as imagens disponíveis da campanha
-de todos os tipos; clicar numa categoria filtra as imagens sem mudar a ferramenta
-de desenho selecionada. **Camadas**, no canto superior direito do mapa, abre um painel
-auxiliar com **Camadas**, **Seleção**, **Configurações**, **Projetos** e **Revisão**.
-Fechá-lo mantém a biblioteca acessível. Esse painel começa fechado e só abre
-quando solicitado; selecionar ou pintar objetos não o abre. **Componentes** permanece planejado.
+| Origem e objetivo | Ação | Resultado |
+| --- | --- | --- |
+| Uma imagem para usar diretamente como cena | **Enviar mapa** | Cena nativa com grade e visibilidade configuradas |
+| Um mapa para construir ou continuar editando como projeto | **Map Builder** | Projeto editável; gerar a cena é uma ação separada |
+| Uma imagem pronta para receber paredes, objetos ou comportamentos | **Map Builder → Biblioteca → Importar → Importar mapa pronto** | Fundo do projeto com elementos editáveis sobre ele |
+| Um arquivo `.uvtt`, `.dd2vtt` ou `.df2vtt` | **Importar Universal VTT** | Nova cena nativa exclusiva do mestre, com paredes, portas e luzes suportadas |
 
-**Importar** abre uma modal para escolher suas imagens e o tipo: **Chão**,
-**Parede**, **Porta** ou **Objeto**. Opcionalmente, escolha uma família de assets
-existente ou digite um novo nome para agrupar variações do mesmo tipo. Escolha uma
-família na biblioteca ou no seletor superior de material para pintar com todas
-as suas imagens; as imagens individuais continuam disponíveis. Dê dois cliques
-no card de uma imagem para editar seu tipo ou família; uma imagem já usada no
-mapa mantém seu tipo.
+Importar uma imagem não detecta paredes nem reconstrói suas camadas originais.
+A importação Universal VTT não cria um projeto do Builder. O
+[guia do importador/exportador](universal-vtt.md) explica os campos aceitos e avisos.
 
-Com **Chão**, escolha **Forma** na barra contextual: arraste livremente com o
-pincel, trace um retângulo entre cantos ou arraste um círculo a partir do centro
-para definir o raio. Para um polígono, clique em pelo menos três vértices e
-pressione **Enter** ou dê dois cliques para concluir; **Escape** cancela. Uma
-família de chão sorteia uma imagem por célula e mantém as escolhas na prévia,
-em desfazer/refazer, no salvamento e na geração de cena. Cada traço ou forma
-concluída ocupa uma etapa do histórico de desfazer. Trace paredes e portas entre
-dois pontos. As portas funcionam independentemente
-e substituem os trechos de parede que sobrepõem na mesma direção. Selecione objetos
-para mover ou editar em **Seleção**; desfazer/refazer acompanha as edições. Clique
-no botão de estado do salvamento no cabeçalho ou pressione **Ctrl+S**, e use
-**Camadas → Projetos** para reabrir o trabalho salvo, inclusive depois de reiniciar o VTT.
-Camadas nomeadas organizam objetos com visibilidade e bloqueio salvos; novos objetos
-entram na camada ativa. A barra contextual configura materiais, pincéis, encaixe
-na grade e rotação de chão/objetos. Shift e clique ou seleção retangular formam um
-grupo para mover, duplicar, girar ou mudar de camada. **Objeto** e **Luz**, na barra
-esquerda, posicionam imagens decorativas e luzes nativas. **Revisão** mostra o resumo
-do projeto e a ação de gerar cena.
+Para criar o primeiro projeto no Builder:
 
-**Prévia** oculta as guias de edição e pausa a pintura; mover a vista e ajustar
-o zoom continuam disponíveis. Ela mostra temporariamente todas as camadas e
-restaura a visibilidade anterior ao retomar a edição. **Camadas** controla a
-visibilidade somente no editor; camadas ocultas continuam presentes na cena gerada.
+1. Escolha **Nova cena → Map Builder** e nomeie o projeto no cabeçalho.
+   Entrar no Builder preserva a cena atual dos jogadores.
+2. Use **Painéis → Configurações** para dimensões e tamanho da célula. O cabeçalho
+   escolhe **Tiles** ou **Pintura**; **Painéis → Ferramentas** reúne as opções do pincel.
+3. Importe suas imagens em **Biblioteca → Importar** ou escolha um fundo de mapa
+   pronto. Ajuste as dimensões da grade para corresponder à imagem.
+4. Pinte pisos e adicione paredes, portas, objetos, luzes ou efeitos. **Painéis → Camadas**
+   controla camada ativa, visibilidade, bloqueios e conteúdo. Selecione um elemento
+   e use **Painéis → Seleção** para editar suas propriedades.
+5. Aguarde o cabeçalho indicar que o projeto foi salvo. As edições salvam
+   automaticamente; o botão de estado e **Ctrl+S** sincronizam imediatamente.
+   Reabra o trabalho salvo por **Painéis → Projetos**.
+6. Use **Prévia** para conferir o mapa. Use **Testar comportamento** para um grafo
+   de Objeto Inteligente disponível; o ensaio apresenta previsões sem confirmar
+   efeitos na partida. Veja os objetos suportados no [guia do Map Builder](map-builder.md).
+7. Escolha **Gerar cena** para criar uma cena nativa privada. Depois do vínculo,
+   a ação do cabeçalho passa a **Atualizar cena**, aplicando novas edições à mesma
+   cena. Um conflito de revisão interrompe a atualização para recuperação explícita.
+8. Em **Cenas**, use **Ativar para jogadores** quando quiser compartilhar a cena.
 
-**Gerar cena** salva o projeto, prepara o mapa fatiado e as paredes e portas
-nativas, depois abre a nova cena reservada ao mestre. O vão da porta pode substituir
-parte da parede: abrir a porta nativa libera movimento e visão nesse vão. As
-imagens das portas acompanham seu estado durante o jogo. A transmissão dos
-jogadores é preservada; use **Ativar para jogadores** no menu de contexto da cena
-quando quiser compartilhar. Cada nova geração cria uma cena separada.
-**Camadas → Revisão → Atualizar cena** substitui o mapa e os recursos gerados pelo projeto na cena
-vinculada, preservando tokens e conteúdo manual, configurações da cena e estado
-das portas durante o jogo. Edições conflitantes interrompem a atualização;
-cenas com conteúdo manual conservam dimensões e tamanho da célula. Consulte o
-[guia do Map Builder](map-builder.md) para o fluxo, limites e plano de entregas.
+Essas ações têm efeitos diferentes:
+
+| Ação | O que altera |
+| --- | --- |
+| Salvamento automático / **Ctrl+S** | O projeto editável |
+| **Gerar cena** / **Atualizar cena** | Imagem e recursos gerados da cena nativa |
+| **Ativar para jogadores** | Visibilidade da cena e transmissão aos jogadores |
+
+Se o salvamento falhar, mantenha a aba aberta e use os controles de recuperação.
+**Recarregar projeto salvo** adota a versão do servidor; **Salvar uma cópia**
+preserva o documento local com uma nova identidade de projeto. O rascunho do
+navegador serve à recuperação, não substitui um backup. O
+[guia do Map Builder](map-builder.md) cobre modos de desenho, remoção de assets,
+camadas, Objetos Inteligentes, atalhos, limites e solução de problemas.
 
 ## Durante a partida
 
@@ -117,7 +105,7 @@ Mapas, músicas, PDFs e outros uploads mantêm suas próprias licenças e titula
 
 ## Limitações atuais
 
-- A preferência de idioma da aplicação oferece `en`; existe documentação em português, mas estas alterações não implementam interface traduzida.
+- Os catálogos do host incluem inglês, português do Brasil e espanhol. Inglês é o padrão quando não há preferência salva. Mudar o idioma da interface não traduz nomes, textos ou assets criados pelo usuário; sistemas instalados fornecem suas próprias traduções.
 - O sistema PDF nativo não fornece tipos de itens; o backend genérico de itens não representa um editor/catálogo nativo completo.
 - O carregador de extensões executa JavaScript na página principal. Instale código confiável; assinaturas não fornecem isolamento.
 - O marketplace online exige catálogo e chaves confiáveis. Hosts gerenciados instalam atualizações pela Administração mediante solicitação do proprietário. Apps Django da biblioteca de módulos são ativados para todo o servidor e exigem reinício automático; módulos de navegador continuam vinculados às mesas.

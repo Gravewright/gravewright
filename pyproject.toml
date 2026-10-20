@@ -1,7 +1,7 @@
 [project]
 name = "gravewright-vtt"
-# Public release: 0.2.3, Alpha development stage (release tag: v0.2.3).
-version = "0.2.3"
+# Public release: 0.3.0, Alpha development stage (release tag: v0.3.0).
+version = "0.3.0"
 classifiers = ["Development Status :: 3 - Alpha"]
 requires-python = ">=3.14"
 readme = "README.md"
