@@ -10,12 +10,15 @@ import uuid
 import zlib
 
 from django.test import TestCase, override_settings
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from gravewright.journals.services import JournalError
 
 from gravewright.maps import builder_dynamic, builder_services, extra_objects, objects, services, universal_vtt as uvtt
-from gravewright.maps.models import Broadcast, MapBuilderProject, Receipt, Scene, SceneObject, Tile
+from gravewright.maps.blueprint_actions import change_sprite, validate_campaign_sprites
+from gravewright.maps.blueprints import default_blueprint
+from gravewright.maps.models import Broadcast, MapAsset, MapBuilderProject, Receipt, Scene, SceneObject, Tile
 from . import test_builder_projects as fixtures
 from . import test_builder_free_paint as free_fixtures
 from .test_builder_terrain_brush import brush
@@ -98,6 +101,7 @@ class UniversalVttTests(TestCase):
         doc = self.document(); doc["resolution"]["pixels_per_grid"] = True; bad.append(self.raw(doc))
         doc = self.document(); doc["portals"][0]["closed"] = "false"; bad.append(self.raw(doc))
         doc = self.document(); doc["lights"][0]["color"] = "#wrong"; bad.append(self.raw(doc))
+        doc = self.document(); doc["resolution"]["map_origin"]["x"] = 10 ** 500; bad.append(self.raw(doc))
         doc = self.document(); doc["line_of_sight"] = [[{"x": 0, "y": 0}]]; bad.append(self.raw(doc))
         doc = self.document(); doc["line_of_sight"] = [[{"x": 0, "y": 0}, {"x": 1, "y": 0}]] * 5001; bad.append(self.raw(doc))
         bad.extend((b'{"format":0.2,"format":0.2}', b'{"format":NaN}', b'[' * 1100 + b']' * 1100))
@@ -181,6 +185,70 @@ class UniversalVttTests(TestCase):
         self.assertTrue(any("Hidden GM" in note for note in exported["warnings"]))
         self.assertTrue(any("locks" in note for note in exported["warnings"]))
         self.assertNotIn(str(private.pk), json.dumps(exported))
+
+    def test_export_open_door_art_rotates_around_each_authored_pivot_and_closes_in_place(self):
+        scene = Scene.objects.get(pk=self.imported()["scene"]["id"])
+        door = scene.elements.get(data__kind="door")
+        for anchor, probe in (("start", (32, 48)), ("center", (48, 24)), ("end", (64, 16))):
+            with self.subTest(anchor=anchor):
+                door.data = objects.wall({"kind": "door", "door_state": "open", "rotationAnchor": anchor,
+                                          "asset_id": str(self.door.pk), "thickness": 8,
+                                          "x1": 32, "y1": 32, "x2": 64, "y2": 32},
+                                         campaign_id=self.campaign.pk)
+                door.save(update_fields=["data"])
+                exported = uvtt.export_map(self.campaign.pk, self.gm.pk, scene.pk)
+                self.assertFalse(exported["document"]["portals"][0]["closed"])
+                with self.pixels(exported) as image:
+                    self.assertEqual(image.getpixel(probe)[:3], (32, 176, 32))
+                    self.assertEqual(image.getpixel((40, 32))[:3], (17, 34, 51))
+                door.data["door_state"] = "closed"
+                door.save(update_fields=["data"])
+                with self.pixels(uvtt.export_map(self.campaign.pk, self.gm.pk, scene.pk)) as image:
+                    self.assertEqual(image.getpixel((40, 32))[:3], (32, 176, 32))
+                    self.assertEqual(image.getpixel(probe)[:3], (17, 34, 51))
+
+    def test_export_open_anchored_door_respects_hidden_appearance_and_discovery(self):
+        scene = Scene.objects.get(pk=self.imported()["scene"]["id"])
+        door = scene.elements.get(data__kind="door")
+        raw = {"kind": "door", "door_state": "open", "rotationAnchor": "start",
+               "asset_id": str(self.door.pk), "thickness": 8, "x1": 32, "y1": 32, "x2": 64, "y2": 32}
+        hidden = default_blueprint()
+        hidden["states"]["open"] = {"appearance": "hidden"}
+        for patch_data, visible in (({"presentation": "secret"}, False), ({"presentation": "invisible"}, False),
+                                    ({"presentation": "secret", "discovered": True}, True),
+                                    ({"blueprint": hidden}, False)):
+            with self.subTest(patch_data=patch_data):
+                door.data = objects.wall({**raw, **patch_data}, campaign_id=self.campaign.pk)
+                door.save(update_fields=["data"])
+                with self.pixels(uvtt.export_map(self.campaign.pk, self.gm.pk, scene.pk)) as image:
+                    self.assertEqual(image.getpixel((32, 48))[:3], (32, 176, 32) if visible else (17, 34, 51))
+
+    def test_export_fitted_sprite_artwork_preserves_size_outside_native_editor_scale_limits(self):
+        scene = Scene.objects.get(pk=self.imported()["scene"]["id"])
+        for source_scale, size in ((.1, (2048, 2048)), (100, (1, 1))):
+            with self.subTest(source_scale=source_scale, size=size):
+                with Image.new("RGB", size, "#229955") as image, BytesIO() as content:
+                    image.save(content, "PNG")
+                    artwork = MapAsset(campaign=self.campaign, name="Fitted sprite", width=size[0], height=size[1])
+                    artwork.file.save("fitted-sprite.png", ContentFile(content.getvalue()), save=False)
+                    artwork.save()
+                data = extra_objects.image(scene, {"asset_id": str(self.floor.pk), "x": 64, "y": 64, "scale": source_scale})
+                row = SceneObject(scene=scene, kind="images", data=data)
+                self.assertTrue(change_sprite(scene, row, {"appearance": "asset", "assetId": str(artwork.pk)}))
+                row.data = extra_objects.image(scene, {}, row.data)
+                row.save()
+                validate_campaign_sprites(self.campaign)
+                self.assertFalse(.001 <= row.data["scale"] <= 100)
+                self.assertAlmostEqual(row.data["natural_width"] * row.data["scale"], self.floor.width * source_scale)
+                before = deepcopy(row.data)
+                with self.pixels(uvtt.export_map(self.campaign.pk, self.gm.pk, scene.pk)) as image:
+                    self.assertEqual(image.getpixel((64, 64))[:3], (34, 153, 85))
+                    self.assertEqual(image.size, (128, 128))
+                    if source_scale == .1:
+                        self.assertEqual(image.getpixel((62, 64))[:3], (17, 34, 51))
+                row.refresh_from_db()
+                self.assertEqual(row.data, before)
+                row.delete()
 
     def test_dynamic_floor_material_mask_and_eraser_flatten_without_stale_baked_pixels(self):
         self.doc["floors"][0]["dynamic"] = True

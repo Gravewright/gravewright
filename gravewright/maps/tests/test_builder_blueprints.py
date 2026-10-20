@@ -327,3 +327,46 @@ class BuilderBlueprintTests(TestCase):
         self.assertNotIn(str(self.sound.pk), str(source.document))
         self.assertNotIn(str(self.sound.pk), str(source.generation))
         self.update_scene()
+
+    def test_deleted_sound_cleans_dynamic_baseline_without_adopting_pending_source_edits(self):
+        from gravewright.administration.archives import export_campaign, import_campaign
+
+        self.doc["floors"][0]["dynamic"] = True
+        self.doc["doors"][0]["blueprint"]["graphs"]["interact"] = graph("interact",
+            {"type": "sound", "trackId": str(self.sound.pk), "volume": .35},
+            {"type": "soundControl", "trackId": str(self.sound.pk), "action": "stop", "volume": .35},
+            {"type": "state", "targetState": "open"})
+        self.generated()
+        self.doc["floors"][0].update(x=2, width=5)
+        response = self.save(expected_version=1)
+        self.assertEqual(response.status_code, 200, response.content)
+
+        audio_services.public_command(self.campaign.pk, self.gm.pk, "track-delete",
+            {"id": str(self.sound.pk), "version": self.sound.version}, uuid.uuid4())
+        source = MapBuilderProject.objects.get(pk=self.project_id)
+        self.assertEqual(source.version, 3)
+        self.assertEqual(source.document["floors"][0]["x"], 2)
+        self.assertEqual(source.generation["dynamicDocument"]["floors"][0]["x"], 1)
+        self.assertNotIn(str(self.sound.pk), str(source.document))
+        self.assertNotIn(str(self.sound.pk), str(source.generation))
+        self.door_object.refresh_from_db()
+        live_graph = self.door_object.data["blueprint"]["graphs"]["interact"]
+        self.assertEqual([node["type"] for node in live_graph["nodes"]], ["event", "state"])
+        self.assertEqual(live_graph["edges"], [
+            {"from": "event", "to": "node2", "output": "next", "kind": "execution"}])
+        snapshot = next(row for row in source.generation["objects"] if row["id"] == str(self.door_object.pk))
+        self.assertEqual(snapshot["data"]["blueprint"], self.door_object.data["blueprint"])
+
+        clone = import_campaign(export_campaign(self.campaign), self.gm, "Dynamic map without deleted sound")
+        copied = MapBuilderProject.objects.get(campaign=clone)
+        self.assertEqual(copied.document["floors"][0]["x"], 2)
+        self.assertEqual(copied.generation["dynamicDocument"]["floors"][0]["x"], 1)
+        self.assertFalse(Track.objects.filter(campaign=clone).exists())
+        self.command()
+        self.door_object.refresh_from_db()
+        self.assertEqual(self.door_object.data["door_state"], "open")
+        self.assertFalse(Playback.objects.filter(scene=self.scene).exists())
+        self.update_scene()
+        builder_services.update(clone.pk, self.gm.pk, copied.pk,
+            {"request_id": str(uuid.uuid4()), "expected_version": copied.version,
+             "expected_scene_version": copied.scene.version})

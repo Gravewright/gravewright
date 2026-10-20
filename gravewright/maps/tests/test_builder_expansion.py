@@ -1,12 +1,15 @@
 """Expanded sources preserve layer organization and generate live native objects."""
 
 from copy import deepcopy
+from io import BytesIO
 import uuid
 
+from django.core.files.base import ContentFile
 from django.test import TestCase, override_settings
+from PIL import Image
 
-from gravewright.maps import builder_services
-from gravewright.maps.models import Scene
+from gravewright.maps import builder_services, extra_objects
+from gravewright.maps.models import MapAsset, Scene
 from . import test_builder_projects as fixtures
 
 
@@ -80,6 +83,49 @@ class BuilderExpansionTests(TestCase):
             with self.subTest(doc=doc):
                 response = self.save(document=doc)
                 self.assertEqual(response.status_code, 400, response.content)
+
+    def test_extreme_fitted_decorations_generate_update_and_clone_with_editable_boxes(self):
+        from gravewright.administration.archives import export_campaign, import_campaign
+        from gravewright.maps.blueprint_actions import validate_campaign_sprites
+
+        for pixels, box in (((1024, 1024), (.05, .05)), ((1, 1), (8, 8)), ((2048, 1), (.05, .05))):
+            with self.subTest(pixels=pixels, box=box):
+                self.project_id = uuid.uuid4()
+                self.url = f"{self.base}/projects/{self.project_id}"
+                doc = self.expanded()
+                doc["cellSize"] = 16
+                source = doc["decorations"][0]
+                source.update(x=0, y=0, width=box[0], height=box[1], rotation=0)
+                asset = MapAsset.objects.get(pk=source["assetId"])
+                output = BytesIO()
+                with Image.new("RGB", pixels, "#aa3300") as image:
+                    image.save(output, "PNG")
+                asset.width, asset.height = pixels
+                asset.file.save("fitted-decoration.png", ContentFile(output.getvalue()))
+                saved = self.save(document=doc)
+                self.assertEqual(saved.status_code, 200, saved.content)
+                generated = self.generate()
+                self.assertEqual(generated.status_code, 200, generated.content)
+                scene = Scene.objects.get(pk=generated.json()["scene"]["id"])
+                row = scene.elements.get(kind="images")
+                scale = min(box[0] * 16 / pixels[0], box[1] * 16 / pixels[1])
+                self.assertFalse(.001 <= scale <= 100)
+                self.assertEqual(row.data["scale"], scale)
+                self.assertEqual(row.data["spriteBase"], {
+                    "assetId": str(asset.pk), "layer": "map", "width": box[0] * 16, "height": box[1] * 16})
+                moved = extra_objects.image(scene, {"x": row.data["x"] + 1}, row.data)
+                self.assertEqual(moved["scale"], scale)
+                self.assertEqual(moved["spriteBase"], row.data["spriteBase"])
+                validate_campaign_sprites(self.campaign)
+                doc["name"] = "Updated fitted decoration"
+                self.assertEqual(self.save(document=doc, expected_version=1).status_code, 200)
+                updated = builder_services.update(self.campaign.pk, self.gm.pk, self.project_id, {
+                    "request_id": str(uuid.uuid4()), "expected_version": 2, "expected_scene_version": scene.version})
+                self.assertEqual(updated["scene"]["id"], str(scene.pk))
+                row.refresh_from_db()
+                self.assertEqual(row.data["scale"], scale)
+                clone = import_campaign(export_campaign(self.campaign), self.gm, "Fitted decoration clone")
+                validate_campaign_sprites(clone)
 
     def test_deleted_decoration_material_preserves_source_geometry(self):
         doc = self.expanded()

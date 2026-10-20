@@ -270,8 +270,13 @@ def detach_project_sound(campaign_id, track_id):
         Q(document__icontains=str(track_id)) | Q(generation__icontains=str(track_id))
     ):
         changed = False
-        for door in [*row.document.get("doors", []), *row.document.get("decorations", []), *row.document.get("regions", [])]:
-            changed = detach_blueprint_sound(door.get("blueprint"), track_id) or changed
+        documents = [row.document]
+        if isinstance(row.generation.get("dynamicDocument"), dict):
+            documents.append(row.generation["dynamicDocument"])
+        for document in documents:
+            for kind in ("doors", "decorations", "regions"):
+                for element in document.get(kind, []):
+                    changed = detach_blueprint_sound(element.get("blueprint"), track_id) or changed
         for obj in row.generation.get("objects", []):
             changed = detach_blueprint_sound(obj.get("data", {}).get("blueprint"), track_id) or changed
         if changed:
@@ -921,6 +926,13 @@ def native_objects(doc, scene, *, dynamic_planes=(), stored=None):
                     kind: {"id": str(uuid.uuid5(scene.pk, row["torch"][key])),
                            "enabled": source_by_id[row["torch"][key]]["enabled"]}
                     for key, kind in COMPONENTS.items() if key in row["torch"]})
+        elif not .001 <= scale <= 100:
+            # Contain-fit artwork can need an extreme scale even for a small,
+            # bounded box. Retain that box through native edits and archives.
+            previous = {"asset_id": row["assetId"], "scale": scale,
+                        "spriteBase": {"assetId": row["assetId"], "layer": "map",
+                                       "width": row["width"] * cell, "height": row["height"] * cell},
+                        "sprite": {"appearance": "asset", "assetId": row["assetId"]}}
         data = image(scene, {"asset_id": row["assetId"],
                              "x": (row["x"] + row["width"] / 2) * cell,
                              "y": (row["y"] + row["height"] / 2) * cell,

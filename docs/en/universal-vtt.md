@@ -54,6 +54,9 @@ the export, review its warnings and choose **Download Universal VTT**.
 Export reads the current native scene, including its latest raster and visible
 image placements. Dynamic surfaces retain their active material, mask, opacity,
 rotation and layer erasure when flattened. Hidden GM image artwork is omitted.
+Open door artwork retains its quarter turn around an explicitly selected start,
+center or end pivot. Fitted sprite and state images retain their displayed size,
+including scales outside the ordinary image editor's range.
 The exporter reads no unsaved or unpublished Builder draft and changes no scene
 state, project, receipt or stored file.
 

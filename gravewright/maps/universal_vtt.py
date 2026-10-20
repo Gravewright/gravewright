@@ -41,7 +41,7 @@ def _invalid():
 
 
 def _number(value, low=-1_000_000, high=1_000_000):
-    if type(value) not in (int, float) or not math.isfinite(value) or not low <= value <= high:
+    if type(value) not in (int, float) or not low <= value <= high or not math.isfinite(value):
         _invalid()
     return value
 
@@ -304,7 +304,12 @@ class _Budget:
 
 def _bounds(data, width, height):
     x, y = _number(data["x"]), _number(data["y"])
-    w, h = _number(data["natural_width"], .001) * _number(data["scale"], .001, 100), _number(data["natural_height"], .001) * data["scale"]
+    # Fitted state/sprite artwork can exceed the ordinary image editor's scale
+    # range. Composition still allocates only its clipped scene intersection.
+    scale = _number(data["scale"], 0)
+    if scale == 0:
+        _invalid()
+    w, h = _number(data["natural_width"], .001) * scale, _number(data["natural_height"], .001) * scale
     angle = math.radians(_number(data.get("rotation", 0), -36000, 36000))
     c, s = abs(math.cos(angle)), abs(math.sin(angle))
     left, top = max(0, math.floor(x - (c * w + s * h) / 2)), max(0, math.floor(y - (s * w + c * h) / 2))
@@ -488,6 +493,13 @@ def _raster(scene, rows, notes):
                 placement = {"x": (data["x1"] + data["x2"]) / 2, "y": (data["y1"] + data["y2"]) / 2,
                              "natural_width": math.hypot(dx, dy), "natural_height": data.get("thickness", 14),
                              "scale": 1, "rotation": math.degrees(math.atan2(dy, dx))}
+                if data.get("door_state") == "open" and data.get("rotationAnchor") in ("start", "center", "end"):
+                    offset = {"start": 0, "center": .5, "end": 1}[data["rotationAnchor"]]
+                    pivot_x, pivot_y = data["x1"] + dx * offset, data["y1"] + dy * offset
+                    # Match the native clockwise quarter turn around the pivot.
+                    placement["x"], placement["y"] = (pivot_x - (placement["y"] - pivot_y),
+                                                       pivot_y + (placement["x"] - pivot_x))
+                    placement["rotation"] += 90
                 _place(canvas, image, placement, budget)
         return canvas
     except Exception:

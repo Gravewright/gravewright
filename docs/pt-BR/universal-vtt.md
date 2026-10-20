@@ -59,7 +59,11 @@ Universal VTT**.
 A exportação lê a cena nativa atual, incluindo seu raster mais recente e imagens
 visíveis. Superfícies dinâmicas mantêm material ativo, máscara, opacidade,
 rotação e apagamento por camada ao serem achatadas. Imagens ocultas do GM são
-omitidas. O exportador não lê rascunhos do Builder não salvos ou não publicados e
+omitidas. A imagem de uma porta aberta mantém o giro de 90° em torno do pivô
+explicitamente escolhido no início, centro ou fim da porta. Sprites e imagens de
+estado ajustados à caixa mantêm o tamanho exibido, inclusive com escalas fora da
+faixa do editor comum de imagens.
+O exportador não lê rascunhos do Builder não salvos ou não publicados e
 não modifica cena, projeto, recibos nem arquivos armazenados.
 
 O download contém um fundo PNG único, informações da grade, segmentos de parede,

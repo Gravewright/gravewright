@@ -152,6 +152,56 @@ def check_browser(base, seed, output, executable):
             idle()
             records.append({'case': 'painting-undo-and-redo-save-automatically-and-retain-authored-history'})
 
+            # A rejected document has a known outcome. Neither Undo to the
+            # acknowledged map nor a later successful repair may recover its
+            # old body or mistake its receipt for an uncertain write.
+            pattern = '**/map-builder/projects/*'
+            rejected = []
+
+            def reject_invalid_project(route):
+                if project_write(route.request) and route.request.post_data_json['document']['name'].startswith('Synthetic rejected validation'):
+                    rejected.append(deepcopy(route.request.post_data_json))
+                    route.fulfill(status=400, json={'error': 'Synthetic document validation rejection'})
+                else:
+                    route.continue_()
+
+            page.route(pattern, reject_invalid_project)
+            routes.append((pattern, reject_invalid_project))
+            before_rejection = review.project(identifier)
+            name('Synthetic rejected validation before Undo')
+            expect(page.locator('[data-map-builder]')).to_have_attribute('data-save-state', 'blocked')
+            draft_key = f'gravewright.map-builder.draft.{campaign}.{identifier}'
+            rejected_draft = page.evaluate('key=>JSON.parse(sessionStorage.getItem(key))', draft_key)
+            assert not rejected_draft['pending'] and not rejected_draft['saveAttempt'], rejected_draft
+            assert rejected_draft['document']['name'] == 'Synthetic rejected validation before Undo'
+            page.locator('[data-builder-undo]').click()
+            idle()
+            assert review.project(identifier)['document'] == before_rejection['document']
+            assert page.evaluate('key=>sessionStorage.getItem(key)', draft_key) is None
+            page.reload()
+            wait_ready(page)
+            idle()
+            assert len(rejected) == 1, rejected
+            name('Synthetic rejected validation before repair')
+            expect(page.locator('[data-map-builder]')).to_have_attribute('data-save-state', 'blocked')
+            name('Synthetic repaired document saves without a false recovery conflict')
+            repaired = persisted(lambda value: value['document']['name'] == 'Synthetic repaired document saves without a false recovery conflict')
+            idle()
+            assert page.evaluate('key=>sessionStorage.getItem(key)', draft_key) is None
+            page.reload()
+            wait_ready(page)
+            idle()
+            assert review.project(identifier)['document'] == repaired['document']
+            assert len(rejected) == 2, rejected
+            page.unroute(pattern, reject_invalid_project)
+            routes.remove((pattern, reject_invalid_project))
+            records.append({'case': 'validation-rejection-undo-and-repaired-save-drop-only-rejected-receipts-and-reload-without-stale-recovery'})
+            # Reload restores the project, while the next gesture explicitly
+            # selects its transient authoring tool and material again.
+            builder_tool(page, 'floor')
+            page.locator('[data-builder-brush-material]').select_option(floor_asset)
+            builder_workspace(page)
+
             # The first response is held after the server commits. Authoring
             # continues while it is in flight, then the later snapshot follows.
             held = {}
@@ -360,6 +410,43 @@ def check_browser(base, seed, output, executable):
             expect(card(modal, counter).locator('[data-blueprint-param=target]')).to_have_value('6')
             modal.locator('[data-blueprint-close]').click()
             records.append({'case': 'smart-object-graph-persists-without-save-close-flushes-valid-edits-and-invalid-field-blocks-close-without-committing'})
+
+            # The graph and project have independent save queues. Once the
+            # project's retries are exhausted, the modal Retry must resume that
+            # same project operation rather than returning its cached error.
+            network = {'online': False, 'attempts': []}
+
+            def fail_until_reconnected(route):
+                if not project_write(route.request):
+                    route.continue_()
+                    return
+                network['attempts'].append(deepcopy(route.request.post_data_json))
+                if network['online']:
+                    route.continue_()
+                else:
+                    route.fulfill(status=503, json={'error': 'Synthetic offline project save'})
+
+            page.route(pattern, fail_until_reconnected)
+            routes.append((pattern, fail_until_reconnected))
+            modal = open_editor(owner_id)
+            target = card(modal, counter).locator('[data-blueprint-param=target]')
+            target.fill('7')
+            target.dispatch_event('change')
+            expect(modal.locator('[data-blueprint-autosave]')).to_have_attribute('data-state', 'error', timeout=30_000)
+            assert len(network['attempts']) == 4, network
+            assert all(value == network['attempts'][0] for value in network['attempts']), network
+            network['online'] = True
+            modal.locator('[data-blueprint-retry]').click()
+            persisted(lambda value: saved_counter(value, 7))
+            expect(modal.locator('[data-blueprint-autosave]')).to_have_attribute('data-state', 'saved', timeout=20_000)
+            assert len(network['attempts']) == 5, network
+            assert network['attempts'][-1] == network['attempts'][0], network
+            modal.locator('[data-blueprint-close]').click()
+            expect(modal).to_have_count(0)
+            idle()
+            page.unroute(pattern, fail_until_reconnected)
+            routes.remove((pattern, fail_until_reconnected))
+            records.append({'case': 'smart-object-retry-resumes-exhausted-parent-project-save-with-the-original-operation-uuid'})
 
             for locale in ('en', 'pt-BR', 'es'):
                 change_locale(page, locale, campaign)

@@ -55,6 +55,10 @@ uncertain write by confirming its original receipt before sending newer local
 edits. Older drafts without that write's body pause for explicit reload or copy.
 If the initial library or project load fails, editing stays blocked and **Retry**
 reloads it without creating an empty replacement project.
+Correcting or undoing a rejected edit clears that rejected save attempt, so
+reloading does not report it as an uncertain write. After reconnecting, **Retry**
+in a Smart Object editor also resumes the pending project save with its original
+receipt; revision conflicts still require explicit recovery.
 
 Returning to the game waits for pending project changes. If saving fails, the
 editor stays open so the GM can retry or explicitly discard. Automatic saving
@@ -1685,6 +1689,9 @@ Ordinary images controlled by Change sprite use a private
 dimensions and a live `sprite` appearance. Participant projections omit both.
 Native edits preserve or adopt the bounded box; campaign archives remap its asset
 ID and validate the active image, fit and ownership before committing an import.
+Generated decorations whose fitted scale exceeds the ordinary image editor's
+range use the same restoration record, retaining their authored pixel box through
+generation, native edits, scene updates and campaign copies.
 Source light targets use authored IDs and are remapped to native scene IDs during
 generation. Doors without this field retain their existing behavior. Asset
 classification belongs to the project rather than changing the campaign image
@@ -1726,7 +1733,9 @@ as do Change sprite nodes that used them; a live sprite using the image is clear
 Set appearance actions using a deleted material are removed and their execution
 continuations reconnected; connected data references never become execution wires.
 Deleting a campaign sound removes its sound nodes and reconnects their
-continuations. Deleting a native light removes the affected live action references;
+continuations in both the current source and the generated snapshot, including
+dynamic-surface recipes, so campaign copies remain importable after deletion.
+Deleting a native light removes the affected live action references;
 deleting a generated light still causes the normal scene-update conflict.
 
 `builder_render.py` rasterizes the validated document; `builder_services.py`

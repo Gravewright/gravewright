@@ -255,7 +255,16 @@ function mountWorkspace(root) {
                 const job = (async () => {
                     const { id, ...payload } = snapshot.payload;
                     state.saveAttempt = clone(snapshot); rememberDraft();
-                    const result = await operation('/projects/' + id, payload);
+                    let result;
+                    try { result = await operation('/projects/' + id, payload); }
+                    catch (cause) {
+                        // Validation and revision rejection did not commit this snapshot.
+                        // Uncertain transport failures must retain its body and receipt.
+                        if ((cause.status === 400 || cause.conflict) && !disposed && epoch === autosaveEpoch && state.id === id) {
+                            state.saveAttempt = null; rememberDraft();
+                        }
+                        throw cause;
+                    }
                     if (disposed || epoch !== autosaveEpoch || state.id !== id) return result.project;
                     state.version = result.project.version;
                     // A response acknowledges its own snapshot. Keep newer edits,
@@ -321,7 +330,7 @@ function mountWorkspace(root) {
             const result = await api(path, { ...payload, request_id: state.pending.get(key) });
             state.pending.delete(key); rememberDraft(); return result;
         } catch (cause) {
-            if (cause.conflict) state.pending.delete(key);
+            if (cause.status === 400 || cause.conflict) { state.pending.delete(key); rememberDraft(); }
             throw cause;
         }
     }
@@ -2602,7 +2611,7 @@ function mountWorkspace(root) {
                 const target = { kind: owner.sourceKind, id: owner.id }, item = itemFor(target);
                 if (!item || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));
                 if (!sameDocument(item.blueprint, blueprint)) { item.blueprint = blueprint; commit(); renderCanvas(); renderProperties(); }
-                await saveCurrent({ settings: false });
+                await saveCurrent({ settings: false, retry: true });
             }, discard: (owner, blueprint) => {
                 const item = itemFor({ kind: owner.sourceKind, id: owner.id }); if (!item) return;
                 if (blueprint === undefined) delete item.blueprint; else item.blueprint = blueprint;
@@ -2627,7 +2636,7 @@ function mountWorkspace(root) {
             onSave: async blueprint => {
                 const current = itemFor(target); if (!current || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));
                 if (!sameDocument(current.blueprint, blueprint)) { current.blueprint = blueprint; commit(); renderCanvas(); renderProperties(); }
-                await saveCurrent({ settings: false });
+                await saveCurrent({ settings: false, retry: true });
             }, onDiscard: blueprint => {
                 const current = itemFor(target); if (!current) return;
                 if (blueprint === undefined) delete current.blueprint; else current.blueprint = blueprint;

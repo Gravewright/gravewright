@@ -60,6 +60,11 @@ seu recibo original antes de enviar edições locais mais recentes. Rascunhos
 antigos sem o corpo dessa escrita pausam para recarregar ou copiar explicitamente.
 Se o carregamento inicial da biblioteca ou do projeto falhar, a edição permanece
 bloqueada e **Tentar novamente** recarrega sem criar um projeto vazio substituto.
+Corrigir ou desfazer uma edição rejeitada limpa a tentativa de salvamento
+rejeitada, evitando que recarregar a aba a trate como escrita incerta. Após
+reconectar, **Tentar novamente** no editor de Objeto Inteligente também retoma
+o salvamento pendente do projeto com o recibo original; conflitos de revisão
+continuam exigindo recuperação explícita.
 
 Voltar ao jogo aguarda as mudanças pendentes do projeto. Se o salvamento falhar,
 o editor permanece aberto para tentar novamente ou descartar explicitamente.
@@ -1770,6 +1775,9 @@ em pixels e aparência ativa `sprite`. Projeções de participantes omitem ambos
 Edições nativas preservam ou adotam a caixa limitada; arquivos de campanha
 remapeiam o ID do asset e validam imagem ativa, ajuste e propriedade antes de
 confirmar a importação.
+Decorações geradas cujo ajuste exige escala fora da faixa do editor comum de
+imagens usam o mesmo registro de restauração, mantendo a caixa em pixels do
+projeto na geração, em edições nativas, na atualização da cena e em cópias da campanha.
 
 Os alvos de luz usam IDs de
 origem do projeto e são remapeados para IDs nativos da cena na geração. Portas sem
@@ -1813,7 +1821,9 @@ da cena, assim como os nós Trocar imagem que as usavam; uma imagem ativa que a
 usava é removida. Ações Definir aparência que usam um material excluído são removidas
 e suas continuações de execução são reconectadas; referências de dados nunca viram
 conexões de execução. Excluir um som da campanha remove seus nós de som e reconecta suas
-continuações. Excluir uma luz nativa remove as referências afetadas das ações
+continuações tanto no projeto atual quanto no snapshot gerado, incluindo as
+receitas de superfícies dinâmicas, permitindo importar cópias da campanha após
+a exclusão. Excluir uma luz nativa remove as referências afetadas das ações
 durante o jogo; excluir uma luz gerada continua causando o conflito normal de
 atualização da cena.
 
