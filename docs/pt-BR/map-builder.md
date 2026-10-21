@@ -154,7 +154,31 @@ ativo e inclui sua aparência padrão.
 **Painéis**, no canto superior direito do mapa, abre um painel auxiliar com as abas
 **Ferramentas**, **Camadas**, **Seleção**, **Configurações**, **Projetos** e **Revisão**. Fechar o painel
 mantém a biblioteca visível. Selecionar ou pintar não abre o painel automaticamente.
-As propriedades dos objetos ficam em **Seleção**. Selecione um elemento e edite
+As propriedades dos objetos ficam em **Seleção** e no menu de botão direito do
+objeto. Selecione um objeto e pressione **Shift+F10** ou a tecla de menu de
+contexto para abrir o mesmo menu. Em telas de toque, use **Opções do objeto**
+no início das propriedades da seleção.
+
+O menu abre modais separadas de **Propriedades**, **Aparência** e **Comportamento**,
+além de **Componentes da tocha**, **Filtros de presença**, editor nativo ou
+**Editar nós**, conforme o elemento selecionado. As mudanças de propriedades
+salvam ao aplicar cada campo; **Desfazer** as reverte. **Duplicar**, **Girar** e
+**Excluir** também ficam no menu.
+
+Para um Objeto ou Objeto vazio, escolha **Modelos prontos** e um modelo da lista.
+Os 14 modelos incluem baú, livro, altar, sino, armadilha de aviso, placa de
+pressão, desafio de dados, início de missão, conclusão de missão, placa de
+entrada, interruptor temporizado e controles de porta. Os mesmos modelos aparecem
+em **Comportamento** e no **Catálogo de objetos** do editor de nós. Busque no
+catálogo e configure porta, diário, destinatários ou dados conforme necessário.
+Marque **Adicionar som ao ativar** para escolher um som da campanha e seu volume,
+ou **Usar imagem ao ativar** para escolher outra imagem de Objeto. Opções
+desmarcadas não adicionam som nem substituição de imagem. O estado inativo
+mantém a imagem original; Objetos vazios continuam sem imagem. **Aplicar** instala
+os nós editáveis em uma etapa de desfazer; fechar o catálogo mantém o objeto
+inalterado. Substituir nós já autorados exige confirmação.
+
+Selecione um elemento e edite
 **Nome do elemento** (ou **Nome do objeto/Nome da região**) para nomeá-lo sem
 alterar o arquivo da imagem. Chãos, paredes, portas, objetos, luzes, partículas,
 shaders e regiões aceitam nomes de até 120 caracteres. Pressione **Enter** ou
@@ -635,19 +659,26 @@ alteração intencional no projeto é aplicada na atualização.
 
 Ações autorizadas de Mover/Girar reconhecem a geometria nativa no histórico de
 propriedade, conservando a fonte editável; atualizar a cena reaplica posições e
-ângulos autorados. Outras edições nativas ainda produzem conflito. Configurações
+ângulos autorados. Edições manuais no VTT em objetos gerados são importadas ao
+abrir o projeto, voltar à aba do navegador e antes de atualizar a cena.
+Mudanças compatíveis em nomes, geometria, imagens, luzes, efeitos e Blueprints
+aparecem no projeto editável; objetos gerados excluídos são removidos dele.
+Trechos de parede continuam editáveis de forma independente. Objetos adicionados
+diretamente à cena permanecem separados do projeto. Configurações
 de interação durante o jogo são preservadas quando seu padrão autorado não muda;
 uma mudança intencional na autoria é aplicada na atualização. A ativação de região
 é conservada enquanto ativação/camada autoradas não mudam; uma mudança
 intencional na autoria vence. Atualizações de configuração
 recalculam a base de ocupação sem executar grafos de presença.
 
-Atualizações exigem as revisões atuais do projeto e da cena. Se outro editor
-alterar qualquer um deles, recarregue antes de tentar novamente. Se um objeto
-gerado foi modificado ou excluído diretamente no VTT, a atualização é interrompida
-para preservar esse trabalho. Resolva essa edição antes de atualizar ou use
-**Salvar uma cópia**, quando os controles de conflito oferecerem a opção, para
-preservar um projeto independente. Mantenha
+Atualizações e sincronizações exigem as revisões atuais do projeto e da cena.
+Mudanças em propriedades diferentes são mescladas com as edições pendentes do
+projeto. Desfazer preserva as mudanças importadas do jogo ao reverter edições
+locais. Se a mesma propriedade tiver valores diferentes nas duas partes, a
+sincronização para e mantém o rascunho local; use **Recarregar projeto salvo** ou
+**Salvar uma cópia** para resolver. Mudanças de tipo de objeto e geometrias que
+o projeto não representa também param com um diagnóstico específico. Edições
+que ocorram durante a renderização ainda exigem nova sincronização. Mantenha
 dimensões e tamanho da célula ao atualizar cenas com conteúdo inserido manualmente.
 Projetos existentes nas versões 1/2 podem adquirir histórico de propriedade se os
 IDs originalmente gerados, dados nativos e geometria da grade ainda corresponderem
@@ -724,7 +755,7 @@ em vez de repetir a mesma edição recusada.
 | O salvamento fica pausado | Corrija o campo destacado de configurações/propriedades/grafo ou desfaça a edição rejeitada. Campos inválidos do grafo também impedem fechar o editor. |
 | O salvamento falhou após perder a conexão | Mantenha a aba atual e use **Tentar novamente** ao reconectar. Uma escrita incerta repete o recibo original; uma correção de validação usa uma nova operação. |
 | Apareceu um conflito de revisão | Use **Recarregar projeto salvo** para adotar a versão do servidor ou **Salvar uma cópia** para preservar o rascunho local. Repetir Tentar novamente não atualiza silenciosamente uma revisão antiga. |
-| A atualização informou objeto gerado alterado/excluído | Resolva a edição manual na cena antes de atualizar. Use os controles de recuperação/cópia oferecidos quando precisar de projeto independente; o projeto existente continua vinculado à cena. |
+| A atualização informou objeto gerado alterado/excluído | Reabra o projeto ou volte à aba dele para sincronizar edições compatíveis do jogo. Se os dois editores mudaram a mesma propriedade, resolva com os controles de recarregar/cópia oferecidos; o projeto existente continua vinculado à cena. |
 | Os jogadores ainda veem o mapa antigo | Confirme o sucesso de **Gerar cena/Atualizar cena** e confira qual cena é transmitida. Gerar uma cena privada não a ativa para jogadores. |
 | Camadas ocultas do editor aparecem na Prévia ou na cena | Ocultar camadas ajuda a editar. Prévia e geração incluem todas as camadas; controle a privacidade durante o jogo pelas camadas GM/imagens da mesa. |
 | O comportamento não fez nada | Confira evento inicial, ações explícitas, vínculos de Alvo, permissões de portas trancadas e pausa da automação. Use **Testar comportamento** e o Registro de automação para o diagnóstico. |
@@ -2016,6 +2047,7 @@ Todos os endpoints abaixo ficam em `/api/containers/<campaign_id>/map-builder`:
 | `POST /projects/<project_id>` | Criar ou salvar um projeto |
 | `POST /projects/<project_id>/generate` | Gerar cena a partir da revisão salva |
 | `POST /projects/<project_id>/update` | Atualizar a cena vinculada a partir da revisão salva |
+| `POST /projects/<project_id>/sync` | Importar mudanças compatíveis dos objetos nativos pertencentes ao projeto |
 | `GET /templates` | Listar modelos de comportamento da campanha, exclusivos do mestre |
 | `GET /templates/<template_id>` | Ler definição tipada e revisão do modelo |
 | `POST /templates/<template_id>` | Criar/atualizar um modelo independente |
@@ -2048,7 +2080,10 @@ esperam versão `0`. Salvar também leva `folder_id` e `document`. Repetir a mes
 operação lógica retorna seu recibo. Reutilizar o UUID com outro payload é rejeitado.
 Conflitos de revisão exigem reler o projeto atual; clientes não devem sobrescrever
 silenciosamente outra revisão salva. Atualizar também leva `expected_scene_version`.
-Seu manifesto de geração registra IDs, identidades de origem, tipos e dados dos objetos gerados; apenas
+A sincronização leva as mesmas duas revisões esperadas e devolve
+`{project, scene, synchronized}` sem alterar a cena nativa. O manifesto de geração
+registra IDs, identidades de origem, tipos, dados dos objetos gerados e uma base
+privada `sourceDocument`; apenas
 esses recursos pertencentes ao projeto podem ser substituídos ou removidos.
 A atualização confere permissões, revisões, propriedade e dados gerados após
 renderizar, dentro da transação de publicação. Notificações ocorrem após o commit;

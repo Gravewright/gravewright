@@ -269,13 +269,12 @@ window.gravewrightRealtime = {
       }
     });
   },
-  roll(payload) {
+  roll(payload, {requestId = crypto.randomUUID(), mapId = chatMapId} = {}) {
     if (getPath('_presence') !== 'seated') return Promise.reject(new Error('Connect to the table before rolling.'));
     if (rolls.size) return Promise.reject(new Error('A roll is already in progress.'));
-    const requestId = crypto.randomUUID();
     return new Promise((resolve, reject) => {
-      rolls.set(requestId, {payload: {...payload, mapId:chatMapId, requestId}, resolve, reject});
-      if (!send('dice.roll', {...payload, mapId:chatMapId, requestId})) {
+      rolls.set(requestId, {payload: {...payload, mapId, requestId}, resolve, reject});
+      if (!send('dice.roll', {...payload, mapId, requestId})) {
         rolls.delete(requestId); reject(new Error('Connect to the table before rolling.'));
       }
     });

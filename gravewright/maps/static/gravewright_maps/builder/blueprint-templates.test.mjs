@@ -90,3 +90,22 @@ test('new templates use the current format and all-zero configured Random weight
     const definition = captureTemplate(blueprint, { expose: templateParameterOptions(blueprint) });
     assert.throws(() => resolveTemplate(definition, { ownerId: id(2), parameters: { parameter1: 0, parameter2: 0 } }), /weights/);
 });
+
+test('roll visibility and quest status parameters round-trip with journal and player bindings', () => {
+    const blueprint = defaultBlueprint('lever'), graph = blueprint.graphs.interact = eventGraph('interact');
+    graph.nodes.push({ id: 'roll', type: 'requestRoll', expression: '1d20', label: id(40), visibility: 'public', audience: { scope: 'users', userIds: [id(40)] }, x: 360, y: 60 },
+        { id: 'quest', type: 'setQuestStatus', journalId: id(50), status: 'active', x: 680, y: 60 });
+    connectNodes(graph, 'event', 'next', 'roll'); connectNodes(graph, 'roll', 'next', 'quest');
+    const expose = templateParameterOptions(blueprint).filter(row => ['visibility', 'status'].includes(row.path.at(-1)));
+    assert.equal(expose.length, 2);
+    const definition = captureTemplate(blueprint, { catalog, expose });
+    validateTemplateDefinition(definition);
+    const parameters = Object.fromEntries(definition.parameters.map(row => [row.id, row.path.at(-1) === 'status' ? 'completed' : 'gm']));
+    const resolved = resolveTemplate(definition, { catalog, bindings: bindingsFor(definition), parameters });
+    const [, roll, quest] = resolved.graphs.interact.nodes;
+    assert.equal(roll.visibility, 'gm'); assert.equal(roll.label, id(40));
+    assert.deepEqual(roll.audience.userIds, [id(40)]);
+    assert.equal(quest.status, 'completed'); assert.equal(quest.journalId, id(50));
+    const badStatus = definition.parameters.find(row => row.path.at(-1) === 'status').id;
+    assert.throws(() => resolveTemplate(definition, { catalog, bindings: bindingsFor(definition), parameters: { ...parameters, [badStatus]: 'invalid' } }), /quest/);
+});

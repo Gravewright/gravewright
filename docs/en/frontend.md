@@ -94,7 +94,9 @@ boundaries:
 | `project-persistence.js` | Draft recovery/storage, HTTP/CSRF, receipt identities and the save queue |
 | `workspace-library.js` | Campaign asset catalog, brush choices and material controls |
 | `workspace-import.js` | Asset import/edit modals and their listener lifetime |
-| `inspector-controller.js` | Selection properties and region/torch configuration |
+| `inspector-controller.js` | Shared selection fields, section modals and region/torch configuration |
+| `object-menu.js` | Object context menu, keyboard navigation and model submenu |
+| `interactive-presets.js` | Configurable generic object Blueprints and their catalog modal |
 | `layer-controller.js` | Layer controls, contents, selection and drag listeners |
 | `canvas-renderer.js` | SVG artwork, selection overlays and disposable terrain/wall caches |
 
@@ -265,6 +267,39 @@ free whole-token footprint inside the destination region and queues arrival
 presence after the current object cache is persisted. A durable arrival gate
 prevents return loops until the token leaves the region; scene navigation and
 party membership are unchanged.
+
+The **Interactive object catalog** in Builder selection, **Ready-made models**
+in the object context menu and the node editor's **Object catalog** share 14
+editable generic lever Blueprints. Models cover switches, chests, secret
+passages, books, altars, warning traps, bells, pressure plates, dice requests,
+quest activation/completion, entrance signs, timed switches and door buttons.
+The configuration modal offers optional sound/volume and active-state artwork;
+unchecked options produce no sound node or image override. State artwork comes
+only from Object assets and restores the original artwork while inactive.
+Applying a model keeps object identity and geometry; replacing authored behavior
+requires confirmation in the application modal and can be undone. The trap warns
+on entry while armed; it does not apply system-specific damage. The inspector's
+Behavior choices open the same configuration modal. Property section modals
+reuse the inspector controls and save through its existing commits and history.
+
+Blueprint V2 `requestRoll` stores a validated dice `expression` (up to 512
+characters), `label` (up to 48), `visibility` (`public` or `gm`) and `audience`.
+Audience controls offer the triggering user, all players, one player or chosen
+users. One player persists as the compatible `users` scope with one UUID.
+Authorized recipients receive a native modal and explicitly choose **Roll**;
+the normal server dice service validates and posts the result to chat. The event
+UUID identifies the same logical roll per user across retries and tabs, and the
+originating scene stays fixed. Streamers cannot receive roll requests.
+The action continues immediately: it does not branch on a roll result.
+
+**Open journal** uses the existing `showHandout` contract for diaries, quests and
+quest boards, without granting reading access. `setQuestStatus` stores a quest
+`journalId` and one of `draft`, `available`, `active`, `completed`, `failed` or
+`archived`. The server validates campaign/type and applies the fixed GM-authored
+action through the journal service within the map transaction; players do not
+gain journal edit permission. Rehearsals report quest changes and roll prompts
+without persisting journals or delivering player windows. Templates, delayed
+references and archives preserve these bindings and authored roll labels.
 
 Blueprint V2 `all`/`any` are pure Boolean values with inputs `a`–`d` and `result`.
 Connected inputs evaluate in fixed order without short circuit; fewer than two

@@ -49,6 +49,8 @@ def catalog_fields(identifier):
         "setAppearance": {"assetId": identifier},
         "showMessage": {"text": "Probe", "audience": {"scope": "trigger"}},
         "showHandout": {"journalId": identifier, "audience": {"scope": "trigger"}},
+        "requestRoll": {"expression": "1d20", "label": "Probe", "visibility": "public", "audience": {"scope": "trigger"}},
+        "setQuestStatus": {"journalId": identifier, "status": "active"},
         "cameraFocus": {"focusX": 1, "focusY": 1, "audience": {"scope": "trigger"}},
         "teleport": {"destinationId": identifier}, "once": {}, "counter": {"target": 2},
         "cooldown": {"seconds": 1},

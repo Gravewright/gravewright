@@ -1,0 +1,31 @@
+.ownership-modal-overlay > .table-form-modal.map-builder-property-modal { display: flex; flex-direction: column; width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: hidden; color: var(--text); font: 14px/1.4 var(--font); }
+.map-builder-property-modal > header, .map-builder-property-modal > footer { display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+.map-builder-property-modal > header { border-bottom: 1px solid var(--border); }
+.map-builder-property-modal > footer { justify-content: flex-end; border-top: 1px solid var(--border); }
+.map-builder-property-modal > header strong { min-width: 0; overflow-wrap: anywhere; }
+.map-builder-property-modal__body { display: grid; align-content: start; flex: 1 1 auto; gap: var(--space-3); min-height: 0; overflow: auto; padding: var(--space-4); }
+.map-builder-property-modal__body [hidden] { display: none !important; }
+.map-builder-property-modal__body > strong { color: var(--text); font-size: 16px; overflow-wrap: anywhere; }
+.map-builder-property-modal__body label, .map-builder-property-modal__body .map-builder__state-field { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr); align-items: center; gap: var(--space-3); min-width: 0; color: var(--text-muted); }
+.map-builder-property-modal__body .map-builder__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.map-builder-property-modal__body .map-builder__fields > label { grid-template-columns: minmax(0, 1fr); align-items: end; gap: var(--space-1); }
+.map-builder-property-modal__body :is(.map-builder__torch-lit, .map-builder__check) { display: flex; align-items: center; gap: var(--space-2); }
+.map-builder-property-modal :is(input,select,textarea) { box-sizing: border-box; width: 100%; min-width: 0; min-height: 34px; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; }
+.map-builder-property-modal input[type=checkbox] { width: 16px; min-height: 16px; margin: var(--space-0); flex: 0 0 auto; }
+.map-builder-property-modal textarea { resize: vertical; }
+.map-builder-property-modal button { min-height: 34px; padding: var(--space-1) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; cursor: pointer; white-space: normal; }
+.map-builder-property-modal button:hover:not(:disabled) { border-color: var(--accent); }
+.map-builder-property-modal button:disabled { cursor: default; opacity: .55; }
+.map-builder-property-modal .map-builder__hint { margin: var(--space-0); color: var(--text-muted); font-size: 12px; }
+.map-builder-property-modal__body :is(.map-builder__torch-components, .map-builder__region-preset) { display: grid; gap: var(--space-3); min-width: 0; }
+.map-builder-property-modal__body .map-builder__torch-component, .map-builder-property-modal__body .map-builder__region-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.map-builder-property-modal__body .map-builder__torch-component > span { flex: 1 1 auto; }
+.map-builder-property-modal__body .map-builder__segmented { display: flex; min-width: 0; }
+.map-builder-property-modal__body .map-builder__segmented > button { flex: 1 1 0; min-width: 0; border: 0; border-radius: 0; padding: var(--space-1); }
+.map-builder-property-modal__body .map-builder__segmented > button + button { border-left: 1px solid var(--border); }
+.map-builder-property-modal__body .map-builder__segmented > button[aria-pressed=true] { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--surface)); box-shadow: inset 0 0 0 1px var(--accent); }
+.map-builder-property-modal__body .map-builder__shader-source label { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 560px) {
+  .ownership-modal-overlay > .table-form-modal.map-builder-property-modal { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .map-builder-property-modal__body label, .map-builder-property-modal__body .map-builder__state-field { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+}

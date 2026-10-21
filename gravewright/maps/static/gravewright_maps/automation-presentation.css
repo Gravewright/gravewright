@@ -6,4 +6,13 @@
 .automation-presentation__messages { min-height: 0; overflow: auto; padding: var(--space-3); }
 .automation-presentation__messages p { margin: var(--space-0) var(--space-0) var(--space-3); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; }
 .automation-presentation__messages p:last-child { margin-bottom: var(--space-0); }
+.automation-presentation__roll { display: grid; gap: var(--space-3); margin: var(--space-0) var(--space-0) var(--space-3); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.automation-presentation__roll:last-child { margin-bottom: var(--space-0); }
+.automation-presentation__roll :is(strong, code) { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; }
+.automation-presentation__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.automation-presentation__audience { color: var(--text-muted); font-size: 12px; }
+.automation-presentation__roll button[type=submit] { border-color: var(--accent); }
+.automation-presentation__roll p { margin: var(--space-0); }
+.automation-presentation__roll [hidden] { display: none; }
+.automation-presentation__result { color: var(--text-muted); }
 .house-menu__preference-row input[data-automation-camera-preference] { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: var(--space-0); }

@@ -90,6 +90,12 @@ def update(request, campaign_id, project_id):
         campaign_id, request.user.pk, project_id, body(request)))
 
 
+@require_POST
+def sync(request, campaign_id, project_id):
+    return response(request, campaign_id, lambda: builder_services.sync(
+        campaign_id, request.user.pk, project_id, body(request)))
+
+
 @require_GET
 def templates(request, campaign_id):
     return response(request, campaign_id, lambda: blueprint_templates.catalog(campaign_id, request.user.pk))

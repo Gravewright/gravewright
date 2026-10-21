@@ -3,6 +3,7 @@
   height: min(760px, calc(100dvh - 32px)); max-height: calc(100dvh - 32px); color: var(--text); font: 14px/1.4 var(--font);
 }
 .blueprint-templates > header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--border); }
+.blueprint-templates > header > button { flex-shrink: 0; }
 .blueprint-templates__body { display: flex; flex-direction: column; min-height: 0; padding: var(--space-3); gap: var(--space-3); }
 .blueprint-templates__toolbar, .blueprint-templates__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .blueprint-templates__panes { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(0, 3fr); gap: var(--space-3); min-height: 0; }

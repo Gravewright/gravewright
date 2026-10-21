@@ -148,7 +148,29 @@ and includes its default appearance.
 **Panels**, at the upper right of the map, opens an auxiliary panel with **Tools**,
 **Layers**, **Selection**, **Settings**, **Projects** and **Review** tabs. The panel can be closed
 without hiding the library. Selecting or painting does not open the panel automatically.
-Object properties stay in **Selection**.
+Object properties are available in **Selection** and through the object's
+right-click menu. Select an object and press **Shift+F10** or the keyboard's
+context-menu key for the same menu. On touch screens, use **Object options**
+at the top of its selection properties.
+
+The menu opens separate **Properties**, **Appearance** and **Behavior** modals,
+plus **Torch components**, **Presence filters**, the native editor or **Edit
+nodes** when supported by the selected element. Property changes save as fields
+are applied; **Undo** reverses them. **Duplicate**, **Rotate** and **Delete**
+are also available in the menu.
+
+For an Object or Empty Object, choose **Ready-made models** and a model from the
+list. The 14 models include a chest, book, altar, bell, warning trap, pressure
+plate, dice challenge, quest giver, quest completion, entrance sign, timed switch
+and door controls. The same models appear under **Behavior** and in the node
+editor's **Object catalog**. Search the catalog and configure its door, journal,
+recipients or dice as needed. Check **Add a sound when activated** to choose a
+campaign sound and volume, or **Use an active image** to choose another Object
+image. Unchecked options add no sound or image override. The inactive state
+keeps the original image; Empty Objects remain image-free. **Apply** installs
+the editable nodes as one undo step; closing the catalog leaves the object
+unchanged. Replacing existing authored nodes requires confirmation.
+
 Select one element and edit **Element name** (or **Object name/Region name**)
 to name it independently of its image file. Floors, walls, doors, decorations,
 lights, particles, shaders and regions support names of up to 120 characters.
@@ -605,18 +627,25 @@ change is applied on update.
 
 Authorized Move/Rotate actions acknowledge their native geometry in ownership
 history while leaving the editable source unchanged; updating the scene reapplies
-authored positions and angles. Unrelated native edits still conflict. Runtime
+authored positions and angles. Manual VTT edits to generated objects are imported
+when the project opens, when returning to its browser tab and before updating the
+scene. Compatible changes to names, geometry, artwork, lights, effects and
+Blueprints appear in the editable project; deleted generated objects disappear
+from it. Split wall spans remain independently editable. Manual objects added
+directly to the scene remain separate from the project. Runtime
 interaction settings are preserved when their authored default is unchanged,
 and an intentional authored change applies on update. Region enabled state stays
 live while authored enabled/layer settings remain unchanged; an intentional
 authored change wins. Configuration updates quietly baseline
 occupancy rather than firing presence graphs.
 
-Updates require both current project and scene revisions. If another editor
-changes either, reload before trying again. If a generated object was modified
-or deleted directly in the VTT, the update stops instead of overwriting that
-work. Resolve that edit before updating, or use **Save a copy** when the
-conflict controls offer it to preserve an independent project. Keep map dimensions
+Updates and synchronization require both current project and scene revisions.
+Changes to different properties merge with pending project edits. Undo keeps
+imported game changes while undoing local edits. If the same property was edited
+differently in both places, synchronization stops and keeps the local draft;
+use **Reload saved project** or **Save a copy** to resolve it. Object type changes
+and geometry the project cannot represent also stop with a specific diagnostic.
+Changes that race with rendering still require a fresh synchronization. Keep map dimensions
 and cell size unchanged when the scene contains manually placed content. Existing version
 1/2 projects can acquire ownership history if their original generated IDs,
 native data and grid geometry still match exactly, allowing only live door-state
@@ -690,7 +719,7 @@ rejected edit.
 | Saving stays blocked | Correct the highlighted settings/property/graph field, or undo the rejected edit. Graph fields with invalid values also block closing. |
 | Saving fails after a connection loss | Keep the current tab and use **Retry** after reconnecting. Retrying an uncertain write keeps its original receipt; correcting validation uses a new operation. |
 | A revision conflict appears | Use **Reload saved project** to adopt the server version or **Save a copy** to preserve the local draft. Repeated Retry does not rebase a stale revision. |
-| Update reports a changed/deleted generated object | Resolve the manual scene edit before updating. Use the offered recovery/copy controls when an independent project is needed; the existing project remains linked to its scene. |
+| Update reports a changed/deleted generated object | Reopen the project or return to its tab to synchronize compatible game edits. If both editors changed the same property, use the offered reload/copy controls to resolve the conflict; the existing project remains linked to its scene. |
 | Players still see the old map | Confirm that **Generate scene/Update scene** succeeded, then verify which scene is broadcast. Generating a private scene does not activate it for players. |
 | Hidden editor layers appear in Preview or the scene | Layer hiding is an editing aid. Preview and generation include all project layers; control live privacy through the game's GM/image layers. |
 | Behavior did nothing | Check its starting event, explicit actions, Target bindings, player lock permissions and automation pause state. Use **Test behavior** and the Automation log for diagnostics. |
@@ -1923,6 +1952,7 @@ All endpoints below are under `/api/containers/<campaign_id>/map-builder`:
 | `POST /projects/<project_id>` | Create or save a project |
 | `POST /projects/<project_id>/generate` | Generate a scene from the saved revision |
 | `POST /projects/<project_id>/update` | Update the linked scene from the saved revision |
+| `POST /projects/<project_id>/sync` | Import compatible changes from owned native objects into the source project |
 | `GET /templates` | List this campaign's GM-owned behavior templates |
 | `GET /templates/<template_id>` | Read a typed template definition and revision |
 | `POST /templates/<template_id>` | Create/update a snapshot template |
@@ -1954,8 +1984,10 @@ expect version `0`. Save also carries `folder_id` and `document`. Retrying the
 same logical request returns its receipt. Reusing that UUID for a different
 payload is rejected. A revision conflict requires rereading the current project;
 clients must not silently overwrite another saved revision. Update also carries
-`expected_scene_version`. Its generation manifest records generated object IDs,
-authored source identities, kinds and data; only those owned resources can be
+`expected_scene_version`. Synchronization carries the same two expected revisions
+and returns `{project, scene, synchronized}` without changing the native scene.
+Its generation manifest records generated object IDs, authored source identities,
+kinds, data and a private `sourceDocument` baseline; only those owned resources can be
 replaced or removed. An update
 rechecks permissions, revisions, ownership and generated data after rendering,
 inside the publication transaction. Notifications occur after commit, and

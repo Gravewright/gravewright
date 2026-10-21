@@ -197,6 +197,9 @@ def validate_reference_ownership(blueprint, *, campaign_id=None, scene_id=None):
         handouts = [node["journalId"] for node in nodes if node["type"] == "showHandout"]
         if Journal.objects.filter(pk__in=handouts).exclude(campaign_id=campaign_id).exists():
             raise MapError("Choose a handout from this campaign.")
+        quests = [node["journalId"] for node in nodes if node["type"] == "setQuestStatus"]
+        if Journal.objects.filter(pk__in=quests).exclude(campaign_id=campaign_id, type="quest").exists():
+            raise MapError("Choose a quest from this campaign.")
 
 
 def detach_blueprint_art(blueprint, asset_id):
@@ -458,9 +461,11 @@ def _steps(graph, result, sound_names):
             step["visible"] = node["visible"]
         elif node["type"] == "setAppearance":
             step["assetId"] = node["assetId"]
-        elif node["type"] in ("showMessage", "showHandout", "cameraFocus"):
+        elif node["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
             step["audience"] = deepcopy(node["audience"])
-            step.update({key: node[key] for key in ("text", "journalId", "focusX", "focusY") if key in node})
+            step.update({key: node[key] for key in ("text", "journalId", "expression", "label", "visibility", "focusX", "focusY") if key in node})
+        elif node["type"] == "setQuestStatus":
+            step.update(journalId=node["journalId"], status=node["status"])
         elif node["type"] == "teleport":
             step["destinationId"] = node["destinationId"]
         elif node["type"] in ("lightReference", "soundReference"):
@@ -1008,8 +1013,12 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                     if (target_type in ("light", "lightset")) != (candidate.kind == "lights"):
                         mark_unsupported(node, aim or key)
                         continue
-                if node["type"] in ("showMessage", "showHandout", "cameraFocus"):
+                if node["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
                     world_results[node["id"]] = {"recipients": present(scene, who, node, context)}
+                    continue
+                if node["type"] == "setQuestStatus":
+                    from .blueprint_world import set_quest_status
+                    world_results[node["id"]] = set_quest_status(scene, who, node)
                     continue
                 if node["type"] == "teleport":
                     if skip_unbound_teleport and not context.get("tokenId"):

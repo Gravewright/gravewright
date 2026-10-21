@@ -130,7 +130,7 @@ class WorldPresentationTests(TestCase):
         Journal.objects.create(campaign=self.other, title="Other private document")
         result = presentation_catalog(self.membership)
         self.assertEqual({row["id"] for row in result["users"]}, {str(self.gm.pk), str(self.player.pk), str(self.streamer.pk)})
-        self.assertEqual(result["handouts"], [{"id": str(self.journal.pk), "name": self.journal.title}])
+        self.assertEqual(result["handouts"], [{"id": str(self.journal.pk), "name": self.journal.title, "type": self.journal.type}])
         with self.assertRaises(services.MapError):
             presentation_catalog(Membership.objects.get(campaign=self.campaign, user=self.player))
 

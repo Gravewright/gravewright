@@ -20,7 +20,7 @@ function* resourceSlots(blueprint) {
     for (const graph of Object.values(blueprint.graphs || {})) for (const node of graph.nodes || []) {
         const slot = { reference: ['targetId', 'element'], lightReference: ['targetId', 'light'], soundReference: ['trackId', 'sound'],
             light: ['targetId', 'light'], sound: ['trackId', 'sound'], soundControl: ['trackId', 'sound'],
-            showHandout: ['journalId', 'handout'], teleport: ['destinationId', 'element'], setAppearance: ['assetId', 'asset'] }[node.type];
+            showHandout: ['journalId', 'handout'], setQuestStatus: ['journalId', 'handout'], teleport: ['destinationId', 'element'], setAppearance: ['assetId', 'asset'] }[node.type];
         if (slot) yield [node, ...slot];
         if (node.type === 'sprite' && node.appearance === 'asset') yield [node, 'assetId', 'asset'];
         if (node.type === 'elementGroup') {
@@ -41,7 +41,8 @@ export function templateParameterOptions(blueprint) {
         const names = { light: ['enabled'], sound: ['volume'], soundControl: ['volume'], flame: ['enabled'], setInteraction: ['enabled'],
             setRegion: ['enabled'], setVisibility: ['visible'], counter: ['target'], cooldown: ['seconds'], delay: ['seconds'],
             timer: node.action === 'stop' ? [] : ['seconds'], move: ['dx', 'dy'], rotate: ['degrees'], getVariable: ['default'],
-            setVariable: ['value'], compareValue: ['expected'], switch: ['value'], showMessage: ['text'], cameraFocus: ['focusX', 'focusY'] }[node.type] || [];
+            setVariable: ['value'], compareValue: ['expected'], switch: ['value'], showMessage: ['text'],
+            requestRoll: ['expression', 'label', 'visibility'], setQuestStatus: ['status'], cameraFocus: ['focusX', 'focusY'] }[node.type] || [];
         const tails = names.map(name => [name]);
         if (node.type === 'switch') tails.push(...node.cases.map((_, position) => ['cases', position, 'value']));
         if (node.type === 'random') tails.push(...node.weights.map((_, position) => ['weights', position]));

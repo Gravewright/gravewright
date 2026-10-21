@@ -28,17 +28,20 @@ def _payload(raw, required, optional=()):
 
 
 def _snapshot(scene):
+    from gravewright.journals.models import Journal
     scene.refresh_from_db()
     elements = {str(row["id"]): {"kind": row["kind"], "data": row["data"], "version": row["version"]}
                 for row in SceneObject.objects.filter(scene=scene).values("id", "kind", "data", "version")}
     tokens = {str(row["id"]): {key: value for key, value in row.items() if key != "id"}
               for row in Token.objects.filter(scene=scene).values("id", "grid_x", "grid_y", "elevation", "version")}
     playback = Playback.objects.filter(scene=scene).values("data", "version").first()
+    journals = {str(row.pk): {"title": row.title, "status": row.data.get("status"), "version": row.version}
+                for row in Journal.objects.filter(campaign_id=scene.campaign_id, type="quest").only("id", "title", "data", "version")}
     waits = {str(row["id"]): {**{key: value for key, value in row.items() if key not in ("id", "element_id", "due_at")},
                                "elementId": str(row["element_id"]), "dueAt": row["due_at"].isoformat()}
              for row in AutomationDelay.objects.filter(scene=scene).values(
                  "id", "element_id", "kind", "name", "event", "seconds", "status", "due_at")}
-    return {"elements": elements, "tokens": tokens, "audio": playback,
+    return {"elements": elements, "tokens": tokens, "journals": journals, "audio": playback,
             "sceneVariables": deepcopy(scene.settings.get("automationVariables", {})), "scheduled": waits}
 
 
@@ -87,7 +90,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
            next((entry for entry in runs if entry["elementId"] == str(row.pk)), None))
     run = deepcopy(run or {"stateBefore": element_state(row), "stateAfter": element_state(row), "events": []})
     changes = {}
-    for kind in ("elements", "tokens"):
+    for kind in ("elements", "tokens", "journals"):
         changes[kind] = []
         for key in dict.fromkeys([*before[kind], *after[kind]]):
             old, value = before[kind].get(key), after[kind].get(key)
@@ -108,7 +111,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
         warnings.append("destruction-timing-cancelled")
     if any(step["type"] in ("delay", "timer") for step in steps):
         warnings.append("timing-not-advanced")
-    if any(step["type"] in ("showMessage", "showHandout", "cameraFocus") for step in steps):
+    if any(step["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus") for step in steps):
         warnings.append("presentation-not-delivered")
     if scene.settings.get("automationPaused") is True:
         warnings.append("automation-paused")
@@ -116,7 +119,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
         warnings.append("missing-test-token")
     if error is not None:
         # A real command would roll back the whole chain, including earlier actions.
-        changes = {"elements": [], "tokens": [], **{kind: {"before": before[kind], "after": before[kind]}
+        changes = {"elements": [], "tokens": [], "journals": [], **{kind: {"before": before[kind], "after": before[kind]}
                     for kind in ("audio", "sceneVariables")}}
         scheduled = []
     # The run records its chain's end; presence passes that follow a teleport or

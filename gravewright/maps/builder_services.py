@@ -112,6 +112,36 @@ def detail(campaign_id, user_id, project_id):
     return {"project": view(project(project_id, who), who)}
 
 
+def sync(campaign_id, user_id, project_id, payload):
+    """Import authored VTT changes using the normal revision and retry contract."""
+    fields(payload, ("request_id", "expected_version", "expected_scene_version"), "map synchronization command")
+    project_id, request_id = identifier(project_id), identifier(payload.get("request_id"))
+    digest = fingerprint("sync", project_id, payload)
+    with transaction.atomic():
+        who = authority(campaign_id, user_id)
+        Campaign.objects.select_for_update().get(pk=who.campaign_id)
+        who = authority(campaign_id, user_id)
+        cached = replay(campaign_id, user_id, request_id, digest)
+        if cached is not None:
+            return cached
+        source = project(project_id, who)
+        expected(payload.get("expected_version"), source)
+        if not source.scene_id:
+            raise services.MapError("Generate a scene before updating it.", "conflict")
+        scene = services.scene(source.scene_id, who, write=True)
+        if type(payload.get("expected_scene_version")) is not int or payload["expected_scene_version"] != scene.version:
+            raise services.MapError("The scene changed. Reload the project before updating it.", "conflict")
+        from .builder_sync import reconcile
+        document, generation, synchronized = reconcile(source, scene, who)
+        if synchronized:
+            source.document, source.generation = document, generation
+            source.version += 1
+            source.save(update_fields=["document", "generation", "version", "updated_at"])
+        response = {"project": view(source, who), "scene": services.view(scene), "synchronized": synchronized}
+        record(campaign_id, user_id, request_id, digest, response)
+    return response
+
+
 def detach_project_art(campaign_id, asset_id):
     """Remove deleted material references while preserving editable geometry.
 
@@ -254,8 +284,9 @@ def detach_generation_art(source, asset_id):
                     apply_lever_appearance(SceneObject(scene=source.scene, kind="images", data=data))
             changed = before != data or changed
         kept.append(previous)
-    if isinstance(history.get("dynamicDocument"), dict):
-        changed = detach_document_art(history["dynamicDocument"], asset_id, available) or changed
+    for key in ("dynamicDocument", "sourceDocument"):
+        if isinstance(history.get(key), dict):
+            changed = detach_document_art(history[key], asset_id, available) or changed
     if changed:
         history["objects"] = kept
         source.generation = history
@@ -271,8 +302,9 @@ def detach_project_sound(campaign_id, track_id):
     ):
         changed = False
         documents = [row.document]
-        if isinstance(row.generation.get("dynamicDocument"), dict):
-            documents.append(row.generation["dynamicDocument"])
+        for key in ("dynamicDocument", "sourceDocument"):
+            if isinstance(row.generation.get(key), dict):
+                documents.append(row.generation[key])
         for document in documents:
             for kind in ("doors", "decorations", "regions"):
                 for element in document.get(kind, []):
@@ -388,7 +420,7 @@ def validate_imported_projects(campaign):
     who = SimpleNamespace(campaign=campaign, campaign_id=campaign.pk)
     for source in MapBuilderProject.objects.filter(campaign=campaign):
         history = source.generation if isinstance(source.generation, dict) else {}
-        for doc in (source.document, history.get("dynamicDocument", {})):
+        for doc in (source.document, history.get("dynamicDocument", {}), history.get("sourceDocument", {})):
             if not isinstance(doc, dict):
                 continue
             decorations = doc.get("decorations")
@@ -1116,11 +1148,13 @@ def generation_manifest(scene, doc, rows):
                        for row in doc.get("regions", [])}
     surface_defaults = {row["id"]: {"assetId": row["assetId"], "layerId": row["layerId"]}
                         for kind in ("floors", "walls") for row in doc[kind] if row.get("dynamic") is True}
-    return {"formatVersion": 1, "sceneId": str(scene.pk),
+    return {"formatVersion": 1, "sceneId": str(scene.pk), "sourceDocument": deepcopy(doc),
             "width": scene.width, "height": scene.height, "cellSize": doc["cellSize"],
             **({"dynamicDocument": deepcopy(doc)} if surface_defaults else {}),
             "objects": [{"id": str(row.pk), "sourceId": row.builder_source_id,
                          "kind": row.kind, "data": deepcopy(row.data),
+                         **({"nativeOverrides": deepcopy(row.builder_native_overrides)}
+                            if hasattr(row, "builder_native_overrides") else {}),
                          **({"sourceEnabled": source_enabled[row.builder_source_id]}
                             if row.kind in LIVE_ENABLED_KINDS else {}),
                          **({"sourceDiscovered": source_discovered[row.builder_source_id]}
@@ -1346,6 +1380,7 @@ def update(campaign_id, user_id, project_id, payload):
             scene, owned = update_target(source, who, payload, doc)
             generated = native_objects(doc, scene, dynamic_planes=dynamic_planes, stored=stored)
             previous_sources = {row["sourceId"]: owned[row["id"]] for row in source.generation["objects"]}
+            previous_overrides = {row["sourceId"]: row.get("nativeOverrides", {}) for row in source.generation["objects"]}
             previous_enabled_defaults = {row["sourceId"]: row.get("sourceEnabled", row["data"].get("enabled"))
                                          for row in source.generation["objects"] if row.get("kind") in LIVE_ENABLED_KINDS}
             previous_discovered_defaults = {row["sourceId"]: row.get("sourceDiscovered", row["data"].get("discovered", False))
@@ -1438,6 +1473,9 @@ def update(campaign_id, user_id, project_id, payload):
                     if memory:
                         row.data["automationMemory"] = memory
             remap_native_blueprints(generated, doc)
+            from .builder_sync import apply_overrides
+            for row in generated:
+                apply_overrides(row, previous_overrides.get(row.builder_source_id))
             old_files = list(scene.tiles.values_list("file", flat=True))
             scene.tiles.all().delete()
             for tile in tiles:

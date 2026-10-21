@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/containers/<uuid:campaign_id>/map-builder/projects/<uuid:project_id>', builder.document, name='map-builder-project'),
     path('api/containers/<uuid:campaign_id>/map-builder/projects/<uuid:project_id>/generate', builder.generate, name='map-builder-generate'),
     path('api/containers/<uuid:campaign_id>/map-builder/projects/<uuid:project_id>/update', builder.update, name='map-builder-update'),
+    path('api/containers/<uuid:campaign_id>/map-builder/projects/<uuid:project_id>/sync', builder.sync, name='map-builder-sync'),
     path('api/containers/<uuid:campaign_id>/library/asset-state', assets.state),
     path('api/containers/<uuid:campaign_id>/library/upload', assets.upload),
     path('api/containers/<uuid:campaign_id>/library/assets/<str:action>', assets.command),

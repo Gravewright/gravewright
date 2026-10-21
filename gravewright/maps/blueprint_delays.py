@@ -119,7 +119,8 @@ def _required_elements(blueprint, event, continuation=None):
             "sounds": {nodes[key]["trackId"] for key in wanted if nodes[key]["type"] in ("sound", "soundControl", "soundReference")},
             "assets": {nodes[key]["assetId"] for key in wanted if nodes[key]["type"] == "sprite"
                        and nodes[key].get("appearance") == "asset"},
-            "handouts": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "showHandout"}}
+            "handouts": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "showHandout"},
+            "quests": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "setQuestStatus"}}
     required["elements"].update(nodes[key]["destinationId"] for key in wanted if nodes[key]["type"] == "teleport")
     required["assets"].update(nodes[key]["assetId"] for key in wanted if nodes[key]["type"] == "setAppearance")
     for key in wanted:
@@ -168,7 +169,8 @@ def invalid_reason(row, element=None):
                  "lights": SceneObject.objects.filter(scene_id=row.scene_id, kind="lights"),
                  "sounds": Track.objects.filter(campaign_id=row.scene.campaign_id),
                  "assets": MapAsset.objects.filter(campaign_id=row.scene.campaign_id, generated_for__isnull=True),
-                 "handouts": Journal.objects.filter(campaign_id=row.scene.campaign_id)}
+                 "handouts": Journal.objects.filter(campaign_id=row.scene.campaign_id),
+                 "quests": Journal.objects.filter(campaign_id=row.scene.campaign_id, type="quest")}
     if any(identifiers != {str(pk) for pk in resources[kind].filter(pk__in=identifiers).values_list("pk", flat=True)}
            for kind, identifiers in required.items() if identifiers):
         return "A delayed blueprint target is missing."

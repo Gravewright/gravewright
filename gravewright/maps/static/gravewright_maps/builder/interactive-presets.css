@@ -1,0 +1,16 @@
+.interactive-presets .blueprint-templates__body { flex: 1; overflow: hidden; }
+.interactive-presets .blueprint-templates__panes { flex: 1; overflow: hidden; }
+.interactive-presets__sidebar { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; min-height: 0; }
+.interactive-presets__sidebar > input { flex-shrink: 0; }
+.interactive-presets__group { display: flex; flex-direction: column; gap: var(--space-2); }
+.interactive-presets__group h4 { margin: var(--space-2) var(--space-0) var(--space-0); color: var(--text-muted); font-size: 12px; }
+.interactive-presets [hidden] { display: none !important; }
+.interactive-presets label.interactive-presets__checkbox { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.interactive-presets__checkbox input { flex-shrink: 0; }
+.interactive-presets__options { display: grid; grid-template-columns: minmax(0, 3fr) minmax(70px, 1fr); gap: var(--space-2); }
+@media (max-width: 600px) {
+  .interactive-presets .blueprint-templates__panes { display: flex; flex-direction: column; overflow: auto; }
+  .interactive-presets__sidebar { flex: 0 0 auto; }
+  .interactive-presets__sidebar > .blueprint-templates__list { min-height: 96px; max-height: 128px; }
+  .interactive-presets .blueprint-templates__content { flex: 0 0 auto; }
+}

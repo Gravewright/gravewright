@@ -48,7 +48,7 @@ export function sceneNetwork(catalog) {
                 if (node.type === 'soundReference' || ['sound', 'soundControl'].includes(node.type) && !targetConnected) link(owner, node.trackId, 'sound', event, 'sound');
                 if (node.type === 'teleport') link(owner, node.destinationId, 'element', event, 'teleport');
                 if (node.assetId) link(owner, node.assetId, 'asset', event, 'appearance');
-                if (node.type === 'showHandout') link(owner, node.journalId, 'handout', event, 'handout');
+                if (['showHandout', 'setQuestStatus'].includes(node.type)) link(owner, node.journalId, 'handout', event, 'handout');
                 if (node.audience?.scope === 'users') for (const target of node.audience.userIds) link(owner, target, 'user', event, 'audience');
                 if (node.type === 'emitEvent' && executed.has(id)) {
                     const signal = `signal:${node.name}`;

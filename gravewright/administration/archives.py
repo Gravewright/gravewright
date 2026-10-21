@@ -158,8 +158,9 @@ def omit_blueprint_audio(record):
         candidates = [*data.get("document", {}).get("doors", []), *data.get("document", {}).get("decorations", []),
                       *data.get("document", {}).get("regions", [])]
         candidates.extend(row.get("data", {}) for row in data.get("generation", {}).get("objects", []))
-        generated = data.get("generation", {}).get("dynamicDocument", {})
-        candidates.extend(row for kind in ("doors", "decorations", "regions") for row in generated.get(kind, []))
+        for name in ("dynamicDocument", "sourceDocument"):
+            generated = data.get("generation", {}).get(name, {})
+            candidates.extend(row for kind in ("doors", "decorations", "regions") for row in generated.get(kind, []))
     for candidate in candidates:
         blueprint = candidate.get("blueprint")
         if not isinstance(blueprint, dict):
@@ -356,8 +357,9 @@ def preserve_shader_text(record, field_name, rewritten):
             candidates.extend((before.get("data"), after.get("data"))
                               for before, after in zip(original.get("objects", []), rewritten.get("objects", []))
                               if isinstance(before, dict) and isinstance(after, dict) and before.get("kind") == "shaders")
-            candidates.extend(zip(original.get("dynamicDocument", {}).get("shaders", []),
-                                  rewritten.get("dynamicDocument", {}).get("shaders", [])))
+            for name in ("dynamicDocument", "sourceDocument"):
+                candidates.extend(zip(original.get(name, {}).get("shaders", []),
+                                      rewritten.get(name, {}).get("shaders", [])))
     for before, after in candidates:
         if isinstance(before, dict) and isinstance(after, dict):
             for key in ("name", "source"):
@@ -415,6 +417,10 @@ def preserve_blueprint_values(before, after):
             after["event"] = before["event"]
         if before.get("type") == "showMessage" and isinstance(before.get("text"), str):
             after["text"] = before["text"]
+        if before.get("type") == "requestRoll":
+            for key in ("expression", "label"):
+                if isinstance(before.get(key), str):
+                    after[key] = before[key]
         for key, value in before.items():
             if key not in ("automationVariables", "automationMemory") and key in after:
                 preserve_blueprint_values(value, after[key])
@@ -436,14 +442,15 @@ def remap_omitted_bindings(record, field_name, rewritten, model_ids, inert_ids):
                 candidates.extend((before, after, kind == "regions")
                                   for before, after in zip(original.get(kind, []), rewritten.get(kind, [])))
         elif field_name == "generation":
-            source_destinations = {before["id"]: after["id"] for before, after in zip(
-                original.get("dynamicDocument", {}).get("regions", []), rewritten.get("dynamicDocument", {}).get("regions", []))}
+            source_destinations = {before["id"]: after["id"] for name in ("dynamicDocument", "sourceDocument") for before, after in zip(
+                original.get(name, {}).get("regions", []), rewritten.get(name, {}).get("regions", []))}
             candidates.extend((before.get("data"), after.get("data"), False)
                               for before, after in zip(original.get("objects", []), rewritten.get("objects", []))
                               if isinstance(before, dict) and isinstance(after, dict))
-            for kind in ("doors", "decorations", "regions"):
-                candidates.extend((before, after, kind == "regions") for before, after in zip(
-                    original.get("dynamicDocument", {}).get(kind, []), rewritten.get("dynamicDocument", {}).get(kind, [])))
+            for name in ("dynamicDocument", "sourceDocument"):
+                for kind in ("doors", "decorations", "regions"):
+                    candidates.extend((before, after, kind == "regions") for before, after in zip(
+                        original.get(name, {}).get(kind, []), rewritten.get(name, {}).get(kind, [])))
 
     def binding(identifier, model):
         try:
@@ -478,9 +485,9 @@ def remap_omitted_bindings(record, field_name, rewritten, model_ids, inert_ids):
                     elif node.get("type") == "teleport":
                         cloned["destinationId"] = source_destinations.get(node.get("destinationId")) or binding(
                             node.get("destinationId"), "gravewright_maps.sceneobject")
-                    elif node.get("type") == "showHandout":
+                    elif node.get("type") in ("showHandout", "setQuestStatus"):
                         cloned["journalId"] = binding(node.get("journalId"), "gravewright_journals.journal")
-                    if node.get("type") in ("showMessage", "showHandout", "cameraFocus"):
+                    if node.get("type") in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
                         audience = node.get("audience", {})
                         if audience.get("scope") == "users" and isinstance(audience.get("userIds"), list):
                             cloned["audience"]["userIds"] = [binding(identifier, "gravewright_accounts.user")

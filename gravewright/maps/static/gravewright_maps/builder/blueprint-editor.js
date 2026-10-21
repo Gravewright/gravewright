@@ -1,11 +1,12 @@
 import { mountModal } from '/static/gravewright_table/modal.js';
 import { openTemplateLibrary } from './blueprint-templates.js';
+import { openInteractiveObjectCatalog } from './interactive-presets.js';
 import { createAutosave } from './autosave.js';
 import { defaultBlueprint, eventGraph, blueprintStatesFor, blueprintAllStates, blueprintWritableStates, blueprintVerbEventsFor, blueprintEventMetadata, dataInputs, dataOutputs, isPureNode,
     blueprintContract, connectNodes, validateBlueprint, simulateGraph, blueprintAppearance, upgradeBlueprint, elementInstanceNode,
     variableTypes, variableScopes, variableOperators, typedDefault, isBlueprintSignalEvent, controlNodeTypes, timerActions,
     executionOutputs, switchCaseIds, randomBranchIds, groupMemberTypes, eventContextProperties, eventContextTypes,
-    acceptsDataType } from './blueprint-model.js';
+    acceptsDataType, questStatuses } from './blueprint-model.js';
 
 // Saved node coordinates start at ORIGIN so cards can be placed around the event.
 const ORIGIN = { x: 320, y: 160 }, PLANE = 5400, MAX_POSITION = 4700, PAD = 1200;
@@ -50,7 +51,9 @@ const catalog = [
     { type: 'setVisibility', group: 'Actions', description: 'Show or hide live artwork while preserving its collision barriers.', aliases: 'setVisibility visibility' },
     { type: 'setAppearance', group: 'Actions', description: 'Change a dynamic surface material or native object image.', missing: 'Add an image to this project first.', aliases: 'setAppearance material' },
     { type: 'showMessage', group: 'Actions', description: 'Show a plain text message to an authorized audience.', aliases: 'showMessage' },
-    { type: 'showHandout', group: 'Actions', description: 'Open a handout only for recipients who can already read it.', missing: 'Create a handout in this campaign first.', aliases: 'showHandout' },
+    { type: 'showHandout', group: 'Actions', description: 'Open a campaign journal, quest or quest board for authorized readers.', missing: 'Create a journal in this campaign first.', aliases: 'showHandout journal diary quest mission' },
+    { type: 'requestRoll', group: 'Actions', description: 'Ask one player or all players to roll dice in a modal.', aliases: 'requestRoll dice roll' },
+    { type: 'setQuestStatus', group: 'Actions', description: 'Update a campaign quest when this behavior runs.', missing: 'Create a quest in this campaign first.', aliases: 'setQuestStatus mission quest' },
     { type: 'cameraFocus', group: 'Actions', description: 'Request camera focus from recipients who allow it.', aliases: 'cameraFocus' },
     { type: 'teleport', group: 'Actions', description: 'Transport the triggering token to an available place in a region of this scene.', missing: 'Add a presence region to this map first.', aliases: 'teleport' },
 ];
@@ -101,6 +104,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     }
     // Selected card ids; the door card's id stands for the entry event node it represents.
     const selection = new Set();
+    const audienceModes = new Map();
     let frame, wireFrame, wireDrag, wireChoice, wirePreview, panDrag, pinch, renderedEvent, suppressClick = false;
     const stateName = (value, stateKind = kind) => t({ closed: 'Closed', open: 'Opened', locked: 'Locked',
         off: stateKind === 'torch' ? 'Normal' : 'Deactivated', on: stateKind === 'torch' ? 'Turned' : 'Activated', empty: 'Empty', occupied: 'Occupied' }[value] || value);
@@ -114,7 +118,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         compareValue: 'Compare value', emitEvent: 'Emit event', counter: 'Counter', once: 'Once', cooldown: 'Cooldown', delay: 'Delay', timer: 'Timer',
         switch: 'Switch', random: 'Random', elementGroup: 'Element group', lightReference: 'Light reference', soundReference: 'Sound reference',
         eventContext: 'Event context', move: 'Move object', rotate: 'Rotate object', setInteraction: 'Set interaction', setRegion: 'Set region',
-        showMessage: 'Show message', showHandout: 'Show handout', cameraFocus: 'Focus camera', teleport: 'Teleport token',
+        showMessage: 'Show message', showHandout: 'Open journal', requestRoll: 'Request dice roll', setQuestStatus: 'Set quest status', cameraFocus: 'Focus camera', teleport: 'Teleport token',
         setVisibility: 'Set visibility', setAppearance: 'Set appearance' }[value]);
     const timerActionName = value => t({ start: 'Start timer', stop: 'Stop timer', restart: 'Restart timer' }[value]);
     const choiceName = (type, output) => output === 'default' ? t('Default')
@@ -125,6 +129,9 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     const channelName = value => t({ movement: 'Movement', vision: 'Vision', light: 'Light', sound: 'Sound' }[value]);
     const modeName = value => t({ block: 'Block', pass: 'Pass', attenuate: 'Attenuate' }[value]);
     const otherElements = (elements || doors).filter(row => row.id !== object.id);
+    const quests = handouts.filter(row => row.type === 'quest');
+    const players = users.filter(row => !row.role || row.role === 'player');
+    const questStatusName = value => t({ draft: 'Draft', available: 'Available', active: 'Active', completed: 'Completed', failed: 'Failed', archived: 'Archived' }[value]);
     const spriteAssets = [...new Map([...assets, ...materials].map(asset => [asset.id, asset])).values()];
     const elementName = id => otherElements.find(row => row.id === id)?.name;
     const contextName = value => t({ event: 'Event', sourceId: 'Triggering element ID', userId: 'Triggering user ID', userName: 'Triggering user name',
@@ -142,6 +149,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     const portLabel = port => /^\d+$/.test(port.label) ? port.label : t(port.label);
     const available = type => type === 'setAppearance' ? materials.length > 0
         : type === 'showHandout' ? handouts.length > 0
+        : type === 'setQuestStatus' ? quests.length > 0
         : type === 'teleport' ? [object, ...otherElements].some(row => row.kind === 'region')
         : ['light', 'lightReference'].includes(type) ? lights.length > 0 : ['sound', 'soundControl', 'soundReference'].includes(type) ? sounds.length > 0
         : type === 'reference' ? otherElements.length > 0 : true;
@@ -194,6 +202,22 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     const undo = button('Undo', { 'data-blueprint-undo': '', title: t('Undo (Ctrl+Z)') });
     const redo = button('Redo', { 'data-blueprint-redo': '', title: t('Redo (Ctrl+Shift+Z)') });
     tools.append(add, simulate, node('span', { class: 'smart-object__tools-gap' }), undo, redo);
+    if (kind === 'lever') {
+        const objects = button('Object catalog', { 'data-blueprint-object-catalog': '' });
+        listen(objects, 'click', async () => {
+            const focused = document.activeElement;
+            if (focused?.matches('[data-blueprint-param]') && authoredControl(focused)) focused.dispatchEvent(new Event('change'));
+            clearConnection();
+            try { await openInteractiveObjectCatalog({ element: { ...object, blueprint: draft },
+                doors: otherElements.filter(row => row.kind === 'door'), handouts, users: players, sounds, assets, materials: assets, t, signal, preserveState: true,
+                onApply: result => {
+                    validateBlueprint(result.blueprint, { assets, materials, lights, sounds, element: object });
+                    remember(); draft = structuredClone(result.blueprint); pending = null; selection.clear();
+                    trigger = 'verb-interact'; renderSettings(); renderGraph(); fitView();
+                } }); } catch (cause) { error(cause); }
+        });
+        tools.insertBefore(objects, undo);
+    }
     if (campaignId) {
         const templates = button('Templates', { 'data-blueprint-templates': '' });
         listen(templates, 'click', async () => {
@@ -643,6 +667,8 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 setVisibility: { visible: true }, setAppearance: { assetId: materials[0]?.id },
                 showMessage: { text: t('Message'), audience: { scope: 'trigger' } },
                 showHandout: { journalId: handouts[0]?.id, audience: { scope: 'trigger' } },
+                requestRoll: { expression: '1d20', label: '', visibility: 'public', audience: { scope: 'trigger' } },
+                setQuestStatus: { journalId: quests[0]?.id, status: 'active' },
                 cameraFocus: { focusX: 0, focusY: 0, audience: { scope: 'trigger' } },
                 teleport: { destinationId: [...otherElements, object].find(row => row.kind === 'region')?.id },
                 emitEvent: { scope: 'element', name: 'PuzzleSolved' },
@@ -698,7 +724,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             && first.offsetTop < second.offsetTop + second.offsetHeight + 16
             && second.offsetTop < first.offsetTop + first.offsetHeight + 16;
         for (const item of graph().nodes.filter(row => ['switch', 'random', 'elementGroup', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
-            'setVisibility', 'setAppearance', 'showMessage', 'showHandout', 'cameraFocus', 'teleport'].includes(row.type))) {
+            'setVisibility', 'setAppearance', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport'].includes(row.type))) {
             const card = sourceElement(item.id);
             // Choice fields and translated hints can grow after their neighbors
             // were placed. Keep the edited card still and make room below it.
@@ -1323,14 +1349,31 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     }
     function audienceFields(item, content) {
         const scope = node('select', { 'data-blueprint-param': 'audienceScope' });
-        options(scope, [['trigger', t('Triggering user')], ['players', t('Players')], ['users', t('Chosen users')]], item.audience.scope);
+        const single = item.audience.scope === 'users' && audienceModes.get(item.id) !== 'users' && item.audience.userIds.length === 1
+            && players.some(user => user.id === item.audience.userIds[0]);
+        options(scope, [['trigger', t('Triggering user')], ['players', t('All players')], ['player', t('One player')], ['users', t('Chosen users')]], single ? 'player' : item.audience.scope);
+        scope.querySelector('option[value=player]').disabled = !players.length;
         scope.querySelector('option[value=users]').disabled = !users.length && item.audience.scope !== 'users';
         listen(scope, 'change', () => {
-            if (scope.value === item.audience.scope) return;
-            remember(); item.audience = { scope: scope.value, ...(scope.value === 'users' ? { userIds: [users[0].id] } : {}) }; renderGraph();
+            audienceModes.set(item.id, scope.value);
+            if (scope.value === 'player') {
+                if (!players.length) return;
+                remember(); item.audience = { scope: 'users', userIds: [players[0].id] };
+            } else {
+                remember(); item.audience = { scope: scope.value, ...(scope.value === 'users' ? { userIds: item.audience.userIds || [users[0].id] } : {}) };
+            }
+            renderGraph();
         });
         content.append(field('Audience', scope));
-        if (item.audience.scope === 'users') {
+        if (single) {
+            const player = node('select', { 'data-blueprint-param': 'audiencePlayer' });
+            options(player, players.map(user => [user.id, user.name || user.id]), item.audience.userIds[0]);
+            player.setAttribute('translate', 'no');
+            listen(player, 'change', () => {
+                if (!players.some(user => user.id === player.value)) return;
+                remember(); item.audience.userIds = [player.value]; clearSimulation();
+            }); content.append(field('Player', player));
+        } else if (item.audience.scope === 'users') {
             const list = node('div', { class: 'smart-object__audience', 'data-blueprint-audience': '' });
             const choices = new Map(users.map(user => [user.id, user]));
             for (const id of item.audience.userIds) if (!choices.has(id)) choices.set(id, { id, name: t('Unavailable: {0}', { 0: id }) });
@@ -1817,11 +1860,27 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 remember(); item.text = text.value; clearSimulation();
             }); content.append(field('Message', text));
         }
-        if (item.type === 'showHandout') {
-            const choices = handouts.map(handout => [handout.id, handout.name]);
-            if (!handouts.some(handout => handout.id === item.journalId)) choices.unshift([item.journalId, t('Missing handout')]);
-            content.append(parameter(item, 'Handout', 'journalId', choices),
-                node('p', { class: 'smart-object__hint' }, t('Opening a handout never grants new reading permissions.')));
+        if (['showHandout', 'setQuestStatus'].includes(item.type)) {
+            const journals = item.type === 'setQuestStatus' ? quests : handouts;
+            const choices = journals.map(handout => [handout.id, handout.name]);
+            if (!journals.some(handout => handout.id === item.journalId)) choices.unshift([item.journalId, t('Missing handout')]);
+            content.append(parameter(item, item.type === 'setQuestStatus' ? 'Quest' : 'Journal', 'journalId', choices));
+            if (item.type === 'setQuestStatus') content.append(parameter(item, 'Status', 'status', questStatuses.map(status => [status, questStatusName(status)])),
+                node('p', { class: 'smart-object__hint' }, t('This changes the quest for the campaign. Reading permissions stay in effect.')));
+            else content.append(node('p', { class: 'smart-object__hint' }, t('Opening a handout never grants new reading permissions.')));
+        }
+        if (item.type === 'requestRoll') {
+            for (const [key, label, limit] of [['expression', 'Dice expression', 512], ['label', 'Roll label', 48]]) {
+                const control = node('input', { type: 'text', maxlength: limit, translate: 'no', 'data-blueprint-param': key, value: item[key],
+                    ...(key === 'expression' ? { required: '', placeholder: '1d20 + 3' } : {}) });
+                listen(control, 'change', () => {
+                    control.setCustomValidity((key !== 'expression' || control.value.trim()) && !control.value.includes('\0') ? '' : t('Enter a dice expression.'));
+                    if (!control.reportValidity() || control.value === item[key]) return;
+                    remember(); item[key] = control.value; clearSimulation();
+                }); content.append(field(label, control));
+            }
+            content.append(parameter(item, 'Roll visibility', 'visibility', [['public', t('Public')], ['gm', t('GM only')]]),
+                node('p', { class: 'smart-object__hint' }, t('Players choose Roll in the modal. Results use the normal dice chat. The next node runs without waiting for a result.')));
         }
         if (item.type === 'cameraFocus') for (const [key, label] of [['focusX', 'Focus X (cells)'], ['focusY', 'Focus Y (cells)']]) {
             const control = node('input', { type: 'number', min: '0', max: '1000', step: 'any', required: '', 'data-blueprint-param': key, value: item[key] });
@@ -1830,7 +1889,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 remember(); item[key] = Number(control.value); clearSimulation();
             }); content.append(field(label, control));
         }
-        if (['showMessage', 'showHandout', 'cameraFocus'].includes(item.type)) audienceFields(item, content);
+        if (['showMessage', 'showHandout', 'requestRoll', 'cameraFocus'].includes(item.type)) audienceFields(item, content);
         if (item.type === 'teleport') {
             const regions = [object, ...otherElements].filter(element => element.kind === 'region');
             const choices = regions.map(region => [region.id, region.name]);
@@ -1976,6 +2035,8 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                         : action.type === 'setAppearance' ? materials.find(row => row.id === action.assetId)?.name || t('Missing image')
                         : action.type === 'showMessage' ? action.text
                         : action.type === 'showHandout' ? handouts.find(row => row.id === action.journalId)?.name || t('Missing handout')
+                        : action.type === 'requestRoll' ? `${action.expression}${action.label ? ` · ${action.label}` : ''}`
+                        : action.type === 'setQuestStatus' ? `${handouts.find(row => row.id === action.journalId)?.name || t('Missing handout')} · ${questStatusName(action.status)}`
                         : action.type === 'cameraFocus' ? `${action.focusX}, ${action.focusY} · ${t('Cells')}`
                         : action.type === 'teleport' ? targetName(action.destinationId)
                         : action.type === 'interact' ? `${t('On interaction')} · ${action.target ? targetName(action.target) : t('This element')}`
@@ -2019,8 +2080,9 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 t('Signals are queued in the game; this preview runs only the selected event.')));
             if (result.actions.some(action => action.type === 'interact')) trace.append(node('li', { class: 'smart-object__hint' },
                 t('Target interactions are listed here. Use Test behavior to rehearse their full graphs without changing the game.')));
-            if (result.actions.some(action => ['showMessage', 'showHandout', 'cameraFocus', 'teleport'].includes(action.type)))
+            if (result.actions.some(action => ['showMessage', 'showHandout', 'requestRoll', 'cameraFocus', 'teleport'].includes(action.type)))
                 trace.append(node('li', { class: 'smart-object__hint' }, t('Presentation and teleport actions are previewed only. No player window, camera or token changes.')));
+            if (result.actions.some(action => action.type === 'setQuestStatus')) trace.append(node('li', { class: 'smart-object__hint' }, t('Quest changes are previewed only. No journal changes in this simulation.')));
         } catch (cause) { error(cause); }
     });
     listen(undo, 'click', () => restore(undoStack, redoStack));

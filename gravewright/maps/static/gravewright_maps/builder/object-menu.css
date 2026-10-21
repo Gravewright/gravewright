@@ -1,0 +1,9 @@
+.map-builder-object-menu {
+    display: grid; width: min(280px, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
+    overflow: auto; color: var(--text); font: 14px/1.4 var(--font);
+}
+.map-builder-object-menu__title { padding: var(--space-1) var(--space-2) var(--space-2); font-size: 12px; color: var(--text-muted); overflow-wrap: anywhere; }
+.map-builder-object-menu button { justify-content: space-between; width: 100%; flex-shrink: 0; white-space: normal; }
+.map-builder-object-menu button > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.map-builder-object-menu button[aria-haspopup=menu] > span:last-child { margin-left: var(--space-2); font-size: 18px; }
+.map-builder-object-menu button:disabled { opacity: .45; }

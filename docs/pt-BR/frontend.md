@@ -57,7 +57,9 @@ vizinhos, servidos diretamente, possuem estas responsabilidades:
 | `project-persistence.js` | Recuperação/armazenamento de rascunhos, HTTP/CSRF, identidade dos recibos e fila de salvamento |
 | `workspace-library.js` | Catálogo de assets da campanha, escolha de pincéis e controles de material |
 | `workspace-import.js` | Modais de importação/edição de assets e ciclo de vida dos listeners |
-| `inspector-controller.js` | Propriedades da seleção e configuração de regiões/tochas |
+| `inspector-controller.js` | Campos compartilhados da seleção, modais por seção e configuração de regiões/tochas |
+| `object-menu.js` | Menu de contexto dos objetos, navegação por teclado e submenu de modelos |
+| `interactive-presets.js` | Blueprints genéricos configuráveis e modal do catálogo de objetos |
 | `layer-controller.js` | Controles, conteúdo e seleção de camadas e listeners de arraste |
 | `canvas-renderer.js` | Arte SVG, marcações de seleção e caches descartáveis de terreno/parede |
 
@@ -289,6 +291,42 @@ espaço livre para toda sua área na região de destino e processa a presença d
 chegada depois de persistir os objetos da ação atual. Uma trava de chegada
 persistente impede voltas até o token sair da região; navegação de cenas e
 composição do grupo permanecem as mesmas.
+
+O **Catálogo de objetos interativos** na seleção do Builder, **Modelos prontos**
+no menu de contexto do objeto e o **Catálogo de objetos** do editor de nós
+compartilham 14 Blueprints editáveis de mecanismos genéricos. Os modelos cobrem
+interruptores, baús, passagens secretas, livros, altares, armadilhas de aviso,
+sinos, placas de pressão, pedidos de dados, ativação/conclusão de missões,
+placas de entrada, interruptores temporizados e botões de porta. A modal de
+configuração oferece som/volume e imagem do estado ativo opcionais; opções
+desmarcadas não geram nós de som nem substituição de imagem. As imagens de estado
+vêm apenas de assets de Objeto e o estado inativo restaura a imagem original.
+Aplicar um modelo preserva a identidade e a geometria; substituir um
+comportamento autorado exige confirmação na modal da aplicação e pode ser
+desfeito. A armadilha avisa na entrada enquanto armada, sem aplicar dano
+específico de um sistema de RPG. As opções de Comportamento no inspetor abrem a
+mesma configuração. As modais de propriedades reutilizam os controles do
+inspetor e salvam pelas operações e pelo histórico existentes.
+
+O nó `requestRoll` do Blueprint V2 armazena uma `expression` de dados validada
+(até 512 caracteres), `label` (até 48), `visibility` (`public` ou `gm`) e
+`audience`. O público pode ser quem interagiu, todos os jogadores, um jogador ou
+usuários escolhidos. Um jogador usa o escopo compatível `users` com um UUID.
+Os destinatários autorizados recebem uma modal nativa e escolhem **Rolar**;
+o serviço normal de dados valida e publica o resultado no chat. O UUID do evento
+identifica a mesma rolagem por usuário entre tentativas e abas, mantendo a cena
+de origem. Streamers não recebem pedidos de rolagem. A ação continua
+imediatamente: ela não cria ramificações com base no resultado.
+
+**Abrir diário** usa o contrato existente `showHandout` para diários, missões e
+quadros de missões, sem conceder acesso de leitura. `setQuestStatus` armazena o
+`journalId` de uma missão e um dos estados `draft`, `available`, `active`,
+`completed`, `failed` ou `archived`. O servidor valida campanha e tipo e aplica
+a ação fixa autorada pelo mestre pelo serviço de diários, dentro da transação
+do mapa; os jogadores não recebem permissão de edição do diário. Ensaios mostram
+alterações de missão e pedidos de dados sem persistir diários nem abrir janelas
+para jogadores. Modelos, referências adiadas e arquivos de exportação preservam
+esses vínculos e os rótulos de rolagem autorados.
 
 Blueprint V2 `elementGroup` é um conjunto puro tipado e ordenado: `name` (1–80
 caracteres), `memberType` (`element`, `light`, `sound`) e de 1 a 32 UUIDs únicos

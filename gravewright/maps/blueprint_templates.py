@@ -71,7 +71,8 @@ def resource_slots(blueprint):
             slot = {"reference": ("targetId", "element"), "lightReference": ("targetId", "light"),
                     "soundReference": ("trackId", "sound"), "light": ("targetId", "light"),
                     "sound": ("trackId", "sound"), "soundControl": ("trackId", "sound"),
-                    "showHandout": ("journalId", "handout"), "teleport": ("destinationId", "element"),
+                    "showHandout": ("journalId", "handout"), "setQuestStatus": ("journalId", "handout"),
+                    "teleport": ("destinationId", "element"),
                     "setAppearance": ("assetId", "asset")}.get(kind)
             if slot:
                 yield node, *slot
@@ -107,6 +108,7 @@ def parameter_options(blueprint):
                 "move": ("dx", "dy"), "rotate": ("degrees",),
                 "getVariable": ("default",), "setVariable": ("value",), "compareValue": ("expected",),
                 "switch": ("value",), "showMessage": ("text",), "cameraFocus": ("focusX", "focusY"),
+                "requestRoll": ("expression", "label", "visibility"), "setQuestStatus": ("status",),
             }.get(kind, ())
             paths = [[field] for field in fields]
             if kind == "switch" and isinstance(node.get("cases"), list):

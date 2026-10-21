@@ -6,6 +6,8 @@ import { createWorkspaceLibrary } from './workspace-library.js';
 import { createWorkspaceImport } from './workspace-import.js';
 import { createCanvasRenderer, ringPath } from './canvas-renderer.js';
 import { createInspectorController } from './inspector-controller.js';
+import { createObjectMenu } from './object-menu.js';
+import { interactiveObjectPresets } from './interactive-presets.js';
 import { createLayerController } from './layer-controller.js';
 import { createFloorPainter } from './floor-painter.js';
 import { createTerrainPainter } from './terrain-painter.js';
@@ -23,6 +25,7 @@ import { HttpClient } from '/static/gravewright_modules/http-client.js';
 import { openUniversalVtt } from '../universal-vtt.js';
 import { openReadyMapImport } from './ready-map.js';
 import { detachDocumentAsset, sameDocument } from './asset-removal.js';
+import { mergeSceneProject } from './scene-sync-model.js';
 import { mountNativeEffects } from './native-effects.js';
 import { isNativeKind, nativeFactory, nativeCatalog, presetName } from './native-controls.js';
 
@@ -222,6 +225,7 @@ function mountWorkspace(root) {
     const { dirty, rememberDraft, operation } = autosave;
     function startAutosave() { autosave.start(); }
     function setBusy(value) {
+        if (value) objectMenu?.close(false);
         busy = value; root.setAttribute('aria-busy', String(value));
         for (const element of root.querySelectorAll('button,input,select,textarea')) element.disabled = value;
         if (!value) applyPreviewControls();
@@ -769,13 +773,19 @@ function mountWorkspace(root) {
     function renderSelection() {
         wallControls?.render(canvasRenderer.renderSelection(selectionRefs(), camera.scale));
     }
-    const { renderProperties } = createInspectorController({
+    const objectMenu = createObjectMenu({ t, signal, onError: cause => notify(t(cause.message), [], 'error') });
+    const { renderProperties, openProperties, openPreset } = createInspectorController({
         root, state, t, signal, toolHints: strings,
         selection: { refs: selectionRefs, current: selected, item: itemFor, set: setSelection, all: allRefs, label: elementLabel },
         library, isBusy: () => busy, isDisposed: () => disposed,
         commit, renderCanvas, renderLayers, renderSelection, applyPreviewControls,
         chooseQuickTool, deleteSelection, openNativeEditor, openBehavior,
         loadFilterCatalog, setSidebarTab, pickOnMap, createTorchComponent, detachTorch, notify,
+        onOptions: (target, trigger) => showObjectOptions(target, null, trigger),
+        onModal: modal => {
+            activeModal = modal;
+            modal?.addEventListener('close', () => { if (activeModal === modal) { picking?.finish(null); activeModal = null; } }, { once: true });
+        },
     });
     function createTorchComponent(item, kind) {
         const tool = kind === 'lights' ? 'light' : kind === 'particles' ? 'particle' : 'shader';
@@ -858,6 +868,36 @@ function mountWorkspace(root) {
         }
         const objects = objectsInRectangle(state.document, { x: point.x, y: point.y, width: .0001, height: .0001 }).filter(ref => state.layers[ref.kind]);
         return objects.filter(ref => (ref.kind === 'regions' || ref.kind === 'decorations' || ref.kind === 'floors' && visibleFloor(ref)) && editable(ref)).at(-1) || null;
+    }
+    function showObjectOptions(target, position, trigger = viewport) {
+        if (disposed || busy || state.preview || activeModal || picking || gesture || brushResize || !target || !editable(target)) return;
+        flushFocusedField();
+        const item = itemFor(target); if (!item) return;
+        if (!selectionRefs().some(ref => ref.kind === target.kind && ref.id === target.id)) {
+            setSelection([target]); renderSelection(); renderProperties();
+        }
+        const entries = [{ id: 'properties', label: t('Properties'), action: () => openProperties(target, 'properties') }];
+        if (!isNativeKind(target.kind) && target.kind !== 'regions' && !item.empty && item.brush?.operation !== 'erase')
+            entries.push({ id: 'appearance', label: t('Appearance'), action: () => openProperties(target, 'appearance') });
+        const intelligent = ['doors', 'regions'].includes(target.kind) || target.kind === 'decorations';
+        if (intelligent) entries.push({ id: 'behavior', label: t('Behavior'), action: () => openProperties(target, 'behavior') });
+        if (target.kind === 'decorations' && !item.torch && (item.assetId || item.empty)) entries.push({
+            id: 'templates', label: t('Ready-made models'), children: interactiveObjectPresets.map(preset => ({
+                id: 'preset:' + preset.id, label: t(preset.name), action: () => openPreset(target, preset.id),
+            })),
+        });
+        if (target.kind === 'decorations' && item.torch) entries.push({ id: 'components', label: t('Torch components'), action: () => openProperties(target, 'components') });
+        if (target.kind === 'regions') entries.push({ id: 'region', label: t('Presence filters'), action: () => openProperties(target, 'region') });
+        if (hasNativeEditor(target.kind)) entries.push({ id: 'native', label: t('Open game editor'), action: () => openNativeEditor(target) });
+        if (['doors', 'regions'].includes(target.kind) || target.kind === 'decorations' && isSmartDecoration(item))
+            entries.push({ id: 'nodes', label: t('Edit nodes'), action: () => openBehavior(target) });
+        entries.push({ id: 'duplicate', label: t('Duplicate'), action: () => transformSelection('duplicate') },
+            { id: 'rotate', label: t('Rotate'), action: () => transformSelection('rotate') },
+            { id: 'delete', label: t('Delete'), danger: true, action: deleteSelection });
+        const anchor = trigger === viewport ? root.querySelector(`[data-object-kind="${target.kind}"][data-object-id="${CSS.escape(target.id)}"]`) : trigger;
+        const box = (anchor || viewport).getBoundingClientRect();
+        objectMenu.open({ ...(position || { x: box.left + Math.min(box.width / 2, 180), y: box.top + Math.min(box.height / 2, 100) }), entries,
+            label: elementLabel(target.kind, item), returnTo: trigger.isConnected ? trigger : viewport });
     }
     function start(point, event, resumePaint = false) {
         if (busy || !ready || state.preview) return false;
@@ -1207,6 +1247,17 @@ function mountWorkspace(root) {
         if (!['doors', 'regions'].includes(target?.kind) && !(target?.kind === 'decorations' && isSmartDecoration(itemFor(target)))) return;
         event.preventDefault(); openBehavior(target);
     }, { signal });
+    viewport.addEventListener('contextmenu', event => {
+        event.preventDefault();
+        if (event.shiftKey && !event.clientX && !event.clientY) { showObjectOptions(state.selection); return; }
+        const matrix = $('[data-builder-canvas]').getScreenCTM(); if (!matrix) return;
+        const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+        showObjectOptions(hit(point, event), { x: event.clientX, y: event.clientY });
+    }, { signal });
+    viewport.addEventListener('keydown', event => {
+        if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
+        event.preventDefault(); event.stopPropagation(); showObjectOptions(state.selection);
+    }, { signal });
     function applyNativeItem(target, next) {
         if (disposed || state.preview || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));
         const current = itemFor(target);
@@ -1410,7 +1461,62 @@ function mountWorkspace(root) {
         updateURL(); rememberDraft(); renderForm(); renderAssets(); renderProjects(); renderCanvas(); renderLayers(); renderProperties();
         camera.resize(state.document.columns, state.document.rows, state.document.cellSize); setMobilePanel('workspace');
     }
-    function openProject(id) { return run(async () => { const result = await api('/projects/' + id); acceptProject(result.project); hideNotice(); }); }
+    async function synchronizedProject(project) {
+        if (!project.sceneId || !project.canUpdate) return project;
+        state.sceneSyncAttempts ||= {};
+        const resumed = state.sceneSyncAttempts[project.id];
+        const payload = resumed || { expected_version: project.version, expected_scene_version: project.sceneVersion };
+        state.sceneSyncAttempts[project.id] = payload;
+        try {
+            const result = await operation('/projects/' + project.id + '/sync', payload);
+            delete state.sceneSyncAttempts[project.id]; rememberDraft();
+            // A lost acknowledgement can predate another game's edit. Settle its
+            // original receipt before reading a fresh snapshot for the next sync.
+            if (resumed) return synchronizedProject((await api('/projects/' + project.id)).project);
+            return result.project;
+        } catch (cause) {
+            if (cause.status === 400 || cause.conflict) { delete state.sceneSyncAttempts[project.id]; rememberDraft(); }
+            throw cause;
+        }
+    }
+    async function synchronizeCurrent() {
+        if (!state.version || state.recoveryConflict) return;
+        await autosave.pendingWrite;
+        // An unconfirmed write must retain its original payload and receipt.
+        if (state.saveAttempt) throw new Error(t('A previous save could not be confirmed. Reload the saved project or save a copy.'));
+        const id = state.id, sceneId = state.sceneId;
+        const result = await api('/projects/' + id);
+        if (disposed || state.id !== id) return;
+        if (sceneId && result.project.sceneId !== sceneId) {
+            const cause = new Error(t('The generated scene changed. Reload the project before updating it.'));
+            cause.conflict = true; throw cause;
+        }
+        const project = await synchronizedProject(result.project);
+        if (disposed || state.id !== id) return;
+        const remote = normalizeDocument(project.document), base = JSON.parse(state.saved), local = state.document;
+        const merged = mergeSceneProject(base, local, remote);
+        if (merged.conflicts.length) {
+            state.recoveryConflict = true; autosave.keepDraft(); rememberDraft(); updateSaveState();
+            const cause = new Error(t('The same object properties changed in the game and in this draft. Your edits are kept in this tab.'));
+            cause.conflict = true; throw cause;
+        }
+        if (!sameDocument(base, remote)) {
+            await refreshLibrary();
+            if (disposed || state.id !== id) return;
+            undo.rebase(snapshot => mergeSceneProject(base, snapshot, remote, { preferRemote: true }).document);
+        }
+        state.version = project.version; state.folderId = project.folderId;
+        state.document = merged.document; state.saved = JSON.stringify(remote); projectMetadata(project, true);
+        state.projects = [project, ...state.projects.filter(row => row.id !== id)];
+        startAutosave(); rememberDraft();
+        setSelection(state.selections); renderForm(); renderAssets(); renderProjects(); renderCanvas(); renderLayers(); renderProperties();
+        camera.resize(state.document.columns, state.document.rows, state.document.cellSize, false);
+        updateSaveState(); if (dirty()) autosave.schedule();
+    }
+    function openProject(id) { return run(async () => {
+        const result = await api('/projects/' + id);
+        acceptProject(await synchronizedProject(result.project)); hideNotice();
+    }); }
     async function saveCurrent({ settings = true, retry = false } = {}) {
         if (!ready) {
             const cause = new Error(t('The editor is still loading. Retry loading the project.')); cause.validation = true; throw cause;
@@ -1693,6 +1799,7 @@ function mountWorkspace(root) {
     $('[data-builder-save]').addEventListener('click', () => run(async () => { await saveCurrent({ retry: true }); hideNotice(); }), { signal });
     function applyScene(updateOnly = false) {
         return run(async () => {
+            await synchronizeCurrent();
             const sceneId = state.sceneId || null, expectedSceneVersion = state.sceneVersion;
             if (updateOnly && !sceneId) throw new Error(t('Generate a scene before updating it.'));
             if (sceneId && !state.canUpdate) throw new Error(t('This scene has no update record. The linked scene cannot be updated.'));
@@ -1778,8 +1885,8 @@ function mountWorkspace(root) {
             if (state.assetRemovals.length) await refreshAfterAssetRemoval(null, { rethrow: true });
             const initialId = root.dataset.projectId;
             if (!restored && !recovered && !recoveryError && !dirty() && initialId) {
-                const result = await api('/projects/' + initialId); acceptProject(result.project);
-            }
+                const result = await api('/projects/' + initialId); acceptProject(await synchronizedProject(result.project));
+            } else if (state.version && !state.recoveryConflict && !state.saveAttempt) await synchronizeCurrent();
         });
         if (disposed) return;
         bootstrapFailed = !result;
@@ -1805,6 +1912,15 @@ function mountWorkspace(root) {
         updateSaveState();
     }
     void loadInitialWorkspace();
+    const synchronizeOnReturn = () => {
+        if (!ready || disposed || busy || document.visibilityState === 'hidden' || activeModal || objectMenu.isOpen || gesture || brushResize
+            || openingNativeEditor || picking || floorPainter?.active || floorPainter?.polygon || terrainPainter?.active
+            || wallControls?.active || wallControls?.armed || document.querySelector('.ownership-modal-overlay:not([hidden])')
+            || state.preview || state.recoveryConflict || state.saveAttempt || state.assetRemovals.length) return;
+        void run(synchronizeCurrent);
+    };
+    window.addEventListener('focus', synchronizeOnReturn, { signal });
+    document.addEventListener('visibilitychange', synchronizeOnReturn, { signal });
     if (recoveryError) notify(t(recoveryError), [], 'error');
     else if (recovered) notify(t('Recovered unsaved work from this tab.'));
     return () => { if (!autosave.discarded) flushFocusedField(); cancelDrawing(); disposed = true; autosave.dispose(); activeModal?.close(true); terrainPainter?.dispose(); clearTerrainPreview(); canvasRenderer.dispose(); nativeEffects?.dispose(); guideObserver.disconnect(); camera.dispose(); rememberDraft(); abort.abort(); };

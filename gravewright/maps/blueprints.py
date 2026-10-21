@@ -42,9 +42,9 @@ NODE_TYPES = ("event", "light", "sound", "state", "interact", "condition", "sequ
               "reference", "reveal", "barrier", "soundControl", "flame", "all", "any",
               "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random",
               "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion",
-              "setVisibility", "setAppearance", "showMessage", "showHandout", "cameraFocus", "teleport", *CONTROL_TYPES)
+              "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "cameraFocus", "teleport", *CONTROL_TYPES)
 # Node types introduced with version 2; version 1 documents keep their original vocabulary.
-VERSION_2_NODE_TYPES = ("interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "cameraFocus", "teleport", *CONTROL_TYPES)
+VERSION_2_NODE_TYPES = ("interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "cameraFocus", "teleport", *CONTROL_TYPES)
 BARRIER_CHANNELS = ("movement", "vision", "light", "sound")
 SOUND_CONTROLS = ("stop", "volume")
 PURE_NODE_TYPES = ("property", "compare", "reference", "all", "any", "getVariable", "compareValue", "elementGroup", "lightReference", "soundReference", "eventContext")
@@ -119,6 +119,8 @@ _NODE_FIELDS = {
     "setAppearance": {"assetId"},
     "showMessage": {"text", "audience"},
     "showHandout": {"journalId", "audience"},
+    "requestRoll": {"expression", "label", "visibility", "audience"},
+    "setQuestStatus": {"journalId", "status"},
     "cameraFocus": {"focusX", "focusY", "audience"},
     "teleport": {"destinationId"},
 }
@@ -318,7 +320,13 @@ def _clean_node(raw, event, *, version, assets, lights, tracks, appearance_asset
         result["visible"] = raw["visible"]
     elif kind == "setAppearance":
         result["assetId"] = _reference(raw["assetId"], appearance_assets, label="asset")
-    elif kind in ("showMessage", "showHandout", "cameraFocus"):
+    elif kind == "setQuestStatus":
+        from gravewright.journals.data import QUEST_STATUSES
+        result["journalId"] = _reference(raw["journalId"], None, label="quest")
+        if not isinstance(raw["status"], str) or raw["status"] not in QUEST_STATUSES:
+            raise MapError("Invalid blueprint quest status.")
+        result["status"] = raw["status"]
+    elif kind in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
         result["audience"] = clean_audience(raw["audience"])
         if kind == "showMessage":
             text = raw["text"]
@@ -327,6 +335,20 @@ def _clean_node(raw, event, *, version, assets, lights, tracks, appearance_asset
             result["text"] = text
         elif kind == "showHandout":
             result["journalId"] = _reference(raw["journalId"], None, label="handout")
+        elif kind == "requestRoll":
+            from gravewright.dice.engine import RollError
+            from gravewright.dice.grammar.compiler import compile_expression
+            from gravewright.dice.grammar.parser import Parser
+            expression, label, visibility = raw["expression"], raw["label"], raw["visibility"]
+            if (not isinstance(expression, str) or not expression.strip() or len(expression) > 512
+                    or not isinstance(label, str) or len(label) > 48 or "\x00" in label
+                    or not isinstance(visibility, str) or visibility not in ("public", "gm")):
+                raise MapError("Invalid blueprint roll request.")
+            try:
+                compile_expression(Parser(expression).parse())
+            except RollError:
+                raise MapError("Invalid blueprint roll expression.") from None
+            result.update(expression=expression, label=label, visibility=visibility)
         else:
             result.update(focusX=_number(raw["focusX"], 0, 1000, label="camera focus"),
                           focusY=_number(raw["focusY"], 0, 1000, label="camera focus"))
@@ -712,7 +734,7 @@ def evaluate_graph(blueprint, event, current_state, previous_state=None, doors=N
         node = nodes[identifier]
         result["trace"].append(node["id"])
         kind = node["type"]
-        if kind in ("light", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "cameraFocus", "teleport"):
+        if kind in ("light", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "cameraFocus", "teleport"):
             action = deepcopy(node)
             source = sources.get((identifier, "target"))
             if source:

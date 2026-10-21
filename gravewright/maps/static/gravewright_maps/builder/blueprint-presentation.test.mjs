@@ -12,6 +12,8 @@ const actions = [
     { id: 'teleport', type: 'teleport', destinationId: id(4) },
     { id: 'visibility', type: 'setVisibility', visible: false },
     { id: 'appearance', type: 'setAppearance', assetId: id(5) },
+    { id: 'roll', type: 'requestRoll', expression: '2d6 + 3', label: 'Search the chest', visibility: 'gm', audience: { scope: 'players' } },
+    { id: 'quest', type: 'setQuestStatus', journalId: id(6), status: 'completed' },
 ];
 const resources = { assets: [{ id: id(5) }] };
 function fixture(nodes = actions) {
@@ -79,4 +81,23 @@ test('Delay suspends later presentation actions and version one cannot silently 
         old.graphs[event].edges = old.graphs[event].edges.map(({ kind, ...edge }) => edge);
         assert.throws(() => validateBlueprint(old, resources), /blueprint/);
     }
+});
+
+test('roll requests preserve selected recipients and authored expressions without rolling during preview', () => {
+    const roll = { ...actions[6], audience: { scope: 'users', userIds: [id(1)] } };
+    const { blueprint } = fixture([roll, actions[7]]);
+    validateBlueprint(blueprint);
+    const before = structuredClone(blueprint), result = simulateGraph(blueprint, event, 'closed');
+    assert.equal(result.actions[0].expression, '2d6 + 3');
+    assert.deepEqual(result.actions[0].audience.userIds, [id(1)]);
+    assert.equal(result.actions[1].status, 'completed');
+    assert.equal(Object.hasOwn(result.actions[0], 'total'), false);
+    result.actions[0].audience.userIds.push(id(2));
+    assert.deepEqual(blueprint, before);
+    for (const node of [
+        { ...roll, expression: '' }, { ...roll, expression: 'x'.repeat(513) }, { ...roll, expression: '1d20\0' },
+        { ...roll, expression: 20 }, { ...roll, label: 'x'.repeat(49) }, { ...roll, visibility: 'secret' },
+        { ...roll, audience: { scope: 'users', userIds: [] } },
+        { ...actions[7], journalId: 'other' }, { ...actions[7], status: 'unknown' },
+    ]) assert.throws(() => validateBlueprint(fixture([node]).blueprint), /blueprint/);
 });

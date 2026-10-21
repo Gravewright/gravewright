@@ -81,7 +81,7 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
         if (result.error) results.append(make('p', { role: 'alert' }, t(result.error.message)));
         const warnings = {
             'timing-not-advanced': 'Timers and waits are scheduled in this test; time does not advance.',
-            'presentation-not-delivered': 'Messages, handouts and camera changes are listed without sending them to players.',
+            'presentation-not-delivered': 'Messages, journals, roll requests and camera changes are listed without sending them to players.',
             'missing-test-token': 'Teleport was skipped. Choose a test actor or token to test its destination.',
             'automation-paused': 'Automation is paused.',
             'destruction-timing-cancelled': 'Timers and waits owned by the destroyed element are cancelled.',
@@ -102,6 +102,10 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
         }
         for (const change of result.changes?.tokens || []) if (change.after) {
             line('Token destination', `${format.tokenLabel(change.id)} · ${change.after.grid_x}, ${change.after.grid_y}`);
+        }
+        const questStatus = value => t({ draft: 'Draft', available: 'Available', active: 'Active', completed: 'Completed', failed: 'Failed', archived: 'Archived' }[value] || value || '—');
+        for (const change of result.changes?.journals || []) if (change.after) {
+            line('Quest', `${change.after.title || change.before?.title || t('Quest')} · ${questStatus(change.before?.status)} → ${questStatus(change.after.status)}`);
         }
         const variables = format.variableChanges(result.changes?.sceneVariables?.before, result.changes?.sceneVariables?.after, t('Scene'));
         if (variables.length) line('Variables', variables.join(' · '));

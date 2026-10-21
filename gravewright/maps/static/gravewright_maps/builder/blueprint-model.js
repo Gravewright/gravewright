@@ -170,7 +170,8 @@ const regionOutputs = blueprintVerbEventsFor('region').map(eventOutput);
 const versionTwoTypes = ['sequence', 'sprite', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'flame',
     'getVariable', 'setVariable', 'compareValue', 'emitEvent', ...controlNodeTypes, 'delay', 'timer', 'switch', 'random',
     'elementGroup', 'lightReference', 'soundReference', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
-    'showMessage', 'showHandout', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'interact'];
+    'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'interact'];
+export const questStatuses = Object.freeze(['draft', 'available', 'active', 'completed', 'failed', 'archived']);
 export const barrierChannels = Object.freeze(['movement', 'vision', 'light', 'sound']);
 export const soundControls = Object.freeze(['stop', 'volume']);
 // A connected Target replaces "Self" with a referenced element. The persisted
@@ -236,6 +237,8 @@ export const blueprintContract = freeze({
         setRegion: { category: 'action', label: 'Set region', inputs: [executionInput, elementTargets], outputs: [executionNext] },
         showMessage: { category: 'action', label: 'Show message', inputs: [executionInput], outputs: [executionNext] },
         showHandout: { category: 'action', label: 'Show handout', inputs: [executionInput], outputs: [executionNext] },
+        requestRoll: { category: 'action', label: 'Request dice roll', inputs: [executionInput], outputs: [executionNext] },
+        setQuestStatus: { category: 'action', label: 'Set quest status', inputs: [executionInput], outputs: [executionNext] },
         cameraFocus: { category: 'action', label: 'Focus camera', inputs: [executionInput], outputs: [executionNext] },
         teleport: { category: 'action', label: 'Teleport token', inputs: [executionInput], outputs: [executionNext] },
         setVisibility: { category: 'action', label: 'Set visibility', inputs: [executionInput, elementTargets], outputs: [executionNext] },
@@ -350,6 +353,7 @@ const nodeFields = {
     elementGroup: ['name', 'memberType', 'targetIds'], lightReference: ['targetId'], soundReference: ['trackId'], eventContext: ['property'],
     move: ['dx', 'dy'], rotate: ['degrees'], setInteraction: ['enabled'], setRegion: ['enabled'],
     showMessage: ['text', 'audience'], showHandout: ['journalId', 'audience'], cameraFocus: ['focusX', 'focusY', 'audience'],
+    requestRoll: ['expression', 'label', 'visibility', 'audience'], setQuestStatus: ['journalId', 'status'],
     teleport: ['destinationId'], setVisibility: ['visible'], setAppearance: ['assetId'],
 };
 function exactFields(value, fields) {
@@ -411,7 +415,11 @@ function validateGraph(graph, event, version) {
         if (node.type === 'move' && ![node.dx, node.dy].every(value => Number.isFinite(value) && Math.abs(value) <= 1000)
             || node.type === 'rotate' && (!Number.isFinite(node.degrees) || Math.abs(node.degrees) > 36000)
             || ['setInteraction', 'setRegion'].includes(node.type) && typeof node.enabled !== 'boolean') throw new Error('Invalid blueprint action.');
-        if (['showMessage', 'showHandout', 'cameraFocus'].includes(node.type)) validateAudience(node.audience);
+        if (['showMessage', 'showHandout', 'requestRoll', 'cameraFocus'].includes(node.type)) validateAudience(node.audience);
+        if (node.type === 'requestRoll' && (typeof node.expression !== 'string' || !node.expression.trim() || node.expression.includes('\0')
+            || Array.from(node.expression).length > 512 || typeof node.label !== 'string' || node.label.includes('\0')
+            || Array.from(node.label).length > 48 || !['public', 'gm'].includes(node.visibility))) throw new Error('Invalid blueprint dice request.');
+        if (node.type === 'setQuestStatus' && (!validUuid(node.journalId) || !questStatuses.includes(node.status))) throw new Error('Invalid blueprint quest action.');
         if (node.type === 'showMessage' && (typeof node.text !== 'string' || !node.text.trim() || node.text.includes('\0') || Array.from(node.text).length > 2000)
             || node.type === 'showHandout' && !validUuid(node.journalId)
             || node.type === 'teleport' && !validUuid(node.destinationId)
@@ -557,7 +565,7 @@ export function simulateGraph(blueprint, event, currentState, previousState = cu
             return;
         }
         if (['light', 'sound', 'state', 'interact', 'sprite', 'reveal', 'barrier', 'soundControl', 'flame', 'setVariable', 'emitEvent', 'timer',
-            'move', 'rotate', 'setInteraction', 'setRegion', 'showMessage', 'showHandout', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance'].includes(node.type)) {
+            'move', 'rotate', 'setInteraction', 'setRegion', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance'].includes(node.type)) {
             const action = structuredClone(node), aim = source(node.id, 'target');
             if (aim) action.target = structuredClone(value(aim));
             const input = node.type === 'setVariable' && source(node.id, 'value');

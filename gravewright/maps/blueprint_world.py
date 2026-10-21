@@ -93,10 +93,10 @@ def presentation_catalog(who):
     from .services import manage
     manage(who)
     return {
-        "users": [{"id": str(row.user_id), "name": row.user.name}
+        "users": [{"id": str(row.user_id), "name": row.user.name, "role": row.role}
                   for row in Membership.objects.filter(campaign_id=who.campaign_id, user__is_active=True)
                   .select_related("user").order_by("user__name", "user_id")],
-        "handouts": [{"id": str(row.pk), "name": row.title}
+        "handouts": [{"id": str(row.pk), "name": row.title, "type": row.type}
                      for row in Journal.objects.filter(campaign_id=who.campaign_id).order_by("title", "id")],
     }
 
@@ -108,6 +108,8 @@ def presentation_for(campaign_id, user_id, payload):
     try:
         who = journals.member(campaign_id, user_id)
         services.scene(payload["sceneId"], who)
+        if payload["type"] == "roll" and who.role == "streamer":
+            return None
         if payload["type"] == "handout":
             journals.get(payload["journalId"], who)
         return payload
@@ -121,6 +123,8 @@ def present(scene, who, node, context):
     from gravewright.realtime.dispatch import send
     audience = node["audience"]
     members = Membership.objects.filter(campaign_id=scene.campaign_id, user__is_active=True)
+    if node["type"] == "requestRoll":
+        members = members.exclude(role="streamer")
     if audience["scope"] == "trigger":
         members = members.filter(user_id=context["userId"])
     elif audience["scope"] == "players":
@@ -128,11 +132,14 @@ def present(scene, who, node, context):
     else:
         members = members.filter(user_id__in=audience["userIds"])
     entry = {"id": str(uuid.uuid4()), "sceneId": str(scene.pk),
-             "type": {"showMessage": "message", "showHandout": "handout", "cameraFocus": "camera"}[node["type"]]}
+             "type": {"showMessage": "message", "showHandout": "handout", "requestRoll": "roll",
+                      "cameraFocus": "camera"}[node["type"]]}
     if node["type"] == "showMessage":
         entry["text"] = node["text"]
     elif node["type"] == "showHandout":
         entry["journalId"] = node["journalId"]
+    elif node["type"] == "requestRoll":
+        entry.update({key: node[key] for key in ("expression", "label", "visibility")})
     else:
         from gravewright.tokens.services import geometry
         cell, ox, oy, width, height = geometry(scene)
@@ -146,6 +153,35 @@ def present(scene, who, node, context):
         transaction.on_commit(lambda: send(scene.campaign_id, {"type": "room.automation_presentation",
             "payload": entry, "recipients": recipients}), robust=True)
     return len(recipients)
+
+
+def set_quest_status(scene, who, node):
+    """Execute a GM-authored status command through the owning journal service.
+
+    Saving a Blueprint requires a GM. Its specific quest/status binding is the
+    delegated capability; interacting players never receive general journal
+    write access. An active campaign GM must still authorize the journal command.
+    The caller's map transaction contains its receipt and notifications too.
+    """
+    from gravewright.campaigns.models import Membership
+    from gravewright.journals import services as journals
+    from gravewright.journals.models import Journal
+    quest = Journal.objects.select_for_update().filter(
+        pk=node["journalId"], campaign_id=scene.campaign_id, type="quest").first()
+    if quest is None:
+        raise MapError("Choose a quest from this campaign.")
+    authority = (who if who.role == "gm" else Membership.objects.filter(
+        campaign_id=scene.campaign_id, role="gm", user__is_active=True).order_by("id").first())
+    if authority is None:
+        raise MapError("An active campaign GM is required to update this quest.", "forbidden")
+    if isinstance(quest.data, dict) and quest.data.get("status") == node["status"]:
+        return {"journalId": str(quest.pk), "status": node["status"], "version": quest.version, "changed": False}
+    try:
+        result = journals.command(scene.campaign_id, authority.user_id, "status",
+            {"journal_id": str(quest.pk), "status": node["status"], "version": quest.version}, uuid.uuid4())
+    except journals.JournalError as error:
+        raise MapError(str(error), error.code) from None
+    return {"journalId": str(quest.pk), "status": node["status"], "version": result["version"], "changed": True}
 
 
 def _wall_blocks(wall, token, left, top, right, bottom):
