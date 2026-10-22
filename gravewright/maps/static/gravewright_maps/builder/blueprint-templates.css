@@ -19,9 +19,10 @@
 .table-form-modal.blueprint-templates button[aria-pressed=true], .table-form-modal.blueprint-templates .blueprint-templates__primary { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--surface)); }
 .blueprint-templates__item { text-align: left; flex-shrink: 0; }
 .blueprint-templates label { display: grid; gap: var(--space-1); color: var(--text-muted); font-size: 12px; min-width: 0; overflow-wrap: anywhere; }
-.blueprint-templates :is(input,select,textarea) { box-sizing: border-box; width: 100%; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; }
-.blueprint-templates :is(input,select) { min-height: 32px; }
-.blueprint-templates input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; accent-color: var(--accent); }
+.blueprint-templates :where(input:not([type=checkbox],[type=radio],[type=range]),select,textarea) { box-sizing: border-box; width: 100%; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background-color: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; }
+.blueprint-templates :where(input:not([type=checkbox],[type=radio],[type=range]),select) { min-height: 32px; }
+.blueprint-templates select { padding-inline-end: var(--space-7); }
+.blueprint-templates input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; margin: var(--space-0); padding: var(--space-0); accent-color: var(--accent); }
 .blueprint-templates textarea { min-height: 72px; resize: vertical; }
 .blueprint-templates :is(input,button,select,textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .blueprint-templates__parameter { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: var(--space-2); }

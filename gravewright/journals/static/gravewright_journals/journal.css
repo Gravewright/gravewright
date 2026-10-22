@@ -11,7 +11,7 @@
 .journal-window__titlebar svg { width: var(--size-16); height: var(--size-16); }
 .journal-window__titlebar .gw-window__controls { padding-left: var(--space-2); border-left: var(--size-1) solid var(--border); }
 .journal-window__identity small, .journal-window__save { font-size: var(--text-md); color: var(--text-muted); }
-.journal-window__title { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; }
+.journal-window__title { width: 100%; padding: var(--space-0); border: 0; background: transparent; color: inherit; font: inherit; }
 .journal-window__body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 .journal-window__permissions { padding: var(--space-3); border-bottom: var(--size-1) solid var(--border); max-height: var(--size-233); overflow: auto; }
 .journal-window__error, .journal-window__result { padding: var(--space-2) var(--space-3); background: var(--surface-raised, #242830); }
@@ -21,12 +21,13 @@
 .journal-button:disabled { opacity: .4; cursor: default; }
 .journal-button svg { width: var(--size-21); height: var(--size-21); flex-shrink: 0; }
 .journal-button:focus-visible, .journal-input:focus-visible { outline: var(--size-2) solid var(--focus-ring); outline-offset: var(--size-2); }
-.journal-input { min-width: 0; width: 100%; padding: var(--space-1); border: var(--size-1) solid var(--border); border-radius: var(--radius-sm); background: var(--input-bg, #0e1216); color: var(--text); font: inherit; }
+.journal-input { min-width: 0; width: 100%; padding: var(--space-1); border: var(--size-1) solid var(--border); border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text); font: inherit; }
+select.journal-input { padding-inline-end: var(--space-7); }
 .journal-field { display: grid; gap: var(--space-1); margin: var(--space-2) var(--space-0); }
 .journal-field > span { display: flex; gap: var(--space-1); align-items: center; }
 .game-panel__journal-host { display: flex; flex: 1; min-height: 0; overflow: auto; }
 .journal-directory { width: 100%; padding: var(--space-2); }
-.diary-workspace__search input { width: 100%; min-width: 0; border: 0; background: transparent; color: inherit; }
+.diary-workspace__search input { width: 100%; min-width: 0; padding: var(--space-0); border: 0; background: transparent; color: inherit; }
 .journal-directory__empty { display: grid; justify-items: center; gap: var(--space-3); color: var(--text-muted); padding: var(--space-5); }
 .diary-workspace { display: grid; grid-template-columns: var(--journal-browser) minmax(0,1fr); width: 100%; min-height: 0; }
 .diary-workspace--collapsed { grid-template-columns: minmax(0,1fr); }

@@ -7,6 +7,7 @@
 
 .gw-field {
     display: grid;
+    align-content: start;
     gap: var(--space-1);
     min-width: 0;
 }
@@ -20,7 +21,7 @@
 }
 
 .gw-field__control,
-.gw-field input,
+.gw-field input:not(:where([type="hidden"], [type="checkbox"], [type="radio"], [type="range"], [type="color"])),
 .gw-field select,
 .gw-field textarea {
     width: 100%;
@@ -48,7 +49,7 @@
     resize: vertical;
 }
 
-.gw-field select {
+.gw-field select:where(:not([multiple])):where(:not([size]), [size="0"], [size="1"]) {
     appearance: none;
     padding-right: var(--space-7);
     background-image: linear-gradient(45deg, transparent 50%, var(--text-faint) 50%),
@@ -60,12 +61,33 @@
     background-repeat: no-repeat;
 }
 
-.gw-field input:focus,
+.gw-field input:not(:where([type="hidden"], [type="checkbox"], [type="radio"], [type="range"], [type="color"])):focus,
 .gw-field select:focus,
 .gw-field textarea:focus,
 .gw-field__control:focus {
     border-color: var(--accent);
     box-shadow: var(--ring-field), var(--ring-accent);
+}
+
+.gw-field :is(input, select, textarea):is([aria-invalid="true"], :user-invalid),
+.gw-field__control:is([aria-invalid="true"], :user-invalid) {
+    border-color: var(--danger);
+}
+
+.gw-field :is(input, select, textarea):is([aria-invalid="true"], :user-invalid):focus,
+.gw-field__control:is([aria-invalid="true"], :user-invalid):focus {
+    outline: var(--hairline-width-strong) solid var(--danger-border);
+    outline-offset: var(--size-2);
+}
+
+.gw-field input[type="range"] {
+    width: 100%;
+    min-height: var(--control-height-sm);
+    padding: var(--space-0);
+}
+
+.gw-field input[type="color"] {
+    height: var(--control-height-md);
 }
 
 /* Keep the autofill surface when the focus ring replaces the base shadow. */

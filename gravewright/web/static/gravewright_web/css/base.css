@@ -13,6 +13,11 @@ body,
     margin: var(--space-0);
 }
 
+html {
+    color-scheme: dark;
+    accent-color: var(--accent);
+}
+
 body {
     min-height: 100vh;
     background: var(--bg);
@@ -31,10 +36,45 @@ textarea {
     color: inherit;
 }
 
+/* Unclassified controls, including dynamically mounted forms, still belong to
+ * the host theme. Component selectors can override these low-specificity defaults. */
+:where(input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="button"], [type="submit"], [type="reset"], [type="image"]), select, textarea) {
+    min-width: 0;
+    max-width: 100%;
+    border: var(--border-hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--surface-field);
+    color: var(--text-bright);
+    font-size: var(--text-md);
+    letter-spacing: var(--tracking-none);
+    text-transform: none;
+}
+
+:where(textarea) {
+    min-height: var(--size-89);
+    resize: vertical;
+    line-height: var(--leading-normal);
+}
+
+:where(input, textarea)::placeholder {
+    color: var(--text-faint);
+}
+
+:where(input, textarea)[readonly] {
+    color: var(--text-muted);
+}
+
+:where(button, input[type="button"], input[type="submit"], input[type="reset"]) {
+    border: var(--border-hairline);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-raised);
+}
+
 /* A native select paints an opaque light ground of its own, and Chrome's
  * autofill repaints a filled input yellow-white. Both must be told otherwise
  * or they punch a hole in a dark surface. */
-select {
+select:where(:not([multiple])):where(:not([size]), [size="0"], [size="1"]) {
     appearance: none;
     background-image:
         linear-gradient(45deg, transparent 50%, currentcolor 50%),
@@ -47,9 +87,79 @@ select {
     padding-right: var(--space-7);
 }
 
-select option {
+select option,
+select optgroup {
     background: var(--surface);
     color: var(--text);
+}
+
+select[multiple],
+select[size]:not([size="0"], [size="1"]) {
+    background-image: none;
+}
+
+:where(input[type="checkbox"], input[type="radio"]) {
+    flex: 0 0 auto;
+    width: var(--size-16);
+    height: var(--size-16);
+    margin: var(--space-0);
+    cursor: pointer;
+}
+
+:where(input[type="range"]) {
+    min-width: 0;
+    max-width: 100%;
+    margin: var(--space-0);
+    cursor: pointer;
+}
+
+:where(input[type="color"]) {
+    width: var(--size-44);
+    height: var(--control-height-sm);
+    border: var(--border-hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1);
+    background-color: var(--surface-field);
+    cursor: pointer;
+}
+
+:where(input[type="color"])::-webkit-color-swatch-wrapper {
+    padding: var(--space-0);
+}
+
+:where(input[type="color"])::-webkit-color-swatch {
+    border: 0;
+    border-radius: var(--radius-sm);
+}
+
+:where(input[type="color"])::-moz-color-swatch {
+    border: 0;
+    border-radius: var(--radius-sm);
+}
+
+:where(input[type="file"]) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:where(input[type="file"])::file-selector-button {
+    margin-right: var(--space-3);
+    border: var(--border-hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--surface-raised);
+    color: var(--text-bright);
+    font: inherit;
+    cursor: pointer;
+}
+
+:where(input[type="file"]:enabled)::file-selector-button:hover {
+    border-color: var(--accent);
+    background-color: var(--accent-glow);
+}
+
+:where(input[type="file"]:disabled)::file-selector-button {
+    cursor: not-allowed;
 }
 
 input:autofill,

@@ -36,8 +36,10 @@
 .gw-folder-editor header button { display: grid; width: var(--size-29); height: var(--size-29); padding: var(--space-0); place-items: center; border: var(--size-1) solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); }
 .gw-folder-editor header button:hover { border-color: var(--border-accent); background: var(--accent-glow); color: var(--accent-hover); }
 .gw-folder-editor label { display: grid; gap: var(--space-2); color: var(--text-muted); font-size: var(--text-sm); font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
-.gw-folder-editor input, .gw-folder-editor select { width: 100%; min-height: var(--size-34); padding: var(--space-0) var(--space-2); border: var(--size-1) solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font: inherit; text-transform: none; }
+.gw-folder-editor input, .gw-folder-editor select { width: 100%; min-height: var(--size-34); padding: var(--space-0) var(--space-2); border: var(--size-1) solid var(--border); border-radius: var(--radius-sm); background-color: var(--bg); color: var(--text); font: inherit; text-transform: none; }
+.gw-folder-editor select { padding-inline-end: var(--space-7); }
 .gw-folder-editor input:focus, .gw-folder-editor select:focus { border-color: var(--accent); outline: none; }
+.gw-folder-editor :is(input, select):focus-visible { outline: var(--size-2) solid var(--focus-ring); outline-offset: var(--size-2); }
 .gw-folder-editor__color { display: grid; grid-template-columns: 1fr var(--size-39); gap: var(--space-2); }
 .gw-folder-editor__color input[type="color"] { width: var(--size-39); min-height: var(--size-34); padding: var(--space-half); cursor: pointer; }
 .gw-folder-editor .gw-folder-editor__primary { min-height: var(--size-38); border: var(--size-1) solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--text); font: inherit; font-weight: 650; }

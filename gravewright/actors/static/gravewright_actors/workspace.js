@@ -1,6 +1,7 @@
 import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
 import { writeReference } from '/static/gravewright_table/references.js';
 import { openFormModal, modalText } from '/static/gravewright_table/form-modal.js';
+import { mountModal } from '/static/gravewright_table/modal.js';
 import {
   beginTreeDrag,
   cancelTreeDrag,
@@ -119,31 +120,44 @@ function error(message) {
   show(el, true);
 }
 function form(id, title, save) {
-  dialog?.remove();
+  dialog?.close();
   const el = clone(id);
   dialog = el;
   el.setAttribute("aria-label", title);
   el.querySelector("header strong").textContent = title;
-  const r = panel.getBoundingClientRect();
-  el.style.left = Math.max(13, r.left - 258) + "px";
-  el.style.top = Math.max(13, r.top + 51) + "px";
-  el.querySelector("header button").onclick = () => el.remove();
+  const fieldset = el.querySelector('fieldset');
+  const footer = document.createElement('footer');
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.textContent = modalText('Cancel', 'Cancelar');
+  footer.append(cancel, el.querySelector('[type=submit]'));
+  el.append(footer);
+  let saving = false;
+  const close = () => { if (!saving) el.close(); };
+  el.querySelector("header button").onclick = close;
+  cancel.onclick = close;
   el.onsubmit = async (e) => {
     e.preventDefault();
-    const button = el.querySelector("[type=submit]");
-    button.disabled = true;
+    if (saving) return;
+    saving = true;
+    fieldset.disabled = true;
+    for (const button of el.querySelectorAll('button')) button.disabled = true;
     try {
       await save(el);
-      el.remove();
+      saving = false;
+      el.close();
     } catch (cause) {
       const p = el.querySelector("[role=alert]");
       p.textContent = cause.message;
       show(p, true);
     } finally {
-      button.disabled = false;
+      saving = false;
+      fieldset.disabled = false;
+      for (const button of el.querySelectorAll('button')) button.disabled = false;
     }
   };
-  document.body.append(el);
+  el.addEventListener('close', () => { if (dialog === el) dialog = undefined; }, {once: true});
+  mountModal(el, {canClose: () => !saving});
   el.querySelector("input")?.focus();
   return el;
 }
@@ -159,7 +173,7 @@ function renderActorTypeLabel(node, type) {
 }
 function syncActorTypes() {
   const select = dialog?.querySelector('[name=actorType]');
-  if (!select || select.disabled) return;
+  if (!select || select.matches(':disabled')) return;
   const selected = select.value;
   select.replaceChildren(...state.actorTypes.map((type) =>
     renderActorTypeLabel(new Option('', type.id), type)));
@@ -595,7 +609,7 @@ if (panel) {
   window.gravewrightRealtime?.actorsSubscribe();
   window.addEventListener("gravewright:access-revoked", () => {
     sheet?.close();
-    dialog?.remove();
+    dialog?.close(true);
     menu?.remove();
     state = { ...state, actors: [], templates: [], folders: [] };
     paint();
@@ -606,7 +620,7 @@ window.addEventListener("pagehide", () => {
   cancelTreeDrag("actor");
   popup?.close();
   sheet?.close();
-  dialog?.remove();
+  dialog?.close(true);
   menu?.remove();
 });
 

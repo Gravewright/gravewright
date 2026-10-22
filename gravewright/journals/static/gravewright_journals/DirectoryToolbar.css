@@ -9,7 +9,7 @@
 }
 .directory-toolbar__search[data-v-gwtoolbar] { display: flex; align-items: center; gap: var(--space-2); min-height: var(--size-34); padding: var(--space-0) var(--space-2); border: var(--size-1) solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-faint);
 }
-.directory-toolbar__search input[data-v-gwtoolbar] { min-width: 0; flex: 1; border: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--text-md);
+.directory-toolbar__search input[data-v-gwtoolbar] { min-width: 0; flex: 1; padding: var(--space-0); border: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--text-md);
 }
 .directory-toolbar__actions[data-v-gwtoolbar] button:hover { color: var(--accent); border-color: var(--accent);
 }

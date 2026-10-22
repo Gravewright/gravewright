@@ -687,6 +687,23 @@ Host interface CSS must render text at **12px or larger**. Check effective sizes
 
 Widths, heights and other component geometry keep their required dimensions. A value specific to one component may use a local `px` literal; reserve shared `--size-*` tokens for values reused across components. Responsive geometry can still use relative units and layout expressions such as `calc()` and `clamp()` where needed.
 
+### Form controls
+
+The shared `base.css` supplies dark, low-specificity defaults for native fields and buttons,
+file chooser buttons, checkboxes, sliders and color swatches, including forms
+mounted after page load. Use `gw-field` for a label, control and help text;
+checkboxes, radios, ranges and colors retain their own geometry rather than
+inheriting text-field dimensions. Native invalid fields and `aria-invalid="true"`
+use the field error treatment. Associate hints and errors with `aria-describedby`.
+
+Single-choice selects inherit their chevron from the base styles. Override their
+surface with `background-color`, since the `background` shorthand removes that
+image, and reserve end padding for the chevron. Multiple/visible-list selects do
+not use a chevron. Custom upload surfaces must keep the real file input reachable
+by keyboard, show its focus, and prevent window dragging from the upload target.
+Check empty, selected, disabled and error states at narrow viewport widths with
+synthetic data; operating-system file selection remains the native file picker.
+
 ## Native state and realtime
 
 Native UI code calls the shared domain API where implemented and still has dedicated HTTP/socket adapters for specialized flows such as uploads, board subscriptions and rendered fragments. The public browser API does not replace every native transport.

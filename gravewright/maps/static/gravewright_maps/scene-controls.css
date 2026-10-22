@@ -1,10 +1,11 @@
 .scene-controls { display: grid; grid-template-rows: auto auto minmax(48px, 1fr) auto auto; flex: 1; gap: var(--space-2); min-width: 0; min-height: 0; overflow: hidden; color: var(--text); font-size: 12px; }
 .scene-controls.is-inspecting { grid-template-rows: auto auto minmax(48px, 1fr) auto minmax(64px, 1.4fr); }
 .scene-controls[hidden] { display: none; }
-.scene-controls :is(button, input, select) { box-sizing: border-box; min-height: 30px; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; }
+.scene-controls :is(button, input, select) { box-sizing: border-box; min-height: 30px; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text); font: inherit; font-size: 12px; }
 .scene-controls :is(button, select) { cursor: pointer; }
 .scene-controls button { padding: var(--space-1) var(--space-2); }
-.scene-controls :is(input:not([type=checkbox]), select) { padding: var(--space-1) var(--space-2); }
+.scene-controls :is(input:where(:not([type=checkbox])), select) { padding: var(--space-1) var(--space-2); }
+.scene-controls select:where(:not([multiple])):where(:not([size]), [size="0"], [size="1"]) { padding-inline-end: var(--space-7); }
 .scene-controls :is(button, input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .scene-controls button:hover:not(:disabled) { border-color: var(--accent); }
 .scene-controls :is(button, input, select):disabled { opacity: .55; cursor: default; }

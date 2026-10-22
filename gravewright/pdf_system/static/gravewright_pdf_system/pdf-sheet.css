@@ -67,6 +67,12 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
 .pdf-sheet__field[readonly] { background: none; }
 .pdf-sheet__field--checkbox { width: auto !important; }
 
+/* Mapped controls use the PDF's authored bounds, including small text rows. */
+.pdf-sheet__stage:not([data-viewer-missing="true"]) .pdf-sheet__field {
+  min-height: 0;
+  max-width: none;
+}
+
 .pdf-sheet__empty {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2);
   height: 100%; padding: var(--space-5); color: var(--text-faint, #7f8994); text-align: center; font-size: var(--text-md);
@@ -143,7 +149,10 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
 .pdf-sheet__select {
   padding: var(--space-1) var(--space-2); font: inherit; font-size: var(--text-md);
   border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
-  background: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
+  background-color: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
+}
+.pdf-sheet__select:where(:not([multiple])):where(:not([size]), [size="0"], [size="1"]) {
+  padding-inline-end: var(--space-7);
 }
 .pdf-sheet__text {
   padding: var(--space-2) var(--space-2); font: inherit; font-size: var(--text-md); line-height: 1.55; resize: vertical;

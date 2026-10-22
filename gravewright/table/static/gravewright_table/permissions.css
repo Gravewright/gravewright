@@ -8,7 +8,7 @@
 .ownership-dialog__gm{display:flex;align-items:center;justify-content:flex-end;gap:var(--space-2);font-size:var(--text-sm)}
 .ownership-dialog__row{display:grid;grid-template-columns:minmax(var(--size-90),1fr) minmax(var(--size-140),1.7fr);align-items:center;gap:var(--space-4);margin-bottom:var(--space-3);font-size:var(--text-base)}
 .ownership-dialog__row span{overflow-wrap:anywhere}
-.ownership-dialog select{width:100%;padding:var(--space-2);border-radius:var(--radius-sm);border:var(--size-1) solid #40464e;background:#252c34;color:inherit}
+.ownership-dialog select{width:100%;padding:var(--space-2);padding-inline-end:var(--space-7);border-radius:var(--radius-sm);border:var(--size-1) solid var(--border);background-color:var(--surface-field);color:inherit}
 .ownership-dialog__help{color:#b7b5ad}
 .ownership-dialog [role=alert]{color:#ffb7ac}
 .ownership-dialog footer{display:flex;flex-direction:column;gap:var(--space-2)}

@@ -220,11 +220,13 @@
 .map-builder__asset[aria-pressed=true] > img { border-color: var(--accent); }
 .map-builder__asset > span:last-child { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; color: var(--text); font-size: 12px; font-weight: 400; }
 .map-builder__empty, .map-builder [data-builder-library-help] { padding-block: var(--space-2); color: var(--text-faint); font-size: 12px; }
-.map-builder :is(a,button,input,select,summary,[tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.map-builder :is(a,button,input,select,textarea,summary,[tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .map-builder label { display: grid; min-width: 0; gap: var(--space-2); font-size: var(--text-md); color: var(--text-muted); }
-.map-builder input:not([type=checkbox],[type=file]), .map-builder select { width: 100%; min-width: 0; height: var(--control-height-sm); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background-color: var(--surface-field); color: var(--text); font-size: var(--text-md); }
+.map-builder input:not([type=checkbox],[type=radio],[type=range],[type=file],[type=hidden]), .map-builder select, .map-builder textarea { width: 100%; min-width: 0; min-height: var(--control-height-sm); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); background-color: var(--surface-field); color: var(--text); font: inherit; font-size: var(--text-md); }
+.map-builder textarea { min-height: 96px; resize: vertical; }
 .map-builder select { padding-inline-end: var(--space-7); text-overflow: ellipsis; }
 .map-builder input[type=color] { padding: var(--space-half); cursor: pointer; }
+.map-builder input[type=range] { width: 100%; min-width: 0; margin: var(--space-0); padding: var(--space-0); border: 0; background: transparent; accent-color: var(--accent); }
 .map-builder input[type=checkbox] { appearance: auto; width: var(--size-18); height: var(--size-18); min-width: var(--size-18); margin: var(--space-0); padding: var(--space-0); accent-color: var(--accent); flex: 0 0 var(--size-18); cursor: pointer; }
 .map-builder input[type=checkbox]:disabled { cursor: not-allowed; }
 .map-builder__project-list { display: grid; gap: var(--space-2); }
@@ -398,6 +400,8 @@
 .map-builder-import select { padding-right: var(--space-7); background-image: linear-gradient(45deg, transparent 50%, currentcolor 50%), linear-gradient(135deg, currentcolor 50%, transparent 50%); background-position: right 14px center, right 9px center; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
 .map-builder-import input[type=file] { height: auto; max-width: 100%; padding: var(--space-2); white-space: normal; }
 .map-builder-import .table-form-modal__body { display: grid; gap: var(--space-4); }
+.map-builder-import [data-builder-ready-map] { min-height: 34px; padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; cursor: pointer; }
+.map-builder-import [data-builder-ready-map]:hover:not(:disabled) { border-color: var(--accent); background: var(--surface-raised); }
 .map-builder-import__hint { margin: var(--space-0); color: var(--text-muted); font-size: 12px; }
 .map-builder-import__preview { width: 100%; height: 140px; object-fit: contain; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 .map-builder__background-settings { display: grid; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); }

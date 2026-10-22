@@ -11,7 +11,9 @@
 .account-settings__card>header{display:grid;gap:var(--space-1)}
 .account-settings__form{display:grid;gap:var(--space-3)}
 .account-settings label{display:grid;gap:var(--space-1);min-width:0;font-size:var(--text-md)}
-.account-settings input:not([type=hidden]):not([type=color]),.account-settings select{box-sizing:border-box;width:100%;min-width:0;min-height:var(--control-height-sm);padding:var(--space-1) var(--space-2);background:var(--bg);border:var(--border-hairline);border-radius:var(--radius-sm);color:var(--text);font:inherit}
+.account-settings input:not([type=hidden],[type=color],[type=checkbox],[type=radio],[type=range]),.account-settings select{box-sizing:border-box;width:100%;min-width:0;min-height:var(--control-height-sm);padding:var(--space-1) var(--space-2);background-color:var(--surface-field);border:var(--border-hairline);border-radius:var(--radius-sm);color:var(--text);font:inherit}
+.account-settings select{padding-inline-end:var(--space-7)}
+.account-settings__profile{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3);min-width:0}
 .account-settings select option{background:var(--surface);color:var(--text)}
 .account-settings input:focus-visible,.account-settings select:focus-visible{outline:var(--size-2) solid var(--accent);outline-offset:var(--size-2)}
 .account-settings fieldset[data-v-gwaccount]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3);min-width:0;margin:var(--space-0);padding:var(--space-3) var(--space-0) var(--space-0);border:0;border-top:var(--border-hairline);border-radius:0}
@@ -27,7 +29,7 @@
 .account-settings__marketplace h3{display:flex;align-items:center;gap:var(--space-2)}
 .account-settings__marketplace h3 svg{color:var(--accent)}
 @media(max-width:1050px){.account-settings__columns{grid-template-columns:1fr}.account-settings__preferences{grid-template-columns:repeat(2,minmax(0,1fr))}.account-settings .condition-preferences{grid-column:1/-1}}
-@media(max-width:650px){.account-settings__preferences{grid-template-columns:1fr}.account-settings .account-settings__card{padding:var(--space-0) var(--space-0) var(--space-3)}.account-settings fieldset[data-v-gwaccount]{grid-template-columns:1fr}.account-settings h1{font-size:var(--text-display)}}
+@media(max-width:650px){.account-settings__preferences{grid-template-columns:1fr}.account-settings .account-settings__card{padding:var(--space-0) var(--space-0) var(--space-3)}.account-settings fieldset[data-v-gwaccount],.account-settings__profile{grid-template-columns:1fr}.account-settings h1{font-size:var(--text-display)}}
 
 .account-settings__preferences{padding-left:var(--space-5);border-left:var(--border-hairline)}
 .account-settings .account-settings__card:last-child{border-bottom:0}

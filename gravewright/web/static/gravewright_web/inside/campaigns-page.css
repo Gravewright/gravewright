@@ -3,7 +3,9 @@
 .campaign-hub__search { display: flex; align-items: center; gap: var(--space-2); color: var(--text-faint); }
 .campaign-hub__global-search { width: min(34vw, var(--size-377)); }
 .campaign-hub__global-search input,
-.campaign-hub__search input { width: 100%; border: 0; background: transparent; color: var(--text-bright); outline: none; }
+.campaign-hub__search input { width: 100%; min-height: 0; padding: var(--space-0); border: 0; border-radius: 0; background: transparent; color: var(--text-bright); outline: none; }
+.campaign-hub__global-search:focus-within { outline: var(--size-2) solid var(--focus-ring); outline-offset: var(--size-4); border-radius: var(--radius-sm); }
+.campaign-hub__search:focus-within { border-color: var(--accent); box-shadow: var(--ring-accent); }
 .campaign-hub__owner { display: flex; align-items: center; gap: var(--space-3); }
 .campaign-hub__owner-copy { display: grid; line-height: 1.25; }
 .campaign-hub__owner-copy strong { color: var(--text); font-size: var(--text-md); }
@@ -18,7 +20,7 @@
 .campaign-hub__primary-actions { display: flex; gap: var(--space-2); }
 .campaign-hub__toolbar { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-5) var(--space-0); }
 .campaign-hub__search { min-height: var(--control-height-md); width: min(100%, var(--size-377)); padding: var(--space-0) var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); }
-.campaign-hub__filter { display: inline-flex; min-height: var(--control-height-md); align-items: center; gap: var(--space-2); padding: var(--space-0) var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-muted); font-size: var(--text-md); }
+.campaign-hub__filter { display: inline-flex; min-height: var(--control-height-md); align-items: center; gap: var(--space-2); padding: var(--space-0) var(--space-7) var(--space-0) var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text-muted); font-size: var(--text-md); }
 .campaign-hub__view-switch { display: flex; margin-left: auto; border: var(--border-hairline); border-radius: var(--radius-sm); overflow: hidden; }
 .campaign-hub__view-switch button { width: var(--control-height-md); height: var(--control-height-md); border: 0; border-right: var(--border-hairline); background: var(--surface-field); color: var(--text-faint); }
 .campaign-hub__view-switch svg { width: var(--size-13); height: var(--size-13); }
@@ -70,40 +72,49 @@
   .campaign-hub__view-switch { display: none; }
 }
 
-/* The create and edit form inside the table modal. Rebuilt on gw-field after the
-   original rules were lost; measurements follow the panel, not the old file. */
+/* Form dialogs use natural rows; the preview modal retains its cover layout. */
+.gw-table-modal__panel.campaign-dialog--form { width: min(100%, 760px); grid-template-rows: none; grid-auto-rows: max-content; gap: var(--space-5); }
+.campaign-dialog__heading { display: grid; gap: var(--space-2); padding-right: var(--space-5); }
+.campaign-dialog__heading h2, .campaign-dialog__heading p { margin: var(--space-0); }
+.campaign-dialog__heading h2 { color: var(--text-bright); font-family: var(--font-display); font-size: var(--text-heading); line-height: var(--leading-tight); }
+.campaign-dialog__heading > p:last-child { color: var(--text-muted); font-size: var(--text-md); line-height: var(--leading-normal); }
 .campaign-dialog__form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-5); }
-.campaign-dialog__column { display: grid; align-content: start; gap: var(--space-3); }
-.campaign-dialog__column > label { display: grid; gap: var(--space-2); }
-.campaign-dialog__column > label > span { color: var(--text-faint); font-size: var(--text-md); font-weight: var(--weight-bold); letter-spacing: var(--tracking-caps); text-transform: uppercase; }
-.campaign-dialog__column input, .campaign-dialog__column select, .campaign-dialog__column textarea { width: 100%; min-height: var(--control-height-md); padding: var(--space-2) var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-bright); font: inherit; font-size: var(--text-md); }
-.campaign-dialog__column input:focus, .campaign-dialog__column select:focus, .campaign-dialog__column textarea:focus { border-color: var(--accent); outline: none; }
-.campaign-dialog__description textarea { min-height: var(--size-144); line-height: var(--leading-normal); resize: vertical; }
+.campaign-dialog__column { display: grid; min-width: 0; align-content: start; gap: var(--space-4); }
+.campaign-dialog__column .campaign-dialog__description textarea { min-height: var(--size-144); line-height: var(--leading-normal); resize: vertical; }
 
-.campaign-dialog__image { display: grid; gap: var(--space-2); margin: var(--space-0); padding: var(--space-0); border: 0; }
+.campaign-dialog__image { display: grid; min-width: 0; gap: var(--space-3); margin: var(--space-0); padding: var(--space-0); border: 0; }
 .campaign-dialog__image legend { padding: var(--space-0); color: var(--text-faint); font-size: var(--text-md); font-weight: var(--weight-bold); letter-spacing: var(--tracking-caps); text-transform: uppercase; }
 .campaign-dialog__source { display: flex; overflow: hidden; border: var(--border-hairline); border-radius: var(--radius-sm); }
-.campaign-dialog__source button { flex: 1; min-height: var(--control-height-sm); border: 0; background: var(--surface-field); color: var(--text-muted); font-size: var(--text-md); }
+.campaign-dialog__source button { flex: 1; min-width: 0; min-height: var(--control-height-md); padding: var(--space-2); border: 0; background: var(--surface-field); color: var(--text-muted); font-size: var(--text-md); }
+.campaign-dialog__source button + button { border-left: var(--border-hairline); }
+.campaign-dialog__source button:hover { color: var(--text-bright); }
+.campaign-dialog__source button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .campaign-dialog__source .campaign-dialog__source--active { background: var(--surface-raised); color: var(--accent-hover); }
 
-.campaign-dialog__dropzone { display: grid; min-height: var(--size-89); place-content: center; justify-items: center; gap: var(--space-1); padding: var(--space-3); border: var(--hairline-width) dashed var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-muted); text-align: center; cursor: pointer; }
-.campaign-dialog__dropzone--dragging { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-field)); }
+.campaign-dialog__dropzone { position: relative; display: grid; min-height: 156px; place-content: center; justify-items: center; gap: var(--space-2); padding: var(--space-4); border: var(--hairline-width) dashed var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-muted); text-align: center; cursor: pointer; }
+.campaign-dialog__dropzone:hover, .campaign-dialog__dropzone--dragging { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-field)); }
+.campaign-dialog__dropzone:focus-within { border-color: var(--accent); box-shadow: var(--ring-field), var(--ring-accent); }
 .campaign-dialog__dropzone strong { color: var(--text); font-size: var(--text-md); }
-.campaign-dialog__dropzone small { color: var(--text-faint); font-size: var(--text-xs); }
-.campaign-dialog__dropzone input { display: none; }
+.campaign-dialog__drop-hint, .campaign-dialog__dropzone small { color: var(--text-faint); font-size: var(--text-md); line-height: var(--leading-normal); }
+/* Keep the real input in the keyboard order while the dropzone supplies its UI. */
+.campaign-dialog__dropzone > input[type="file"] { position: absolute; display: block; inset: 0; width: 100%; height: 100%; min-height: 0; margin: var(--space-0); padding: var(--space-0); border: 0; opacity: 0; cursor: pointer; }
 .campaign-dialog__upload-icon svg { width: var(--size-21); height: var(--size-21); color: var(--accent); }
 
-.campaign-dialog__preview-wrap { display: flex; align-items: center; gap: var(--space-3); padding-top: var(--space-2); }
-.campaign-dialog__preview { width: var(--size-144); height: var(--size-89); object-fit: cover; border: var(--border-hairline); border-radius: var(--radius-sm); }
-.campaign-dialog__preview-wrap span { display: grid; min-width: 0; }
+.campaign-dialog__preview-wrap { display: flex; min-width: 0; align-items: center; gap: var(--space-3); padding: var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); }
+.campaign-dialog__preview { flex: 0 0 auto; width: 72px; height: 48px; object-fit: cover; border: var(--border-hairline); border-radius: var(--radius-sm); }
+.campaign-dialog__preview-copy { display: grid; flex: 1; min-width: 0; gap: var(--space-1); }
 .campaign-dialog__preview-wrap strong { overflow: hidden; color: var(--text); font-size: var(--text-md); text-overflow: ellipsis; white-space: nowrap; }
-.campaign-dialog__preview-wrap small { color: var(--text-faint); font-size: var(--text-xs); }
+.campaign-dialog__preview-wrap small { color: var(--text-faint); font-size: var(--text-md); }
+.campaign-dialog__preview-wrap .campaign-dialog__remove-image { flex: 0 0 auto; width: var(--control-height-md); padding: var(--space-0); }
+.campaign-dialog__footer { display: flex; justify-content: flex-end; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--border-hairline); }
 
 .campaign-dialog__code { display: grid; gap: var(--space-2); padding: var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--accent-hover); font-family: var(--font-mono); font-size: var(--text-lg); text-align: center; }
 .campaign-dialog__error { color: var(--danger-text); font-size: var(--text-md); }
 
 @media (max-width: 700px) {
+  .gw-table-modal__panel.campaign-dialog--form { padding: var(--space-5); }
   .campaign-dialog__form-grid { grid-template-columns: minmax(0, 1fr); }
+  .campaign-dialog__footer > button { width: 100%; }
 }
 
 /* Code dialogs use natural rows rather than the cover/title layout. */

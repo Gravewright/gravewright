@@ -104,11 +104,19 @@ uv run --locked python tests/e2e/frontend_api.py
 uv run --locked python tests/e2e/https.py
 uv run --locked python tests/e2e/runner.py
 uv run --locked python tests/web/window_i18n_browser.py
+uv run --locked python tests/web/form_controls_browser.py
 ```
 
 O teste independente de janelas serve apenas arquivos estáticos do host e
 confere os controles em inglês, português e espanhol, incluindo liberação dos
 listeners e preservação dos textos do usuário. Não carrega campanha ou banco.
+
+O teste independente de controles de formulário verifica o tema compartilhado,
+seleção de arquivos pelo teclado, caixas de seleção, sliders, validação, campos
+desabilitados/somente leitura e layouts de 320px. Também confere se campos mapeados
+sobre PDFs mantêm suas dimensões autoradas em janelas da mesa. Serve arquivos
+estáticos com controles sintéticos e grava capturas em `test-results/form-controls/`,
+sem banco de dados.
 
 `uv run --locked python tests/e2e/board_scene_refresh.py` verifica atualizações
 da mesma cena com WebGL real, imagens sintéticas e respostas de tiles atrasadas.
@@ -172,6 +180,12 @@ Em outra fixture nova, `tests/e2e/item_directory_layout.py --seed
 itens, ordenação de itens/pastas/tipos, busca, menus pelo teclado, duplicação,
 movimentação e controles de leitura. Encerre cada servidor pertencente ao teste
 depois da execução.
+
+`tests/e2e/actor_form_layout.py --seed <fixture>/seed.json --output <diretório-de-resultados>`
+usa a mesma fixture descartável para verificar os modais de personagens/pastas
+em desktop, 390px e 320px, contenção e restauração de foco, Escape/cancelar,
+salvamentos pendentes e falha/nova tentativa com persistência real. Também aceita
+`--browser-executable`.
 
 | Alteração | Cenários pertinentes |
 | --- | --- |

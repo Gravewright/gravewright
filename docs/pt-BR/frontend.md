@@ -739,6 +739,24 @@ O CSS da interface do host deve renderizar textos com **12px ou mais**. Confira 
 
 Larguras, alturas e demais geometrias dos componentes mantêm as dimensões necessárias. Um valor específico de um único componente pode usar um literal local em `px`; reserve tokens `--size-*` compartilhados para valores reutilizados entre componentes. A geometria responsiva ainda pode usar unidades relativas e expressões de layout como `calc()` e `clamp()` quando necessário.
 
+### Controles de formulário
+
+O `base.css` compartilhado fornece padrões escuros com baixa especificidade para
+campos e botões nativos, botões de seleção de arquivos, caixas de seleção, sliders e
+amostras de cor, incluindo formulários montados após o carregamento. Use `gw-field`
+para rótulo, controle e ajuda; caixas de seleção, opções, sliders e cores mantêm
+suas dimensões próprias em vez de herdar as de campos de texto. Campos nativos
+inválidos e `aria-invalid="true"` usam o tratamento de erro do campo. Associe ajudas
+e erros com `aria-describedby`.
+
+Seletores de escolha única herdam sua seta dos estilos base. Altere a superfície
+com `background-color`, pois o atalho `background` remove essa imagem, e reserve
+espaço no final para a seta. Seletores múltiplos ou com lista visível não usam seta.
+Áreas personalizadas de upload devem manter o campo de arquivo acessível pelo
+teclado, exibir seu foco e impedir o arraste da janela pelo alvo de upload.
+Verifique os estados vazio, selecionado, desabilitado e de erro em telas estreitas
+com dados sintéticos; a escolha de arquivos do sistema operacional continua nativa.
+
 ## Estado nativo e tempo real
 
 O frontend nativo usa a API de domínio compartilhada onde implementada e mantém adaptadores HTTP/socket especializados para uploads, assinaturas do tabuleiro e fragmentos renderizados. A API pública não substitui todos os transportes nativos.

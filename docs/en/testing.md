@@ -103,11 +103,18 @@ uv run --locked python tests/e2e/frontend_api.py
 uv run --locked python tests/e2e/https.py
 uv run --locked python tests/e2e/runner.py
 uv run --locked python tests/web/window_i18n_browser.py
+uv run --locked python tests/web/form_controls_browser.py
 ```
 
 The standalone window test serves only static host files and checks native
 controls in English, Portuguese and Spanish, including listener disposal and
 preservation of authored content. It does not load a campaign or database.
+
+The standalone form-control test exercises the shared theme, keyboard file
+selection, checkbox/range behavior, validation, disabled/read-only fields and
+320px layouts. It also checks that mapped PDF fields retain their authored
+dimensions inside table windows. It serves static files with synthetic controls
+and writes screenshots to `test-results/form-controls/` without a database.
 
 `uv run --locked python tests/e2e/board_scene_refresh.py` exercises same-scene
 updates with real WebGL, synthetic artwork and delayed tile responses. It checks
@@ -165,6 +172,11 @@ permissions, read-only access and first-pack creation. Results go to
 <results-directory> [--browser-executable <chromium>]` checks the native item
 directory's density, item/folder/type ordering, search, keyboard menus,
 duplication, moving and read-only controls. Stop each owned server afterward.
+
+`tests/e2e/actor_form_layout.py --seed <fixture>/seed.json --output <results-directory>`
+uses the same disposable fixture to verify actor/folder modal layouts at desktop,
+390px and 320px, focus trapping/restoration, Escape/cancel, pending saves and
+failure/retry with real persistence. It also accepts `--browser-executable`.
 
 | Change | Relevant scenarios |
 | --- | --- |

@@ -11,8 +11,9 @@
 .dice-tray__body[data-v-gwdice] { padding:var(--space-2);
 }.dice-tray fieldset[data-v-gwdice] { border:0; margin:var(--space-0); padding:var(--space-0); display:grid; gap:var(--space-2); min-width:0;
 }.dice-tray label[data-v-gwdice] { display:grid; gap:var(--space-half);
-}.dice-tray input[data-v-gwdice]:not([type=checkbox]),.dice-tray select[data-v-gwdice] { box-sizing:border-box; width:100%; min-width:0; border:var(--size-1) solid var(--border); border-radius:var(--radius-sm); padding:var(--space-1) var(--space-2); background:var(--surface-field, #101419); color:inherit; font:inherit; min-height:var(--size-34);
+}.dice-tray input[data-v-gwdice]:not([type=checkbox]),.dice-tray select[data-v-gwdice] { box-sizing:border-box; width:100%; min-width:0; border:var(--size-1) solid var(--border); border-radius:var(--radius-sm); padding:var(--space-1) var(--space-2); background-color:var(--surface-field, #101419); color:inherit; font:inherit; min-height:var(--size-34);
 }
+.dice-tray select[data-v-gwdice]:where(:not([multiple])):where(:not([size]),[size="0"],[size="1"]){padding-inline-end:var(--space-7)}
 .dice-tray__palette[data-v-gwdice] { display:grid; grid-template-columns:repeat(6,1fr); gap:var(--space-1);
 }.dice-tray__palette button[data-v-gwdice] { flex-direction:column; padding:var(--space-2) var(--space-half);
 }.dice-tray__palette svg[data-v-gwdice] { width:var(--size-21); height:var(--size-21); color:var(--accent);

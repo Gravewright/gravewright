@@ -144,7 +144,7 @@
    reflows under the pointer and the target the user is aiming at cannot move away from them. */
 .game-scene-lists { display: flex; min-height: 0; flex-direction: column; gap: var(--space-1); }
 .game-directory__actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
-.game-directory__actions button { display: flex; min-height: var(--size-34); align-items: center; justify-content: center; gap: var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background: #151a20; color: #d8d2c3; font-size: var(--text-sm); font-weight: 650; }
+.game-directory__actions button { display: flex; min-height: var(--size-34); align-items: center; justify-content: center; gap: var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text); font-size: var(--text-sm); font-weight: 650; }
 .game-directory__actions button:hover { border-color: var(--border-accent-strong); background: rgba(var(--layer-accent-rgb), .06); }
 .game-directory__actions svg { width: var(--size-15); height: var(--size-15); color: var(--layer-accent); }
 .game-directory > label { display: flex; min-height: var(--size-34); align-items: center; gap: var(--space-2); padding: var(--space-0) var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background: #151a20; color: #7f8994; }
@@ -168,7 +168,8 @@
 .game-scene-editor > header button { display: grid; width: var(--size-29); height: var(--size-29); padding: var(--space-0); place-items: center; border: var(--size-1) solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); } .game-scene-editor > header button:hover { border-color: var(--border-accent); background: var(--accent-glow); color: var(--accent-hover); }
 .game-scene-editor > p { margin: var(--space-0); color: var(--text-muted); font-size: var(--text-sm); }
 .game-scene-editor label { display: grid; min-width: 0; gap: var(--space-1); color: #89929e; font-size: var(--text-sm); font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
-.game-scene-editor input:not([type="checkbox"]):not([type="range"]):not([type="color"]), .game-scene-editor select { width: 100%; min-height: var(--size-34); padding: var(--space-0) var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background: #151a20; color: #d8d2c3; font: inherit; font-size: var(--text-md); text-transform: none; }
+.game-scene-editor input:not([type="checkbox"]):not([type="range"]):not([type="color"]), .game-scene-editor select { width: 100%; min-height: var(--size-34); padding: var(--space-0) var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text); font: inherit; font-size: var(--text-md); text-transform: none; }
+.game-scene-editor select, .game-scene-settings select { padding-inline-end: var(--space-7); }
 .game-scene-editor input:focus, .game-scene-editor select:focus { border-color: var(--layer-accent); outline: none; }
 .game-scene-editor__columns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
 .game-scene-editor__file { display: flex; min-height: var(--size-40); padding: var(--space-1); align-items: center; gap: var(--space-3); overflow: hidden; border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background: #151a20; text-align: left; }
@@ -190,15 +191,16 @@
 .game-scene-settings > header strong { overflow: hidden; font-size: var(--text-md); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .game-scene-settings > header button { display: grid; width: var(--size-29); height: var(--size-29); padding: var(--space-0); place-items: center; border: var(--size-1) solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); } .game-scene-settings > header button:hover { border-color: var(--border-accent); background: var(--accent-glow); color: var(--accent-hover); }
 .game-scene-settings label { display: grid; min-width: 0; gap: var(--space-1); color: #89929e; font-size: var(--text-sm); font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
-.game-scene-settings input:not([type="checkbox"]):not([type="range"]):not([type="color"]), .game-scene-settings select { width: 100%; min-height: var(--size-34); padding: var(--space-0) var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background: #151a20; color: #d8d2c3; font-size: var(--text-md); }
+.game-scene-settings input:not([type="checkbox"]):not([type="range"]):not([type="color"]), .game-scene-settings select { width: 100%; min-height: var(--size-34); padding: var(--space-0) var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text); font-size: var(--text-md); }
 .game-scene-settings input:focus, .game-scene-settings select:focus { border-color: var(--border-accent-strong); outline: 0; }
+:is(.game-scene-editor,.game-scene-settings) :is(input,select):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .game-scene-settings__wide { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
 .game-scene-settings__triple { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--space-2); }
 .game-scene-settings__calibration { display: flex; min-height: 60px; padding: var(--space-2) var(--space-3); align-items: center; justify-content: space-between; gap: var(--space-3); border: var(--size-1) solid #353b38; border-radius: var(--radius-sm); background: rgb(201 164 76 / 6%); }
 .game-scene-settings__calibration div { display: grid; gap: var(--space-1); }
 .game-scene-settings__calibration strong { font-family: var(--font-display); font-size: var(--text-lg); }
 .game-scene-settings__calibration small { color: var(--text-muted); font-size: var(--text-sm); }
-.game-scene-settings__calibration button, .game-scene-settings__actions button { display: flex; min-height: var(--size-38); padding: var(--space-0) var(--space-4); align-items: center; justify-content: center; gap: var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background: #151a20; color: #d8d2c3; font-size: var(--text-sm); font-weight: 650; }
+.game-scene-settings__calibration button, .game-scene-settings__actions button { display: flex; min-height: var(--size-38); padding: var(--space-0) var(--space-4); align-items: center; justify-content: center; gap: var(--space-2); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text); font-size: var(--text-sm); font-weight: 650; }
 .game-scene-settings__grid { display: grid; min-height: var(--size-48); padding: var(--space-2) var(--space-3); grid-template-columns: 1fr var(--size-110) 190px; align-items: center; gap: var(--space-3); border: var(--size-1) solid #2a302e; border-radius: var(--radius-sm); background: rgb(255 255 255 / 2%); }
 .game-scene-settings input[type="color"] { width: var(--size-39); height: var(--size-32); padding: var(--space-half); border: var(--size-1) solid #303842; border-radius: var(--radius-sm); background: #151a20; }
 .game-scene-settings__actions { display: flex; padding-top: var(--space-2); flex-direction: row-reverse; justify-content: space-between; border-top: var(--size-1) solid rgb(48 56 66 / 45%); }

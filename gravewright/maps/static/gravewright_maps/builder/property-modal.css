@@ -10,8 +10,10 @@
 .map-builder-property-modal__body .map-builder__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .map-builder-property-modal__body .map-builder__fields > label { grid-template-columns: minmax(0, 1fr); align-items: end; gap: var(--space-1); }
 .map-builder-property-modal__body :is(.map-builder__torch-lit, .map-builder__check) { display: flex; align-items: center; gap: var(--space-2); }
-.map-builder-property-modal :is(input,select,textarea) { box-sizing: border-box; width: 100%; min-width: 0; min-height: 34px; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; }
-.map-builder-property-modal input[type=checkbox] { width: 16px; min-height: 16px; margin: var(--space-0); flex: 0 0 auto; }
+.map-builder-property-modal :where(input:not([type=checkbox],[type=radio],[type=range]),select,textarea) { box-sizing: border-box; width: 100%; min-width: 0; min-height: 34px; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background-color: var(--surface-field); color: var(--text); font: inherit; }
+.map-builder-property-modal select { padding-inline-end: var(--space-7); }
+.map-builder-property-modal input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; margin: var(--space-0); padding: var(--space-0); flex: 0 0 auto; accent-color: var(--accent); }
+.map-builder-property-modal input[type=color] { padding: var(--space-half); cursor: pointer; }
 .map-builder-property-modal textarea { resize: vertical; }
 .map-builder-property-modal button { min-height: 34px; padding: var(--space-1) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; cursor: pointer; white-space: normal; }
 .map-builder-property-modal button:hover:not(:disabled) { border-color: var(--accent); }
