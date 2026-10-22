@@ -44,13 +44,33 @@ function confirmRemoval(pkg, preview) {
   });
 }
 
+export function waitForRestartPoll(signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason);
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', abort);
+      resolve();
+    }, 2000);
+    function abort() {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', abort);
+      reject(signal.reason);
+    }
+    signal?.addEventListener('abort', abort, {once: true});
+  });
+}
+
 async function awaitRestart(http) {
+  const signal = http.scopeSignal?.();
   const deadline = Date.now() + 15 * 60 * 1000;
   while (Date.now() < deadline) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await waitForRestartPoll(signal);
     let progress;
     try { progress = (await http.get('/api/admin/status')).updates.automatic; }
-    catch { continue; }
+    catch { signal?.throwIfAborted(); continue; }
     if (progress.busy) continue;
     if (progress.stage !== 'complete') throw Error(label('Module operation failed.', 'Falha ao alterar o módulo.', 'Error al modificar el módulo.'));
     return;

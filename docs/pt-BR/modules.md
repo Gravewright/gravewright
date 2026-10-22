@@ -361,6 +361,15 @@ Novos registros assinados devem incluir `"type": "system"` ou `"type": "module"`
 
 Registros do catálogo aceitam `tags`: até 24 textos Unicode únicos, sem espaços nas extremidades, não vazios e com até 64 caracteres. As tags integram a assinatura e geram categorias na modal de instalação, separadas pelo tipo de pacote. Pacotes sem tags continuam aparecendo em Todos os pacotes.
 
+Os rótulos das tags acompanham o idioma da interface selecionado pelo Translator.
+O host traduz sua apresentação e reconhece aliases para as tags em português
+já existentes no catálogo oficial, como `Tradução` e `Dados`. IDs de pacotes, valores
+originais das tags, registros assinados e filtros de categoria mantêm suas
+identidades originais. A busca aceita tags originais e traduzidas.
+Tags desconhecidas sem tradução permanecem como fornecidas
+pelo publicador. Essa integração do host funciona com o Translator 0.1.2 e não
+exige alteração em seu pacote assinado nem no catálogo do Marketplace.
+
 A modal recebe progresso real via NDJSON de `POST /api/marketplace/install`, solicitando `Accept: application/x-ndjson`. As etapas são `catalog`, `download` (bytes recebidos e total quando conhecido), `verify`, `complete` e `error`. A conclusão só é enviada após verificar e instalar o arquivo. Downloads sem tamanho informado exibem progresso indeterminado e contagem de bytes. O retorno JSON tradicional permanece disponível. Desconectar o navegador não desfaz uma instalação em andamento; atualize a biblioteca para conferir o resultado.
 
 ### Personalização opcional por usuário

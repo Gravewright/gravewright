@@ -1,6 +1,8 @@
 import { mountModal } from '/static/gravewright_table/modal.js';
 import { renderReleaseNotes } from './release-notes.js';
 import { createUpdateProgress } from './update-progress.js';
+import { createTranslator } from '/static/gravewright_modules/i18n.js';
+import { packageTagLabel } from './package-tags.js';
 function openPackageModal(element) {
   const placeholder = document.createComment('package-modal');
   element.before(placeholder); element.hidden = false;
@@ -13,7 +15,7 @@ function openPackageModal(element) {
   mountModal(element, {canClose: () => !element.querySelector('button:disabled')});
   element.parentElement.classList.add('module-catalog__overlay');
 }
-import { packageAction } from "/static/gravewright_modules/package-actions.js";
+import { packageAction, waitForRestartPoll } from "/static/gravewright_modules/package-actions.js";
 import { HttpClient } from "/static/gravewright_modules/http-client.js";
 const http = new HttpClient();
 const text = (root, selector, value) => {
@@ -51,43 +53,57 @@ function summary(root, values) {
     root.append(dt, dd);
   }
 }
-async function run(root, work) {
-  if (root.dataset.busy === "true") return;
+async function run(root, work, signal) {
+  if (signal?.aborted || root.dataset.busy === "true") return;
   root.dataset.busy = "true";
   root.setAttribute("aria-busy", "true");
   show(root, "[role=alert]", false);
   const disabled = [...root.querySelectorAll("button,input,select")].map((el) => [el, el.disabled]);
   disabled.forEach(([el]) => el.disabled = true);
-  try {
-    await work();
-  } catch (error) {
-    const code = error.code ?? error.message;
-    const blueprintMessage = code === 'blueprint_audio_cleanup_limit'
-      && (blueprintAudioCleanupErrors[document.documentElement.lang] || blueprintAudioCleanupErrors.en);
-    text(root, "[role=alert]", blueprintMessage || (root.dataset.moduleCatalog && marketplaceErrors[code]) || (error.status === 403 ? "Only the installation owner or campaign GM can perform this action." : error.status === 409 ? "The state changed. Refresh before trying again." : error.status === 413 ? "The archive exceeds the 256 MB upload limit." : error.message || "The operation failed. Check the file or connection and try again."));
-    show(root, "[role=alert]", true);
-  } finally {
+  let restored = false;
+  const restore = () => {
+    if (restored) return;
+    restored = true;
     root.dataset.busy = "false";
     root.setAttribute("aria-busy", "false");
     disabled.forEach(([el, value]) => {
       el.disabled = el.dataset.unavailable === undefined ? value : el.dataset.unavailable === 'true';
       el.removeAttribute('aria-busy');
     });
+  };
+  signal?.addEventListener('abort', restore, {once: true});
+  try {
+    await work();
+  } catch (error) {
+    if (signal?.aborted) return;
+    const code = error.code ?? error.message;
+    const blueprintMessage = code === 'blueprint_audio_cleanup_limit'
+      && (blueprintAudioCleanupErrors[document.documentElement.lang] || blueprintAudioCleanupErrors.en);
+    text(root, "[role=alert]", blueprintMessage || (root.dataset.moduleCatalog && marketplaceErrors[code]) || (error.status === 403 ? "Only the installation owner or campaign GM can perform this action." : error.status === 409 ? "The state changed. Refresh before trying again." : error.status === 413 ? "The archive exceeds the 256 MB upload limit." : error.message || "The operation failed. Check the file or connection and try again."));
+    show(root, "[role=alert]", true);
+  } finally {
+    signal?.removeEventListener('abort', restore);
+    restore();
   }
 }
 function modules(root) {
   let installed = [], releases = [], ready = false, page = 1, category = '';
+  let disposed = false;
+  const events = new AbortController();
+  const http = new HttpClient(undefined, () => events.signal);
+  const perform = (target, work) => run(target, work, events.signal);
+  const translator = createTranslator();
+  const tagLabel = tag => packageTagLabel(tag, translator);
   const normalize = value => String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const collator = new Intl.Collator(document.documentElement.lang, {numeric:true, sensitivity:"base"});
   const installedOnly = root.dataset.moduleCatalog === "installed";
   const kind = root.dataset.packageKind;
   const manager = root.closest('[data-package-manager]');
+  const dialogs = [...manager.querySelectorAll('[data-package-detail], [data-local-install]')];
   const browser = manager.querySelector('[data-package-browser]');
   const localDialog = manager.querySelector('[data-local-install]');
   const detail = root.querySelector('[data-package-detail]');
   const native = root.querySelector('[data-native-system]');
-  const language = document.documentElement.lang;
-  const ui = (en, pt, es) => language === 'pt-BR' ? pt : language === 'es' ? es : en;
+  const ui = (en, pt, es) => translator.locale === 'pt-BR' ? pt : translator.locale === 'es' ? es : en;
   const nativeRow = native ? (() => { const r = JSON.parse(native.textContent); return {id:r.systemId, name:r.title, version:'', builtin:true, system:{}, description:ui('Built into Gravewright. Available when creating a table.', 'Integrado ao Gravewright. Disponível ao criar uma mesa.', 'Integrado en Gravewright. Disponible al crear una mesa.')}; })() : null;
   const packageType = r => r.system || r.type === 'system' ? 'system' : 'module';
   function view(mode) {
@@ -127,7 +143,7 @@ function modules(root) {
       const csrfPath = document.querySelector('meta[name="gravewright-csrf-url"]')?.content || '/__gravewright/csrf';
       const {token, header} = await http.get(csrfPath);
       const api = document.querySelector('meta[name="gravewright-backend-api"]')?.content || '/api';
-      const response = await fetch(api + '/marketplace/install', {method:'POST', headers:{[header]:token, 'Content-Type':'application/json', Accept:'application/x-ndjson'}, body:JSON.stringify({id:row.id, version:row.version})});
+      const response = await fetch(api + '/marketplace/install', {method:'POST', signal:events.signal, headers:{[header]:token, 'Content-Type':'application/json', Accept:'application/x-ndjson'}, body:JSON.stringify({id:row.id, version:row.version})});
       if (!response.ok) { const payload = await response.json(); throw Object.assign(new Error(payload.error), {code:payload.error}); }
       const reader = response.body.getReader(), decoder = new TextDecoder();
       let buffer = '', complete = false;
@@ -150,6 +166,8 @@ function modules(root) {
     finally { close.disabled = false; }
   }
   function render() {
+    if (disposed) return;
+    const collator = new Intl.Collator(translator.locale, {numeric:true, sensitivity:"base"});
     const q = normalize(root.querySelector('input[type=search]').value.trim());
     const filter = root.querySelector('[data-filter]').value;
     root.querySelectorAll('[data-state]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.state === filter)));
@@ -165,10 +183,10 @@ function modules(root) {
       for (const item of all) for (const tag of new Set(item.tags ?? locals.get(item.id + '@' + item.version)?.tags ?? [])) counts.set(tag, (counts.get(tag) ?? 0) + 1);
       if (category && !counts.has(category) && (installedOnly || ready)) category = '';
       categories.replaceChildren();
-      for (const [tag, count] of [['', all.length], ...[...counts].sort((a,b) => collator.compare(a[0],b[0]))]) {
+      for (const [tag, count] of [['', all.length], ...[...counts].sort((a,b) => collator.compare(tagLabel(a[0]),tagLabel(b[0])) || collator.compare(a[0],b[0]))]) {
         const button = document.createElement('button'), name = document.createElement('span'), number = document.createElement('span');
         button.type = 'button'; button.dataset.category = tag; button.setAttribute('aria-pressed', String(category === tag));
-        name.textContent = tag || ui('All packages', 'Todos os pacotes', 'Todos los paquetes'); name.translate = false;
+        name.textContent = tag ? tagLabel(tag) : ui('All packages', 'Todos os pacotes', 'Todos los paquetes'); name.translate = false;
         number.textContent = count; button.append(name, number);
         button.onclick = () => { category = tag; page = 1; render(); };
         categories.append(button);
@@ -178,7 +196,8 @@ function modules(root) {
     const rows = all.filter(r => {
       const local = locals.get(r.id + '@' + r.version);
       const info = local ?? r;
-      return (!category || (r.tags ?? local?.tags ?? []).includes(category)) && normalize(`${r.id} ${info.name ?? ''} ${r.version} ${info.description ?? ''} ${info.author ?? ''}`).includes(q)
+      const tags = r.tags ?? local?.tags ?? [];
+      return (!category || tags.includes(category)) && normalize(`${r.id} ${info.name ?? ''} ${r.version} ${info.description ?? ''} ${info.author ?? ''} ${tags.join(' ')} ${tags.map(tagLabel).join(' ')}`).includes(q)
         && (filter === 'all' || filter === 'installed' && !!local
           || filter === 'active' && local?.globalEnabled && !local.revoked
           || filter === 'available' && !local || filter === 'revoked' && local?.revoked);
@@ -200,10 +219,10 @@ function modules(root) {
       const tags = card.querySelector('[data-tags]');
       if (tags && (local?.django || row.type === 'django')) {
         const badge = document.createElement('span');
-        badge.textContent = 'Django · Server';
+        badge.textContent = translator.t('Django · Server');
         tags.append(badge);
       }
-      if (tags) for (const tag of row.tags ?? local?.tags ?? []) { const badge = document.createElement('span'); badge.textContent = tag; tags.append(badge); }
+      if (tags) for (const tag of row.tags ?? local?.tags ?? []) { const badge = document.createElement('span'); badge.textContent = tagLabel(tag); tags.append(badge); }
       text(card, "[data-version]", row.builtin ? "PDF" : `v${row.version}`);
       const status = row.builtin ? ui('Built-in', 'Integrado', 'Integrado') : local?.revoked ? ui('Revoked', 'Revogado', 'Revocado') : local?.globalEnabled ? ui('Active', 'Ativo', 'Activo') : local ? ui('Installed', 'Instalado', 'Instalado') : ui('Available', 'Disponível', 'Disponible');
       text(card, '[data-status]', status);
@@ -213,7 +232,7 @@ function modules(root) {
       for (const action of ['update', 'remove']) {
         const button = card.querySelector(`[data-action=${action}]`);
         button.hidden = !local || !!row.builtin;
-        button.onclick = () => run(root, async () => {
+        button.onclick = () => perform(root, async () => {
           button.setAttribute('aria-busy', 'true');
           const result = await packageAction(http, local ?? row, action);
           if (result.cancelled) return;
@@ -239,7 +258,7 @@ function modules(root) {
         openPackageModal(detail);
       };
       show(card, "[data-action=install]", !local);
-      card.querySelector("[data-action=install]").onclick = () => run(root, async () => {
+      card.querySelector("[data-action=install]").onclick = () => perform(root, async () => {
         try {
         await installPackage(row);
         } catch (error) {
@@ -265,7 +284,7 @@ function modules(root) {
           button.setAttribute('aria-label', button.title);
         }
         button.setAttribute('aria-pressed', String(!!local.globalEnabled));
-        button.onclick = () => run(root, async () => {
+        button.onclick = () => perform(root, async () => {
           await http.post('/api/module-packages/activation', {id: row.id, version: row.version, enabled: !local.globalEnabled});
           if (local.django) {
             show(root, '[role=status]', true);
@@ -273,10 +292,10 @@ function modules(root) {
             const deadline = Date.now() + 15 * 60 * 1000;
             let complete = false;
             while (Date.now() < deadline) {
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await waitForRestartPoll(events.signal);
               let progress;
               try { progress = (await http.get('/api/admin/status')).updates.automatic; }
-              catch { continue; }
+              catch { events.signal.throwIfAborted(); continue; }
               if (progress.busy) continue;
               if (progress.stage !== 'complete') throw Error('Django activation failed. Previous configuration preserved; check the host update log.');
               complete = true;
@@ -336,8 +355,8 @@ function modules(root) {
   root.querySelector('[data-page-size]').onchange = reset;
   root.querySelector('[data-action=previous]').onclick = () => { page = Math.max(1, page - 1); render(); };
   root.querySelector('[data-action=next]').onclick = () => { page += 1; render(); };
-  if (installedOnly) root.querySelector('[data-filter] option[value=available]').remove();
-  root.querySelector("[data-action=refresh]").onclick = async () => { await run(root, refresh); render(); };
+  if (installedOnly) root.querySelector('[data-filter] option[value=available]')?.remove();
+  root.querySelector("[data-action=refresh]").onclick = async () => { await perform(root, refresh); render(); };
   if (installedOnly) {
     root.querySelector('[data-action=browse]').onclick = () => {
       browser.hidden = false;
@@ -361,7 +380,7 @@ function modules(root) {
       localDialog.querySelector('[data-local-form]').reset();
       show(localDialog, '[role=alert]', false);
       manager.querySelector('[data-action=install-local]').focus();
-    });
+    }, {signal: events.signal});
     localDialog.querySelectorAll('[data-action=close-local]').forEach(button => button.onclick = closeLocal);
     manager.querySelector('[data-action=install-local]').onclick = async () => {
       show(localDialog, '[role=alert]', false);
@@ -378,9 +397,9 @@ function modules(root) {
     };
     localDialog.querySelector('[data-local-form]').onsubmit = event => {
       event.preventDefault();
-      // FormData omits disabled inputs, so capture before run() disables them.
+      // FormData omits disabled inputs, so capture before perform() disables them.
       const form = new FormData(event.currentTarget);
-      void run(localDialog, async () => {
+      void perform(localDialog, async () => {
         const file = form.get('file');
         if (!(file instanceof File) || !file.size) throw new Error(ui('Select a ZIP file.', 'Selecione um arquivo ZIP.', 'Selecciona un archivo ZIP.'));
         if (file.size > Number(localDialog.dataset.maxBytes)) throw new Error(ui('The ZIP exceeds the 64 MiB package limit.', 'O ZIP ultrapassa o limite de 64 MiB por pacote.', 'El ZIP supera el límite de 64 MiB por paquete.'));
@@ -410,12 +429,26 @@ function modules(root) {
         if (event.shiftKey && (document.activeElement === first || !browser.contains(document.activeElement))) { event.preventDefault(); last?.focus(); }
         else if (!event.shiftKey && (document.activeElement === last || !browser.contains(document.activeElement))) { event.preventDefault(); first?.focus(); }
       }
-    });
-    root.addEventListener('packages-changed', () => void run(root, refresh).then(render));
-    void run(root, refresh).then(render);
+    }, {signal: events.signal});
+    root.addEventListener('packages-changed', () => void perform(root, refresh).then(render), {signal: events.signal});
+    void perform(root, refresh).then(render);
   } else {
-    root.addEventListener('catalog-open', () => void run(root, refresh).then(render));
+    root.addEventListener('catalog-open', () => void perform(root, refresh).then(render), {signal: events.signal});
   }
+  const stopLocale = translator.onChange(render);
+  return () => {
+    disposed = true;
+    stopLocale();
+    events.abort();
+    dialogs.forEach(dialog => dialog.close?.(true));
+    if (!browser.hidden) {
+      browser.hidden = true;
+      root.inert = false;
+      const library = manager.querySelector('[data-module-catalog=installed]');
+      if (library) library.inert = false;
+      document.body.style.overflow = browser.dataset.restoreOverflow ?? '';
+    }
+  };
 }
 function privacySettings(root) {
   const language = document.documentElement.lang;
@@ -688,11 +721,19 @@ function defaultMarketplace(root) {
   });
   void run(root, refresh);
 }
+const componentDisposers = new Map();
 function initialize() {
+  for (const [root, dispose] of componentDisposers) {
+    if (root.isConnected) continue;
+    dispose();
+    componentDisposers.delete(root);
+    delete root.dataset.initialized;
+  }
   for (const [selector, start] of [["[data-module-catalog]", modules], ["[data-administration]", administration], ["[data-privacy-settings]", privacySettings], ["[data-default-marketplace]", defaultMarketplace]]) document.querySelectorAll(selector).forEach((root) => {
     if (root.dataset.initialized) return;
     root.dataset.initialized = "true";
-    start(root);
+    const dispose = start(root);
+    if (typeof dispose === 'function') componentDisposers.set(root, dispose);
   });
 }
 new MutationObserver(initialize).observe(document.body, { subtree: true, childList: true });

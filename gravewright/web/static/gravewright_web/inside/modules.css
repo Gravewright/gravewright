@@ -24,6 +24,7 @@
 .module-catalog__overlay [hidden]{display:none!important}
 
 .module-catalog__filters{min-width:0;flex-wrap:wrap}
+.module-catalog__tags span{box-sizing:border-box;min-width:0;max-width:100%;overflow-wrap:anywhere}
 .module-catalog__search input{min-height:0;padding:var(--space-0);border-radius:0}
 .module-catalog__pagination{flex-wrap:wrap}
 .module-catalog__local-dialog label{min-width:0}

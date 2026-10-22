@@ -1898,5 +1898,11 @@
   "Timed switch": "Interruptor temporizado",
   "Use an active image": "Usar imagen al activar",
   "You have entered a new area.": "Has entrado en una zona nueva.",
-  "Choose a quest first.": "Elige primero una misión."
+  "Choose a quest first.": "Elige primero una misión.",
+  "Translation": "Traducción",
+  "Languages": "Idiomas",
+  "Rolls": "Tiradas",
+  "Sheets": "Fichas",
+  "Interface": "Interfaz",
+  "Django · Server": "Django · Servidor"
 }

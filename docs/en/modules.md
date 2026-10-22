@@ -358,6 +358,15 @@ New signed catalog records should include `"type": "system"`, `"type": "module"`
 
 Catalog records may also declare `tags`: up to 24 unique, trimmed, nonempty Unicode strings of at most 64 characters. They participate in the canonical signature and form creator-defined categories in the installation modal. Categories are scoped to the selected package type. Missing tags remain valid and packages still appear under All packages.
 
+Tag labels follow the interface language selected through Translator. The host
+translates their presentation and recognizes aliases for Portuguese tags already
+in the official catalog, such as `Tradução` and `Dados`. Package IDs, original
+tag values, signed records and category filters retain their original identities.
+Search accepts both original and translated tags. Unknown tags without a
+translation remain as provided by the publisher. This host integration works
+with Translator 0.1.2 and requires no change to its signed
+package or the Marketplace catalog.
+
 The installation modal receives NDJSON progress from `POST /api/marketplace/install` when `Accept: application/x-ndjson` is sent. Events have `stage` values `catalog`, `download` (actual `received` bytes and nullable `total`), `verify`, `complete` (manifest), or `error` (code). Completion is emitted only after archive verification, extraction and database installation. Without a known Content-Length, download progress is indeterminate with a byte count. The ordinary JSON endpoint remains compatible. Disconnecting a browser does not roll back an installation already running; refresh the installed library to check its result.
 
 ### Optional per-user customization
