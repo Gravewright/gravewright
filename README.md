@@ -4,7 +4,7 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.3.0**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **3.0.1**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
 
 ## Install and run locally
 
@@ -12,8 +12,9 @@ Start with the [Map Builder guide](docs/en/map-builder.md) to create an editable
 map project or add interactive elements over a finished map image. The
 [Universal VTT guide](docs/en/universal-vtt.md) explains importing `.uvtt`,
 `.dd2vtt` and `.df2vtt` files as native scenes, exporting scenes and reviewing
-format limitations. See the [0.3.0 release notes](docs/releases/0.3.0.md)
-for the full change list.
+format limitations. The [3.0.1 release notes](docs/releases/3.0.1.md) cover
+consistent forms, interactive object models and synchronization of game edits
+with Map Builder projects.
 
 Extract the complete project into a writable folder, run the installer for your operating system, then use its generated Runner. The installer prepares tools, dependencies, the frontend and saved settings; the Runner starts the prepared application.
 
@@ -23,7 +24,7 @@ Extract the complete project into a writable folder, run the installer for your 
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/en/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/en/macos-runner.md) |
 
-The complete 0.3.0 release ZIP includes all three platform installers. Installations on 0.2.3 can use **Administration → Updates → Check for updates**. Back up `.env` and configured data first. For a manual upgrade, stop the Runner, replace application files while preserving configuration and data, then rerun the platform installer. See the [download and upgrade instructions](docs/releases/0.3.0.md#download-and-upgrade), including the database migrations in this update.
+The complete 3.0.1 release ZIP includes all three platform installers. Managed installations on 0.3.0 can use **Administration → Updates → Check for updates**. Back up `.env`, configured data and local extensions first. For a manual upgrade, stop the Runner, replace application files while preserving configuration, data and extensions, then rerun the platform installer. See the [download and upgrade instructions](docs/releases/3.0.1.md#download-and-upgrade). This release adds no database migrations relative to 0.3.0; older installations still need the normal migration workflow.
 
 Linux downloads use glibc-based distributions; Alpine/musl needs a compatible Node.js installation already available. The macOS installer targets macOS 13.5 or newer. Installation needs internet for missing tools/packages. Python 3.14, uv and Node.js are prepared privately when compatible tools are unavailable; no permanent PATH changes are made. All launchers use a local profile on `127.0.0.1`, with no Redis service required. See the platform guides for exact requirements and storage paths.
 

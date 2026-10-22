@@ -4,7 +4,7 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **0.3.0**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **3.0.1**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
 ## Instalar e executar localmente
 
@@ -12,8 +12,9 @@ Comece pelo [guia do Map Builder](docs/pt-BR/map-builder.md) para criar um proje
 de mapa editável ou colocar elementos interativos sobre uma imagem de mapa pronto.
 O [guia do Universal VTT](docs/pt-BR/universal-vtt.md) explica como importar
 arquivos `.uvtt`, `.dd2vtt` e `.df2vtt` como cenas nativas, exportar cenas e conferir
-os limites do formato. As [notas da 0.3.0](docs/releases/0.3.0.md)
-reúnem as mudanças.
+os limites do formato. As [notas da 3.0.1](docs/releases/3.0.1.md) apresentam
+formulários consistentes, modelos de objetos interativos e sincronização das
+edições da mesa com os projetos do Map Builder.
 
 Extraia o projeto completo para uma pasta gravável, execute o instalador do seu sistema operacional e depois use o Runner gerado. O instalador prepara ferramentas, dependências, frontend e configurações; o Runner inicia a aplicação já preparada.
 
@@ -23,7 +24,7 @@ Extraia o projeto completo para uma pasta gravável, execute o instalador do seu
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/pt-BR/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/pt-BR/macos-runner.md) |
 
-O ZIP completo da release 0.3.0 inclui os instaladores das três plataformas. Instalações na 0.2.3 podem usar **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env` e dados configurados antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração e dados e execute novamente o instalador da plataforma. Veja as [instruções de download e atualização](docs/releases/0.3.0.md#download-e-atualização), incluindo as migrações de banco desta atualização.
+O ZIP completo da release 3.0.1 inclui os instaladores das três plataformas. Instalações gerenciadas na 0.3.0 podem usar **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env`, dados configurados e extensões locais antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração, dados e extensões e execute novamente o instalador da plataforma. Veja as [instruções de download e atualização](docs/releases/3.0.1.md#download-e-atualização). Esta release não acrescenta migrações de banco em relação à 0.3.0; instalações anteriores ainda precisam do fluxo normal de migrações.
 
 Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
 
