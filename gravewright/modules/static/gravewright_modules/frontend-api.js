@@ -27,10 +27,21 @@ export function tableApi(tableId, sceneId, life = page) {
     if (!sceneId && !Object.hasOwn(payload, 'sceneId') && !Object.hasOwn(payload, 'mapId') && currentScene)
       payload = { ...payload, sceneId: currentScene, mapId: currentScene };
     if (sceneId) {
+      if (['clocks', 'clues'].includes(domain) && payload.scopeSceneId != null && payload.scopeSceneId !== sceneId) throw new ModuleError('stale_context');
       if (domain === 'maps' && method === 'navigate' && ['sceneId', 'mapId'].some(key => Object.hasOwn(payload, key) && payload[key] == null))
         throw new ModuleError('stale_context');
       if (['sceneId', 'mapId'].some(key => payload[key] && payload[key] !== sceneId)) throw new ModuleError('stale_context');
       payload = { ...payload, sceneId, mapId: sceneId };
+    }
+    if (['clocks', 'clues'].includes(domain) && method === 'state') {
+      if (payload.sceneId != null && payload.mapId != null && payload.sceneId !== payload.mapId)
+        throw new ModuleError('invalid_data');
+      const query = new URLSearchParams();
+      const selectedScene = payload.sceneId ?? payload.mapId;
+      if (selectedScene != null) query.set('sceneId', selectedScene);
+      // Guest stream sessions retain their HTTP write ban; state uses the native read route.
+      return http.get(`/api/containers/${segment(tableId)}/modules-native/${domain}${query.size ? `?${query}` : ''}`,
+        { signal, cache: 'no-store', ...domainTiming(domain, method, options) });
     }
     const result = await http.post(`/api/tables/${segment(tableId)}/api`, {
       domain, method, payload, requestId: options.requestId ?? crypto.randomUUID(),

@@ -114,6 +114,55 @@ Substitua `<existingChromium>` por um executável Chromium existente. Escolha um
 pasta de saída nova ou vazia a cada execução; fixtures, logs, comparações de
 estado e capturas ficam nessa pasta dentro da instalação.
 
+O [cenário de preparação de campanha](../../tests/e2e/campaign_preparation.py)
+usa a mesma fixture descartável para exercitar o painel, o seletor de referências
+sem conexão com a mesa, o planejador de sessões, a cronologia e o calendário, as
+colunas de missões com pré-requisitos, as conexões, a prévia do jogador e a
+restauração de um diário pela lixeira, e confere layouts em largura de celular.
+Use as mesmas opções `--output` e `--browser-executable` do cenário acima.
+
+`tests/e2e/campaign_preparation_regressions.py` verifica preservação de rascunhos,
+edição durante o salvamento, erros e novas tentativas no seletor assíncrono de
+referências, comparação desatualizada durante edição por outro mestre, permissões
+de versões privadas e rejeição atômica de restauração histórica com arquivo físico
+ausente. Também verifica a mensagem nativa exata em inglês e suas traduções em
+português/espanhol em 320px. Use outra pasta de saída nova:
+`uv run --locked python tests/e2e/campaign_preparation_regressions.py --output data/prep-regressions --browser-executable "<existingChromium>"`.
+
+`gravewright.administration.test_preparation_archives` cobre exportação e retorno
+da preparação e do histórico, arquivos retidos, painel de cada mestre em snapshots,
+compatibilidade com arquivos antigos, remapeamento de referências, cronologia e
+rejeição de metadados inválidos, donos conflitantes de anexos e ciclos de missões.
+
+O [cenário dos relógios de progresso](../../tests/e2e/clocks.py) usa campanhas
+isoladas para verificar os mesmos relógios no gerenciamento e na mesa real,
+atualizações em tempo real, permissões de jogadores e espectadores, filtragem
+de relógios privados e por cena, versões concorrentes, persistência e exibição
+fixada. Também confere inglês, português e espanhol em 320px e preserva os
+limites de transmissão, navegação e presença do gerenciamento. Execute com
+`uv run --locked python tests/e2e/clocks.py --output data/clocks-check --browser-executable "<existingChromium>"`,
+usando uma pasta de saída nova. A descrição informa a cobertura, não o resultado
+de uma execução específica.
+
+`tests/e2e/map_builder_clocks.py` confere nós nativos de relógio, conexões tipadas
+de Quantidade, continuação da execução, salvar/recarregar e ensaio sem alterações
+persistidas, comparando snapshots de relógios, recibos e mídia. Exercita vínculos
+do mestre acionados por jogadores, filtragem de relógios privados, HUD fixado em
+tempo real e edição de nós ao vivo para avançar, reduzir, definir e reiniciar,
+além de inglês, português e espanhol em desktop e 320px. Use uma pasta nova,
+por exemplo
+`uv run --locked python tests/e2e/map_builder_clocks.py --output data/mbclocks-check --browser-executable "<existingChromium>"`.
+
+`tests/e2e/clues.py` cobre descobertas imediatas e progressivas no gerenciamento,
+na mesa e no editor nativo do MapBuilder. Confere a filtragem de registros
+desconhecidos e notas do mestre em JSON, eventos e DOM do jogador; revelar/ocultar,
+permissões, revisões, repetição de recibos, persistência, escopo de cena, exibição
+fixada e ensaio sem alterações persistidas. Nós de pistas exercitam entradas
+numéricas tipadas, continuação da execução e ações ao vivo de avançar, recuar,
+definir, reiniciar, revelar e ocultar. Inglês, português e espanhol são conferidos
+com conteúdo autoral longo em 320px e desktop. Execute em uma pasta local nova:
+`uv run --locked python tests/e2e/clues.py --output data/clues-check --browser-executable "<existingChromium>"`.
+
 ```bash
 uv run --locked playwright install chromium
 uv run --locked python tests/e2e/authentication.py

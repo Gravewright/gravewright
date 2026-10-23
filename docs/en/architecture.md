@@ -167,6 +167,13 @@ member removal. Streamer links create a dedicated guest identity with expiration
 and revocation checks. The Inside interface composes these workflows in
 `web/inside.py`.
 
+Campaign preparation opens through `campaigns/management_views.py` without a
+table socket, Pixi renderer or presence record. `management.py` authorizes current
+campaign GMs; `preparation.py` validates session plans, timeline events, each GM's
+dashboard and command receipts. Connections and player previews read native
+documents rather than copying their state. Calendar dates are optional ISO dates;
+in-world dates remain authored text. See [Campaign management](campaign-management.md).
+
 ### Actors, PDF sheets and tokens
 
 An `Actor` is the reusable character source. `pdf_system/schema.py` normalizes its
@@ -229,6 +236,29 @@ structured content and filters GM blocks; `data.py` normalizes document shapes;
 `types.py` handles behavior such as boards and quests. Player edits preserve hidden
 GM content and cannot link arbitrary assets. `presentations.py` issues and resolves
 recipient-bound handout tickets rather than making the underlying files public.
+
+`journals/history.py` stores bounded per-document `Revision` snapshots and deleted
+documents. Restores validate visibility/default access, current quest dependency
+graphs and physical attachment availability in the journal transaction. A restore
+records the state it replaces so it can be undone. File cleanup checks both live
+assets and retained revision ownership after commit. History and trash are GM-only;
+ordinary journal projections do not include them.
+
+### Progress clocks and clue discoveries
+
+`table/clocks.py` and `table/clues.py` own persistent, versioned campaign/scene
+records and command receipts. These are generic progress trackers, separate from
+system-owned combat effect clocks. Table clients use projected realtime resource
+states; campaign management reads the same records through HTTP.
+
+Clock visibility and optional player advancement are server rules. Clue projections
+omit all undiscovered records and private GM notes; only completed, player-visible
+findings reach players and streamers. MapBuilder's `blueprint_clocks.py` and
+`blueprint_clues.py` execute specific GM-authored bindings with campaign/scene
+validation. Those bindings do not give the interacting participant general write
+access or reveal private resource data. Simulation does not execute writes; server
+rehearsal executes inside a rollback boundary. See [Clocks](clocks.md) and
+[Clues](clues.md).
 
 ### Chat and dice
 
@@ -302,6 +332,15 @@ identifiers and file paths. Restoration into the same campaign preserves resourc
 identifiers and replaces native content while retaining members, codes and snapshot
 history. These archives are not complete host backups: accounts, sessions, host
 settings and installed packages are separate operational state.
+
+`administration/preparation_archives.py` validates and remaps preparation records,
+dashboards, journal revisions and retained attachment files. Portable imports
+assign one source dashboard to the importing GM without creating memberships;
+snapshots restore each current GM's own dashboard. Legacy archives without
+preparation metadata preserve existing preparation/history on restoration.
+Resource-only compendium exports omit this private preparation and history.
+Clocks and clues retain campaign or scene scope, and Blueprint references remap
+to copied targets rather than the source campaign.
 
 Import validates paths, archive size, expanded size, model/field allowlists and
 checksums before creating content. Adding a model or file relationship requires

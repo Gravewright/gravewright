@@ -186,6 +186,12 @@ def validate_reference_ownership(blueprint, *, campaign_id=None, scene_id=None):
     if campaign_id is not None and Track.objects.filter(pk__in=ids["sound"]).exclude(campaign_id=campaign_id).exists():
         raise MapError("Choose a sound from this campaign.")
     nodes = [node for graph in blueprint.get("graphs", {}).values() for node in graph["nodes"]]
+    from .blueprint_clocks import validate_clock_references
+    validate_clock_references([node['clockId'] for node in nodes if node['type'] == 'clockControl'],
+                              campaign_id=campaign_id, scene_id=scene_id)
+    from .blueprint_clues import validate_clue_references
+    validate_clue_references([node['clueId'] for node in nodes if node['type'] == 'clueControl'],
+                             campaign_id=campaign_id, scene_id=scene_id)
     destinations = [node["destinationId"] for node in nodes if node["type"] == "teleport"]
     for row in SceneObject.objects.filter(pk__in=destinations).select_related("scene"):
         if (campaign_id is not None and str(row.scene.campaign_id) != str(campaign_id)
@@ -466,6 +472,12 @@ def _steps(graph, result, sound_names):
             step.update({key: node[key] for key in ("text", "journalId", "expression", "label", "visibility", "focusX", "focusY") if key in node})
         elif node["type"] == "setQuestStatus":
             step.update(journalId=node["journalId"], status=node["status"])
+        elif node['type'] == 'clockControl':
+            action = next(action for action in result['actions'] if action['id'] == identifier)
+            step.update(clockId=action['clockId'], action=action['action'], amount=action['amount'])
+        elif node['type'] == 'clueControl':
+            action = next(action for action in result['actions'] if action['id'] == identifier)
+            step.update(clueId=action['clueId'], action=action['action'], amount=action['amount'])
         elif node["type"] == "teleport":
             step["destinationId"] = node["destinationId"]
         elif node["type"] in ("lightReference", "soundReference"):
@@ -1019,6 +1031,14 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                 if node["type"] == "setQuestStatus":
                     from .blueprint_world import set_quest_status
                     world_results[node["id"]] = set_quest_status(scene, who, node)
+                    continue
+                if node['type'] == 'clockControl':
+                    from .blueprint_clocks import control_clock
+                    world_results[node['id']] = control_clock(scene, who, node)
+                    continue
+                if node['type'] == 'clueControl':
+                    from .blueprint_clues import control_clue
+                    world_results[node['id']] = control_clue(scene, who, node)
                     continue
                 if node["type"] == "teleport":
                     if skip_unbound_teleport and not context.get("tokenId"):

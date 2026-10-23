@@ -29,7 +29,7 @@ Mantenha alterações de esquema em migrações. Não mude o significado de uma 
 
 Não inclua `.env`, bancos, documentos enviados, módulos instalados, chaves privadas, sessões de navegador ou `test-results/` nos commits. Use contas fictícias e recursos que você possa distribuir nas fixtures.
 
-Atualmente não há configuração global de formatador/linter nem workflow de CI que defina verificações adicionais obrigatórias. Siga o estilo próximo e informe os comandos efetivamente executados; não declare aprovação de CI sem que ela tenha ocorrido.
+Atualmente não há configuração global de formatador/linter. O [workflow de atualizações automáticas](.github/workflows/automatic-updates.yml) verifica a recuperação de atualizações em Windows, Linux e macOS, além dos fluxos de navegador e módulos. Siga o estilo próximo, execute as verificações adequadas à alteração e informe os comandos efetivamente executados; não declare aprovação de CI sem que ela tenha ocorrido.
 
 ## Licenciamento das contribuições
 

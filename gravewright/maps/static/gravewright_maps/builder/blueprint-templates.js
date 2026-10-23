@@ -1,6 +1,6 @@
 import { validateBlueprint } from './blueprint-model.js';
 
-export const templateBindingTypes = Object.freeze(['asset', 'element', 'light', 'sound', 'handout', 'user']);
+export const templateBindingTypes = Object.freeze(['asset', 'element', 'light', 'sound', 'handout', 'user', 'clock', 'clue']);
 const fields = (value, required, optional = []) => value && typeof value === 'object' && !Array.isArray(value)
     && required.every(key => Object.hasOwn(value, key)) && Object.keys(value).every(key => [...required, ...optional].includes(key));
 const identifier = /^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/;
@@ -11,7 +11,7 @@ const text = (value, limit, empty = false) => typeof value === 'string' && !valu
 const scalarType = value => typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : typeof value === 'string' ? 'text' : null;
 const validScalar = (type, value) => scalarType(value) === type && (type === 'number' ? Number.isFinite(value) : type !== 'text' || text(value, 2000, true));
 const at = (value, path) => { for (const part of path.slice(0, -1)) value = value[part]; return [value, path.at(-1)]; };
-const catalogs = { asset: 'assets', element: 'elements', light: 'lights', sound: 'sounds', handout: 'handouts', user: 'users' };
+const catalogs = { asset: 'assets', element: 'elements', light: 'lights', sound: 'sounds', handout: 'handouts', user: 'users', clock: 'clocks', clue: 'clues' };
 const resourcesFor = (catalog, type) => type === 'asset' ? catalog.materials || catalog.assets || [] : catalog[catalogs[type]] || [];
 
 /** Exact reference fields only; authored UUID-like strings never become bindings. */
@@ -19,7 +19,7 @@ function* resourceSlots(blueprint) {
     for (const appearance of Object.values(blueprint.states || {})) if (appearance?.appearance === 'asset') yield [appearance, 'assetId', 'asset'];
     for (const graph of Object.values(blueprint.graphs || {})) for (const node of graph.nodes || []) {
         const slot = { reference: ['targetId', 'element'], lightReference: ['targetId', 'light'], soundReference: ['trackId', 'sound'],
-            light: ['targetId', 'light'], sound: ['trackId', 'sound'], soundControl: ['trackId', 'sound'],
+            light: ['targetId', 'light'], sound: ['trackId', 'sound'], soundControl: ['trackId', 'sound'], clockControl: ['clockId', 'clock'], clueControl: ['clueId', 'clue'],
             showHandout: ['journalId', 'handout'], setQuestStatus: ['journalId', 'handout'], teleport: ['destinationId', 'element'], setAppearance: ['assetId', 'asset'] }[node.type];
         if (slot) yield [node, ...slot];
         if (node.type === 'sprite' && node.appearance === 'asset') yield [node, 'assetId', 'asset'];
@@ -38,7 +38,8 @@ function* resourceSlots(blueprint) {
 export function templateParameterOptions(blueprint) {
     const options = [];
     for (const [event, graph] of Object.entries(blueprint.graphs || {})) for (const [index, node] of graph.nodes.entries()) {
-        const names = { light: ['enabled'], sound: ['volume'], soundControl: ['volume'], flame: ['enabled'], setInteraction: ['enabled'],
+        const names = { light: ['enabled'], sound: ['volume'], soundControl: ['volume'], clockControl: node.action === 'reset' ? [] : ['amount'], flame: ['enabled'], setInteraction: ['enabled'],
+            clueControl: ['advance', 'reduce', 'set'].includes(node.action) ? ['amount'] : [],
             setRegion: ['enabled'], setVisibility: ['visible'], counter: ['target'], cooldown: ['seconds'], delay: ['seconds'],
             timer: node.action === 'stop' ? [] : ['seconds'], move: ['dx', 'dy'], rotate: ['degrees'], getVariable: ['default'],
             setVariable: ['value'], compareValue: ['expected'], switch: ['value'], showMessage: ['text'],
@@ -57,8 +58,8 @@ export function templateParameterOptions(blueprint) {
 }
 
 function referenceCatalog(blueprint) {
-    const result = { assets: [], lights: [], sounds: [] };
-    for (const [parent, key, type] of resourceSlots(blueprint)) if (['asset', 'light', 'sound'].includes(type)) result[catalogs[type]].push({ id: parent[key] });
+    const result = { assets: [], lights: [], sounds: [], clocks: [], clues: [] };
+    for (const [parent, key, type] of resourceSlots(blueprint)) if (['asset', 'light', 'sound', 'clock', 'clue'].includes(type)) result[catalogs[type]].push({ id: parent[key] });
     return result;
 }
 

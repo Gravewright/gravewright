@@ -35,6 +35,9 @@ for MapBuilder, blueprints, ownership, library files and system-owned operations
 
 ### Manual PDF fields
 
+For the complete player/GM workflow, see the [PDF System guide](pdf-system.md).
+This section identifies the implementation and its validation boundaries.
+
 In a Gravewright PDF System character sheet, the GM can open a PDF and choose
 **Map fields**. Select text, number, checkbox or multiline text, then drag a
 rectangle over its area on the page. **Add field** creates a rectangle with the

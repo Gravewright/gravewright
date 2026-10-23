@@ -17,6 +17,8 @@ if (root?.dataset.role === 'gm' && template) {
     const formatter = createRunFormatter({ t, elements: () => doors });
     const { label: doorLabel, stateName, stepText, eventTitle } = formatter;
     const typeNames = STEP_NAMES;
+    const outcomeNames = { completed: 'Completed', blocked: 'Blocked by the lock', failed: 'Failed',
+        waiting: 'Waiting', cancelled: 'Cancelled', paused: 'Automation is paused.' };
     const scalar = value => typeof value === 'boolean' ? t(value ? 'True' : 'False') : typeof value === 'string' ? JSON.stringify(value) : String(value);
     const scopeName = value => t(value === 'scene' ? 'Scene' : 'This element');
     let panel, panelAbort, controls, childModal, unregisterEscape, sceneId = null, runs = [], doors = [], paused = false, view = 'runs', filter = 'all', request = 0, failed = false, notice = '';

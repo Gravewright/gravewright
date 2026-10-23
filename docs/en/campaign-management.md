@@ -20,7 +20,9 @@ There is no second campaign copy to merge back into the table.
 | Area | What to prepare |
 | --- | --- |
 | Journals and quests | Diaries, pages, quests, quest boards and roll tables in the native journal editors, with their normal attachments and access rules |
-| Characters and PDF sheets | Campaign actors and system sheets; in the PDF System, PDF selection, manual fields, saved rolls, calculations and reusable mappings |
+| [Clocks](clocks.md) | Progress clocks for the campaign or selected scene, with visibility, player controls and pinning shared with the table |
+| [Clues](clues.md) | Staged discoveries shared with the table; content is delivered to players only after completion and public visibility |
+| Characters and [PDF sheets](pdf-system.md) | Campaign actors and system sheets; in the PDF System, PDF selection, manual fields, saved rolls, calculations and reusable mappings |
 | Items | Item documents and forms supplied by the campaign's installed system |
 | Scenes and MapBuilder | Campaign scenes, editable map projects and compatible existing scenes; generating or updating a scene remains an explicit operation |
 | File library | Campaign images, PDFs and audio through the native upload, folder and file tools |
@@ -51,6 +53,78 @@ system, so a system without item types does not gain an item catalog here.
 
 See the [MapBuilder guide](map-builder.md) for adoption, linked sources and scene
 updates, and [Universal VTT](universal-vtt.md) for import limits and warnings.
+
+## Preparation tools
+
+These tools are for campaign GMs only. Session plans, timeline events, private
+notes and dashboard choices are stored with the campaign, and players never
+receive them. Each GM has their own dashboard. Other GMs see changes to shared
+records the next time the page refreshes, which happens automatically every
+15 seconds.
+
+| Area | What it does |
+| --- | --- |
+| Overview dashboard | Pinned documents, the next planned session, pending work, sheet diagnostics and upcoming events. **Customize dashboard** shows, hides and reorders these panels for you |
+| Quests | Columns for each quest status. Drag a card to another column, or use **Move quest to** from the keyboard. Cards show assigned characters, objective progress (objectives can be checked off on the card) and prerequisites. A quest that is active before its prerequisites are completed shows a warning |
+| Session planner | An ordered sequence of scenes, encounters, quests, journals, characters, items, audio and notes, plus a checklist and private notes. **Finish session** records a summary and pending work; remaining steps and checklist entries are suggested as pending work. That pending work then appears on the dashboard |
+| Timeline | Events with an in-world date as free text, an optional calendar date, an "upcoming" flag and links to campaign documents. Events are listed in the order you set. The calendar view shows events and planned sessions that have a calendar date |
+| Connections | What a character, item, journal or scene links to, and where it is used: references in journal text, quest assignments and prerequisites, quest boards, scene pins, tokens, session plans and timeline links |
+| View as player | Choose a player to see the journals, pages, characters, items and scenes the server sends that player. Journals open in a read-only preview of the player's version, with GM-only blocks removed |
+| History and trash | Earlier versions of each journal, compared line by line with the current version. A GM can restore any of them. Deleted journals go to the trash, and restoring one brings back its identifier, pages, access, quest board links and files without restoring the rest of the campaign |
+
+**Insert reference** in the journal editor also works in the manager: it
+searches through the same authorized HTTP API instead of the table connection.
+A reference can point to a character, item, journal or scene. In the manager, a
+scene reference selects that scene for preparation; on the table it opens the
+scene directory.
+
+Quest prerequisites are stored with the quest and are visible only to GMs.
+They cannot form a cycle. Editors that do not send prerequisites keep the
+stored ones.
+
+A version is recorded before each change to a journal. Saves by the same
+person within five minutes are combined into one version, and each journal
+keeps its 50 most recent versions. Restoring a version records the replaced
+content as a new version, so a restore can itself be undone. A version cannot
+be restored if it uses files that were later removed from the document. The
+trash keeps up to 200 deleted journals. Files belonging to a trashed journal
+are deleted only when that journal is deleted permanently. Map pins removed
+together with a journal are not recreated when it is restored.
+
+Sheet diagnostics come from the campaign system through the optional
+`preparation.diagnostics` system operation. The PDF System reports sheets with
+no PDF selected and saved calculations that cannot be evaluated; page geometry
+is still checked when a sheet is opened. Systems that do not provide this
+operation do not show the panel.
+
+Campaign exports, copies and snapshots include session plans, timeline events,
+dashboards and journal history, including files retained by the trash. Select
+**Preparation** when copying to include session plans, events and dashboard
+choices; history follows **Journals**. Copies include physical files. Portable
+imports assign one dashboard to the importing GM (their matching dashboard, or
+the first source dashboard, with the source owner's dashboard preferred), without
+adding campaign members or user permissions. Snapshots restore each current GM's
+own dashboard. Older archives that did not store preparation keep existing
+preparation and history when restored into a campaign.
+
+Restoring a revision revalidates document visibility, prerequisite quests and
+files before saving. Its expected version is the one displayed in the comparison;
+if another GM edits the document, open a fresh comparison before restoring.
+Missing files leave the trash entry intact and report an error. Session drafts
+survive selecting the current session, and inputs are disabled while saving.
+
+Preparation allows 200 session plans and 1,000 timeline events per campaign.
+Each session holds up to 64 steps and 64 checklist entries, with up to 32 pending
+entries recorded when finishing. Each GM can pin 24 documents; each event can
+link to 24 documents. Calendar dates use `YYYY-MM-DD`; an in-world date is
+authored text and the core does not interpret a game's calendar.
+
+Full campaign archives contain private preparation, GM notes and journal history.
+Share them only with their intended recipients. A portable import removes
+user-specific grants; it does not sanitize authored secrets into player handouts.
+Resource-only compendium exports omit preparation and history. Keep physical
+files when archiving trash attachments; exporting such an archive without its
+files is rejected.
 
 ## Preparing content and entering play
 

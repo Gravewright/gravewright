@@ -37,9 +37,11 @@ Todo domínio abaixo possui `state(payload = {}, options)` e os métodos listado
 | `actors` | `create`, `update`, `delete`, `setPermissions`, `saveSheet`, `createFolder`, `updateFolder`, `deleteFolder`, `deleteAsset` |
 | `tokens` | `place`, `move`, `remove`, `duplicate`, `setHidden`, `setVision`, `configure`, `addCondition`, `removeCondition` |
 | `maps` | `update`, `move`, `delete`, `activate`, `navigate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder`, `exportUniversalVtt` |
-| `journals` | `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset` |
+| `journals` | `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset`, `setPrerequisites`, `restoreRevision`, `restoreDeleted`, `purgeDeleted` |
 | `items` | `create`, `update`, `delete`, `duplicate`, `setPermissions`, `createFolder`, `updateFolder`, `deleteFolder` |
 | `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
+| `clocks` | `create`, `update`, `advance`, `reset`, `delete` |
+| `clues` | `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
 | `cards` | `define`, `instantiate`, `create`, `draw`, `shuffle`, `reset`, `deleteDeck`, `discard`, `return`, `give`, `place`, `take`, `flip`, `move` |
 | `audio` | `updateTrack`, `deleteTrack`, `createPlaylist`, `updatePlaylist`, `deletePlaylist`, `createSpatialSound`, `updateSpatialSound`, `deleteSpatialSound`, `play`, `pause`, `stop`, `seek`, `setVolume`, `startScore`, `pauseScore`, `resumeScore`, `stopScore`, `nextScore`, `previousScore` |
 | `compendiums` | `create`, `configure`, `read`, `delete`, `add`, `remove`, `import`, `setPermissions` |
@@ -53,8 +55,8 @@ Formas adicionais:
 
 | Método | Comportamento |
 | --- | --- |
-| `actors/tokens/maps/journals/items.list(payload, options)` | Retorna a coleção da resposta autorizada de `state` |
-| `actors/tokens/maps/journals/items.get(id, payload, options)` | Procura na coleção projetada ou gera `not_found` |
+| `actors/tokens/maps/journals/items/clocks/clues.list(payload, options)` | Retorna a coleção da resposta autorizada de `state` |
+| `actors/tokens/maps/journals/items/clocks/clues.get(id, payload, options)` | Procura na coleção projetada ou gera `not_found` |
 | `actors.update(id, changes, options)` | Atalho que lê a versão atual se `changes.version` não foi fornecido |
 | `actors.sheet(id, payload, options)` | Lê ficha, inclusive com contexto de token no payload |
 | `maps.layers(payload, options)` | Lê camadas autorizadas da cena |
@@ -80,7 +82,7 @@ await table.actors.update(current.id, {
 
 Mutações geram um UUID `requestId` quando ele não é fornecido. Comandos que usam recibos nativos deduplicam tentativas com o mesmo ID; reutilize-o apenas ao repetir o mesmo comando lógico. Uma nova alteração exige novo ID. `version`/`expectedVersion` desatualizada ainda pode gerar `conflict`. Não presuma idempotência em todos os endpoints: alterações da sala de espera e moderação do chat possuem outras assinaturas de serviço.
 
-`options.signal` cancela operações pendentes. Um contexto descartado resulta em `stale_context`; cancelamento explícito resulta em `cancelled` nas operações com escopo do módulo. Trate `error.code`, não textos traduzidos. Adaptadores HTTP globais também podem expor erros de transporte/autenticação dos endpoints.
+`options.signal` cancela operações pendentes. Um contexto descartado resulta em `stale_context`; cancelamento explícito resulta em `cancelled` nas operações com escopo do módulo. Trate `error.code`, não textos traduzidos. Falhas autorizadas dos serviços nativos também podem fornecer uma mensagem em `error.message`; exiba-a como texto pelo Translator. Adaptadores HTTP globais também podem expor erros de transporte/autenticação dos endpoints.
 
 ### Descoberta de capacidades e domínios adicionais
 
@@ -107,7 +109,7 @@ revisões esperadas dos serviços nativos. Os payloads públicos usam estes nome
 | `blueprints.templates` / `readTemplate` | `{}` / `{templateId}` |
 | `blueprints.saveTemplate` / `deleteTemplate` | `{templateId, expectedVersion, name, description, definition}` / `{templateId, expectedVersion}` |
 | `blueprints.test` | `{sceneId, elementId, expectedVersion, event, tokenId?, blueprint?}` |
-| `blueprints.testDraft` | `{document, elementId, event, actorId?}` |
+| `blueprints.testDraft` | `{document, elementId, event, actorId?, projectId?}`; um projeto vinculado autorizado fornece o escopo da cena original para os vínculos de relógio no ensaio temporário |
 | `blueprints.control` | `{sceneId, elementId, expectedVersion, action, value?}` |
 | `maps.exportUniversalVtt` | `{sceneId}`; JSON nativo de intercâmbio |
 | `maps.navigate` | `{mapId}`; `mapId: null` explícito volta a seguir a transmissão em contexto sem cena fixa |
@@ -128,8 +130,67 @@ Renderização e criação de tiles ocorrem fora de uma transação global do
 transporte; cada serviço mantém seus próprios limites de commit e limpeza.
 Geração, atualização de cenas, exportação UVTT e ensaios começam sem prazo
 artificial no cliente. `options.timeoutMs` define um prazo; `null` o desativa.
-Os novos domínios de coleção não acrescentam eventos de socket: releia após
-gravar ou use as invalidações existentes de mapas/atores.
+As coleções do Builder usam as invalidações existentes de mapas. Relógios e
+pistas possuem os eventos de coleção descritos abaixo.
+
+### Relógios de progresso
+
+O domínio `clocks` fornece os mesmos registros persistentes na mesa e no gestor
+de campanha. `state({sceneId})` retorna os relógios da campanha e daquela cena
+autorizada, filtrados pela participação atual. O adaptador nativo da página usa
+a rota GET de estado dos recursos para espectadores visualizarem relógios públicos.
+
+Criar aceita `{name, segments?, value?, color?, visibility?, playersCanEdit?,
+pinned?, scopeSceneId?}`. Os padrões são 4 segmentos, valor 0, `#c9a44c`, `gm`,
+false, false e escopo da campanha. Segmentos são inteiros de 2 a 24; o progresso
+vai de 0 ao total de segmentos; cada campanha comporta até 128 relógios. Atualizar
+aceita os campos de configuração e o `id` e a `version` existentes.
+`advance({id, version, delta})` aceita delta inteiro de -24 a 24 e limita o
+progresso ao intervalo válido. Reiniciar e excluir aceitam `{id, version}`.
+Somente mestres configuram, reiniciam ou excluem; jogadores avançam apenas
+relógios públicos com `playersCanEdit: true`. Espectadores continuam somente
+com leitura. Os relógios retornados expõem `canEdit`, `canConfigure` e o escopo
+salvo em `sceneId`.
+
+`scopeSceneId: null` salva o escopo da campanha; um UUID de cena salva o escopo
+da cena. O `sceneId`/`mapId` da requisição é o contexto de visualização e nunca
+move o relógio. Uma API vinculada a cena rejeita outro `scopeSceneId` não nulo.
+Alterações de relógios existentes exigem a versão salva; conflitos exigem revisar
+o estado atualizado. O evento `clocks.changed` usa o envelope de estado de
+recursos descrito abaixo. Consulte [o guia de relógios](clocks.md) para
+visibilidade, fixação e sincronização.
+
+### Descoberta de pistas
+
+O domínio `clues` compartilha as descobertas persistentes entre a mesa e o gestor
+de campanha. `state({sceneId})` retorna as pistas da campanha e daquela cena
+autorizada. Jogadores e espectadores recebem somente pistas com
+`visibility: "players"` e `value === segments`; pistas não descobertas não têm
+registro, título, conteúdo, ID ou marcador público. `gmNotes` fica ausente de
+todas as projeções públicas, inclusive após a descoberta. Toda alteração direta
+exige a autoridade atual de mestre.
+
+Criar aceita `{name, content?, gmNotes?, segments?, value?, color?, visibility?,
+pinned?, scopeSceneId?}`. Os padrões são conteúdo e notas vazios, 4 etapas,
+valor 0, `#c9a44c`, `players`, false e escopo da campanha. Nomes têm até 120
+caracteres; conteúdo e notas do mestre têm até 4000 cada. Etapas são inteiros
+de 1 a 24; o valor vai de 0 ao total. Uma etapa permite descoberta imediata.
+Cada campanha comporta até 128 pistas, independentemente dos relógios.
+
+Atualizar aceita esses campos e `{id, version}`. `advance({id, version, delta})`
+aceita inteiro de -24 a 24 e limita o progresso. `reset({id, version})` zera o
+progresso e preserva a visibilidade; `hide({id, version})` restringe a mestres
+e preserva o progresso; `reveal({id, version})` completa a descoberta e permite
+visibilidade aos jogadores. Excluir aceita `{id, version}`. Versões e UUIDs de
+tentativa seguem os recibos nativos; um antigo mestre não pode reutilizar um
+recibo privado após perder a autoridade.
+
+`scopeSceneId` controla o escopo salvo; `sceneId`/`mapId` fornece o contexto de
+visualização, como nos relógios. Leituras nativas usam a rota GET compatível com
+espectadores. Assinaturas de `clues.changed` releem o estado projetado no envelope
+de recursos abaixo. O nó `clueControl` do MapBuilder delega somente o efeito
+configurado e não concede alterações diretas aos jogadores. Ensaios desfazem
+suas alterações e notificações. Veja [pistas](clues.md) para uso e ações do nó.
 
 ### Operações dos sistemas e PDF System
 
@@ -152,6 +213,7 @@ O provedor PDF integrado expõe estes nomes pela API genérica:
 | `pdf.exportMapping` | `{actorId, tokenId?, source?}`; pacote portátil sem PDF ou valores, exclusivo do mestre |
 | `pdf.applyMapping` | `{actorId, tokenId?, source, version, sheetVersion, bundle}`; aplicação em ator ou token independente pelo mestre |
 | `pdf.diagnostics` | `{actorId, tokenId?, source?, document?}`; diagnóstico de metadados/cálculos sem gravação |
+| `preparation.diagnostics` | `{}`; problemas de fichas salvas para o painel de preparação, exclusivos do mestre, sem ler bytes do PDF |
 | `pdf.roll` | `{actorId, tokenId?, field, source?, visibility?, sceneId?}`; ação salva autorizada com dados/chat e recibos nativos |
 | `pdf.templates.list` / `read` / `export` | `{}` / `{id}` / `{id}`; biblioteca da campanha para o mestre |
 | `pdf.templates.create` / `update` | `{name, bundle}` / `{id, revision, name, bundle}` |
@@ -177,6 +239,7 @@ const template = await api.system.call('pdf.templates.create', {
 Inspeção com PDF.js, renderização achatada, seleção e histórico permanecem no
 navegador. O diagnóstico do servidor usa vínculos/cálculos salvos e um descritor
 opcional observado pelo cliente; não afirma interpretar bytes do PDF.
+Veja o fluxo de mapeamento, cálculo e exportação no [guia do PDF System](pdf-system.md).
 
 ### Métodos binários dos domínios
 
@@ -212,7 +275,7 @@ Disponíveis no objeto global `gravewright`, não na API restrita a domínios do
 | Adaptador | Métodos |
 | --- | --- |
 | `accounts` | `status`, `session`, `login(payload)`, `register(payload)`, `setup(payload)`, `logout`, `update(payload)`, `home(kind)`, `privacy` |
-| `campaigns` | `list`, `management(id)`, `create(payload)`, `update(id, payload)`, `join(code)`, `remove(id, code)`, `invite(id, payload)`, `removalCode(id, payload)`, `invitationStatus(id)`, `revokeInvitation(id)`, `banMember(id, payload)`, `onboarding(id)`, `configureOnboarding(id, payload)`, `claimCharacter(id)`, `streamerLink(id)`, `revokeStreamer(id)`, `rulesets` |
+| `campaigns` | `list`, `management(id)`, `create(payload)`, `update(id, payload)`, `join(code)`, `remove(id, code)`, `invite(id, payload)`, `removalCode(id, payload)`, `invitationStatus(id)`, `revokeInvitation(id)`, `banMember(id, payload)`, `onboarding(id)`, `configureOnboarding(id, payload)`, `claimCharacter(id)`, `streamerLink(id)`, `revokeStreamer(id)`, `rulesets`, `preparation(id)`, `prepare(id, action, payload, requestId)`, `references(id, type, documentId)`, `viewAs(id, userId)`, `journalHistory(id, journalId)`, `journalRevision(id, revisionId)`, `journalTrash(id)` |
 | `administration` | `status`, `diagnostics`, `settings`, `updateSettings(section, payload)`, `snapshots(id)`, `createSnapshot(id, payload)`, `snapshotAction(id, snapshotId, action, payload)`, `previewSnapshot(id, snapshotId)`, `restoreSnapshot(id, snapshotId, payload)`, `deleteSnapshot(id, snapshotId, payload)`, `clonePreview(id, payload)`, `clone(id, payload)`, `exportCampaign(id)`, `importCampaign(file, payload)` |
 | `administration.updates` | `check`, `notification`, `channel(payload)`, `apply(payload)` |
 | `modules` | `list`, `catalog`, `catalogLatest`, `status`, `install(payload)`, `state(tableId)`, `configure(tableId, payload)`, `activation(payload)`, `update(payload)`, `removalPreview(payload)`, `remove(payload)`, `defaultMarketplace`, `configureDefaultMarketplace`, `acknowledge(tableId, payload)`, `localInstallationInfo`, `installLocal(file, payload)` |
@@ -220,6 +283,43 @@ Disponíveis no objeto global `gravewright`, não na API restrita a domínios do
 Todo método aceita um argumento final `options` opcional com `signal` e `timeoutMs`; transferências de arquivos também aceitam `onProgress`. As assinaturas e os nomes nativos dos campos estão documentados em [`global-api.js`](../../gravewright/modules/static/gravewright_modules/global-api.js). Ações de snapshots preservam `{confirm}` fornecido pelo chamador, e a remoção de pacotes preserva `confirmedTables`; os adaptadores não preenchem aprovações automaticamente. A exportação retorna `{blob, name, contentType, size}`. A importação de campanha recebe um ZIP como `File`/`Blob` e `{title}` opcional; a instalação local de pacote recebe um ZIP e `{kind: "module" | "system"}`. Não existe endpoint nativo de download de snapshot. Criar a referência da API não executa ações administrativas.
 
 `campaigns.management(id, options)` lê o resumo da campanha exclusivo do mestre sem carregar a mesa nem entrar em sua presença. A [área de gerenciamento](campaign-management.md) usa os mesmos serviços nativos de documentos e verifica o vínculo atual de mestre daquela campanha.
+
+As [ferramentas de preparação](campaign-management.md#ferramentas-de-preparação) usam outros métodos exclusivos do mestre. `preparation(id)` lê planos de sessão, eventos da cronologia, o painel de quem chama, pendências e o diagnóstico de fichas do sistema. `prepare(id, action, payload, requestId)` executa um comando: `session-create`, `session-update`, `session-finish`, `session-reopen`, `session-delete`, `event-create`, `event-update`, `event-delete` ou `board-update`. Repetir o mesmo comando reutiliza seu UUID de requisição. Alterações e exclusões enviam a `revision` atual do registro; uma revisão desatualizada é recusada com HTTP 409. `references(id, type, documentId)` lista os vínculos e usos de um personagem, item, diário ou cena. `viewAs(id, userId)` devolve as projeções nativas de diários, atores, itens e cenas que um jogador recebe. `journalHistory(id, journalId)`, `journalRevision(id, revisionId)` e `journalTrash(id)` leem versões de diários, uma comparação linha a linha com a versão atual e os diários excluídos. Requisições de preparação recusadas informam o motivo no campo JSON `error`.
+
+Payloads de preparação usam estes campos nativos. Criar retorna `{id, revision}`;
+alterar o painel retorna `{revision}`. Campos omitidos em atualizações preservam
+seus valores atuais.
+
+| Ação | Payload |
+| --- | --- |
+| `session-create` / `session-update` | `{title, scheduledFor?, steps?, checklist?, notes?}`; atualizar também exige `{id, revision}` |
+| `session-finish` | `{id, revision, summary, pending?}`; pendências usam itens de checklist |
+| `session-reopen` / `session-delete` | `{id, revision}` |
+| `event-create` / `event-update` | `{title, worldDate?, position?, date?, upcoming?, description?, links?}`; atualizar também exige `{id, revision}` |
+| `event-delete` | `{id, revision}` |
+| `board-update` | `{revision, pins?, widgets?}`; altera somente o painel de quem chama |
+
+Uma etapa usa `{id, kind, refId, label, done}`; `kind` pode ser `actor`, `item`,
+`journal`, `scene`, `encounter`, `track`, `playlist` ou `note` (notas usam
+`refId: null`). Um item de checklist usa `{id, text, done}`. Vínculos de eventos e
+itens fixados usam `{type, id}` para os mesmos tipos, exceto `note`. Datas usam
+`YYYY-MM-DD` ou `null`; datas do mundo continuam texto. IDs dos painéis são
+`pins`, `session`, `pending`, `diagnostics`, `events`, na ordem desejada e sem
+repetições. O serviço valida campanha e [limites da preparação](campaign-management.md).
+
+Escritas no histórico usam a API `journals` vinculada à mesa e UUIDs de operação:
+
+| Método | Payload |
+| --- | --- |
+| `setPrerequisites` | `{journal_id, version, prerequisites: [questId, ...]}`; exclusivo do mestre, missões da mesma campanha, rejeita ciclos |
+| `restoreRevision` | `{journal_id, revision_id, version}`; `version` deve ser o `current.version` devolvido pela comparação exibida |
+| `restoreDeleted` / `purgeDeleted` | `{revision_id}`; ID da entrada excluída, em vez do antigo UUID do diário |
+
+Restaurações revalidam acesso padrão, pré-requisitos e anexos físicos. Uma falha
+preserva o diário/lixeira atual. Após um conflito, obtenha outra comparação antes
+de restaurar; substituir a versão esperada sem revisão descartaria edições de
+outro mestre. Leituras e escritas de histórico/lixeira verificam novamente o
+vínculo atual de mestre, inclusive ao repetir recibos.
 
 Permissões de proprietário e gerenciamento da campanha continuam verificadas no servidor. Os métodos usam cookies de sessão e obtêm token CSRF antes de escrever. Não há autenticação por chave de API nessa interface. Views e testes dos apps definem os payloads; não coloque credenciais no código de módulos.
 
@@ -238,10 +338,10 @@ actors.changed       tokens.changed       maps.changed
 maps.layersChanged   journals.changed     items.changed
 combat.changed       cards.changed        audio.changed
 compendiums.changed  chat.changed         chat.message
-table.presence       table.lobbyChanged
+table.presence       table.lobbyChanged   clocks.changed   clues.changed
 ```
 
-Assinaturas de mudanças em coleções fazem leitura HTTP autorizada inicialmente, após invalidações correspondentes do socket e na reconexão. Invalidações concorrentes são agrupadas; não representam todas as mutações intermediárias. Callbacks de ator/token/mapa/documento recebem o estado projetado e a identidade da mesa/cena; callbacks de item/combate/cartas/áudio/compêndio recebem `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presença e sala de espera encaminham payloads do socket sem ler automaticamente o estado inicial. Consulte esse estado separadamente quando necessário.
+Assinaturas de mudanças em coleções fazem leitura HTTP autorizada inicialmente, após invalidações correspondentes do socket e na reconexão. Invalidações concorrentes são agrupadas; não representam todas as mutações intermediárias. Callbacks de ator/token/mapa/documento recebem o estado projetado e a identidade da mesa/cena; callbacks de item/combate/cartas/áudio/compêndio/relógio recebem `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presença e sala de espera encaminham payloads do socket sem ler automaticamente o estado inicial. Consulte esse estado separadamente quando necessário.
 
 Assinaturas usam o socket da página atual. Uma API criada com `forTable` em `/inside`, ou apontando para outra mesa, faz requisições HTTP, mas não cria socket para essa mesa. Não presuma atualizações contínuas. Callbacks devem ser síncronos; inicie tarefas assíncronas explicitamente com tratamento de erro. O `events` antigo do bloco usa outros nomes e possui ressalvas descritas no [guia de módulos](modules.md#arquivos-persistência-e-eventos).
 
@@ -333,6 +433,8 @@ Imports e assinaturas públicas; `campaign_id`/`user_id` representam identificad
 | `api.library` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, payload, request_id)`; [serviço nativo da biblioteca](../../gravewright/maps/library_services.py) |
 | `api.ownership` | `state(campaign_id, user_id, kind, resource_id)`, `command(campaign_id, user_id, kind, resource_id, payload, request_id)`; [serviço do mestre para documentos, pastas e páginas](../../gravewright/table/permission_services.py) |
 | `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)` |
+| `api.clocks` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)`; ações `create`, `update`, `advance`, `reset`, `delete` |
+| `api.clues` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)`; ações `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
 | `api.items`, `api.combat`, `api.cards`, `api.audio`, `api.compendiums` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.combat.register_provider` | Registro de callbacks pelo sistema em `AppConfig.ready()`; veja [provedores de combate](modules.md#provedores-de-combate-do-sistema) |
 | `api.resources` | `state(campaign_id, user_id, name, scene_id=None, preview_token_id=None)`, `command(campaign_id, user_id, name, action, data, request_id)` |
@@ -342,7 +444,7 @@ Imports e assinaturas públicas; `campaign_id`/`user_id` representam identificad
 | `api.events` | `Change`, `resource_changed` |
 | `api.errors` | `AuthError`, `JournalError`, `MapError`, `RollError` |
 
-Use argumentos posicionais como no exemplo quando nomes de parâmetros diferirem. `resources` seleciona `items`, `combat`, `cards`, `audio` ou `compendiums` pelo nome. `dice.evaluate` calcula localmente; `dice.roll` salva/publica uma rolagem. Exceções Python preservam tipos/códigos dos serviços originais, sem a normalização de sete códigos do navegador.
+Use argumentos posicionais como no exemplo quando nomes de parâmetros diferirem. `resources` seleciona `items`, `combat`, `cards`, `audio`, `compendiums`, `clocks` ou `clues` pelo nome. `dice.evaluate` calcula localmente; `dice.roll` salva/publica uma rolagem. Exceções Python preservam tipos/códigos dos serviços originais, sem a normalização de sete códigos do navegador.
 
 ### Transações e hooks do servidor
 

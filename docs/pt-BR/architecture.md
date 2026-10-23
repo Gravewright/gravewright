@@ -168,6 +168,13 @@ remoção armazenados como hash, limites de resgate e remoção de participantes
 de streamer criam uma identidade visitante específica com validade e revogação.
 A interface Inside reúne esses fluxos em `web/inside.py`.
 
+O gerenciamento abre por `campaigns/management_views.py` sem socket da mesa,
+renderizador Pixi ou registro de presença. `management.py` autoriza os mestres
+atuais; `preparation.py` valida planos de sessão, eventos, painel de cada mestre
+e recibos das operações. Conexões e prévias de jogadores leem documentos nativos
+sem copiar seu estado. Datas do calendário são datas ISO opcionais; datas do
+mundo permanecem texto autoral. Veja [Gerenciar uma campanha](campaign-management.md).
+
 ### Atores, fichas PDF e tokens
 
 Um `Actor` é a fonte reutilizável do personagem. `pdf_system/schema.py` normaliza a
@@ -237,6 +244,29 @@ normaliza os formatos; `types.py` trata comportamentos como quadros e missões.
 Edições de jogadores preservam conteúdo oculto do mestre e não podem associar
 arquivos arbitrários. `presentations.py` emite e resolve tickets vinculados ao
 destinatário, sem tornar públicos os arquivos originais.
+
+`journals/history.py` armazena snapshots `Revision` limitados por documento e
+documentos excluídos. Restaurar revalida visibilidade/acesso padrão, dependências
+de missões e disponibilidade física dos anexos na transação do diário. A versão
+substituída fica registrada para permitir desfazer a restauração. A limpeza de
+arquivos confere tanto assets ativos quanto versões retidas após o commit.
+Histórico e lixeira são exclusivos dos mestres e não integram as projeções comuns.
+
+### Relógios de progresso e descobertas de pistas
+
+`table/clocks.py` e `table/clues.py` controlam registros persistentes e versionados
+de campanha/cena e seus recibos. São marcadores genéricos de progresso, separados
+dos relógios de efeitos de combate pertencentes ao sistema. Clientes da mesa usam
+estados projetados em tempo real; o gestor lê os mesmos registros por HTTP.
+
+Visibilidade e avanço opcional por jogadores são regras do servidor. Projeções de
+pistas omitem registros não descobertos e notas privadas; somente descobertas
+concluídas e visíveis a jogadores chegam a jogadores e streamers. Os auxiliares
+`blueprint_clocks.py` e `blueprint_clues.py` do MapBuilder executam vínculos
+específicos criados pelo mestre, validando campanha e cena. Eles não concedem
+edição geral ao participante nem revelam dados privados. Simulação não escreve;
+o ensaio no servidor executa dentro de uma transação revertida. Veja
+[Relógios](clocks.md) e [Pistas](clues.md).
 
 ### Chat e dados
 
@@ -314,6 +344,15 @@ Restaurações na mesma campanha preservam identificadores e substituem o conte�
 nativo, mantendo participantes, códigos e histórico de snapshots. Esses arquivos
 não são backups completos do servidor: contas, sessões, configurações e pacotes
 instalados são dados operacionais separados.
+
+`administration/preparation_archives.py` valida e remapeia preparação, painéis,
+versões dos diários e arquivos de anexos retidos. Importações portáteis atribuem
+um painel da origem ao mestre importador sem criar participantes; snapshots
+restauram o painel de cada mestre atual. Arquivos antigos sem metadados de
+preparação preservam preparação/histórico existentes ao restaurar. Exportações
+de recursos para compêndios omitem esses dados privados. Relógios e pistas mantêm
+escopo de campanha/cena, e referências Blueprint apontam aos destinos copiados,
+sem controlar a campanha de origem.
 
 A importação valida caminhos, tamanho do ZIP, tamanho descompactado, modelos, campos
 e hashes antes de criar conteúdo. Adicionar um modelo ou relacionamento de arquivo

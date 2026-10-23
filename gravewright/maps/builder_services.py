@@ -95,6 +95,8 @@ def catalog(campaign_id, user_id):
     who = authority(campaign_id, user_id)
     from gravewright.audio.models import Track
     from .blueprint_world import presentation_catalog
+    from .blueprint_clocks import catalog as clock_catalog
+    from .blueprint_clues import catalog as clue_catalog
     return {
         "projects": [summary(row, who) for row in MapBuilderProject.objects.filter(campaign=who.campaign).select_related("scene")],
         "assets": [
@@ -106,6 +108,8 @@ def catalog(campaign_id, user_id):
                     "url": f"/game/audio/{row.pk}", "duration": row.duration}
                    for row in Track.objects.filter(campaign=who.campaign).order_by("name", "id")],
         **presentation_catalog(who),
+        "clocks": clock_catalog(who, all_scenes=True),
+        "clues": clue_catalog(who, all_scenes=True),
         "limits": {**LIMITS, "maxPixels": min(LIMITS["maxPixels"], settings.GRAVEWRIGHT_MAP_MAX_PIXELS)},
     }
 
@@ -430,13 +434,13 @@ def validate_imported_projects(campaign):
             decorations = doc.get("decorations")
             if ("backgroundImage" in doc or isinstance(decorations, list)
                     and any(isinstance(row, dict) and "empty" in row for row in decorations)):
-                clean_document(doc, who)
+                clean_document(doc, who, scene_id=source.scene_id)
     for row in SceneObject.objects.filter(scene__campaign=campaign, kind="images").select_related("scene"):
         if isinstance(row.data, dict) and "empty" in row.data:
             empty_image(row.scene, {**row.data, "id": str(row.pk)})
 
 
-def clean_document(raw, who):
+def clean_document(raw, who, *, scene_id=None):
     """Normalize a finite, bounded, campaign-scoped document in grid cells."""
     fields(raw, ("schemaVersion", "name", "columns", "rows", "cellSize", "background", "backgroundImage", "floors", "walls", "doors", "assets", "layers", "decorations", "lights", "particles", "shaders", "regions", "editingMode", "sceneGeometry"), "map project")
     try:
@@ -792,7 +796,9 @@ def clean_document(raw, who):
         for kind in ("doors", "decorations", "regions"):
             for row in doc.get(kind, []):
                 if "blueprint" in row:
-                    validate_reference_ownership(row["blueprint"], campaign_id=who.campaign_id)
+                    from .blueprint_clocks import clock_scope
+                    with clock_scope(scene_id):
+                        validate_reference_ownership(row["blueprint"], campaign_id=who.campaign_id)
         if source_presence_count(doc) > MAX_REGIONS:
             raise services.MapError("The scene has too many presence regions.")
     # Independent openings can split several overlapping wall strokes. Bound
@@ -862,7 +868,7 @@ def save(campaign_id, user_id, project_id, payload):
         if row is not None and row.campaign_id != who.campaign_id:
             raise services.MapError("Map project not found.", "not_found")
         expected(payload.get("expected_version"), row)
-        doc = clean_document(payload.get("document"), who)
+        doc = clean_document(payload.get("document"), who, scene_id=row.scene_id if row else None)
         target = services.folder(payload.get("folder_id"), who)
         if row is None:
             row = MapBuilderProject(id=project_id, campaign=who.campaign)
@@ -1223,7 +1229,7 @@ def legacy_generation(source, who):
     if scene.campaign_id != who.campaign_id:
         return None
     try:
-        doc = clean_document(source.document, who)
+        doc = clean_document(source.document, who, scene_id=source.scene_id)
         if (scene.width != doc["columns"] * doc["cellSize"]
                 or scene.height != doc["rows"] * doc["cellSize"]
                 or not isinstance(scene.settings, dict)
@@ -1399,7 +1405,7 @@ def update(campaign_id, user_id, project_id, payload):
         return cached
     source = project(project_id, who)
     expected(payload.get("expected_version"), source)
-    doc = clean_document(source.document, who)
+    doc = clean_document(source.document, who, scene_id=source.scene_id)
     initial_manifest = deepcopy(source.generation)
     initial_scene, _ = update_target(source, who, payload, doc)
     stored, tiles = [], []
@@ -1417,7 +1423,7 @@ def update(campaign_id, user_id, project_id, payload):
                 return cached
             source = project(project_id, who)
             expected(payload.get("expected_version"), source)
-            clean_document(source.document, who)
+            clean_document(source.document, who, scene_id=source.scene_id)
             if source.scene_id != initial_scene.pk or source.generation != initial_manifest:
                 raise services.MapError("The generated scene changed. Reload the project before updating it.", "conflict")
             scene, owned = update_target(source, who, payload, doc)

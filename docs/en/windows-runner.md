@@ -59,7 +59,7 @@ For unattended installation with defaults, without configuration questions or se
 "Install Windows.bat" --check --no-pause --data-dir "data\check"
 ```
 
-This installs dependencies, prepares assets/database and generates a runner pointing at the selected data directory. It is not read-only. A later normal installation asks the questions. `--data-dir` chooses the stored data directory; `--port` overrides only the installation check, not the saved port.
+This installs dependencies, prepares assets/database and generates a runner pointing at the selected state directory. It is not read-only. A later normal installation asks the questions. `--data-dir` changes Runner state, logs and collected assets; the database and uploads still follow project `.env`. For isolated checks, use a disposable project copy with separate database/media configuration as well. `--port` overrides only the installation check, not the saved port.
 
 The generated runner accepts `--no-browser`, `--no-pause`, `--data-dir`, `--port` and `--check`. Runner `--check` checks the application/database without tool installation or frontend preparation; it can apply migrations and collect static assets. `--port` applies only to that run. To configure saved values, open the installer.
 
@@ -68,6 +68,8 @@ For download failures, inspect the console and connectivity to GitHub, nodejs.or
 The installer owns tool/dependency preparation. [create_runner.py](../../scripts/windows/create_runner.py) generates the startup BAT from its [template](../../scripts/windows/runner.bat); [create_shortcut.py](../../scripts/windows/create_shortcut.py) creates the optional icon shortcut. [gravewright_runner.py](../../scripts/gravewright_runner.py) owns personal settings, locking and server lifecycle. See [testing](testing.md): the native Windows harness covers installation, reconfiguration, private Python downloads, offline reuse and the generated runner. Browser validation is separate when `--skip-browser` is used.
 
 ## Updates and rollback
+
+The prepared **0.3.2** release uses **`Gravewright-0.3.2-django.zip`** and its matching checksum. It adds database migrations for clocks, clues, campaign preparation and journal history. Follow [upgrading](upgrading.md) before installing it. A manual upgrade requires the complete archive and another run of **`Install Windows.bat`**, preserving `.env`, `data/` and explicit storage overrides. Same-version reissues require manual installation because discovery compares version numbers.
 
 Updates replace the project files in place, including the installer, and regenerate the runner with the new Python environment. In Administration → Updates, **Keep a .old copy for rollback** controls whether the old code and matching data snapshot are retained after success. Temporary recovery remains available during installation. See [deployment](deployment.md) for restoration instructions.
 

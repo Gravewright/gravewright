@@ -671,7 +671,7 @@ function administration(root) {
         return;
       }
       if (form.dataset.form === "clone") {
-        const options = Object.fromEntries(["scenes", "actors", "items", "journals", "settings"].map((k) => [k, data.has(k)]));
+        const options = Object.fromEntries(["scenes", "actors", "items", "journals", "settings", "clocks", "clues", "preparation"].map((k) => [k, data.has(k)]));
         const result = await http.post(`/api/admin/campaigns/${data.get("source")}/clone/${preview ? "create" : "preview"}`, { title: data.get("title"), options }, { timeoutMs: null });
         if (preview) {
           location.assign("/inside");

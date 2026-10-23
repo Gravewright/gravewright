@@ -1,7 +1,7 @@
 [project]
 name = "gravewright-vtt"
-# Public release: 0.3.1, Alpha development stage (release tag: v0.3.1).
-version = "0.3.1"
+# Public release: 0.3.2, Alpha development stage (release tag: v0.3.2).
+version = "0.3.2"
 classifiers = ["Development Status :: 3 - Alpha"]
 requires-python = ">=3.14"
 readme = "README.md"
@@ -30,7 +30,7 @@ dependencies = [
     "jinja2>=3.1.6,<4",
     "jsonschema>=4.26.0",
     "mutagen>=1.47,<2",
-    "pillow>=12.3.0",
+    "pillow>=13.0.0",
     "python-dotenv>=1.1,<2",
 ]
 

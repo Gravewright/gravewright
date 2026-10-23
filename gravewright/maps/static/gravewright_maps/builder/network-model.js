@@ -2,7 +2,7 @@
 export function sceneNetwork(catalog) {
     const nodes = new Map(), edges = new Map();
     const keyFor = (resource, id) => resource === 'element' ? id : `${resource}:${id}`;
-    const kinds = { elements: 'element', lights: 'light', sounds: 'sound', assets: 'asset', handouts: 'handout', users: 'user' };
+    const kinds = { elements: 'element', lights: 'light', sounds: 'sound', assets: 'asset', handouts: 'handout', users: 'user', clocks: 'clock', clues: 'clue' };
     for (const [collection, resource] of Object.entries(kinds)) {
         for (const item of catalog[collection] || []) nodes.set(keyFor(resource, item.id), { ...item, id: keyFor(resource, item.id), resourceId: item.id, resource, missing: false,
             editable: resource === 'element' && (item.editable ?? ['door', 'lever', 'torch', 'region'].includes(item.kind)),
@@ -49,6 +49,8 @@ export function sceneNetwork(catalog) {
                 if (node.type === 'teleport') link(owner, node.destinationId, 'element', event, 'teleport');
                 if (node.assetId) link(owner, node.assetId, 'asset', event, 'appearance');
                 if (['showHandout', 'setQuestStatus'].includes(node.type)) link(owner, node.journalId, 'handout', event, 'handout');
+                if (node.type === 'clockControl') link(owner, node.clockId, 'clock', event, 'clock');
+                if (node.type === 'clueControl') link(owner, node.clueId, 'clue', event, 'clue');
                 if (node.audience?.scope === 'users') for (const target of node.audience.userIds) link(owner, target, 'user', event, 'audience');
                 if (node.type === 'emitEvent' && executed.has(id)) {
                     const signal = `signal:${node.name}`;

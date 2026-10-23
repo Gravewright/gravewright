@@ -2,7 +2,7 @@
 
 [Documentation](../README.md) · [Português](../pt-BR/deployment.md)
 
-This guide covers server deployments. For a Windows installation used only on its own computer, use the separate [Gravewright Runner](windows-runner.md), which manages personal storage and a single-process local profile.
+This guide covers server deployments. For local play, use the separate Gravewright Runner for [Windows](windows-runner.md), [Linux](linux-runner.md) or [macOS](macos-runner.md), which manages installation-local storage and a single-process local profile. Before upgrading to **0.3.2**, follow the [upgrade and recovery guide](upgrading.md).
 
 ## HTTPS and WebSockets
 
@@ -16,7 +16,7 @@ The public origin is an allowlist, not a TLS listener or permission grant. Table
 
 Run from a versioned source checkout as an account that can write the configured database and private storage. Use a persistent, private `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=false`, an explicit allowed-host list, the intended public origin and a Redis URL. A public origin must be an HTTP(S) origin with no path or trailing slash. HTTPS enables secure session/CSRF cookies and HSTS in settings.
 
-Generate a secret locally and put it in protected configuration, preserving it across restarts:
+Before invoking uv, configure [installation-local tool storage](upgrading.md#local-tool-storage) in the same shell. Generate a secret locally and put it in protected configuration, preserving it across restarts:
 
 ```bash
 uv run --locked python -c 'import secrets; print(secrets.token_urlsafe(64))'
@@ -32,7 +32,7 @@ uv run --locked --no-dev python manage.py check --deploy
 uv run --locked --no-dev daphne -b 127.0.0.1 -p 3000 config.asgi:application
 ```
 
-These commands assume production values have already been set and storage directories exist. `check --deploy` can report settings requiring an operator decision; verify the public endpoint as described below as well. The last command binds plain HTTP to loopback behind the TLS proxy. `main.py` invokes Django's development `runserver`; `config.wsgi` cannot serve WebSockets.
+These commands assume production values have already been set and storage directories exist. `check --deploy` can report settings requiring an operator decision; verify the public endpoint as described below as well. The last command binds plain HTTP to loopback behind the TLS proxy. Normal `main.py` execution starts the managed supervisor and Daphne; `main.py --dev` invokes Django's development `runserver`. Direct Daphne execution above leaves process supervision and upgrades to the operator. `config.wsgi` cannot serve WebSockets.
 
 ## Nginx reverse proxy
 
@@ -103,7 +103,7 @@ Nginx handles the HTTP-to-HTTPS redirect; this checkout does not enable Django's
 
 Serve `/static/` from the `staticfiles/` directory produced by `collectstatic`. Runtime app assets, including frontend modules served by custom views, still need their corresponding application routes. With debug disabled, Django does not automatically serve collected files through the development static handler.
 
-Keep `MEDIA_ROOT` private: uploaded maps, PDFs, journal files, audio, cards and installed module packages are served by guarded routes. A public `/media/` alias would bypass these checks. Back up private storage together with the database. Optional disk compendium collections in `data/vtt/compendiums/` need backup too.
+Keep `MEDIA_ROOT` private: uploaded maps, PDFs, journal files, audio, cards and installed module packages are served by guarded routes. A public `/media/` alias would bypass these checks. Back up private storage together with the database, including attachments retained by deleted journal history. Optional disk compendium collections in the configured `GRAVEWRIGHT_CONTENT_ROOT` need backup too: standard settings default to `data/vtt/compendiums/`, while the Runner uses `data/compendiums/`.
 
 Configure upstream upload limits and timeouts explicitly for your deployment. The default map byte limit is 50 GiB, while decoded-pixel, dimension and tile limits apply separately; a high accepted byte limit does not imply that the server can process such a file within available memory.
 
@@ -154,7 +154,9 @@ Use a service manager to supervise ASGI and Redis, retain logs, and shut down gr
 
 ## Backups and restoration
 
-Campaign exports are portable content packages; snapshots are campaign recovery points. Neither is a full instance backup. Exports omit or sanitize some memberships, ownership and private session history, and module installation state is outside their content graph. See [archives.py](../../gravewright/administration/archives.py).
+Campaign exports are portable content packages; snapshots are campaign recovery points. In **0.3.2**, complete exports, clones and snapshots include clocks, clues, session preparation, timeline events, dashboard metadata and journal history/trash with retained attachments. Portable imports remap references and do not create campaign members or restore source-user permissions. Snapshots restore dashboards only for current GMs. Older archives without preparation metadata preserve the target's existing preparation/history data. See [campaign management](campaign-management.md) for selection and dashboard rules and [archives.py](../../gravewright/administration/archives.py) for the content graph.
+
+Neither format is a full instance backup: user accounts, host settings, installed module state, command receipts and pending Blueprint waits are outside portable content packages. A full database/media backup includes them. Trashed attachments still consume private storage until released by history cleanup; do not prune those files manually.
 
 For a consistent full backup:
 
@@ -205,12 +207,12 @@ replacement workflow. Preserve the personal data and `updates` directory.
 
 Updates replace application files in the original project folder, including the installer, scripts and assets, remove obsolete code, and regenerate the platform Runner. Local `.env`, Python environments, caches and persistent data/extension directories are preserved. New dependencies are prepared in isolation before the replacement.
 
-**Keep a .old copy for rollback** is checked by default. After success, a folder such as `data/updates/retained/Gravewright-0.2.3.old` inside the installation holds the previous code and matching data snapshots under `.gravewright-rollback`. If it already exists, a unique identifier is added to the new backup name. Unchecking removes the temporary recovery copy after success. Temporary recovery is always retained during installation: migration, file replacement or startup failures restore code, launchers and data. Interrupted transactions recover at next launch.
+**Keep a .old copy for rollback** is checked by default. After success, the updater's `retained/` directory holds the previous code and matching data snapshots under `.gravewright-rollback`. The folder is named after the installation directory, for example `data/updates/retained/gravewright.old` for a Runner installation extracted as `gravewright`; collisions add a unique identifier. Normal `main.py` uses `data/updates/<installation-hash>/retained/` instead. Use the actual path recorded by your installation, rather than constructing it from the target release version. Unchecking removes the temporary recovery copy after success. Temporary recovery is always retained during installation: migration, file replacement or startup failures restore code, launchers and data. Interrupted transactions recover at next launch.
 
 To restore a retained copy, stop the runner and use the installation's Python (shown in the generated BAT):
 
 ```bat
-"PATH_TO_PYTHON\python.exe" -X utf8 scripts\rollback_update.py "data\updates\retained\Gravewright-0.2.3.old"
+"PATH_TO_PYTHON\python.exe" -X utf8 scripts\rollback_update.py "data\updates\retained\gravewright.old"
 ```
 
 Restoration also returns the database and media to the backup's point in time, discarding later changes. Keep updater state and environments together with the `.old` copy: it references the previous Python. Dirty Git checkouts remain protected. Never run another server against the same database during an update or restoration.

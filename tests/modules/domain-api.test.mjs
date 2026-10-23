@@ -41,6 +41,75 @@ test('actor convenience update and combat turns retain optimistic versions', asy
   await assert.rejects(api.actors.get('private'),{code:'not_found'});
 });
 
+test('clock collections and mutations preserve scope, revisions and retry identity', async () => {
+  const calls = [], clock = { id: 'clock', sceneId: null, version: 3 };
+  const api = createDomainApi(async (...args) => { calls.push(args); return { clocks: [clock] }; });
+  const options = { requestId: 'logical-clock-operation' };
+  const context = { sceneId: 'scene', mapId: 'scene' };
+  assert.equal(await api.clocks.get('clock', context), clock);
+  await assert.rejects(api.clocks.get('unavailable', context), { code: 'not_found' });
+  const payload = { ...context, id: clock.id, version: clock.version, scopeSceneId: null, name: 'Campaign clock' };
+  await api.clocks.update(payload, options);
+  await api.clocks.advance({ ...context, id: clock.id, version: 4, delta: -1 }, options);
+  assert.deepEqual(calls.at(-2), ['clocks', 'update', payload, options]);
+  assert.deepEqual(calls.at(-1), ['clocks', 'advance', { ...context, id: 'clock', version: 4, delta: -1 }, options]);
+  assert.equal(clock.version, 3);
+});
+
+test('clock events filter other scenes and campaigns and release their listener', async () => {
+  const target = new EventTarget(), life = new Lifetime(), values = [];
+  const events = createEvents(target, life, { tableId: 'table', sceneId: 'scene' });
+  events.on('clocks.changed', payload => values.push(payload));
+  const emit = payload => target.dispatchEvent(new CustomEvent('gravewright:api-event', { detail: { type: 'resources.state', payload } }));
+  emit({ tableId: 'other', sceneId: 'scene', module: 'clocks' });
+  emit({ tableId: 'table', sceneId: 'other', module: 'clocks' });
+  emit({ tableId: 'table', sceneId: 'scene', module: 'combat' });
+  const projection = { tableId: 'table', sceneId: 'scene', module: 'clocks', state: { clocks: [] } };
+  emit(projection);
+  assert.deepEqual(values, [projection]);
+  await life.close();
+  emit(projection);
+  assert.equal(values.length, 1);
+});
+
+test('clue discovery methods retain revision and retry identity without changing the projected collection', async () => {
+  const clue = { id: 'discovered', version: 5, discovered: true }, calls = [];
+  const api = createDomainApi(async (...args) => { calls.push(args); return { clues: [clue] }; });
+  const context = { sceneId: 'scene' }, options = { requestId: 'logical-discovery' };
+  assert.deepEqual(await api.clues.list(context), [clue]);
+  await assert.rejects(api.clues.get('undiscovered', context), { code: 'not_found' });
+  for (const action of ['reveal', 'hide', 'reset']) {
+    const payload = { ...context, id: clue.id, version: clue.version };
+    await api.clues[action](payload, options);
+    assert.deepEqual(calls.at(-1), ['clues', action, payload, options]);
+  }
+  assert.equal(clue.version, 5);
+});
+
+test('clue subscriptions read authorized state and never forward an invalidation as a discovery', async () => {
+  const target = new EventTarget(), life = new Lifetime(), values = [], reads = [];
+  const projection = { clues: [{ id: 'discovered', content: 'Public finding' }] };
+  const events = createEvents(target, life, { tableId: 'table', sceneId: 'scene' }, async domain => {
+    reads.push(domain); return projection;
+  });
+  events.on('clues.changed', value => values.push(value));
+  await new Promise(resolve => setImmediate(resolve));
+  const emit = payload => target.dispatchEvent(new CustomEvent('gravewright:api-event', {
+    detail: { type: 'api.changed', payload },
+  }));
+  emit({ tableId: 'foreign', domain: 'clues' });
+  emit({ tableId: 'table', domain: 'clocks' });
+  emit({ tableId: 'table', domain: 'clues', state: { clues: [{ gmNotes: 'NEVER FORWARD' }] } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(reads, ['clues', 'clues']);
+  assert.equal(values.length, 2);
+  assert.deepEqual(values.at(-1), { module: 'clues', state: projection, tableId: 'table', sceneId: 'scene' });
+  assert.equal(JSON.stringify(values).includes('NEVER FORWARD'), false);
+  await life.close();
+  emit({ tableId: 'table', domain: 'clues' });
+  assert.equal(reads.length, 2);
+});
+
 test('event subscriptions filter table, scene and resource and release on disposal', async () => {
   const target = new EventTarget(), life = new Lifetime(), values = [];
   const events = createEvents(target, life, {tableId:'table',sceneId:'scene'});

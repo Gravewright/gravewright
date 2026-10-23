@@ -1,7 +1,7 @@
 import { FRONTEND_CONTRACT } from './frontend-contract.js';
 import { ModuleError } from './lifetime.js';
 
-const collections = { actors: 'actors', tokens: 'tokens', maps: 'maps', journals: 'journals', items: 'items' };
+const collections = { actors: 'actors', tokens: 'tokens', maps: 'maps', journals: 'journals', items: 'items', clocks: 'clocks', clues: 'clues' };
 
 /**
  * Public domain methods shared by native pages and installed modules. The call
@@ -90,7 +90,7 @@ const eventTypes = {
   'journals.changed': 'journals.state', 'chat.changed': 'chat.history',
   'chat.message': 'chat.message', 'table.presence': 'table.presence',
   'table.lobbyChanged': 'lobby.state',
-  ...Object.fromEntries(['items','combat','cards','audio','compendiums'].map(name => [name + '.changed', 'resources.state'])),
+  ...Object.fromEntries(['items','combat','cards','audio','compendiums','clocks','clues'].map(name => [name + '.changed', 'resources.state'])),
 };
 
 /**

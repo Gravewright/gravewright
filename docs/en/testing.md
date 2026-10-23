@@ -112,6 +112,54 @@ Replace `<existingChromium>` with an existing Chromium executable. Choose a new
 or empty output directory for each run; fixtures, logs, state comparisons and
 screenshots stay in that installation-local directory.
 
+The [campaign preparation scenario](../../tests/e2e/campaign_preparation.py)
+uses the same disposable fixture to exercise the dashboard, the reference picker
+without a table connection, the session planner, the timeline and calendar, quest
+columns with prerequisites, connections, the player preview and restoring a
+journal from the trash, and checks phone-width layouts. Run it with the same
+`--output` and `--browser-executable` options as the scenario above.
+
+`tests/e2e/campaign_preparation_regressions.py` checks session draft preservation,
+editing during an in-flight save, asynchronous reference-picker errors and retry,
+stale comparisons during concurrent GM edits, private revision permissions and
+atomic rejection of a historical revision restore whose physical file is missing.
+It also checks the exact native error in English and its Portuguese/Spanish
+translations at 320px. Use a separate fresh output directory:
+`uv run --locked python tests/e2e/campaign_preparation_regressions.py --output data/prep-regressions --browser-executable "<existingChromium>"`.
+
+`gravewright.administration.test_preparation_archives` covers preparation and
+history round trips, retained files, each GM's snapshot dashboard, old-archive
+compatibility, typed reference remapping, chronology and rejection of malformed
+metadata, conflicting asset owners and quest cycles.
+
+The [progress-clock scenario](../../tests/e2e/clocks.py) uses isolated campaign
+fixtures to check shared clocks in management and the real table, realtime
+updates, player and streamer permissions, private and scene-scoped filtering,
+concurrent revisions, persistence and pinned display. It also checks English,
+Portuguese and Spanish at 320px and preserves management's broadcast, navigation
+and presence boundaries. Run it with
+`uv run --locked python tests/e2e/clocks.py --output data/clocks-check --browser-executable "<existingChromium>"`,
+using a fresh output directory. This describes coverage rather than a particular
+run's result.
+
+`tests/e2e/map_builder_clocks.py` checks native clock nodes, typed Amount wires,
+execution continuations, save/reload, and nonmutating server rehearsal with
+clock/receipt/media snapshots. It exercises player-triggered GM bindings,
+private-clock filtering, realtime pinned HUD changes and live node editing for
+advance, reduce, set and reset, plus English, Portuguese and Spanish at desktop
+and 320px. Use a fresh directory, for example
+`uv run --locked python tests/e2e/map_builder_clocks.py --output data/mbclocks-check --browser-executable "<existingChromium>"`.
+
+`tests/e2e/clues.py` covers one-step and progressive discoveries through the native
+campaign manager, table and MapBuilder editor. It checks undiscovered-record and
+GM-note filtering in player JSON, events and DOM; reveal/hide, permissions,
+revisions, receipt retries, persistence, scene scope, pinned displays and a
+nonmutating server rehearsal. Native clue nodes exercise typed numeric inputs,
+execution continuations and live advance/reduce/set/reset/reveal/hide actions.
+English, Portuguese and Spanish are checked with long authored content at 320px
+and desktop widths. Run with a fresh installation-local output directory:
+`uv run --locked python tests/e2e/clues.py --output data/clues-check --browser-executable "<existingChromium>"`.
+
 ```bash
 uv run --locked playwright install chromium
 uv run --locked python tests/e2e/authentication.py

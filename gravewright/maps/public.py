@@ -136,9 +136,11 @@ def _blueprints(campaign_id, user_id, method, payload, request_id, target):
             **{key: payload[key] for key in ("tokenId", "blueprint") if key in payload},
         })
     if method == "testDraft":
-        _fields(payload, ("document", "elementId", "event"), ("actorId",))
+        _fields(payload, ("document", "elementId", "event"), ("actorId", "projectId"))
+        if "projectId" in payload:
+            _project_scene(campaign_id, user_id, payload["projectId"], target)
         return map_blueprints.rehearse_draft(*args, {
-            **_request(request_id), **{key: payload[key] for key in ("document", "elementId", "event", "actorId") if key in payload},
+            **_request(request_id), **{key: payload[key] for key in ("document", "elementId", "event", "actorId", "projectId") if key in payload},
         })
     if method == "control":
         _fields(payload, ("elementId", "expectedVersion", "action"), ("value",))

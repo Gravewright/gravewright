@@ -4,7 +4,23 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.3.1**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **0.3.2**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, progress clocks and clues, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+
+## Campaign preparation and play
+
+| Tool | What you can do |
+| --- | --- |
+| [Campaign manager](docs/en/campaign-management.md) | Open **Manage campaign** before entering the table. Use the campaign's native documents, file library, sheets and scene tools, with a personal dashboard, session planner, timeline/calendar, quest columns, connections, player preview and journal history/trash |
+| [Progress clocks](docs/en/clocks.md) | Track segmented goals in the table and campaign manager, with campaign/scene scope, audience controls, optional player progress changes and pinned displays |
+| [Clues](docs/en/clues.md) | Prepare findings and private GM notes; reveal the finding to players when its discovery progress is complete |
+| [PDF System](docs/en/pdf-system.md) | Map text, numeric and checkbox fields onto a non-editable PDF; bind fields to token bars, add saved dice rolls and calculations, and reuse mappings |
+| [Map Builder](docs/en/map-builder.md) | Create editable maps, adopt compatible existing scenes, synchronize supported game edits and connect Smart Object mechanisms to native tools, clocks and clues |
+| [Universal VTT](docs/en/universal-vtt.md) | Import `.uvtt`, `.dd2vtt` and `.df2vtt` maps as native scenes or editable Builder projects, with warnings for approximations and format limits |
+
+The manager and table share campaign records. GM-only preparation, undiscovered
+clues and private documents are filtered on the server. A scene or document link
+does not grant permission to its target. See the guides for authorization,
+concurrent editing and backup behavior.
 
 ## Install and run locally
 
@@ -12,9 +28,10 @@ Start with the [Map Builder guide](docs/en/map-builder.md) to create an editable
 map project or add interactive elements over a finished map image. The
 [Universal VTT guide](docs/en/universal-vtt.md) explains importing `.uvtt`,
 `.dd2vtt` and `.df2vtt` files as native scenes, exporting scenes and reviewing
-format limitations. The [0.3.1 release notes](docs/releases/0.3.1.md) cover
-consistent forms, interactive object models and synchronization of game edits
-with Map Builder projects.
+format limitations. The [0.3.2 release notes](docs/releases/0.3.2.md) describe
+campaign preparation, clocks and clues, PDF improvements, Pillow 13 and the
+required database migrations. These notes prepare the release; they do not
+indicate that a tag or download has been published.
 
 Extract the complete project into a writable folder, run the installer for your operating system, then use its generated Runner. The installer prepares tools, dependencies, the frontend and saved settings; the Runner starts the prepared application.
 
@@ -24,7 +41,7 @@ Extract the complete project into a writable folder, run the installer for your 
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/en/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/en/macos-runner.md) |
 
-The complete 0.3.1 release ZIP includes all three platform installers. Managed installations on 0.3.0 can use **Administration → Updates → Check for updates**. Back up `.env`, configured data and local extensions first. For a manual upgrade, stop the Runner, replace application files while preserving configuration, data and extensions, then rerun the platform installer. See the [download and upgrade instructions](docs/releases/0.3.1.md#download-and-upgrade). This release adds no database migrations relative to 0.3.0; older installations still need the normal migration workflow.
+The source distribution includes all three platform installers. The prepared release identifiers are **`v0.3.2`** and **`Gravewright-0.3.2-django.zip`**. Once a matching release is published in the configured repository, managed installations can use **Administration → Updates → Check for updates**. Back up `.env`, configured data and local extensions first. For a manual upgrade, stop the Runner, replace application files while preserving configuration, data and extensions, then rerun the platform installer. See [upgrade and recovery](docs/en/upgrading.md) and the [release instructions](docs/releases/0.3.2.md#download-and-upgrade). This version adds campaign preparation, journal history, clock and clue migrations relative to 0.3.1; run the normal migration workflow before starting the updated server.
 
 Linux downloads use glibc-based distributions; Alpine/musl needs a compatible Node.js installation already available. The macOS installer targets macOS 13.5 or newer. Installation needs internet for missing tools/packages. Python 3.14, uv and Node.js are prepared privately when compatible tools are unavailable; no permanent PATH changes are made. All launchers use a local profile on `127.0.0.1`, with no Redis service required. See the platform guides for exact requirements and storage paths.
 
@@ -95,7 +112,7 @@ The Django test runner uses `data/test-gravewright.sqlite3`; `--noinput` permits
 
 ## Contribute
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [development guide](docs/en/development.md). English is the primary documentation language; Portuguese guides are maintained alongside it. Code comments and docstrings use English. The official Translator supplies installable interface languages; modules register private catalogs through the host's translation API. User-authored content retains its original text.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [development guide](docs/en/development.md). English is the primary documentation language; Portuguese guides are maintained alongside it. Code comments and docstrings use English. The default interface language is English; the official [Translator](https://github.com/Gravewright/translator) supplies installable languages, including Portuguese and Spanish. Modules and systems register private catalogs through the host's translation API. User-authored content retains its original text.
 
 Report ordinary bugs through the repository's issue tracker, including reproduction steps and relevant versions. Follow [SECURITY.md](SECURITY.md) for vulnerability reports.
 

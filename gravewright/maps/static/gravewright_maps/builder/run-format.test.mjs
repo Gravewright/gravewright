@@ -21,6 +21,16 @@ test('teleport steps name the token and destination instead of raw identifiers',
     assert.equal(format.stepText({ type: 'teleport', skipped: 'missing-test-token' }), 'Teleport token: Skipped');
 });
 
+test('clock action traces describe the operation and actual bounded progress', () => {
+    const format = rehearsal();
+    assert.equal(format.stepText({ type: 'clockControl', clockId: 'technical-id', action: 'advance', amount: 3, before: 4, value: 6 }),
+        'Control clock: Advance clock · 4 → 6');
+    assert.equal(format.stepText({ type: 'clockControl', action: 'reset', before: 6, value: 0 }),
+        'Control clock: Reset clock · 6 → 0');
+    assert.equal(format.stepText({ type: 'clockControl', action: 'set', missing: true }),
+        'Control clock: Set clock value · Missing target');
+});
+
 test('region changes read as state and occupancy, keeping bookkeeping in technical details', () => {
     const format = rehearsal();
     const summary = format.describeChange({ id: 'nativeGate', kind: 'zones',

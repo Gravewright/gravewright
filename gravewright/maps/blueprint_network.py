@@ -69,6 +69,8 @@ def state(campaign_id, user_id, scene_id):
             entry["materialId"] = sprite.get("assetId") if sprite.get("appearance") == "asset" else None
             entry["appearanceOverride"] = bool(sprite)
     from .blueprint_world import presentation_catalog
+    from .blueprint_clocks import catalog as clock_catalog
+    from .blueprint_clues import catalog as clue_catalog
     from gravewright.tokens.models import Token
     return {"campaignId": str(who.campaign_id), "sceneId": str(scene.pk), "sceneName": scene.name, "sceneVersion": scene.version,
             "elements": elements, "lights": lights,
@@ -79,6 +81,8 @@ def state(campaign_id, user_id, scene_id):
             "tokens": [{"id": str(row.pk), "name": row.actor.name, "actorId": str(row.actor_id)}
                        for row in Token.objects.filter(scene=scene).select_related("actor").order_by("id")],
             "sounds": [{"id": str(row.pk), "name": row.name} for row in Track.objects.filter(campaign_id=campaign_id).order_by("name", "id")],
+            "clocks": clock_catalog(who, scene.pk),
+            "clues": clue_catalog(who, scene.pk),
             "assets": [{"id": str(row.pk), "name": row.name, "url": f"/game/map-assets/{row.pk}",
                         "width": row.width, "height": row.height}
                        for row in MapAsset.objects.filter(campaign_id=campaign_id, generated_for__isnull=True).order_by("name", "id")],

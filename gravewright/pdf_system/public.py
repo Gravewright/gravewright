@@ -174,6 +174,29 @@ def diagnostics(campaign_id, user_id, actor_id, *, source=None, token_id=None, d
     return {"source": source, "issues": issues}
 
 
+def preparation_diagnostics(campaign_id, user_id):
+    """Summarize saved-sheet problems for the GM preparation dashboard.
+
+    Only stored metadata and calculations are checked; PDF bytes are not read,
+    so page geometry problems still appear when a sheet is opened.
+    """
+    from gravewright.actors.models import Actor
+    _member(campaign_id, user_id, gm=True)
+    issues = []
+    for actor_id, name, data in Actor.objects.filter(campaign_id=campaign_id).order_by("name").values_list("id", "name", "data")[:200]:
+        pdf = data.get("pdf") if isinstance(data, dict) else None
+        row = {"actorId": str(actor_id), "actorName": name}
+        if not isinstance(pdf, dict) or not (pdf.get("asset") or pdf.get("template")):
+            issues.append({**row, "code": "no-pdf", "message": "No PDF has been selected for this sheet."})
+            continue
+        try:
+            found = diagnostics(campaign_id, user_id, str(actor_id))["issues"]
+        except MapError as error:
+            found = [{"code": "unavailable", "message": str(error)}]
+        issues.extend({**row, "code": issue["code"], "message": issue["message"], "params": issue.get("params", [])} for issue in found)
+    return {"issues": issues}
+
+
 def list_templates(campaign_id, user_id):
     return templates.list_templates(campaign_id, user_id)
 
@@ -296,6 +319,8 @@ def operations():
         "pdf.exportMapping": {"effect": "read", "handler": actor_read(export_mapping)},
         "pdf.applyMapping": {"effect": "write", "handler": actor_write(apply_mapping)},
         "pdf.diagnostics": {"effect": "read", "handler": actor_read(diagnostics)},
+        "preparation.diagnostics": {"effect": "read", "description": "Sheet problems for the GM preparation dashboard.",
+                                    "handler": lambda c, u, p, r, scene_id=None: preparation_diagnostics(c, u)},
         "pdf.roll": {"effect": "write", "handler": roll},
         "pdf.templates.list": {"effect": "read", "handler": lambda c, u, p, r, scene_id=None: list_templates(c, u)},
         "pdf.templates.read": {"effect": "read", "handler": lambda c, u, p, r, scene_id=None: read_template(c, u, _payload(p).get("id"))},

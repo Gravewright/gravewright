@@ -35,6 +35,9 @@ documenta MapBuilder, blueprints, permissões, biblioteca e operações dos sist
 
 ### Campos manuais no PDF
 
+Veja o fluxo completo de jogadores e mestres no [guia do PDF System](pdf-system.md).
+Esta seção identifica a implementação e seus limites de validação.
+
 Na ficha do Gravewright PDF System, o mestre pode abrir um PDF e escolher
 **Mapear campos**. Selecione texto, número, checkbox ou texto de várias linhas e
 arraste um retângulo sobre a área da página. **Adicionar campo** cria um retângulo

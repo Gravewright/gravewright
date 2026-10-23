@@ -65,7 +65,7 @@ def _summary(campaign, ruleset):
         'domains': {
             'maps': True, 'actors': True, 'journals': True, 'items': bool(ruleset.get('itemTypes')),
             'quests': True, 'library': True, 'audio': True, 'cards': True,
-            'compendiums': True, 'combat': True, 'members': True,
+            'compendiums': True, 'combat': True, 'members': True, 'clocks': True, 'clues': True,
         },
     }
 

@@ -8,10 +8,13 @@ class JournalsConfig(AppConfig):
 
     def ready(self):
         from django.db.models.signals import post_delete
-        from django.db import transaction
-        from .models import Asset
+        from .models import Asset, Revision
+        from .history import release_files, retained_asset_names
         def remove_file(sender, instance, **kwargs):
             storage, name = instance.file.storage, instance.file.name
             if name:
-                transaction.on_commit(lambda: storage.delete(name))
+                release_files({name}, storage)
+        def remove_retained_files(sender, instance, **kwargs):
+            release_files(retained_asset_names(instance.retained))
         post_delete.connect(remove_file, sender=Asset, weak=False, dispatch_uid='journal_asset_cleanup')
+        post_delete.connect(remove_retained_files, sender=Revision, weak=False, dispatch_uid='journal_revision_cleanup')

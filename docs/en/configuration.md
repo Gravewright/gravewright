@@ -8,7 +8,7 @@ The source of truth is [config/environment.py](../../config/environment.py), [co
 
 Booleans accept `1/true/yes/y/on` and `0/false/no/n/off`, case-insensitively. Invalid spellings fail startup. Engine numeric limits must be positive. Join-code minimum ≤ default ≤ maximum, and viewport area cannot exceed width × height. `GRAVEWRIGHT_PORT` must be 1–65535. Public origins normalize the scheme and hostname to lowercase, preserving explicit ports and IPv6 brackets; `HTTPS://VTT.EXAMPLE.COM` therefore enables the same HTTPS settings as `https://vtt.example.com`. They reject paths, trailing slashes, credentials, empty ports, control characters, query strings and fragments, including empty `?` or `#` delimiters. These validations do not imply that every setting has the same numeric parser or upper bound.
 
-The [Windows runner](windows-runner.md) reads defaults from `.env.example`, then `.env` in the project root, with local security settings enforced by its dedicated profile. If the project `.env` is missing, it generates a complete configuration from `.env.example` with a new private secret. It never imports configuration from user-data directories. The reference below describes the standard server settings; feature settings also apply to the runner, while its bind address, debug, cookies, host/origin, proxy trust and single-process Channels choices are fixed for local execution. Set the runner's port in the project `.env`.
+The native Runner for [Windows](windows-runner.md), [Linux](linux-runner.md) and [macOS](macos-runner.md) reads defaults from `.env.example`, then `.env` in the project root, with local security settings enforced by its dedicated profile. If the project `.env` is missing, it generates a complete configuration from `.env.example` with a new private secret. It never imports configuration from user-data directories. The reference below describes the standard server settings; feature settings also apply to the Runner, while its bind address, debug, cookies, host/origin, proxy trust and single-process Channels choices are fixed for local execution. Set the Runner's port in the project `.env`.
 
 ## Environment reference
 
@@ -23,6 +23,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `GRAVEWRIGHT_PUBLIC_ORIGIN` | empty | Public HTTP(S) origin; pins the WebSocket origin/Host including port, adds host and CSRF trusted origin, enables Secure cookies for HTTPS |
 | `GRAVEWRIGHT_DATABASE` | `data/gravewright.sqlite3` | SQLite filename; relative to source root; :memory: is supported |
 | `GRAVEWRIGHT_MEDIA_ROOT` | `data/media` | Private upload/module storage, relative to source root |
+| `GRAVEWRIGHT_CONTENT_ROOT` | `data/vtt/compendiums` | Disk content collections in standard server settings; the Runner uses its state directory's `compendiums/` |
 | `GRAVEWRIGHT_MODULES_ROOT` | `GRAVEWRIGHT_MEDIA_ROOT/modules` | Private folder where module ZIP archives and extracted packages are installed; may be absolute or source-root-relative |
 | `GRAVEWRIGHT_API_MODULES_ROOT` | `extensions/api` | Default folder for browser module sources, relative to source root; installed signed packages still live under the media root |
 | `GRAVEWRIGHT_DJANGO_MODULES_ROOT` | `extensions/django` | Default folder for trusted Django apps, relative to source root; appended to `sys.path` when it exists |
@@ -32,7 +33,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `GRAVEWRIGHT_AUTH_WINDOW_SECONDS` | `300` | Authentication window in seconds |
 | `GRAVEWRIGHT_REDIS_URL` | empty | Channels Redis URL; standard server settings allow empty/in-memory delivery only in debug |
 | `APP_NAME` | `Gravewright` | Fallback product name; persisted host preferences can override |
-| `DEFAULT_LOCALE` | `en` | Fallback locale; current supported host locale is en |
+| `DEFAULT_LOCALE` | `en` | Fallback locale; additional languages require an installed, enabled language package |
 | `PRIVACY_ENABLED` | `false` | Initial privacy publication setting; the saved Privacy checkbox takes precedence |
 | `CAMPAIGN_JOIN_CODE_ENABLED` | `true` | Enable campaign join-code workflow |
 | `CAMPAIGN_CLONE_ENABLED` | `true` | Enable campaign cloning |
@@ -143,18 +144,35 @@ The following are configured in Python, not loaded automatically from similarly 
 | `DATA_UPLOAD_MAX_MEMORY_SIZE` | 8 MiB for Django request-data handling; not a universal uploaded-file byte cap |
 | `SESSION_COOKIE_AGE` | 12 hours; session data is stored in the database |
 | `TIME_ZONE` | `America/Sao_Paulo`, with timezone-aware datetimes |
-| `STATIC_ROOT` | Source-root `staticfiles/` |
-| `GRAVEWRIGHT_CONTENT_ROOT` | Optional Django settings override used by the content catalog; fallback is `data/vtt/compendiums/`. Merely exporting this name in `.env` has no effect |
+| `STATIC_ROOT` | Source-root `staticfiles/`; the Runner uses its state directory's `staticfiles/` |
 | `MAILERS.default` | Console email backend |
 
 Authentication bodies are separately limited to 16 KiB in middleware. Archive imports/exports have limits in `gravewright/administration/archives.py`. Map uploads have independent byte, decoded-image and generated-tile bounds. Check the owning code before assuming one limit governs every path.
 
 ## Persisted host preferences
 
-`gravewright.administration.preferences` stores app identity, update channels and privacy content in the `HostSettings` singleton. `APP_NAME` and `DEFAULT_LOCALE` provide fallbacks, not forced overrides of every saved value. The supported locale list is currently `('en',)`. Setting `DEFAULT_LOCALE=pt-BR` does not add a Portuguese UI.
+`gravewright.administration.preferences` stores app identity, update channels and privacy content in the `HostSettings` singleton. `APP_NAME` and `DEFAULT_LOCALE` provide fallbacks, not forced overrides of every saved value. English is built in; the available locale list comes from installed, globally enabled, compatible language packages. The native installer installs and activates the official Translator when `pt-BR` is selected. Setting `DEFAULT_LOCALE=pt-BR` alone in a manual source installation does not install it. Existing user language choices take precedence over host defaults.
 
 Privacy publication is enabled when either the environment flag or the stored privacy flag is true. Snapshot/audit retention is enforced by the relevant operation paths, not a background scheduler supplied by this project. User preferences and campaign settings are separate from these host settings.
 
 For HTTPS, set the exact browser-facing public origin, including any non-default port. Other entries in `DJANGO_ALLOWED_HOSTS` do not become additional permitted WebSocket origins when a public origin is configured. Without it, WebSocket validation derives the origin from the ASGI scheme and Host; an absent scheme defaults to HTTP.
 
 The [ASGI proxy adapter](../../config/proxy.py) accepts exactly one `X-Forwarded-Proto` header with value `http` or `https` only from the immediate socket peer in `TRUSTED_PROXIES`. It ignores duplicate, comma-separated, malformed or untrusted values. Keep Daphne's `--proxy-headers` disabled so the original peer remains available for this check. The same trust list controls [client-IP forwarding](../../gravewright/accounts/client_ip.py). See [deployment](deployment.md) for a TLS proxy example, Redis and storage requirements.
+
+## Installation-local Runner storage
+
+Default state remains inside the extracted project: `data/` for logs, locks,
+collected assets and content collections; `data/runner/` for managed tools,
+environments, caches and temporary files; `data/updates/` for update transactions
+and recovery. The installer, Runner and `main.py` configure their child-process
+storage before launching tools. No default selects configuration or an active
+release from AppData, HOME, XDG or macOS Library directories.
+
+Runner `--data-dir` selects its state directory, including `compendiums/` and
+`staticfiles/`; it does not relocate database or uploaded media. Set their
+explicit environment paths in project `.env`. An explicit
+`GRAVEWRIGHT_RUNNER_ROOT` selects managed tool/cache storage. Relative overrides
+resolve from the installation root. A non-writable directory is an error rather
+than a request to fall back to a shared user directory. For manual shell commands,
+configure [local tool storage](upgrading.md#local-tool-storage) before invoking
+uv or npm.

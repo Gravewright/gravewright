@@ -1,5 +1,7 @@
 """HTTP campaign preparation shell; no live-table connection is established."""
 
+import json
+
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.middleware.csrf import get_token
@@ -7,7 +9,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
 
 from gravewright.accounts.services import AuthError
 from gravewright.accounts.views import api_error
@@ -79,3 +81,67 @@ def overview(request, campaign_id):
         return JsonResponse(management.overview(request.user, campaign_id))
     except AuthError as error:
         return api_error(error)
+
+
+def _respond(work):
+    from .preparation import PreparationError
+    try:
+        return JsonResponse(work())
+    except PreparationError as error:
+        return JsonResponse({'error': error.message, 'code': error.code}, status=error.status)
+    except AuthError as error:
+        return api_error(error)
+
+
+@cache_control(private=True, no_store=True)
+@require_http_methods(['GET', 'POST'])
+def preparation(request, campaign_id):
+    from . import preparation as service
+    if request.method == 'GET':
+        return _respond(lambda: service.state(request.user, campaign_id))
+    def command():
+        try:
+            body = json.loads(request.body or b'{}')
+        except (ValueError, UnicodeDecodeError):
+            raise service.PreparationError('Invalid preparation command.') from None
+        if not isinstance(body, dict):
+            raise service.PreparationError('Invalid preparation command.')
+        if not request.user.is_authenticated:
+            raise AuthError('authentication_required', 401)
+        return service.command(request.user, campaign_id, body.get('action'), body.get('payload'), body.get('request_id'))
+    return _respond(command)
+
+
+@cache_control(private=True, no_store=True)
+@require_GET
+def references(request, campaign_id):
+    from . import preparation as service
+    return _respond(lambda: service.references(request.user, campaign_id, request.GET.get('type'), request.GET.get('id', '')))
+
+
+@cache_control(private=True, no_store=True)
+@require_GET
+def view_as(request, campaign_id, user_id):
+    from . import preparation as service
+    return _respond(lambda: service.view_as(request.user, campaign_id, str(user_id)))
+
+
+@cache_control(private=True, no_store=True)
+@require_GET
+def journal_history(request, campaign_id, journal_id):
+    from . import preparation as service
+    return _respond(lambda: service.journal_history(request.user, campaign_id, str(journal_id)))
+
+
+@cache_control(private=True, no_store=True)
+@require_GET
+def journal_revision(request, campaign_id, revision_id):
+    from . import preparation as service
+    return _respond(lambda: service.compare(request.user, campaign_id, str(revision_id)))
+
+
+@cache_control(private=True, no_store=True)
+@require_GET
+def journal_trash(request, campaign_id):
+    from . import preparation as service
+    return _respond(lambda: service.trash(request.user, campaign_id))

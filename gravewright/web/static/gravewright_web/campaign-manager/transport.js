@@ -53,12 +53,17 @@ export function managementTransport({ api, execute, authorize, publish, revoked,
     return result;
   }
   return {
-    signal: scope.signal, states, check, read, subscribe,
+    signal: scope.signal, states, check, read, subscribe, invalidate,
     journalCommand: (action, data, extra) => command('journals', action, data, extra),
     resourceCommand: command,
     actorsSubscribe: () => subscribe('actors'),
     journalsSubscribe: () => subscribe('journals'),
     subscribeModule: subscribe,
+    // Document pickers use this instead of the table socket's search tool.
+    async search(query) {
+      await check();
+      return api.table.search(query, options());
+    },
     async roll(payload, { requestId = crypto.randomUUID(), mapId } = {}) {
       await check();
       return api.dice.roll(payload.expression, { ...payload, sceneId: mapId }, options({ requestId }));

@@ -12,11 +12,11 @@ Para jogar localmente, use o instalador de [Windows](windows-runner.md), [Linux]
 
 Extraia antes o projeto completo para uma pasta gravável. A instalação pode baixar ferramentas e pacotes; a inicialização usa o ambiente preparado. Mantenha o terminal do Runner aberto e pressione Ctrl+C para encerrar. O endereço padrão é `http://127.0.0.1:3000`. Downloads privados Linux exigem glibc; consulte no guia as famílias de distribuição reconhecidas e os limites de Alpine/musl.
 
-O pacote 0.2.1 atualizado em **13 de outubro de 2026** inclui esses instaladores Linux/macOS junto do Windows. Hosts que já usam 0.2.1 precisam baixar manualmente o ZIP atualizado e seu checksum; o atualizador automático não oferece novamente a mesma versão. Pare o Runner, faça backup de `.env`, banco/mídias configurados e estado de recuperação, preserve-os ao substituir os arquivos da aplicação na pasta existente e execute o instalador. Consulte as [instruções completas](../releases/0.2.1.md).
+A release **0.3.2** preparada usa **`Gravewright-0.3.2-django.zip`** e seu checksum correspondente, com instaladores para as três plataformas. Para uma instalação existente, siga o [guia de atualização](upgrading.md) antes de substituir arquivos: esta versão acrescenta migrações de banco para relógios, pistas, preparação de campanha e histórico de diários. As [notas da release](../releases/0.3.2.md) descrevem o comportamento e a compatibilidade.
 
 ## Requisitos
 
-Use Python 3.14 ou superior, conforme [pyproject.toml](../../pyproject.toml). O código usa sintaxe do Python 3.14; interpretadores antigos não são suportados. Instale uv pelas [instruções oficiais](https://docs.astral.sh/uv/getting-started/installation/). Execute os comandos na pasta que contém `manage.py`.
+Use Python 3.14 ou superior, conforme [pyproject.toml](../../pyproject.toml). O código usa sintaxe do Python 3.14; interpretadores antigos não são suportados. Instale uv pelas [instruções oficiais](https://docs.astral.sh/uv/getting-started/installation/). Execute os comandos na pasta que contém `manage.py`, depois de definir o [armazenamento local das ferramentas](upgrading.md#armazenamento-local-das-ferramentas) nesse terminal. Os instaladores nativos fazem essa configuração automaticamente.
 
 ```bash
 uv sync --locked
@@ -31,7 +31,7 @@ uv run --locked python main.py
 
 Abra `http://127.0.0.1:3000`. Antes de existir um proprietário, `/setup` cria essa conta e inicia a sessão. Escolha nome, e-mail e senha com pelo menos 12 caracteres. Depois da configuração, `/register` cria participantes e `/login` autentica contas existentes.
 
-O proprietário pode criar campanhas em `/inside`, convidar jogadores e entrar na mesa. O vínculo com a campanha define permissões de mestre/jogador. Veja o [guia de uso](user-guide.md).
+O proprietário pode criar campanhas em `/inside`, convidar jogadores e entrar na mesa. Um mestre também pode escolher **Gerenciar campanha** no cartão da campanha para preparar sessões, diários, missões, relógios e pistas sem entrar na mesa. Os vínculos na campanha determinam permissões de mestre/jogador. Consulte o [guia do usuário](user-guide.md) e a [gestão de campanha](campaign-management.md).
 
 Para acessar a administração separada do Django em `/admin/`:
 
@@ -52,8 +52,10 @@ O Runner gerado usa o `.env` do projeto e seus caminhos de banco/mídia, impondo
 | `.env` | Configuração local e segredos privados |
 | `data/gravewright.sqlite3` | Banco padrão da aplicação |
 | `data/media/` | Uploads privados e pacotes de módulos instalados |
-| `data/vtt/compendiums/` | Coleções opcionais de conteúdo nativo lidas do disco |
-| `staticfiles/` | Saída de `collectstatic`, regenerada na implantação |
+| `data/compendiums/` | Coleções do Runner em disco; configurações padrão do código-fonte usam `data/vtt/compendiums/` |
+| `data/staticfiles/` | Assets coletados do Runner; implantação padrão do código-fonte usa `staticfiles/` na raiz |
+| `data/runner/` | Ferramentas gerenciadas, ambientes, caches e arquivos temporários |
+| `data/updates/` | Transações de atualização, releases e cópias de recuperação retidas |
 | `data/test-gravewright.sqlite3` | Banco de testes Django |
 | `test-results/` | Logs, relatórios e capturas de testes no navegador |
 

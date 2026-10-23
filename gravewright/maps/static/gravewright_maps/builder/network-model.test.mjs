@@ -119,3 +119,18 @@ test('authored state images are visible relationships even without an action gra
     assert.equal(missing.missing, true); assert.equal(missing.resource, 'asset');
     assert.deepEqual(networkPage(result, { problems: true }).nodes.map(row => row.id), ['owner', 'asset:missing-image']);
 });
+
+test('clock actions expose typed live and missing relationships without colliding with owners', () => {
+    const source = owner('same', { interact: graph([
+        node('advance', 'clockControl', { clockId: 'same', action: 'advance', amount: 1 }),
+        node('reset', 'clockControl', { clockId: 'removed', action: 'reset', amount: 1 }),
+        node('unused', 'clockControl', { clockId: 'unused', action: 'set', amount: 2 }),
+    ], [execution('event', 'advance'), execution('advance', 'reset')]) });
+    const result = sceneNetwork({ elements: [source], clocks: [{ id: 'same', name: 'Authored clock' }] });
+    assert.ok(result.nodes.find(row => row.id === 'same').editable);
+    assert.equal(result.nodes.find(row => row.id === 'clock:same').name, 'Authored clock');
+    assert.ok(relationship(result, 'same', 'clock:same', 'clock'));
+    assert.equal(result.nodes.find(row => row.id === 'clock:removed').missing, true);
+    assert.equal(result.nodes.some(row => row.id === 'clock:unused'), false);
+    assert.deepEqual(networkPage(result, { problems: true }).nodes.map(row => row.id), ['same', 'clock:removed']);
+});

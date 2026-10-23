@@ -126,7 +126,7 @@ def clone(request, campaign_id, action):
     if action != "create":
         raise AuthError("invalid_action")
     result = archives.import_campaign(
-        archives.export_campaign(campaign, selected, include_files=False),
+        archives.export_campaign(campaign, selected),
         request.user,
         data.get("title", ""),
     )

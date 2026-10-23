@@ -50,6 +50,20 @@ export function createGlobalApi(http, life) {
   const campaigns = {
     /** management(id, options?): Read the GM-only campaign preparation overview. */
     management: (id, options) => get(`${campaignPath(id)}/management`, options),
+    /** preparation(id, options?): Read GM session plans, timeline, dashboard and pending work. */
+    preparation: (id, options) => get(`${campaignPath(id)}/preparation`, options),
+    /** prepare(id, action, payload, requestId, options?): Run one GM preparation command. */
+    prepare: (id, action, payload, requestId, options) => post(`${campaignPath(id)}/preparation`, { action, payload, request_id: requestId }, options),
+    /** references(id, type, documentId, options?): List a document's links and where it is used. */
+    references: (id, type, documentId, options) => get(`${campaignPath(id)}/references?type=${segment(type)}&id=${segment(documentId)}`, options),
+    /** viewAs(id, userId, options?): Read the native projection a player receives, for that campaign's GM. */
+    viewAs: (id, userId, options) => get(`${campaignPath(id)}/view-as/${segment(userId)}`, options),
+    /** journalHistory(id, journalId, options?): List earlier versions of one journal. */
+    journalHistory: (id, journalId, options) => get(`${campaignPath(id)}/journal-history/${segment(journalId)}`, options),
+    /** journalRevision(id, revisionId, options?): Compare an earlier version with the current journal. */
+    journalRevision: (id, revisionId, options) => get(`${campaignPath(id)}/journal-revisions/${segment(revisionId)}`, options),
+    /** journalTrash(id, options?): List deleted journals that can still be restored. */
+    journalTrash: (id, options) => get(`${campaignPath(id)}/journal-trash`, options),
     /** list(options?): List campaigns visible to the authenticated account. */
     list: options => get('/api/containers', options),
     /** create(payload, options?): Create a campaign using the native form. */

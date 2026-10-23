@@ -170,10 +170,12 @@ const regionOutputs = blueprintVerbEventsFor('region').map(eventOutput);
 const versionTwoTypes = ['sequence', 'sprite', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'flame',
     'getVariable', 'setVariable', 'compareValue', 'emitEvent', ...controlNodeTypes, 'delay', 'timer', 'switch', 'random',
     'elementGroup', 'lightReference', 'soundReference', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
-    'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'interact'];
+    'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'interact', 'clockControl', 'clueControl'];
 export const questStatuses = Object.freeze(['draft', 'available', 'active', 'completed', 'failed', 'archived']);
 export const barrierChannels = Object.freeze(['movement', 'vision', 'light', 'sound']);
 export const soundControls = Object.freeze(['stop', 'volume']);
+export const clockControls = Object.freeze(['advance', 'reduce', 'set', 'reset']);
+export const clueControls = Object.freeze(['advance', 'reduce', 'set', 'reset', 'reveal', 'hide']);
 // A connected Target replaces "Self" with a referenced element. The persisted
 // reference output ID remains "door" for existing version-two documents.
 const targetInput = { id: 'target', kind: 'value', type: 'element', label: 'Target' };
@@ -215,6 +217,10 @@ export const blueprintContract = freeze({
         reveal: { category: 'action', label: 'Reveal', inputs: [executionInput, elementTargets], outputs: [executionNext] },
         barrier: { category: 'action', label: 'Set barrier', inputs: [executionInput, elementTargets], outputs: [executionNext] },
         soundControl: { category: 'action', label: 'Control sound', inputs: [executionInput, soundTargets], outputs: [executionNext] },
+        clockControl: { category: 'action', label: 'Control clock', inputs: [executionInput,
+            { id: 'amount', kind: 'value', type: 'number', label: 'Amount' }], outputs: [executionNext] },
+        clueControl: { category: 'action', label: 'Control clue', inputs: [executionInput,
+            { id: 'amount', kind: 'value', type: 'number', label: 'Amount' }], outputs: [executionNext] },
         getVariable: { category: 'value', label: 'Get variable', inputs: [], outputs: [{ id: 'value', kind: 'value', type: 'boolean', label: 'Value' }] },
         setVariable: { category: 'action', label: 'Set variable', inputs: [executionInput, { id: 'value', kind: 'value', type: 'boolean', label: 'Value' }], outputs: [executionNext] },
         compareValue: { category: 'value', label: 'Compare value', inputs: [{ id: 'value', kind: 'value', type: 'boolean', label: 'Value' }], outputs: [booleanOutput] },
@@ -345,7 +351,8 @@ export function connectNodes(graph, from, output, to, { version = 2, input } = {
 const nodeFields = {
     event: ['event'], light: ['targetId', 'enabled'], sound: ['trackId', 'volume'], state: ['targetState'], condition: ['state'],
     sequence: [], interact: [], sprite: ['appearance'], property: ['property'], compare: ['state'], all: [], any: [], reference: ['targetId'], reveal: [],
-    barrier: ['channel', 'mode'], soundControl: ['trackId', 'action', 'volume'], flame: ['enabled'],
+    barrier: ['channel', 'mode'], soundControl: ['trackId', 'action', 'volume'], clockControl: ['clockId', 'action', 'amount'],
+    clueControl: ['clueId', 'action', 'amount'], flame: ['enabled'],
     getVariable: ['scope', 'name', 'valueType', 'default'], setVariable: ['scope', 'name', 'valueType', 'value'],
     compareValue: ['valueType', 'operator', 'expected'], emitEvent: ['scope', 'name'],
     counter: ['target'], once: [], cooldown: ['seconds'], delay: ['seconds'], timer: ['name', 'action'],
@@ -401,6 +408,10 @@ function validateGraph(graph, event, version) {
             || ['cooldown', 'delay'].includes(node.type) && (!Number.isFinite(node.seconds) || node.seconds < .1 || node.seconds > 86400)) throw new Error('Invalid blueprint control.');
         if (node.type === 'timer' && (typeof node.name !== 'string' || !namePattern.test(node.name) || !timerActions.includes(node.action)
             || node.action !== 'stop' && (!Number.isFinite(node.seconds) || node.seconds < .1 || node.seconds > 86400))) throw new Error('Invalid blueprint timer.');
+        if (node.type === 'clockControl' && (!validUuid(node.clockId) || !clockControls.includes(node.action)
+            || !Number.isInteger(node.amount) || node.amount < 0 || node.amount > 24)) throw new Error('Invalid blueprint clock action.');
+        if (node.type === 'clueControl' && (!validUuid(node.clueId) || !clueControls.includes(node.action)
+            || !Number.isInteger(node.amount) || node.amount < 0 || node.amount > 24)) throw new Error('Invalid blueprint clue action.');
         if (node.type === 'switch' && (!variableTypes.includes(node.valueType) || !typedValue(node.valueType, node.value)
             || !Array.isArray(node.cases) || node.cases.length < 1 || node.cases.length > 4
             || !Array.from(node.cases).every(row => exactFields(row, ['id', 'value']) && switchCaseIds.includes(row.id) && typedValue(node.valueType, row.value))
@@ -444,7 +455,7 @@ export function validateBlueprintImageTargets(blueprint, element) {
     if (Object.values(blueprint.states || {}).some(state => state.appearance !== 'inherit')) invalid();
     return blueprint;
 }
-export function validateBlueprint(blueprint, { assets = [], materials = assets, lights = [], sounds = [], element } = {}) {
+export function validateBlueprint(blueprint, { assets = [], materials = assets, lights = [], sounds = [], clocks, clues, element } = {}) {
     supportedBlueprint(blueprint);
     const states = blueprintStatesFor(blueprint.kind);
     if (!exactFields(blueprint, ['version', 'kind', 'states', 'graphs']) || !exactFields(blueprint.states, states)) throw new Error('Invalid blueprint state.');
@@ -475,6 +486,10 @@ export function validateBlueprint(blueprint, { assets = [], materials = assets, 
             }
             if (node.type === 'light' && (!lightIds.has(node.targetId) || typeof node.enabled !== 'boolean')) throw new Error('Choose a light from this map.');
             if (['sound', 'soundControl'].includes(node.type) && (!soundIds.has(node.trackId) || !Number.isFinite(node.volume) || node.volume < 0 || node.volume > 1)) throw new Error('Choose a sound from this campaign.');
+            if (node.type === 'clockControl' && clocks !== undefined
+                && !clocks.some(clock => clock.id.toLowerCase() === node.clockId.toLowerCase())) throw new Error('Choose a clock from this campaign.');
+            if (node.type === 'clueControl' && clues !== undefined
+                && !clues.some(clue => clue.id.toLowerCase() === node.clueId.toLowerCase())) throw new Error('Choose a clue from this campaign.');
             if (node.type === 'sprite' && node.appearance === 'asset' && !assetIds.has(node.assetId) && !materialIds.has(node.assetId)) throw new Error('Choose an image for each Change sprite node.');
             if (node.type === 'setAppearance' && !materialIds.has(node.assetId)) throw new Error('Choose an image for each Set appearance node.');
         }
@@ -565,13 +580,25 @@ export function simulateGraph(blueprint, event, currentState, previousState = cu
             return;
         }
         if (['light', 'sound', 'state', 'interact', 'sprite', 'reveal', 'barrier', 'soundControl', 'flame', 'setVariable', 'emitEvent', 'timer',
-            'move', 'rotate', 'setInteraction', 'setRegion', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance'].includes(node.type)) {
+            'move', 'rotate', 'setInteraction', 'setRegion', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'clockControl', 'clueControl'].includes(node.type)) {
             const action = structuredClone(node), aim = source(node.id, 'target');
             if (aim) action.target = structuredClone(value(aim));
             const input = node.type === 'setVariable' && source(node.id, 'value');
             if (node.type === 'setVariable') {
                 storedVariable(node);
                 if (input) action.value = value(input);
+            }
+            if (node.type === 'clockControl' && node.action !== 'reset') {
+                const amount = source(node.id, 'amount');
+                if (amount) action.amount = value(amount);
+                if (!Number.isInteger(action.amount) || action.amount < 0 || action.amount > 24)
+                    throw new Error('Clock amount must be an integer from 0 to 24.');
+            }
+            if (node.type === 'clueControl' && ['advance', 'reduce', 'set'].includes(node.action)) {
+                const amount = source(node.id, 'amount');
+                if (amount) action.amount = value(amount);
+                if (!Number.isInteger(action.amount) || action.amount < 0 || action.amount > 24)
+                    throw new Error('Clue amount must be an integer from 0 to 24.');
             }
             actions.push(action);
         }

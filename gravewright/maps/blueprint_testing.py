@@ -1,6 +1,7 @@
 """GM rehearsals through the real engine, always discarded at a savepoint."""
 
 from copy import deepcopy
+from contextlib import ExitStack
 import uuid
 
 from django.db import transaction
@@ -29,6 +30,9 @@ def _payload(raw, required, optional=()):
 
 def _snapshot(scene):
     from gravewright.journals.models import Journal
+    from gravewright.table.models import ProgressClock, ProgressClue
+    from django.db.models import Q
+    from .blueprint_clocks import effective_scene_id
     scene.refresh_from_db()
     elements = {str(row["id"]): {"kind": row["kind"], "data": row["data"], "version": row["version"]}
                 for row in SceneObject.objects.filter(scene=scene).values("id", "kind", "data", "version")}
@@ -37,11 +41,18 @@ def _snapshot(scene):
     playback = Playback.objects.filter(scene=scene).values("data", "version").first()
     journals = {str(row.pk): {"title": row.title, "status": row.data.get("status"), "version": row.version}
                 for row in Journal.objects.filter(campaign_id=scene.campaign_id, type="quest").only("id", "title", "data", "version")}
+    clocks = {str(row.pk): {"name": row.name, "value": row.value, "segments": row.segments, "version": row.version}
+              for row in ProgressClock.objects.filter(campaign_id=scene.campaign_id).filter(
+                  Q(scene__isnull=True) | Q(scene_id=effective_scene_id(scene.pk)))}
+    clues = {str(row.pk): {"name": row.name, "value": row.value, "segments": row.segments,
+                          "visibility": row.visibility, "discovered": row.value == row.segments, "version": row.version}
+             for row in ProgressClue.objects.filter(campaign_id=scene.campaign_id).filter(
+                 Q(scene__isnull=True) | Q(scene_id=effective_scene_id(scene.pk)))}
     waits = {str(row["id"]): {**{key: value for key, value in row.items() if key not in ("id", "element_id", "due_at")},
                                "elementId": str(row["element_id"]), "dueAt": row["due_at"].isoformat()}
              for row in AutomationDelay.objects.filter(scene=scene).values(
                  "id", "element_id", "kind", "name", "event", "seconds", "status", "due_at")}
-    return {"elements": elements, "tokens": tokens, "journals": journals, "audio": playback,
+    return {"elements": elements, "tokens": tokens, "journals": journals, "clocks": clocks, "clues": clues, "audio": playback,
             "sceneVariables": deepcopy(scene.settings.get("automationVariables", {})), "scheduled": waits}
 
 
@@ -90,7 +101,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
            next((entry for entry in runs if entry["elementId"] == str(row.pk)), None))
     run = deepcopy(run or {"stateBefore": element_state(row), "stateAfter": element_state(row), "events": []})
     changes = {}
-    for kind in ("elements", "tokens", "journals"):
+    for kind in ("elements", "tokens", "journals", "clocks", "clues"):
         changes[kind] = []
         for key in dict.fromkeys([*before[kind], *after[kind]]):
             old, value = before[kind].get(key), after[kind].get(key)
@@ -119,7 +130,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
         warnings.append("missing-test-token")
     if error is not None:
         # A real command would roll back the whole chain, including earlier actions.
-        changes = {"elements": [], "tokens": [], "journals": [], **{kind: {"before": before[kind], "after": before[kind]}
+        changes = {"elements": [], "tokens": [], "journals": [], "clocks": [], "clues": [], **{kind: {"before": before[kind], "after": before[kind]}
                     for kind in ("audio", "sceneVariables")}}
         scheduled = []
     # The run records its chain's end; presence passes that follow a teleport or
@@ -193,15 +204,18 @@ def _draft_surfaces(document, scene):
 
 def run_draft(campaign_id, user_id, payload):
     """Build an ephemeral native scene from a validated unsaved Builder document."""
-    request_id = _payload(payload, ("request_id", "document", "elementId", "event"), ("actorId",))
+    request_id = _payload(payload, ("request_id", "document", "elementId", "event"), ("actorId", "projectId"))
     source_id = str(identifier(payload["elementId"]))
-    from .builder_services import clean_document, native_objects, remap_native_blueprints
+    from .builder_services import clean_document, native_objects, remap_native_blueprints, project
+    from .blueprint_clocks import clock_scope
     from .regions import baseline
-    with transaction.atomic():
+    with transaction.atomic(), ExitStack() as scope:
         Campaign.objects.select_for_update().get(pk=campaign_id)
         who = member(campaign_id, user_id)
         services.manage(who)
-        document = clean_document(payload["document"], who)
+        source_scene_id = project(payload["projectId"], who).scene_id if "projectId" in payload else None
+        scope.enter_context(clock_scope(source_scene_id))
+        document = clean_document(payload["document"], who, scene_id=source_scene_id)
         scene = Scene.objects.create(id=uuid.uuid5(request_id, "blueprint-rehearsal"), campaign=who.campaign,
             name=document["name"], visibility="gm", width=document["columns"]*document["cellSize"],
             height=document["rows"]*document["cellSize"], settings=services.settings({"gridSize": document["cellSize"]}))

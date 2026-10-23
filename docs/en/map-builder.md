@@ -7,8 +7,8 @@ from materials or import a finished image, add native walls, doors, objects,
 lights and effects, then generate or update a scene. The project remains editable
 separately from the scene used at the table.
 
-This guide describes the current checkout being documented for the next
-**0.3.0** release; it does not announce publication. The
+This guide describes the source prepared for **0.3.2**; it does not announce
+publication. See the [release notes](../releases/0.3.2.md). The
 [Smart Objects design direction](smart-objects-direction.md) distinguishes
 implemented capabilities from proposals.
 
@@ -912,6 +912,8 @@ It offers these actions and conditions:
 | **Reveal** | Mark a secret or invisible door as discovered: this door, or the door connected to **Target** |
 | **Set barrier** | Make this door, or the door connected to **Target**, block or let through movement, vision, light or sound (sound can also attenuate) |
 | **Control sound** | Stop a campaign sound already playing in the scene, or change its volume |
+| **Control clock** | Advance, reduce, set or reset a campaign progress clock; a connected numeric **Amount** overrides its configured amount |
+| **Control clue** | Advance, reduce, set, reset, reveal or hide a prepared clue; numeric **Amount** applies to advance, reduce and set |
 
 **Change state**, **Change sprite**, **Interact with object**, **Reveal** and **Get property** have a **Target** input of type
 **Element** (orange). Without a connection the target is the edited element; with an
@@ -1672,6 +1674,89 @@ Standalone native elements save only their native definition. Viewing the networ
 creates no second graph store or additional execution. A conflict requires refresh;
 the operation never adopts unrelated manual geometry changes. Reusing a request UUID
 with another payload is rejected.
+
+### Control progress clocks
+
+Create a [progress clock](clocks.md) on the table or in campaign management, then
+choose **Add node → Actions → Control clock** in the Smart Object editor. Select
+the clock, choose an action and connect an event or another action to **Input**.
+Connect **Next** to continue the sequence after the clock operation.
+
+| Action | Effect |
+| --- | --- |
+| Advance clock | Add Amount to the current progress |
+| Reduce clock | Subtract Amount from the current progress |
+| Set clock value | Set progress to Amount |
+| Reset clock | Return progress to zero; Amount is ignored |
+
+Amount is an integer from 0 to 24. Progress stays between zero and the clock's
+segment count. A numeric **Amount** input replaces the saved fallback amount;
+for example, connect a number from **Get variable**. The fallback control is
+disabled while that input is connected, and Reset disables it independently.
+
+The saved version-2 action is `clockControl` with `clockId`, `action`
+(`advance`, `reduce`, `set` or `reset`) and integer `amount`. Clock names remain
+authored text. Targets must belong to the campaign and have campaign scope or
+belong to the executing scene. Existing clocks from another scene or campaign
+cannot be bound. A missing or unavailable clock produces a diagnostic and
+refuses the operation without committing partial effects.
+
+**Generate** creates a new scene. A clock scoped to the linked scene can be
+saved, rehearsed and used by **Update scene**, but cannot be carried into a
+different newly generated scene. Use a campaign clock or review and rebind the
+target for the destination scene; generation never changes a clock's scope.
+
+A GM-authored binding delegates that specific operation to the mechanism.
+A player allowed to interact with it can trigger the operation even when the
+clock is private or direct player editing is disabled. This grants no general
+clock controls or access to private clock names, values or graphs. The runtime
+requires an active campaign GM and retains the map command's transaction,
+revision, retry and post-commit notification rules.
+
+**Simulate** lists the planned clock actions without changing saved progress.
+**Test behavior** uses the real server engine, shows each clock's before/after
+progress, and rolls back clock rows and receipts with the rest of the rehearsal.
+Committed play updates the same clock window and permitted pinned HUD; opening
+the node editor or running a preview preserves saved progress.
+
+### Control clues
+
+Prepare a [clue](clues.md) on the table or in campaign management, then choose
+**Add node → Actions → Control clue**. Select the clue and connect the event to
+**Input**. Connect **Next** to continue after the operation. There is no Target
+port: the GM chooses the specific clue in the node.
+
+| Action | Result |
+| --- | --- |
+| Advance clue | Add Amount to progress |
+| Reduce clue | Subtract Amount from progress |
+| Set clue progress | Set progress to Amount |
+| Reset clue | Return progress to zero |
+| Reveal clue | Complete progress and set visibility to Players |
+| Hide clue | Set visibility to GM only, preserving progress |
+
+Amount is an integer from 0 to 24. A connected numeric **Amount** overrides the
+configured amount, and progress is bounded by the clue's segment count. Reset,
+reveal and hide ignore Amount. The saved version-2 node is `clueControl`, with
+`clueId`, `action` (`advance`, `reduce`, `set`, `reset`, `reveal` or `hide`)
+and integer `amount`.
+
+Players see a finding only when its progress is complete and its visibility is
+Players. The server omits undiscovered records and all GM notes from player and
+streamer projections. A player can trigger a GM-authored mechanism's specific
+clue operation without receiving general clue editing permission. Execution
+requires an active campaign GM and validates the clue's campaign and scene scope.
+
+Campaign clues can accompany a newly generated scene. A clue scoped to a linked
+scene can be saved, tested and used when updating that scene, but **Generate**
+creates a different scene. Rebind the target or use a campaign clue for the new
+scene; generation does not change the clue's scope.
+
+**Simulate** preserves saved progress. **Test behavior** previews changes through
+the real server engine and rolls back clue records, receipts and notifications.
+Normal committed interactions update the shared clue panel and permitted pinned
+display. Reducing progress below completion, resetting or hiding a clue removes
+it from current player views.
 
 ### Dynamic surfaces
 

@@ -1391,6 +1391,7 @@ function mountWorkspace(root) {
             activeModal = openPlaytest({ elements, actors: catalog.actors, draft: true, t, initialElement: state.selection?.id,
                 execute: (owner, event, actor, requestId, signal) => http.post(base + '/test', {
                     request_id: requestId, document: source, elementId: owner.id, event, ...(actor ? { actorId: actor } : {}),
+                    ...(state.version > 0 ? { projectId: state.id } : {}),
                 }, { signal }),
                 preview: (host, result) => renderTestPreview(host, source, result), onClose: () => { activeModal = null; },
             });
@@ -1421,7 +1422,7 @@ function mountWorkspace(root) {
         cancelDrawing();
         activeModal = openSceneNetwork({ campaignId: root.dataset.campaignId, t, pick: pickOnMap,
             load: async () => ({ elements: behaviorElements(), assets: behaviorMaterials(), materials: behaviorMaterials(), lights: state.document.lights,
-                sounds: state.sounds || [], users: state.users || [], handouts: state.handouts || [] }),
+                sounds: state.sounds || [], users: state.users || [], handouts: state.handouts || [], clocks: behaviorClocks(), clues: behaviorClues() }),
             save: async (owner, blueprint) => {
                 const target = { kind: owner.sourceKind, id: owner.id }, item = itemFor(target);
                 if (!item || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));
@@ -1447,6 +1448,7 @@ function mountWorkspace(root) {
         }).filter(Boolean);
         activeModal = openBlueprintEditor({ element: elements.find(item => item.id === object.id), elements,
             assets, materials: behaviorMaterials(), campaignId: root.dataset.campaignId, linkedScene: Boolean(state.sceneId), users: state.users || [], handouts: state.handouts || [],
+            clocks: behaviorClocks(), clues: behaviorClues(),
             lights: state.document.lights, sounds: state.sounds || [], t, pick: pickOnMap,
             onSave: async blueprint => {
                 const current = itemFor(target); if (!current || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));
@@ -1463,8 +1465,16 @@ function mountWorkspace(root) {
     async function refreshLibrary(result = null) {
         result ||= await api(); if (disposed) return;
         state.assets = result.assets; state.sounds = result.sounds || []; state.users = result.users || []; state.handouts = result.handouts || [];
+        state.clocks = result.clocks || [];
+        state.clues = result.clues || [];
         state.projects = result.projects; state.limits = result.limits || {};
         renderAssets(); renderProjects(); renderCanvas();
+    }
+    function behaviorClocks() {
+        return (state.clocks || []).filter(clock => !clock.sceneId || clock.sceneId === state.sceneId);
+    }
+    function behaviorClues() {
+        return (state.clues || []).filter(clue => !clue.sceneId || clue.sceneId === state.sceneId);
     }
     function updateURL() {
         const url = new URL(location.href); url.searchParams.set('project', state.id);

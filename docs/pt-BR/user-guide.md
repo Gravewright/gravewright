@@ -20,6 +20,13 @@ A aba de atualizações destaca o nome completo da versão instalada e carrega i
 
 ## Preparar a mesa
 
+Antes de entrar na partida, escolha **Gerenciar campanha** no cartão da campanha.
+O [espaço do mestre](campaign-management.md) edita os mesmos registros sem iniciar
+a conexão da mesa ou criar presença. Prepare painel, planos de sessão,
+cronologia/calendário, colunas de missões e pré-requisitos, conexões, prévias de
+jogadores e histórico/lixeira de diários. Cenas, fichas, arquivos e outras
+ferramentas nativas continuam disponíveis nesse espaço.
+
 1. Crie uma campanha e abra sua mesa.
 2. Crie/importe uma cena de mapa e configure grade e visão inicial. **Ativar para jogadores** torna a cena visível e a transmite. Abrir uma cena em particular não a compartilha.
 3. Crie atores, anexe fichas PDF quando necessário e coloque seus tokens na cena. Dados do ator e estado do token são relacionados, mas distintos; o token representa o ator em um mapa específico.
@@ -37,10 +44,13 @@ Como mestre da campanha, abra **Nova cena**. Escolha o fluxo conforme sua origem
 | Uma imagem para usar diretamente como cena | **Enviar mapa** | Cena nativa com grade e visibilidade configuradas |
 | Um mapa para construir ou continuar editando como projeto | **Map Builder** | Projeto editável; gerar a cena é uma ação separada |
 | Uma imagem pronta para receber paredes, objetos ou comportamentos | **Map Builder → Biblioteca → Importar → Importar mapa pronto** | Fundo do projeto com elementos editáveis sobre ele |
-| Um arquivo `.uvtt`, `.dd2vtt` ou `.df2vtt` | **Importar Universal VTT** | Nova cena nativa exclusiva do mestre, com paredes, portas e luzes suportadas |
+| Um arquivo `.uvtt`, `.dd2vtt` ou `.df2vtt` | **Nova cena → Importar Universal VTT**, ou a importação do Builder | Cena nativa exclusiva do mestre; o caminho pelo Builder também cria um projeto editável vinculado |
 
 Importar uma imagem não detecta paredes nem reconstrói suas camadas originais.
-A importação Universal VTT não cria um projeto do Builder. O
+O importador do diretório de cenas cria somente a cena nativa. O importador do
+Builder também cria o projeto vinculado. Use **Editar mapa com map builder** na
+barra superior da mesa para abrir ou adotar a cena existente selecionada;
+geometria nativa compatível permanece editável sobre o fundo. O
 [guia do importador/exportador](universal-vtt.md) explica os campos aceitos e avisos.
 
 Para criar o primeiro projeto no Builder:
@@ -85,6 +95,8 @@ camadas, Objetos Inteligentes, atalhos, limites e solução de problemas.
 | Área | Finalidade |
 | --- | --- |
 | Atores e tokens | Dados de personagem, mapeamento PDF, posicionamento, movimento e estado visual |
+| [PDF System](pdf-system.md) | Campos manuais em PDFs não editáveis, ações, fórmulas, modelos de mapeamento e exportação preenchida |
+| [Relógios](clocks.md) e [pistas](clues.md) | Progresso e descobertas de campanha/cena, compartilhados com o gestor e mecanismos do MapBuilder |
 | Chat e dados | Mensagens, projeções privadas/do mestre suportadas, rolagens e presets |
 | Diários | Diários, missões, quadros de missões, tabelas ponderadas e anexos de imagem/PDF |
 | Áudio | Faixas, playlists, reprodução sincronizada e controles de som posicional |
@@ -99,7 +111,7 @@ Consulte a [referência de notação de dados](../../gravewright/dice/grammar/no
 
 ## Preservar conteúdo
 
-Exportação/importação, clonagem e snapshots dependem das opções da instância e das permissões. Exportações priorizam conteúdo portável e podem omitir histórico privado ou redefinir propriedade; não são backups completos da instância. Antes de restaurar snapshot ou substituir conteúdo, siga os procedimentos de [implantação](deployment.md).
+Exportação/importação, clonagem e snapshots dependem das opções da instância e das permissões. Arquivos completos de campanha incluem preparação, relógios, pistas, modelos de mapeamento PDF e histórico/lixeira dos diários com seus arquivos retidos. Exportações portáteis removem permissões de usuários e omitem chat; snapshots também preservam acesso/chat para restauração. Exportações de recursos para compêndios omitem preparação e histórico. Esses arquivos não são backups completos da instância. Antes de restaurar snapshot ou substituir conteúdo, siga os procedimentos de [implantação](deployment.md).
 
 Mapas, músicas, PDFs e outros uploads mantêm suas próprias licenças e titularidade. A licença do projeto não autoriza redistribuir livros ou mídias que não sejam seus. Módulos podem usar licenças diferentes; veja [licenciamento](../../LICENSING.pt-BR.md).
 

@@ -46,7 +46,7 @@ class HttpClient {
       : AbortSignal.any([AbortSignal.timeout(options.timeoutMs), ...(signal ? [signal] : [])]);
     const response = await exchange(backendPath(path), { method: 'GET', credentials: 'same-origin',
       cache: options.cache ?? 'no-store', signal: combined });
-    if (!response.ok) throw new ApiError(response.status, code(await response.text()));
+    if (!response.ok) throw failure(response.status, await response.text());
     const blob = await response.blob();
     combined?.throwIfAborted();
     const disposition = response.headers.get('content-disposition') || '';
@@ -77,16 +77,18 @@ class HttpClient {
     request.signal?.throwIfAborted();
     const reply = await this.transport.send(request);
     request.signal?.throwIfAborted();
-    if (!reply.ok) throw new ApiError(reply.status, code(reply.text));
+    if (!reply.ok) throw failure(reply.status, reply.text);
     if (reply.status === 204 || reply.text === "") return void 0;
     return JSON.parse(reply.text);
   }
 }
-function code(body) {
+function failure(status, body) {
   try {
-    return JSON.parse(body).error ?? "request_failed";
+    const payload = JSON.parse(body);
+    return new ApiError(status, typeof payload?.error === 'string' ? payload.error : 'request_failed',
+      typeof payload?.message === 'string' && payload.message ? payload.message : undefined);
   } catch {
-    return "request_failed";
+    return new ApiError(status, 'request_failed');
   }
 }
 function timing({ timeoutMs }) {

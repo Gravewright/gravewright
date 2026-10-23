@@ -7,6 +7,7 @@ from gravewright.journals.services import identifier, member
 from gravewright.maps.models import Receipt
 from gravewright.maps.services import MapError, title, color, manage
 from gravewright.maps.objects import number, boolean, choice
+from .models import ClockReceipt, ClueReceipt
 
 
 def version(row, payload):
@@ -31,6 +32,12 @@ def permissions(value, who):
 
 def module(name):
     """Resolve a supported built-in table resource, not an installed extension package."""
+    if name == 'clocks':
+        from . import clocks
+        return clocks
+    if name == 'clues':
+        from . import clues
+        return clues
     if name not in ('items','combat','cards','audio','compendiums'):
         raise MapError('Unknown table module.')
     return __import__('gravewright.'+name+'.services', fromlist=['services'])
@@ -62,11 +69,16 @@ def command(campaign_id, user_id, name, action, data, request_id):
     if not isinstance(action, str) or not isinstance(data, dict):
         raise MapError('Invalid command.')
     rid = identifier(request_id)
-    previous = Receipt.objects.filter(campaign_id=campaign_id,user_id=user_id,request_id=rid).first()
+    # These projections include GM-only data. Each private domain has its own
+    # cache, outside legacy cross-resource map/actor/native command receipts.
+    receipt_model = {'clocks': ClockReceipt, 'clues': ClueReceipt}.get(name, Receipt)
+    previous = receipt_model.objects.filter(campaign_id=campaign_id,user_id=user_id,request_id=rid).first()
     if previous:
+        if name in ('clocks', 'clues'):
+            module(name).validate_replay(who, action, data, previous.result)
         return previous.result
     result = module(name).command(who, action, data) or {}
-    Receipt.objects.create(campaign_id=campaign_id,user_id=user_id,request_id=rid,result=result)
+    receipt_model.objects.create(campaign_id=campaign_id,user_id=user_id,request_id=rid,result=result)
     from gravewright.realtime.dispatch import changed
     changed(campaign_id,user_id,name,action,rid,result)
     return result

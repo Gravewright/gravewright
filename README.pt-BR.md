@@ -4,7 +4,23 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **0.3.1**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **0.3.2**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, relógios de progresso e pistas, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+
+## Preparação da campanha e jogo
+
+| Ferramenta | O que permite fazer |
+| --- | --- |
+| [Gestor de campanha](docs/pt-BR/campaign-management.md) | Abrir **Gerenciar campanha** antes de entrar na mesa. Usar documentos, biblioteca de arquivos, fichas e ferramentas de cena nativos, com painel pessoal, planejador de sessões, cronologia/calendário, colunas de missões, conexões, prévia de jogador e histórico/lixeira de diários |
+| [Relógios de progresso](docs/pt-BR/clocks.md) | Acompanhar objetivos por segmentos na mesa e no gestor, com escopo de campanha/cena, controle de público, alteração opcional de progresso por jogadores e exibição fixada |
+| [Pistas](docs/pt-BR/clues.md) | Preparar descobertas e notas privadas do mestre; revelar o conteúdo aos jogadores quando o progresso da descoberta for concluído |
+| [PDF System](docs/pt-BR/pdf-system.md) | Mapear campos de texto, número e checkbox sobre um PDF não editável; vincular campos às barras do token, criar rolagens e cálculos salvos e reutilizar mapeamentos |
+| [Map Builder](docs/pt-BR/map-builder.md) | Criar mapas editáveis, adotar cenas existentes compatíveis, sincronizar edições da mesa e conectar mecanismos de Objetos Inteligentes às ferramentas nativas, relógios e pistas |
+| [Universal VTT](docs/pt-BR/universal-vtt.md) | Importar mapas `.uvtt`, `.dd2vtt` e `.df2vtt` como cenas nativas ou projetos editáveis do Builder, com avisos de aproximações e limites do formato |
+
+O gestor e a mesa compartilham os registros da campanha. Preparação exclusiva do
+mestre, pistas não descobertas e documentos privados são filtrados no servidor.
+Um vínculo com cena ou documento não concede permissão ao destino. Os guias
+explicam autorização, edição concorrente e comportamento dos backups.
 
 ## Instalar e executar localmente
 
@@ -12,9 +28,10 @@ Comece pelo [guia do Map Builder](docs/pt-BR/map-builder.md) para criar um proje
 de mapa editável ou colocar elementos interativos sobre uma imagem de mapa pronto.
 O [guia do Universal VTT](docs/pt-BR/universal-vtt.md) explica como importar
 arquivos `.uvtt`, `.dd2vtt` e `.df2vtt` como cenas nativas, exportar cenas e conferir
-os limites do formato. As [notas da 0.3.1](docs/releases/0.3.1.md) apresentam
-formulários consistentes, modelos de objetos interativos e sincronização das
-edições da mesa com os projetos do Map Builder.
+os limites do formato. As [notas da 0.3.2](docs/releases/0.3.2.md) apresentam
+preparação de campanha, relógios e pistas, melhorias do PDF, Pillow 13 e as
+migrações de banco necessárias. As notas preparam a release; não indicam que
+uma tag ou um download já foram publicados.
 
 Extraia o projeto completo para uma pasta gravável, execute o instalador do seu sistema operacional e depois use o Runner gerado. O instalador prepara ferramentas, dependências, frontend e configurações; o Runner inicia a aplicação já preparada.
 
@@ -24,7 +41,7 @@ Extraia o projeto completo para uma pasta gravável, execute o instalador do seu
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/pt-BR/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/pt-BR/macos-runner.md) |
 
-O ZIP completo da release 0.3.1 inclui os instaladores das três plataformas. Instalações gerenciadas na 0.3.0 podem usar **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env`, dados configurados e extensões locais antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração, dados e extensões e execute novamente o instalador da plataforma. Veja as [instruções de download e atualização](docs/releases/0.3.1.md#download-e-atualização). Esta release não acrescenta migrações de banco em relação à 0.3.0; instalações anteriores ainda precisam do fluxo normal de migrações.
+A distribuição do código inclui os instaladores das três plataformas. Os identificadores preparados para a release são **`v0.3.2`** e **`Gravewright-0.3.2-django.zip`**. Quando a release correspondente for publicada no repositório configurado, instalações gerenciadas poderão usar **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env`, dados configurados e extensões locais antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração, dados e extensões e execute novamente o instalador da plataforma. Veja [atualização e recuperação](docs/pt-BR/upgrading.md) e as [instruções da release](docs/releases/0.3.2.md#download-e-atualização). Esta versão acrescenta migrações de preparação de campanha, histórico de diários, relógios e pistas em relação à 0.3.1; execute o fluxo normal de migrações antes de iniciar o servidor atualizado.
 
 Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
 
@@ -37,6 +54,12 @@ Extraia o projeto completo e dê dois cliques em **`Install Windows.bat`**. Ele 
 O executor funciona diretamente no **CMD do Windows**. Use Windows 10 versão 1803 ou superior, ou Windows 11, em x64; `curl.exe`, `tar.exe` e `certutil.exe` nativos cuidam dos downloads, extração e verificação de integridade.
 
 O instalador salva configurações no `.env` do projeto. Os caminhos do banco e uploads seguem essa configuração; os padrões são `data/gravewright.sqlite3` e `data/media` no projeto. O estado, os logs e os arquivos estáticos coletados do Runner ficam em `data/`; ferramentas gerenciadas, ambientes, caches e arquivos temporários ficam em `data/runner/` nesta instalação. O executor atende apenas este computador e dispensa Redis. Um atalho com o ícone do Gravewright é criado ao lado do launcher. Veja o [guia do executor Windows](docs/pt-BR/windows-runner.md) para requisitos e solução de problemas, e o guia de [implantação e backups](docs/pt-BR/deployment.md).
+
+Antes de atualizar, pare a aplicação e faça backup conjunto do banco configurado,
+mídias privadas e `.env`. Instalações gerenciadas podem usar Administração →
+Atualizações; instalações pelo código-fonte precisam instalar dependências
+fixadas e executar migrações. Depois de mover ou substituir um projeto Windows,
+execute novamente **`Install Windows.bat`** para prepará-lo e regenerar o Runner.
 
 ### Linux e macOS
 
@@ -93,7 +116,7 @@ O executor de testes Django usa `data/test-gravewright.sqlite3`; `--noinput` per
 
 ## Contribuir
 
-Leia [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md) e o [guia de desenvolvimento](docs/pt-BR/development.md). Inglês é o idioma principal da documentação, com guias correspondentes em português. Comentários e docstrings usam inglês. O idioma base da aplicação é inglês; o módulo oficial [Translator](https://github.com/Gravewright/translator) oferece português e espanhol. Sistemas podem registrar seus próprios catálogos pela API de tradução.
+Leia [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md) e o [guia de desenvolvimento](docs/pt-BR/development.md). Inglês é o idioma principal da documentação, com guias correspondentes em português. Comentários e docstrings usam inglês. O idioma base da aplicação é inglês; o módulo oficial [Translator](https://github.com/Gravewright/translator) oferece idiomas instaláveis, incluindo português e espanhol. Módulos e sistemas registram seus catálogos privados pela API de tradução do host. Conteúdo criado pelos usuários preserva o texto original.
 
 Relate problemas comuns nas issues do repositório, com passos para reproduzir e versões relevantes. Para vulnerabilidades, siga [SECURITY.pt-BR.md](SECURITY.pt-BR.md).
 

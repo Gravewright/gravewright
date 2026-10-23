@@ -38,6 +38,34 @@ def validate_assignees(values, journal, who):
     return values
 
 
+def validate_prerequisites(values, journal, who, strict=True):
+    from .services import JournalError, identifier
+    from .models import Journal
+    if not isinstance(values, list) or len(values) > shapes.PREREQUISITE_LIMIT:
+        raise JournalError('Use up to 16 prerequisite quests.')
+    values = list(dict.fromkeys(str(identifier(value)) for value in values))
+    if str(journal.pk) in values:
+        raise JournalError('A quest cannot require itself.')
+    found = {str(pk) for pk in Journal.objects.filter(campaign_id=who.campaign_id, type='quest', pk__in=values).values_list('pk', flat=True)}
+    if strict and found != set(values):
+        raise JournalError('Prerequisite quest not found.')
+    # A full editor save may still carry a quest deleted elsewhere since it opened.
+    values = [value for value in values if value in found]
+    # Reject cycles so the board can always show an order to complete quests in.
+    graph = {str(row.pk): shapes.normalize_quest_data(row.data)['prerequisites']
+             for row in Journal.objects.filter(campaign_id=who.campaign_id, type='quest').only('id', 'data')}
+    graph[str(journal.pk)] = values
+    pending, seen = list(values), set()
+    while pending:
+        current = pending.pop()
+        if current == str(journal.pk):
+            raise JournalError('These prerequisites would create a cycle.')
+        if current not in seen:
+            seen.add(current)
+            pending.extend(graph.get(current, []))
+    return values
+
+
 def locations(journal, who):
     from gravewright.maps.models import SceneObject
     from gravewright.maps.services import scene, MapError
@@ -125,6 +153,9 @@ def clean_type(raw, clean, journal, who):
         if 'assignees' in raw and (not isinstance(raw['assignees'], list) or len(raw['assignees']) > 32):
             raise JournalError('Use up to 32 assigned characters.')
         clean['assignees'] = validate_assignees(clean['assignees'], journal, who)
+        # Editors that predate prerequisites, and non-GM editors, keep the stored links.
+        clean['prerequisites'] = (validate_prerequisites(clean['prerequisites'], journal, who, strict=False)
+                                  if gm and 'prerequisites' in raw else existing['prerequisites'])
         image = clean['public']['image']
         if image['assetId']:
             image['src'] = '/game/journal/asset/' + image['assetId']
@@ -160,6 +191,13 @@ def apply(journal, who, action, payload):
             raise JournalError('Invalid quest status.')
         journal.data = shapes.normalize_quest_data(journal.data)
         journal.data['status'] = payload['status']
+    elif action == 'prerequisites':
+        if journal.type != 'quest' or not gm:raise JournalError('Only the GM can plan quest prerequisites.')
+        if type(payload.get('version')) is not int or payload['version'] != journal.version:
+            raise JournalError('This quest changed. Reopen it and try again.', 'conflict')
+        clean = shapes.normalize_quest_data(journal.data)
+        clean['prerequisites'] = validate_prerequisites(payload.get('prerequisites'), journal, who)
+        journal.data = clean
     elif action in {'objective', 'assign'}:
         if journal.type != 'quest':raise JournalError('Choose a quest.')
         if type(payload.get('version')) is not int or payload['version'] != journal.version:

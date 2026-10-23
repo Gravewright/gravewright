@@ -59,7 +59,7 @@ Para instalar com os padrões, sem perguntas nem inicialização do servidor:
 "Install Windows.bat" --check --no-pause --data-dir "data\check"
 ```
 
-Isso instala dependências, prepara assets/banco e gera um runner apontando para a pasta escolhida. Não é somente leitura. Uma instalação normal posterior faz as perguntas. `--data-dir` escolhe a pasta persistida; `--port` altera apenas a verificação da instalação, não a porta salva.
+Isso instala dependências, prepara assets/banco e gera um Runner apontando para a pasta de estado escolhida. Não é somente leitura. Uma instalação normal posterior faz as perguntas. `--data-dir` muda estado, logs e assets coletados do Runner; banco e uploads continuam seguindo o `.env` do projeto. Para verificações isoladas, use também uma cópia descartável do projeto com configuração de banco/mídia separada. `--port` altera apenas a verificação da instalação, não a porta salva.
 
 O runner gerado aceita `--no-browser`, `--no-pause`, `--data-dir`, `--port` e `--check`. O `--check` do runner verifica aplicação/banco sem instalar ferramentas nem preparar frontend; pode aplicar migrações e coletar assets. `--port` vale apenas naquela execução. Para alterar valores salvos, abra o instalador.
 
@@ -68,6 +68,8 @@ Em falhas de download, confira o console e acesso ao GitHub, nodejs.org e fontes
 O instalador prepara ferramentas e dependências. [create_runner.py](../../scripts/windows/create_runner.py) gera o BAT de execução pelo [modelo](../../scripts/windows/runner.bat); [create_shortcut.py](../../scripts/windows/create_shortcut.py) cria o atalho opcional. [gravewright_runner.py](../../scripts/gravewright_runner.py) gerencia configurações pessoais, bloqueios e ciclo do servidor. Veja [testes](testing.md): o cenário nativo Windows cobre instalação, reconfiguração, download privado do Python, reaproveitamento offline e runner gerado. A validação de navegador é separada quando se usa `--skip-browser`.
 
 ## Atualização e rollback
+
+A release **0.3.2** preparada usa **`Gravewright-0.3.2-django.zip`** e seu checksum correspondente. Acrescenta migrações de banco para relógios, pistas, preparação de campanha e histórico de diários. Siga o [guia de atualização](upgrading.md) antes de instalá-la. Uma atualização manual exige o pacote completo e outra execução de **`Install Windows.bat`**, preservando `.env`, `data/` e caminhos de armazenamento explicitamente configurados. Reedições da mesma versão exigem instalação manual porque a descoberta compara números de versão.
 
 A atualização substitui os arquivos na própria pasta do projeto, incluindo o instalador, e regenera o runner com o novo ambiente Python. Em Administração → Atualizações, **Manter cópia .old para rollback** controla se o código anterior e o snapshot correspondente dos dados serão preservados após o sucesso. A recuperação temporária durante a instalação é sempre mantida. Veja [implantação](deployment.md) para restaurar uma cópia.
 

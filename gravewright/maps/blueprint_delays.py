@@ -120,7 +120,9 @@ def _required_elements(blueprint, event, continuation=None):
             "assets": {nodes[key]["assetId"] for key in wanted if nodes[key]["type"] == "sprite"
                        and nodes[key].get("appearance") == "asset"},
             "handouts": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "showHandout"},
-            "quests": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "setQuestStatus"}}
+            "quests": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "setQuestStatus"},
+            "clocks": {nodes[key]['clockId'] for key in wanted if nodes[key]['type'] == 'clockControl'},
+            "clues": {nodes[key]['clueId'] for key in wanted if nodes[key]['type'] == 'clueControl'}}
     required["elements"].update(nodes[key]["destinationId"] for key in wanted if nodes[key]["type"] == "teleport")
     required["assets"].update(nodes[key]["assetId"] for key in wanted if nodes[key]["type"] == "setAppearance")
     for key in wanted:
@@ -155,6 +157,8 @@ def invalid_reason(row, element=None):
     from gravewright.audio.models import Track
     from .models import MapAsset
     from gravewright.journals.models import Journal
+    from .blueprint_clocks import scoped_clocks
+    from .blueprint_clues import scoped_clues
     required = _required_elements(blueprint, row.event, continuation)
     # Native validation keeps every authored resource binding campaign-local,
     # including those in other events and before the wait. If one disappears,
@@ -170,7 +174,9 @@ def invalid_reason(row, element=None):
                  "sounds": Track.objects.filter(campaign_id=row.scene.campaign_id),
                  "assets": MapAsset.objects.filter(campaign_id=row.scene.campaign_id, generated_for__isnull=True),
                  "handouts": Journal.objects.filter(campaign_id=row.scene.campaign_id),
-                 "quests": Journal.objects.filter(campaign_id=row.scene.campaign_id, type="quest")}
+                 "quests": Journal.objects.filter(campaign_id=row.scene.campaign_id, type="quest"),
+                 "clocks": scoped_clocks(row.scene.campaign_id, row.scene_id),
+                 "clues": scoped_clues(row.scene.campaign_id, row.scene_id)}
     if any(identifiers != {str(pk) for pk in resources[kind].filter(pk__in=identifiers).values_list("pk", flat=True)}
            for kind, identifiers in required.items() if identifiers):
         return "A delayed blueprint target is missing."

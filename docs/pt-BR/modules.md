@@ -18,10 +18,13 @@ APIs opcionais do navegador antes de chamá-las. O VTT 0.2.0 já introduziu
 catálogos privados em `context.i18n`; o 0.2.1 também resolve os nomes traduzidos
 dos tipos de documento nos diretórios nativos.
 
-Regras, escolhas, layout das fichas e catálogos de tradução de jogos pertencem
-ao sistema instalado ou ao app complementar confiável. O núcleo valida
-descritores, autorização e armazenamento sem interpretar regras de jogos.
-Veja as [notas da 0.2.1](../releases/0.2.1.md) para instalação e atualização.
+Regras, escolhas, layouts, automações e traduções de jogos ficam juntos em um
+único pacote de sistema instalável. Não exija um complemento Server Rules
+instalado separadamente em Módulos. O núcleo valida descritores, autorização e
+armazenamento sem interpretar regras de jogos. As versões acima identificam
+hosts mínimos históricos; veja os detalhes atuais de atualização nas
+[notas da 0.3.2](../releases/0.3.2.md) e os marcadores atuais de Python e navegador
+na [referência da API](api.md).
 
 ## Confiança e limites da instalação
 
@@ -347,13 +350,13 @@ Os testes de navegador precisam das dependências de desenvolvimento e do navega
 
 O manifesto pode declarar `locales`, associando cada idioma a `{ "name": "Português (Brasil)", "path": "locales/pt-BR.json" }`. Cada catálogo é um objeto JSON de textos originais e traduções, preservando marcadores como `{name}`. O inglês pertence ao host e não pode ser sobrescrito. Um pacote não pode combinar `system` e `locales`. Pacotes de idiomas não podem conter Python.
 
-O proprietário ativa os idiomas em Módulos instalados. A rota `POST /api/module-packages/activation` recebe `{ "id": "gravewright.translator", "version": "0.1.0", "enabled": true }` e verifica o arquivo assinado. Somente um pacote de idiomas fica ativo por instalação. A configuração de módulos por campanha rejeita esses pacotes e a lista de extensões da mesa os omite.
+O proprietário ativa os idiomas em Módulos instalados. A rota `POST /api/module-packages/activation` recebe `{ "id": "gravewright.translator", "version": "<installed-version>", "enabled": true }` e verifica o arquivo assinado. Substitua o marcador pela versão exata do pacote instalado, independente da versão do VTT. Somente um pacote de idiomas fica ativo por instalação. A configuração de módulos por campanha rejeita esses pacotes e a lista de extensões da mesa os omite.
 
 Com o pacote ativo, cada usuário escolhe seu idioma nas configurações internas da conta, armazenado em `UserPreference.locale`. Um cookie assinado permite manter o idioma na tela de entrada; outra conta autenticada não herda a preferência desse cookie. Desativar ou revogar o pacote remove o seletor e restaura o inglês no próximo carregamento. Páginas já abertas precisam ser recarregadas.
 
 A tradução abrange dicionários da aplicação, textos literais dos templates e controles criados no navegador. Rótulos reativos são traduzidos antes do processamento pelo Datastar para evitar disputa entre observadores. Nomes, mensagens, conteúdo editável, PDFs e interfaces arbitrárias de terceiros não são traduzidos.
 
-O app Django do [Translator](https://github.com/Gravewright/translator) extrai e mantém os catálogos e gera o ZIP portátil. Ele não precisa estar instalado no Django após a instalação pelo marketplace. O relatório `VALIDATION.md` registra os testes offline e online. A pré-release v0.1.0 exige as alterações do host presentes neste checkout de desenvolvimento.
+O app Django do [Translator](https://github.com/Gravewright/translator) extrai e mantém os catálogos e gera o ZIP portátil. Ele não precisa estar instalado no Django após a instalação pelo marketplace. Consulte a documentação desse pacote para seu fluxo de build e validação. O host controla o contrato de ativação de idiomas e os pontos de tradução em execução descritos aqui; versões do pacote e do VTT têm históricos separados.
 
 ### Biblioteca de pacotes e instalação
 

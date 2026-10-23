@@ -7,6 +7,7 @@ import { sceneRestored, clearContent } from '/static/gravewright_table/content-s
 import { openFormModal } from '/static/gravewright_table/form-modal.js';
 import { managementTransport } from './transport.js';
 import { mountManagedScenes } from './scenes.js';
+import { mountPreparation } from './preparation.js';
 
 const root = document.querySelector('#table-workspace[data-management]');
 const campaignId = root.dataset.tableId;
@@ -16,10 +17,11 @@ const http = new HttpClient();
 const $ = selector => root.querySelector(selector);
 const errorBox = $('[data-manager-error]');
 let overview = JSON.parse(document.getElementById('campaign-management-overview').textContent);
-let section = 'overview', selectedScene = null, library, decks, timer, searching, audioSignature;
+let section = 'overview', selectedScene = null, library, decks, timer, searching, audioSignature, clocksWidget, cluesWidget;
 const mounted = new Set();
-const labels = { overview: 'Overview', journals: 'Journals', quests: 'Quests', actors: 'Characters', items: 'Items',
-  maps: 'Scenes', library: 'File library', audio: 'Audio', cards: 'Cards', compendiums: 'Compendiums', combat: 'Encounters', members: 'Participants' };
+const labels = { overview: 'Overview', journals: 'Journals', quests: 'Quests', clocks: 'Clocks', clues: 'Clues', actors: 'Characters', items: 'Items',
+  maps: 'Scenes', library: 'File library', audio: 'Audio', cards: 'Cards', compendiums: 'Compendiums', combat: 'Encounters', members: 'Participants',
+  sessions: 'Session planner', timeline: 'Timeline', connections: 'Connections', 'player-view': 'View as player', history: 'History and trash' };
 const statuses = { draft: 'Draft', available: 'Available', active: 'Active', completed: 'Completed', failed: 'Failed', archived: 'Archived' };
 function node(tag, className, value) {
   const element = document.createElement(tag);
@@ -57,6 +59,9 @@ function revoke() {
   clearContent();
   stopPreviews();
   library?.destroy(); decks?.destroy();
+  clocksWidget?.destroy();
+  cluesWidget?.destroy();
+  preparation?.destroy();
   window.dispatchEvent(new Event('gravewright:access-revoked'));
   for (const panel of root.querySelectorAll('[data-native-directory]')) panel._content?.dispose();
   for (const modal of document.querySelectorAll('[role="dialog"]')) modal.close?.(true);
@@ -80,12 +85,14 @@ const transport = managementTransport({ api, execute: executeNative, report, rev
       overview.counts.journals = value.journals.length;
       const quests = value.journals.filter(doc => doc.type === 'quest');
       overview.counts.quests = quests.length;
-      overview.quests = { total: quests.length, byStatus: Object.fromEntries(Object.keys(statuses).map(status => [status, quests.filter(doc => doc.status === status).length])) };
-      renderQuests(); renderDocuments(); renderOverview();
+      overview.quests = { total: quests.length, byStatus: Object.fromEntries(Object.keys(statuses).map(status => [status, quests.filter(doc => (doc.quest?.status ?? doc.status) === status).length])) };
+      renderDocuments(); renderOverview(); preparation?.journalsChanged(section);
     }
-    if (domain === 'actors') { overview.counts.actors = value.actors.length; renderOverview(); }
+    if (domain === 'actors') { overview.counts.actors = value.actors.length; renderOverview(); preparation?.renderQuests(); }
     if (domain === 'maps') { overview.counts.scenes = value.maps.length; scenes.render(value); renderSceneChoices(); renderOverview(); }
     if (domain === 'audio') renderAudio(value);
+    if (domain === 'clocks' && (context.sceneId ?? null) === selectedScene) clocksWidget?.update(value);
+    if (domain === 'clues' && (context.sceneId ?? null) === selectedScene) cluesWidget?.update(value);
   },
 });
 window.gravewrightRealtime = transport;
@@ -96,21 +103,43 @@ window.gravewrightMaps = {
 };
 const scenes = mountManagedScenes({ root, api, transport, http, t, report,
   selectedScene: () => selectedScene, onSelect: id => selectScene(id) });
+// Opens a referenced document in its native manager editor.
+async function openDocument(ref) {
+  if (ref.type === 'journal') return window.gravewrightJournals.open(ref.id);
+  if (ref.type === 'actor') { await selectSection('actors'); return window.gravewrightActors.open(ref.id); }
+  if (ref.type === 'item') { await selectSection('items'); return window.gravewrightItems?.open(ref.id); }
+  if (ref.type === 'scene' || ref.type === 'encounter') { await selectSection('maps'); return selectScene(ref.id); }
+  if (ref.type === 'track' || ref.type === 'playlist') return selectSection('audio');
+}
+const preparation = mountPreparation({ root, campaignId, campaigns: gravewright.campaigns, transport, signal: transport.signal,
+  t: (key, params) => language.t(key, params), run, open: openDocument, select: next => selectSection(next), overview: () => overview,
+  audio: async () => { await transport.subscribeModule('audio', selectedScene); return transport.states.get('audio'); } });
 
 function selectScene(id) {
   selectedScene = transport.states.get('maps')?.maps.some(scene => scene.id === id) ? id : null;
   $('[data-manager-scene]').value = selectedScene || '';
+  $('[data-manager-clock-scene]').value = selectedScene || '';
+  $('[data-manager-clue-scene]').value = selectedScene || '';
   scenes.render(transport.states.get('maps'));
   window.dispatchEvent(new Event('gravewright:module-scene'));
+  if (clocksWidget) {
+    clocksWidget.update({ clocks: [], is_gm: true, sceneId: selectedScene });
+    void transport.subscribeModule('clocks', selectedScene);
+  }
+  if (cluesWidget) {
+    cluesWidget.update({ clues: [], is_gm: true, sceneId: selectedScene });
+    void transport.subscribeModule('clues', selectedScene);
+  }
 }
 function renderSceneChoices() {
-  const select = $('[data-manager-scene]');
-  select.replaceChildren(new Option(t('No scene selected'), ''));
-  for (const scene of transport.states.get('maps')?.maps || []) {
-    const option = new Option(scene.name, scene.id); option.setAttribute('translate', 'no'); select.append(option);
+  for (const select of [$('[data-manager-scene]'), $('[data-manager-clock-scene]'), $('[data-manager-clue-scene]')]) {
+    select.replaceChildren(new Option(t('No scene selected'), ''));
+    for (const scene of transport.states.get('maps')?.maps || []) {
+      const option = new Option(scene.name, scene.id); option.setAttribute('translate', 'no'); select.append(option);
+    }
+    if (selectedScene && !transport.states.get('maps')?.maps.some(scene => scene.id === selectedScene)) selectScene(null);
+    select.value = selectedScene || '';
   }
-  if (selectedScene && !transport.states.get('maps')?.maps.some(scene => scene.id === selectedScene)) selectScene(null);
-  select.value = selectedScene || '';
 }
 function renderOverview() {
   const host = $('[data-manager-stats]'); if (!host || transport?.signal.aborted) return;
@@ -139,18 +168,7 @@ function renderDocuments() {
     row.append(authored('span', doc.title), node('small', '', t(doc.type === 'quest' ? 'Quest' : doc.type === 'quest_board' ? 'Quest board' : doc.type === 'roll_table' ? 'Roll table' : 'Journal'))); host.append(row);
   }
 }
-function renderQuests() {
-  const host = $('[data-manager-quests]'), status = $('[data-manager-quest-status]').value;
-  host.replaceChildren();
-  const quests = documents().filter(doc => doc.type === 'quest' && (!status || doc.status === status));
-  if (!quests.length) { empty(host, 'No quests match this status.'); return; }
-  for (const quest of quests) {
-    const row = node('article', 'campaign-manager__row'); row.dataset.managerQuestId = quest.id;
-    const info = node('div', 'campaign-manager__row-info'), goals = quest.objectives || [];
-    info.append(node('strong', '', quest.title), node('small', '', `${t(statuses[quest.status] || 'Draft')} · ${goals.filter(goal => goal.completed).length}/${goals.length} ${t('Objectives')}`));
-    row.append(info, button('Open quest', () => window.gravewrightJournals.open(quest.id))); host.append(row);
-  }
-}
+function renderQuests() { preparation.renderQuests(); }
 function createDocument(kind) {
   const note = kind === 'gm-note';
   const titles = { diary: 'New journal', quest: 'New quest', quest_board: 'New quest board', 'gm-note': 'GM notebook' };
@@ -228,6 +246,34 @@ async function selectSection(next, { history = true } = {}) {
   if (directory) await transport.subscribeModule(next, selectedScene);
   if (next === 'audio' || next === 'cards') await ensureMedia();
   if (transport.signal.aborted) return;
+  if (next === 'clocks') {
+    if (!clocksWidget) {
+      const { mountClocks } = await import('/static/gravewright_table/clocks.js');
+      if (transport.signal.aborted) return;
+      clocksWidget = mountClocks($('[data-manager-view="clocks"] [data-clocks-root]'), { api,
+        sceneId: () => selectedScene, scenes: () => transport.states.get('maps')?.maps || [], t,
+        onChange: state => {
+          if ((state.sceneId ?? null) !== selectedScene || transport.signal.aborted) return;
+          transport.invalidate('clocks'); transport.states.set('clocks', state); clocksWidget?.update(state);
+        },
+      });
+    }
+    await transport.subscribeModule('clocks', selectedScene);
+  }
+  if (next === 'clues') {
+    if (!cluesWidget) {
+      const { mountClues } = await import('/static/gravewright_table/clues.js');
+      if (transport.signal.aborted) return;
+      cluesWidget = mountClues($('[data-manager-view="clues"] [data-clues-root]'), { api,
+        sceneId: () => selectedScene, scenes: () => transport.states.get('maps')?.maps || [], t,
+        onChange: state => {
+          if ((state.sceneId ?? null) !== selectedScene || transport.signal.aborted) return;
+          transport.invalidate('clues'); transport.states.set('clues', state); cluesWidget?.update(state);
+        },
+      });
+    }
+    await transport.subscribeModule('clues', selectedScene);
+  }
   if (next === 'audio') await transport.subscribeModule('audio', selectedScene);
   if (next === 'cards' && !decks) decks = window.gravewrightTableMedia.mountDecks($('[data-manager-decks]'));
   if (next === 'library' && !library) {
@@ -235,6 +281,7 @@ async function selectSection(next, { history = true } = {}) {
     if (transport.signal.aborted) return;
     library = mountAssetLibrary($('[data-manager-library]'), { props: { containerId: campaignId, gm: true, revision: 0 }, HttpClient });
   }
+  await preparation.enter(next);
 }
 async function search() {
   const query = $('#campaign-search').value.trim(), host = $('[data-manager-search-results]');
@@ -274,7 +321,9 @@ $('[data-manager-invite]').addEventListener('click', event => void run(async () 
   modal.querySelector('[data-fields]').append(node('p', '', t('This invitation expires in 24 hours and allows up to 10 uses.')));
 }, event.currentTarget), { signal: transport.signal });
 $('[data-manager-scene]').addEventListener('change', event => selectScene(event.target.value), { signal: transport.signal });
-$('[data-manager-refresh]').addEventListener('click', event => run(() => transport.refresh(), event.currentTarget), { signal: transport.signal });
+$('[data-manager-clock-scene]').addEventListener('change', event => selectScene(event.target.value), { signal: transport.signal });
+$('[data-manager-clue-scene]').addEventListener('change', event => selectScene(event.target.value), { signal: transport.signal });
+$('[data-manager-refresh]').addEventListener('click', event => run(() => Promise.all([transport.refresh(), preparation.enter(section)]), event.currentTarget), { signal: transport.signal });
 $('#campaign-search').addEventListener('input', () => { clearTimeout(searching); searching = setTimeout(() => void run(search), 250); }, { signal: transport.signal });
 $('[data-manager-audio-upload]').addEventListener('click', () => $('[data-manager-audio-file]').click(), { signal: transport.signal });
 $('[data-manager-audio-file]').addEventListener('change', event => void run(async () => {
@@ -289,10 +338,10 @@ $('[data-manager-audio-workspace]').addEventListener('click', () => void run(asy
 window.addEventListener('focus', () => { if (!document.hidden) void run(() => transport.refresh()); }, { signal: transport.signal });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void run(() => transport.refresh()); }, { signal: transport.signal });
 window.addEventListener('pagehide', () => {
-  clearInterval(timer); clearTimeout(searching); clearContent(); stopPreviews(); library?.destroy(); decks?.destroy(); scenes.destroy(); transport.close();
+  clearInterval(timer); clearTimeout(searching); clearContent(); stopPreviews(); library?.destroy(); decks?.destroy(); clocksWidget?.destroy(); cluesWidget?.destroy(); preparation.destroy(); scenes.destroy(); transport.close();
 }, { once: true });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); }, { once: true });
-language.onChange(() => { renderOverview(); renderDocuments(); renderQuests(); renderMembers(); renderSceneChoices(); $('[data-manager-heading]').textContent = t(labels[section]); });
+language.onChange(() => { renderOverview(); renderDocuments(); renderMembers(); renderSceneChoices(); preparation.refreshLabels(section); $('[data-manager-heading]').textContent = t(labels[section]); });
 
 try {
   await transport.check();
@@ -304,6 +353,11 @@ try {
   window.dispatchEvent(new Event('gravewright:connected'));
   renderOverview(); renderDocuments(); renderQuests(); renderMembers();
   await selectSection(new URL(location.href).searchParams.get('section') || 'overview', { history: false });
-  timer = setInterval(() => { if (!document.hidden) void run(() => transport.refresh()); }, 15000);
+  timer = setInterval(() => {
+    if (document.hidden) return;
+    void run(() => transport.refresh());
+    // Preparation records are GM-only and resynchronize by polling, like the native states.
+    if (['overview', 'sessions', 'timeline'].includes(section)) void run(() => preparation.load());
+  }, 15000);
   root.dataset.managerReady = 'true';
 } catch (error) { report(error); }

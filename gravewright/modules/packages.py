@@ -50,6 +50,7 @@ def package_type(manifest):
 
 class ModuleFailure(AuthError):
     def __init__(self, code, message=None):
+        self.message = message if isinstance(message, str) else code
         super().__init__(
             code,
             {

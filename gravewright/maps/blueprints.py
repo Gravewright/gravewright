@@ -42,9 +42,9 @@ NODE_TYPES = ("event", "light", "sound", "state", "interact", "condition", "sequ
               "reference", "reveal", "barrier", "soundControl", "flame", "all", "any",
               "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random",
               "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion",
-              "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "cameraFocus", "teleport", *CONTROL_TYPES)
+              "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "cameraFocus", "teleport", *CONTROL_TYPES)
 # Node types introduced with version 2; version 1 documents keep their original vocabulary.
-VERSION_2_NODE_TYPES = ("interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "cameraFocus", "teleport", *CONTROL_TYPES)
+VERSION_2_NODE_TYPES = ("interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "cameraFocus", "teleport", *CONTROL_TYPES)
 BARRIER_CHANNELS = ("movement", "vision", "light", "sound")
 SOUND_CONTROLS = ("stop", "volume")
 PURE_NODE_TYPES = ("property", "compare", "reference", "all", "any", "getVariable", "compareValue", "elementGroup", "lightReference", "soundReference", "eventContext")
@@ -64,7 +64,8 @@ DATA_INPUTS = {"compare": {"value": "state"}, "condition": {"test": "boolean"},
                "reveal": {"target": "element"}, "property": {"target": "element"},
                "barrier": {"target": "element"}, "flame": {"target": "element"}, "emitEvent": {"target": "element"},
                "all": {port: "boolean" for port in BOOLEAN_INPUTS},
-               "any": {port: "boolean" for port in BOOLEAN_INPUTS}}
+                "any": {port: "boolean" for port in BOOLEAN_INPUTS},
+                "clockControl": {"amount": "number"}, "clueControl": {"amount": "number"}}
 SUPPORTED_VERSIONS = (1, 2)
 DOOR_CAPABILITY = {
     "kind": "door",
@@ -121,6 +122,8 @@ _NODE_FIELDS = {
     "showHandout": {"journalId", "audience"},
     "requestRoll": {"expression", "label", "visibility", "audience"},
     "setQuestStatus": {"journalId", "status"},
+    "clockControl": {"clockId", "action", "amount"},
+    "clueControl": {"clueId", "action", "amount"},
     "cameraFocus": {"focusX", "focusY", "audience"},
     "teleport": {"destinationId"},
 }
@@ -170,6 +173,20 @@ def _number(value, low, high, *, label):
     ):
         raise MapError(f"Invalid blueprint {label}.")
     return round(value, 3)
+
+
+def _clock_amount(value):
+    """Clock data inputs accept only bounded whole numbers, without rounding."""
+    if type(value) not in (int, float) or not 0 <= value <= 24 or not math.isfinite(value) or int(value) != value:
+        raise MapError("Invalid blueprint clock amount.")
+    return int(value)
+
+
+def _clue_amount(value):
+    """Clue inputs accept bounded whole numbers without rounding or coercion."""
+    if type(value) not in (int, float) or not 0 <= value <= 24 or not math.isfinite(value) or int(value) != value:
+        raise MapError("Invalid blueprint clue amount.")
+    return int(value)
 
 
 def _identifier(value):
@@ -326,6 +343,20 @@ def _clean_node(raw, event, *, version, assets, lights, tracks, appearance_asset
         if not isinstance(raw["status"], str) or raw["status"] not in QUEST_STATUSES:
             raise MapError("Invalid blueprint quest status.")
         result["status"] = raw["status"]
+    elif kind == "clockControl":
+        result["clockId"] = _reference(raw["clockId"], None, label="clock")
+        if not isinstance(raw["action"], str) or raw["action"] not in ("advance", "reduce", "set", "reset"):
+            raise MapError("Invalid blueprint clock action.")
+        if type(raw["amount"]) is not int:
+            raise MapError("Invalid blueprint clock amount.")
+        result.update(action=raw["action"], amount=_clock_amount(raw["amount"]))
+    elif kind == "clueControl":
+        result["clueId"] = _reference(raw["clueId"], None, label="clue")
+        if not isinstance(raw["action"], str) or raw["action"] not in ("advance", "reduce", "set", "reset", "reveal", "hide"):
+            raise MapError("Invalid blueprint clue action.")
+        if type(raw["amount"]) is not int:
+            raise MapError("Invalid blueprint clue amount.")
+        result.update(action=raw["action"], amount=_clue_amount(raw["amount"]))
     elif kind in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
         result["audience"] = clean_audience(raw["audience"])
         if kind == "showMessage":
@@ -734,13 +765,17 @@ def evaluate_graph(blueprint, event, current_state, previous_state=None, doors=N
         node = nodes[identifier]
         result["trace"].append(node["id"])
         kind = node["type"]
-        if kind in ("light", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "cameraFocus", "teleport"):
+        if kind in ("light", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "cameraFocus", "teleport"):
             action = deepcopy(node)
             source = sources.get((identifier, "target"))
             if source:
                 action["target"] = value(source)
             if kind == "setVariable" and (source := sources.get((identifier, "value"))):
                 action["value"] = value(source)
+            if kind == "clockControl" and node["action"] != "reset" and (source := sources.get((identifier, "amount"))):
+                action["amount"] = _clock_amount(value(source))
+            if kind == "clueControl" and node["action"] not in ("reset", "reveal", "hide") and (source := sources.get((identifier, "amount"))):
+                action["amount"] = _clue_amount(value(source))
             result["actions"].append(action)
         if kind == "switch":
             source = sources.get((identifier, "value"))

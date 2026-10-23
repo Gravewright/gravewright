@@ -5,6 +5,12 @@ app_name = 'campaigns'
 urlpatterns = [
     path('campaigns/<uuid:campaign_id>/manage', management_views.page, name='manage'),
     path('api/containers/<uuid:campaign_id>/management', management_views.overview, name='management'),
+    path('api/containers/<uuid:campaign_id>/preparation', management_views.preparation, name='preparation'),
+    path('api/containers/<uuid:campaign_id>/references', management_views.references, name='references'),
+    path('api/containers/<uuid:campaign_id>/view-as/<uuid:user_id>', management_views.view_as, name='view-as'),
+    path('api/containers/<uuid:campaign_id>/journal-history/<uuid:journal_id>', management_views.journal_history, name='journal-history'),
+    path('api/containers/<uuid:campaign_id>/journal-revisions/<uuid:revision_id>', management_views.journal_revision, name='journal-revision'),
+    path('api/containers/<uuid:campaign_id>/journal-trash', management_views.journal_trash, name='journal-trash'),
     path('stream/<str:token>', streamer.consume),
     path('api/containers/<uuid:campaign_id>/streamer-link', views.streamer_link),
     path('api/containers/<uuid:campaign_id>/streamer-link/revoke', views.revoke_streamer),

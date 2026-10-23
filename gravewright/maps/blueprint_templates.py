@@ -27,7 +27,7 @@ MAX_TEMPLATES = 128
 MAX_BINDINGS = 256
 MAX_PARAMETERS = 64
 MAX_DEFINITION_BYTES = 262144
-BINDING_TYPES = ("asset", "element", "light", "sound", "handout", "user")
+BINDING_TYPES = ("asset", "element", "light", "sound", "handout", "user", "clock", "clue")
 _IDENTIFIER = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 
 
@@ -72,6 +72,8 @@ def resource_slots(blueprint):
                     "soundReference": ("trackId", "sound"), "light": ("targetId", "light"),
                     "sound": ("trackId", "sound"), "soundControl": ("trackId", "sound"),
                     "showHandout": ("journalId", "handout"), "setQuestStatus": ("journalId", "handout"),
+                    "clockControl": ("clockId", "clock"),
+                    "clueControl": ("clueId", "clue"),
                     "teleport": ("destinationId", "element"),
                     "setAppearance": ("assetId", "asset")}.get(kind)
             if slot:
@@ -109,6 +111,8 @@ def parameter_options(blueprint):
                 "getVariable": ("default",), "setVariable": ("value",), "compareValue": ("expected",),
                 "switch": ("value",), "showMessage": ("text",), "cameraFocus": ("focusX", "focusY"),
                 "requestRoll": ("expression", "label", "visibility"), "setQuestStatus": ("status",),
+                "clockControl": (() if node.get("action") == "reset" else ("amount",)),
+                "clueControl": (("amount",) if node.get("action") in ("advance", "reduce", "set") else ()),
             }.get(kind, ())
             paths = [[field] for field in fields]
             if kind == "switch" and isinstance(node.get("cases"), list):

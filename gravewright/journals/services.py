@@ -129,6 +129,22 @@ def clean_data(raw, journal, who):
     return clean
 
 
+def set_visibility(journal, who, visibility, *, force_default=False):
+    """Keep the journal's visibility and explicit default grant in agreement."""
+    if who.role != 'gm':
+        raise JournalError('Only the GM can change access.')
+    if not isinstance(visibility, str) or visibility not in {'private', 'shared', 'handout'}:
+        raise JournalError('Invalid visibility.')
+    if force_default or visibility != journal.visibility:
+        from gravewright.table.models import DocumentAccess
+        explicit = DocumentAccess.objects.filter(campaign_id=who.campaign_id, kind='journals', resource_id=str(journal.pk)).first()
+        if explicit:
+            explicit.grants['default'] = 'read' if visibility in {'shared', 'handout'} else 'none'
+            explicit.save(update_fields=['grants'])
+            who._ownership_cache = {}
+    journal.visibility = visibility
+
+
 def preserve_secrets(submitted, stored):
     # A player cannot create GM blocks or erase nested GM blocks they never saw.
     public=documents.filter_doc_for_role(submitted,is_gm=False)
@@ -270,23 +286,33 @@ def apply(who,action,p):
             else:raise JournalError('Unknown folder command.')
             f.save()
         return {'folder_id':str(f.pk)}
+    if action in {'restore-deleted','trash-purge'}:
+        if not gm:raise JournalError('Only the GM can manage deleted documents.')
+        from . import history
+        if action=='trash-purge':
+            from .models import Revision
+            row=Revision.objects.filter(campaign_id=who.campaign_id,reason='delete',pk=identifier(p.get('revision_id'))).first()
+            if row is None:raise JournalError('That document is no longer in the trash.','not_found')
+            history.purge(row);return {}
+        j=history.restore_deleted(p.get('revision_id'),who)
+        return {'journal_id':str(j.pk),'version':j.version,'restored':True}
     j=get(p.get('journal_id'),who,edit=True)
     result = {}
-    if action=='update':
+    if action not in {'delete','move','access'}:
+        # The transaction discards this snapshot if the command is rejected.
+        from . import history
+        history.snapshot(j,who)
+    if action=='restore-revision':
+        if not gm:raise JournalError('Only the GM can restore earlier versions.')
+        if type(p.get('version')) is not int or p['version']!=j.version:
+            raise JournalError('This journal changed in another window. Review the current version before restoring.', 'conflict')
+        history.restore_revision(j,p.get('revision_id'),who)
+    elif action=='update':
         if type(p.get('version')) is not int or p['version']!=j.version:
             raise JournalError('This journal changed in another window. Review your draft, then try saving to replace that version.', 'conflict')
         j.title=text(p.get('title'),120,'Title')
         if gm:
-            visibility=p.get('visibility',j.visibility)
-            if visibility not in {'private','shared','handout'}:raise JournalError('Invalid visibility.')
-            if visibility != j.visibility:
-                from gravewright.table.models import DocumentAccess
-                explicit=DocumentAccess.objects.filter(campaign_id=who.campaign_id,kind='journals',resource_id=str(j.pk)).first()
-                if explicit:
-                    explicit.grants['default']='read' if visibility in {'shared','handout'} else 'none'
-                    explicit.save(update_fields=['grants'])
-                    who._ownership_cache={}
-            j.visibility=visibility
+            set_visibility(j,who,p.get('visibility',j.visibility))
         j.data=clean_data(p.get('data'),j,who)
         if j.type == 'diary':
             from gravewright.maps.models import SceneObject
@@ -314,7 +340,8 @@ def apply(who,action,p):
         from gravewright.maps.models import SceneObject
         removed, _ = SceneObject.objects.filter(scene__campaign_id=who.campaign_id,
             kind='journalPins', data__journalId=str(j.pk)).delete()
-        j.delete();return {'map_locations_changed': True} if removed else {}
+        from . import history
+        history.trash(j,who);return {'map_locations_changed': True} if removed else {}
     else:
         result = types.apply(j, who, action, p)
     j.version+=1;j.save()

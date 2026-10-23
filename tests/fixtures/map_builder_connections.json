@@ -1,5 +1,5 @@
 {
-  "resources": {"assets":[{"id":"00000000-0000-4000-8000-000000000001"}],"lights":[{"id":"00000000-0000-4000-8000-000000000002"}],"sounds":[{"id":"00000000-0000-4000-8000-000000000003"}]},
+  "resources": {"assets":[{"id":"00000000-0000-4000-8000-000000000001"}],"lights":[{"id":"00000000-0000-4000-8000-000000000002"}],"sounds":[{"id":"00000000-0000-4000-8000-000000000003"}],"clocks":[{"id":"00000000-0000-4000-8000-000000000005"}],"clues":[{"id":"00000000-0000-4000-8000-000000000006"}]},
   "providers": [
     ["property","value","state",{"property":"state"}],
     ["property","value","state",{"property":"previous"}],
@@ -47,6 +47,8 @@
     ["light","target",["light","lightset"],{"targetId":"00000000-0000-4000-8000-000000000002","enabled":true}],
     ["sound","target",["sound","soundset"],{"trackId":"00000000-0000-4000-8000-000000000003","volume":0.5}],
     ["soundControl","target",["sound","soundset"],{"trackId":"00000000-0000-4000-8000-000000000003","action":"stop","volume":0.5}],
+    ["clockControl","amount",["number"],{"clockId":"00000000-0000-4000-8000-000000000005","action":"advance","amount":1}],
+    ["clueControl","amount",["number"],{"clueId":"00000000-0000-4000-8000-000000000006","action":"reveal","amount":1}],
     ["property","target",["element"],{"property":"state"}],
     ["condition","test",["boolean"],{"state":"off"}],
     ["compare","value",["state"],{"state":"off"}],

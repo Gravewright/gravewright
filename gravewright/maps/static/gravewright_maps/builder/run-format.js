@@ -10,7 +10,7 @@ export const STEP_NAMES = { event: 'Event', light: 'Set light', sound: 'Play sou
     elementGroup: 'Element group', lightReference: 'Light reference', soundReference: 'Sound reference', eventContext: 'Event context',
     move: 'Move object', rotate: 'Rotate object', setInteraction: 'Set interaction', setRegion: 'Set region',
     setVisibility: 'Set visibility', setAppearance: 'Set appearance', showMessage: 'Show message',
-    showHandout: 'Show handout', requestRoll: 'Request dice roll', setQuestStatus: 'Set quest status', cameraFocus: 'Focus camera', teleport: 'Teleport token' };
+    showHandout: 'Show handout', requestRoll: 'Request dice roll', setQuestStatus: 'Set quest status', cameraFocus: 'Focus camera', teleport: 'Teleport token', clockControl: 'Control clock', clueControl: 'Control clue' };
 const CHANNEL_NAMES = { movement: 'Movement', vision: 'Vision', light: 'Light', sound: 'Sound' };
 const MODE_NAMES = { block: 'Block', pass: 'Pass', attenuate: 'Attenuate' };
 const APPEARANCE_NAMES = { inherit: 'Native appearance', hidden: 'Hidden image', asset: 'Use image' };
@@ -83,6 +83,11 @@ export function createRunFormatter({ t, elements, resolve = id => id, fallbackNa
             showHandout: () => t('Handout'),
             requestRoll: () => `${step.expression || ''}${step.label ? ` · ${step.label}` : ''}`,
             setQuestStatus: () => t({ draft: 'Draft', available: 'Available', active: 'Active', completed: 'Completed', failed: 'Failed', archived: 'Archived' }[step.status] || step.status),
+            clockControl: () => `${t({ advance: 'Advance clock', reduce: 'Reduce clock', set: 'Set clock value', reset: 'Reset clock' }[step.action])}`
+                + (Number.isInteger(step.before) && Number.isInteger(step.value) ? ` · ${step.before} → ${step.value}` : ''),
+            clueControl: () => `${t({ advance: 'Advance clue', reduce: 'Reduce clue', set: 'Set clue progress', reset: 'Reset clue', reveal: 'Reveal clue', hide: 'Hide clue' }[step.action])}`
+                + (Number.isInteger(step.before) && Number.isInteger(step.value) ? ` · ${step.before} → ${step.value}` : '')
+                + (['gm', 'players'].includes(step.visibility) ? ` · ${t(step.beforeVisibility === 'gm' ? 'GM only' : 'Visible to players')} → ${t(step.visibility === 'gm' ? 'GM only' : 'Visible to players')}` : ''),
             cameraFocus: () => `${step.focusX}, ${step.focusY} · ${t('Cells')}`,
             teleport: () => step.skipped ? t('Skipped')
                 : `${token(step.tokenId)} → ${label(step.destinationId)} (${step.gridX}, ${step.gridY})`,

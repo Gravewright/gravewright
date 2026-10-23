@@ -5,6 +5,8 @@
 {% for name in ['DirectoryToolbar','DirectoryEntry','DirectoryDialog','DirectoryTree','DirectoryFolderFields'] %}<link rel="stylesheet" href="{{ static('gravewright_journals/'+name+'.css') }}">{% endfor %}
 <link rel="stylesheet" href="{{ static('gravewright_table/audio.css') }}" />
 <link rel="stylesheet" href="{{ static('gravewright_table/permissions.css') }}" />
+<link rel="stylesheet" href="{{ static('gravewright_table/clocks.css') }}" />
+<link rel="stylesheet" href="{{ static('gravewright_table/clues.css') }}" />
 {{ super() }}
 {% for name in ['DiceTray','DicePresets','DiceResult'] %}<link rel="stylesheet" href="{{ static('gravewright_dice/'+name+'.css') }}">{% endfor %}
 <link rel="stylesheet" href="{{ static('gravewright_table/game-page.css') }}" />
@@ -33,6 +35,8 @@
 <script type="module" src="{{ static('gravewright_journals/workspace.js') }}"></script>
 <script src="{{ static('gravewright_web/windows.js') }}" defer></script>
 <script type="module" src="{{ static('gravewright_table/realtime.js') }}"></script>
+<script type="module" src="{{ static('gravewright_table/clock-workspace.js') }}"></script>
+<script type="module" src="{{ static('gravewright_table/clue-workspace.js') }}"></script>
 <script type="module" src="{{ static('gravewright_dice/tray.js') }}"></script>
 <link rel="stylesheet" href="{{ static('gravewright_table/window-polish.css') }}" />
 {% endblock %}

@@ -10,11 +10,15 @@ Inglês é o idioma principal da documentação. Cada guia tem uma versão corre
 | [Executor Linux](pt-BR/linux-runner.md) | Detecção da distribuição, ferramentas privadas, execução local e verificações sem perguntas |
 | [Executor macOS](pt-BR/macos-runner.md) | Instalação Intel/Apple Silicon, launcher pelo Finder, ferramentas privadas e execução local |
 | [Primeiros passos](pt-BR/getting-started.md) | Dependências, configuração, migrações e primeiro acesso |
+| [Atualização e recuperação](pt-BR/upgrading.md) | Preparação para a 0.3.2, migrações necessárias, atualização de dependências e recuperação por backup |
 | [Guia de uso](pt-BR/user-guide.md) | Campanhas, cenas, fichas, diários e fluxos da mesa |
-| [Gerenciamento de campanha](pt-BR/campaign-management.md) | Preparar documentos e arquivos da campanha na área do mestre antes de entrar na mesa |
+| [Gerenciamento de campanha](pt-BR/campaign-management.md) | Área do mestre, painel pessoal, planejador de sessões, cronologia, colunas de missões, conexões, prévia de jogador e histórico/lixeira |
+| [PDF System](pt-BR/pdf-system.md) | Campos manuais para PDFs não editáveis, barras do token, rolagens salvas, cálculos, mapeamentos reutilizáveis, exportação e diagnósticos |
+| [Relógios de progresso](pt-BR/clocks.md) | Progresso compartilhado, público, escopo de cena e relógios fixados na mesa e no gerenciamento |
+| [Pistas](pt-BR/clues.md) | Descobertas progressivas, notas privadas do mestre, revelação aos jogadores e mecanismos do MapBuilder |
 | [Map Builder](pt-BR/map-builder.md) | Primeiro projeto, Tiles/Pintura, fundo de mapa pronto, camadas, salvamento, Objetos Inteligentes e atualização de cenas |
 | [Importador/exportador Universal VTT](pt-BR/universal-vtt.md) | Fluxos de importação, mapas/paredes/portas/luzes nativos, avisos e recuperação de erros |
-| [Direção dos Objetos Inteligentes](pt-BR/smart-objects-direction.md) | Proposta de editor de nós, capacidades dos elementos, referências e ordem de entrega |
+| [Direção dos Objetos Inteligentes](pt-BR/smart-objects-direction.md) | Etapas entregues do editor de nós, capacidades dos elementos, referências e extensões propostas |
 | [Arquitetura](pt-BR/architecture.md) | Requisições, persistência, autorização e tempo real |
 | [Mapa do código](pt-BR/code-map.md) | Responsabilidade de cada domínio e onde alterar |
 | [Desenvolvimento](pt-BR/development.md) | Fluxo de contribuição, convenções e contratos |
@@ -32,4 +36,6 @@ Para a implementação de dados, consulte os documentos existentes de [arquitetu
 
 Os contratos de módulos processáveis por máquina ficam em [contracts/](../gravewright/modules/contracts/), acompanhados da [nota de transporte](../gravewright/modules/contracts/transport.pt-BR.md).
 
-Release atual: [Gravewright 0.3.1 — Alpha](releases/0.3.1.md), com formulários consistentes, menus e modelos de objetos interativos do Map Builder, ações de dados e missões e sincronização de edições da mesa. As notas apresentam instalação e atualização a partir da 0.3.0, sem novas migrações de banco. As [notas da 0.3.0](releases/0.3.0.md) descrevem o Map Builder original, Objetos Inteligentes, suporte a Universal VTT e suas migrações; as [notas da 0.2.3](releases/0.2.3.md) preservam o histórico anterior.
+Versão atual do projeto: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). As notas preparadas apresentam preparação de campanha, histórico/lixeira de diários, relógios e pistas, mapeamento/ações de PDF, integração do MapBuilder, Pillow 13 e quatro novas migrações de banco em relação à 0.3.1. Publicação e disponibilidade de download são etapas separadas; veja [atualização e recuperação](pt-BR/upgrading.md).
+
+As notas históricas permanecem: [0.3.1](releases/0.3.1.md) cobre formulários, modelos de objetos e sincronização de cenas; [0.3.0](releases/0.3.0.md) cobre o Map Builder original e o suporte a Universal VTT; [0.2.3](releases/0.2.3.md) preserva o histórico anterior. A numeração e as informações de migração históricas descrevem aquelas releases, não a versão atual.

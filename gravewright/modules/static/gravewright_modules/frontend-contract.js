@@ -2,6 +2,22 @@
 export const FRONTEND_CONTRACT = {
   "version": "1.2.0",
   "domains": {
+    "clues": {
+      "create": "create",
+      "update": "update",
+      "advance": "advance",
+      "reset": "reset",
+      "reveal": "reveal",
+      "hide": "hide",
+      "delete": "delete"
+    },
+    "clocks": {
+      "create": "create",
+      "update": "update",
+      "advance": "advance",
+      "reset": "reset",
+      "delete": "delete"
+    },
     "actors": {
       "create": "actor.create",
       "update": "actor.update",
@@ -56,7 +72,11 @@ export const FRONTEND_CONTRACT = {
       "pinQuest": "board-pin",
       "reorderQuests": "board-reorder",
       "roll": "roll",
-      "reset": "reset"
+      "reset": "reset",
+      "setPrerequisites": "prerequisites",
+      "restoreRevision": "restore-revision",
+      "restoreDeleted": "restore-deleted",
+      "purgeDeleted": "trash-purge"
     },
     "items": {
       "create": "create",
@@ -259,7 +279,14 @@ export const FRONTEND_CONTRACT = {
       "streamerLink",
       "revokeStreamer",
       "rulesets",
-      "management"
+      "management",
+      "preparation",
+      "prepare",
+      "references",
+      "viewAs",
+      "journalHistory",
+      "journalRevision",
+      "journalTrash"
     ],
     "administration": [
       "status",

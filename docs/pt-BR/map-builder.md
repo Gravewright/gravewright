@@ -7,8 +7,8 @@ Desenhe com materiais ou importe uma imagem pronta, acrescente paredes, portas,
 objetos, luzes e efeitos nativos e depois gere ou atualize uma cena. O projeto
 continua editável separadamente da cena usada na mesa.
 
-Este guia descreve o código atual que está sendo documentado para a próxima
-versão **0.3.0**; não anuncia sua publicação. A
+Este guia descreve o código preparado para a **0.3.2**; não anuncia sua
+publicação. Veja as [notas da release](../releases/0.3.2.md). A
 [direção dos Objetos Inteligentes](smart-objects-direction.md) distingue as
 capacidades implementadas das propostas.
 
@@ -950,6 +950,8 @@ oferece estas ações e condições:
 | **Revelar** | Marcar uma porta secreta ou invisível como descoberta: esta porta, ou a porta conectada em **Alvo** |
 | **Definir barreira** | Fazer esta porta, ou a porta conectada em **Alvo**, bloquear ou liberar movimento, visão, luz ou som (o som também pode atenuar) |
 | **Controlar som** | Parar um som da campanha que já toca na cena ou mudar seu volume |
+| **Controlar relógio** | Avançar, reduzir, definir ou reiniciar um relógio de progresso; uma entrada numérica **Quantidade** substitui a quantidade configurada |
+| **Controlar pista** | Avançar, recuar, definir, reiniciar, revelar ou ocultar uma pista preparada; **Quantidade** numérica vale para avançar, recuar e definir |
 
 **Mudar estado**, **Trocar imagem**, **Interagir com objeto**, **Revelar** e **Ler propriedade** têm uma entrada **Alvo** do tipo
 **Elemento** (laranja). Sem conexão, o alvo é o elemento editado; com uma Referência de
@@ -1756,6 +1758,93 @@ nativos independentes salvam somente sua definição nativa. Abrir a rede não c
 outro armazenamento de grafos nem execução adicional. Um conflito exige recarregar;
 a operação não incorpora mudanças manuais de geometria sem relação com a regra.
 Reutilizar o UUID de requisição com outro conteúdo é rejeitado.
+
+### Controlar relógios de progresso
+
+Crie um [relógio de progresso](clocks.md) na mesa ou no gerenciamento e escolha
+**Adicionar nó → Ações → Controlar relógio** no editor de Objetos Inteligentes.
+Selecione o relógio, escolha a ação e conecte um evento ou outra ação à
+**Entrada**. Conecte **Próximo** para continuar a sequência após a operação.
+
+| Ação | Efeito |
+| --- | --- |
+| Avançar relógio | Somar a Quantidade ao progresso atual |
+| Recuar relógio | Subtrair a Quantidade do progresso atual |
+| Definir progresso do relógio | Definir o progresso como Quantidade |
+| Reiniciar relógio | Voltar o progresso a zero; ignora Quantidade |
+
+Quantidade é um inteiro de 0 a 24. O progresso permanece entre zero e o número
+de segmentos do relógio. A entrada numérica **Quantidade** substitui o valor
+salvo; por exemplo, conecte um número de **Ler variável**. O campo de valor
+salvo fica desabilitado enquanto a entrada está conectada; Reiniciar também o
+desabilita, independentemente da conexão.
+
+A ação salva na versão 2 é `clockControl`, com `clockId`, `action`
+(`advance`, `reduce`, `set` ou `reset`) e `amount` inteiro. Nomes de relógios
+permanecem texto autoral. O alvo deve pertencer à campanha e ter escopo da
+campanha ou da cena que executa a regra. Relógios existentes de outra campanha
+ou cena não podem ser vinculados. Um relógio ausente ou indisponível produz
+diagnóstico e recusa a operação sem confirmar efeitos parciais.
+
+**Gerar** cria uma cena nova. Um relógio vinculado à cena atual do projeto pode
+ser salvo, ensaiado e usado por **Atualizar cena**, mas não pode ser levado para
+outra cena recém-gerada. Use um relógio da campanha ou revise e refaça o vínculo
+para a cena de destino; a geração nunca altera o escopo do relógio.
+
+Um vínculo autorado pelo mestre delega aquela operação específica ao mecanismo.
+Um jogador autorizado a interagir com ele pode disparar a operação mesmo
+quando o relógio é privado ou sua edição direta por jogadores está desativada.
+Isso não concede controles gerais nem acesso a nomes, valores ou grafos
+privados. O motor exige um mestre ativo na campanha e mantém as regras de
+transação, revisão, repetição de requisições e notificações após confirmação
+do comando do mapa.
+
+**Simular** lista as ações planejadas sem alterar o progresso salvo.
+**Testar comportamento** usa o motor real do servidor, mostra o progresso de
+cada relógio antes e depois e reverte registros e recibos de relógios junto com
+o restante do ensaio. Durante o jogo, alterações confirmadas atualizam a mesma
+janela de relógios e o HUD fixado permitido. Abrir o editor ou executar uma
+prévia preserva o progresso salvo.
+
+### Controlar pistas
+
+Prepare uma [pista](clues.md) na mesa ou no gerenciamento e escolha
+**Adicionar nó → Ações → Controlar pista**. Selecione a pista e conecte o evento
+à **Entrada**. Conecte **Próximo** para continuar após a operação. Não há porta
+Alvo: o mestre escolhe a pista específica no nó.
+
+| Ação | Resultado |
+| --- | --- |
+| Avançar pista | Somar Quantidade ao progresso |
+| Recuar pista | Subtrair Quantidade do progresso |
+| Definir progresso da pista | Definir o progresso como Quantidade |
+| Reiniciar pista | Voltar o progresso a zero |
+| Revelar pista | Completar o progresso e definir a visibilidade para Jogadores |
+| Ocultar pista | Definir a visibilidade para apenas mestre, preservando o progresso |
+
+Quantidade é um inteiro de 0 a 24. Uma entrada numérica **Quantidade** conectada
+substitui a quantidade configurada, e o progresso fica limitado ao número de
+segmentos da pista. Reiniciar, revelar e ocultar ignoram Quantidade. O nó salvo
+na versão 2 é `clueControl`, com `clueId`, `action` (`advance`, `reduce`, `set`,
+`reset`, `reveal` ou `hide`) e `amount` inteiro.
+
+Jogadores veem uma descoberta apenas com progresso completo e visibilidade
+Jogadores. O servidor omite registros desconhecidos e todas as notas do mestre
+das projeções para jogadores e espectadores. Um jogador pode acionar a operação
+específica de um mecanismo criado pelo mestre sem receber permissão geral de
+editar pistas. A execução exige um mestre ativo na campanha e valida os escopos
+de campanha e cena da pista.
+
+Pistas da campanha podem acompanhar uma cena recém-gerada. Uma pista vinculada
+à cena atual pode ser salva, testada e usada ao atualizar essa cena, mas **Gerar**
+cria uma cena diferente. Refaça o vínculo do alvo ou use uma pista da campanha
+para a cena nova; gerar não altera o escopo da pista.
+
+**Simular** preserva o progresso salvo. **Testar comportamento** apresenta as
+alterações pelo motor real do servidor e reverte registros, recibos e
+notificações de pistas. Interações confirmadas durante o jogo atualizam o painel
+compartilhado e a exibição fixada permitida. Recuar para menos que o progresso
+completo, reiniciar ou ocultar remove a pista da visualização atual dos jogadores.
 
 ### Superfícies dinâmicas
 

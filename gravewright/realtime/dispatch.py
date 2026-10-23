@@ -60,6 +60,8 @@ def changed(campaign_id, user_id, resource, action, request_id, result=None):
         from gravewright.maps.models import SceneObject
         if result.get('map_locations_changed') or SceneObject.objects.filter(scene__campaign_id=campaign_id, kind='journalPins').exists():
             events.append({'type': 'room.map_layers'})
+    elif resource in ('clocks', 'clues'):
+        events = [{'type': 'room.resources', 'module': resource}]
     elif resource in ('items','combat','cards','audio','compendiums'):
         events = [{'type':'room.resources','module':name} for name in ('items','combat','cards','audio','compendiums')]
         if resource == 'compendiums' and result.get('kind') == 'scene':

@@ -277,7 +277,13 @@ class PublicPdfApiTests(TestCase):
         operations = public.operations()
         self.assertEqual(set(operations), {"pdf.read", "pdf.configure", "pdf.exportMapping", "pdf.applyMapping", "pdf.diagnostics", "pdf.roll",
                                             "pdf.templates.list", "pdf.templates.read", "pdf.templates.create", "pdf.templates.update", "pdf.templates.delete",
-                                            "pdf.templates.import", "pdf.templates.export", "pdf.templates.apply"})
+                                            "pdf.templates.import", "pdf.templates.export", "pdf.templates.apply",
+                                            "preparation.diagnostics"})
+        self.assertEqual(operations["preparation.diagnostics"]["effect"], "read")
+        with self.assertRaises(MapError):
+            operations["preparation.diagnostics"]["handler"](self.campaign.pk, self.player.pk, {}, None)
+        issues = operations["preparation.diagnostics"]["handler"](self.campaign.pk, self.gm.pk, {}, None)["issues"]
+        self.assertTrue(all(issue["actorId"] and issue["message"] for issue in issues))
         self.assertEqual(operations["pdf.read"]["effect"], "read")
         self.assertEqual(operations["pdf.configure"]["effect"], "write")
         read = operations["pdf.read"]["handler"](self.campaign.pk, self.player.pk, {"actorId": str(self.actor.pk)}, None)

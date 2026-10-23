@@ -4,7 +4,7 @@
 
 ## Instalar, configurar e executar
 
-Use **macOS 13.5 ou superior**, em Intel x64 ou Apple Silicon ARM64, com navegador moderno com WebGL. A alternativa privada do Node.js segue os [requisitos macOS do Node.js 24](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). O **pacote 0.2.1 atualizado em 13 de outubro de 2026** inclui estes launchers, assim como pacotes completos gerados por [build_release.py](../../scripts/build_release.py).
+Use **macOS 13.5 ou superior**, em Intel x64 ou Apple Silicon ARM64, com navegador moderno com WebGL. A alternativa privada do Node.js segue os [requisitos macOS do Node.js 24](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). A release **0.3.2** preparada inclui estes inicializadores no pacote completo **`Gravewright-0.3.2-django.zip`**, gerado por [build_release.py](../../scripts/build_release.py).
 
 **Mac Intel exige as Command Line Tools da Apple (ou um Xcode selecionado com compilador e SDK)** para compilar a dependência descrita abaixo. Homebrew não é necessário.
 
@@ -79,7 +79,7 @@ O instalador cria/completa **o `.env` do projeto** a partir de `.env.example`, p
 | `logs/runner.log` no estado do Runner | Diagnóstico de inicialização/execução |
 | `runner.lock`, `.runner-launchers/`, `updates/` no estado | Bloqueio da instância, cópias imutáveis do launcher e recuperação de atualização |
 
-`--data-dir` muda **o estado do Runner**, não o banco ou uploads; configure-os no `.env`. Defina `GRAVEWRIGHT_RUNNER_ROOT` com um caminho expl?cito absoluto ou relativo ao projeto antes de instalar para escolher outra pasta de ferramentas privadas, por exemplo em um teste isolado. Isso não muda HOME nem importa configuração de outra instalação. Mover o projeto exige instalar novamente: o ambiente preparado e o estado do frontend ficam associados à localização do código.
+`--data-dir` muda **o estado do Runner**, não o banco ou uploads; configure-os no `.env`. Defina `GRAVEWRIGHT_RUNNER_ROOT` com um caminho explícito absoluto ou relativo ao projeto antes de instalar para escolher outra pasta de ferramentas privadas, por exemplo em um teste isolado. Isso não muda HOME nem importa configuração de outra instalação. Mover o projeto exige instalar novamente: o ambiente preparado e o estado do frontend ficam associados à localização do código.
 
 ## Execução local, atualização e backups
 
@@ -87,13 +87,13 @@ O Runner atende HTTP apenas em `127.0.0.1`, com um processo servidor e Channels 
 
 Pare o Runner antes de alterar configurações ou fazer backup. Preserve juntos banco configurado, mídias privadas e `.env`; guarde também o estado do Runner para recuperação de atualizações. Migrações podem tornar versões antigas incompatíveis. Atualizações gerenciadas compatíveis substituem arquivos e regeneram o launcher macOS; cópias imutáveis em `.runner-launchers` separam o launcher em execução dos arquivos substituídos. Em atualização manual ou projeto movido, execute o instalador da nova pasta antes de iniciar. Veja [implantação e rollback](deployment.md).
 
-### Reinstalar o pacote 0.2.1 atualizado
+### Atualizar ou reinstalar a 0.3.2
 
-O reempacotamento de 13 de outubro de 2026 preserva versão `0.2.1`, canal `stable`, estágio Alpha e **Gravewright-0.2.1-django.zip**. Hosts que já usam 0.2.1 não recebem atualização automática da mesma versão. Baixe o ZIP atualizado e seu arquivo SHA-256 correspondente; não reutilize o checksum do pacote anterior.
+A versão **0.3.2** mantém o estágio Alpha de desenvolvimento e a convenção de canal das versões numéricas. Use o ZIP completo e seu SHA-256 correspondente. Uma instalação gerenciada compatível pode oferecê-la pela Administração após a publicação. Hosts que já usam 0.3.2 não recebem atualização automática da mesma versão; reinstale esse pacote manualmente.
 
-Pare o Runner e faça backup do `.env`, dos caminhos configurados de banco/mídias/módulos e do estado. Substitua os arquivos da aplicação pelo pacote atualizado completo na pasta existente, preservando configuração e dados. Abra novamente **`Install macOS.command`** e use o Runner regenerado. O script de entrada e seus scripts de apoio precisam ser substituídos juntos. Ao mover o projeto, preserve os caminhos dos dados e prepare a nova pasta com o instalador.
+Pare o Runner e faça backup do `.env`, dos caminhos configurados de banco/mídias/módulos e do estado. Substitua os arquivos da aplicação pelo pacote completo na pasta existente, preservando configuração e dados. Abra novamente **`Install macOS.command`** para preparar as dependências fixadas e aplicar migrações; use o Runner regenerado. O script de entrada e seus scripts de apoio precisam ser substituídos juntos. Ao mover o projeto, preserve os caminhos dos dados e prepare a nova pasta com o instalador. Veja o [guia de atualização](upgrading.md) e as [notas da 0.3.2](../releases/0.3.2.md) para as novas migrações.
 
-`SIGHUP` usa o encerramento ordenado do Runner, incluindo a limpeza do supervisor. Uma transação de atualização interrompida é recuperada na próxima inicialização; preserve `.runner-launchers/` e `updates/` junto do estado. Veja as [notas bilíngues da atualização 0.2.1](../releases/0.2.1.md). A matriz nativa de CI inclui Intel e Apple Silicon; consulte os resultados do workflow para a validação efetiva de cada plataforma.
+`SIGHUP` usa o encerramento ordenado do Runner, incluindo a limpeza do supervisor. Uma transação de atualização interrompida é recuperada na próxima inicialização; preserve `data/.runner-launchers/` e `data/updates/`, ou seus equivalentes em um caminho explicitamente configurado. As [notas históricas do reempacotamento da 0.2.1](../releases/0.2.1.md) continuam específicas daquela reedição antiga. A matriz nativa de CI inclui Intel e Apple Silicon; consulte os resultados do workflow para a validação efetiva de cada plataforma.
 
 ## Verificações sem perguntas e solução de problemas
 

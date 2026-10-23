@@ -28,7 +28,7 @@ Keep database schema changes in migrations. Never edit an already published migr
 
 Do not commit `.env`, database files, uploaded documents, installed modules, private keys, browser session state or `test-results/`. Use fake accounts and assets you are authorized to distribute in test fixtures.
 
-There is currently no repository-wide formatter/linter configuration or CI workflow defining additional mandatory checks. Follow nearby style and report the commands you actually ran; do not claim CI passed when it did not run.
+There is currently no repository-wide formatter/linter configuration. The [automatic updates workflow](.github/workflows/automatic-updates.yml) checks upgrade recovery on Windows, Linux and macOS, plus browser and module behavior. Follow nearby style, run checks appropriate to the change and report the commands you actually ran; do not claim CI passed when it did not run.
 
 ## Licensing contributions
 

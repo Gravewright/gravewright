@@ -75,3 +75,27 @@ class BoardEntry(models.Model):
     class Meta:
         ordering = ['sort_order', 'id']
         constraints = [models.UniqueConstraint(fields=['board', 'quest'], name='journal_unique_board_quest')]
+
+
+class Revision(models.Model):
+    """Earlier journal state, or a deleted journal retained in the campaign trash.
+
+    ``journal_id`` is not a foreign key so a deleted document keeps its history.
+    ``retained`` holds grants, board links and asset rows needed to restore it.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    campaign = models.ForeignKey('gravewright_campaigns.Campaign', on_delete=models.CASCADE, related_name='+')
+    journal_id = models.UUIDField(db_index=True)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='+')
+    reason = models.CharField(max_length=8, choices=[('update', 'Update'), ('delete', 'Delete')])
+    title = models.CharField(max_length=120)
+    type = models.CharField(max_length=16)
+    visibility = models.CharField(max_length=8)
+    folder_id = models.UUIDField(null=True, blank=True)
+    data = models.JSONField(default=dict)
+    version = models.PositiveIntegerField()
+    retained = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']

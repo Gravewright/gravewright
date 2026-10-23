@@ -18,7 +18,7 @@ from .packages import ModuleFailure
 
 CONTRACT = json.loads((Path(__file__).parent / 'contracts/frontend.json').read_text(encoding='utf-8'))
 DOMAINS = {'actors': actors, 'tokens': tokens, 'maps': maps, 'journals': journals}
-RESOURCE_DOMAINS = {'items', 'combat', 'cards', 'audio', 'compendiums'}
+RESOURCE_DOMAINS = {'items', 'combat', 'cards', 'audio', 'compendiums', 'clocks', 'clues'}
 
 
 def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene_id=None):
@@ -33,6 +33,8 @@ def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene
     p = dict(payload)
     # A mounted scene is authoritative; a payload cannot silently retarget it.
     if scene_id is not None:
+        if domain in ('clocks', 'clues') and p.get('scopeSceneId') is not None and str(p['scopeSceneId']) != str(scene_id):
+            raise ModuleFailure('stale_context')
         if domain == 'maps' and method == 'navigate' and any(key in p and p[key] is None for key in ('sceneId', 'mapId')):
             raise ModuleFailure('stale_context')
         for key in ('sceneId', 'mapId'):
@@ -149,6 +151,12 @@ def call(request, table_id, module_id=None):
     if module_id is not None:
         from .views import identity
         _, _, scene = identity(request, table_id, module_id, data)
-    value = invoke(table_id, request.user.pk, data.get('domain'), data.get('method'),
-                   data.get('payload', {}), data.get('requestId'), scene)
+    try:
+        value = invoke(table_id, request.user.pk, data.get('domain'), data.get('method'),
+                       data.get('payload', {}), data.get('requestId'), scene)
+    except ModuleFailure as error:
+        failure = {'error': error.code}
+        if error.message != error.code:
+            failure['message'] = error.message
+        return JsonResponse(failure, status=error.status)
     return JsonResponse({'value': value})

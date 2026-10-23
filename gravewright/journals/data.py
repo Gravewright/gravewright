@@ -22,6 +22,7 @@ OBJECTIVE_LIMIT = 64
 REWARD_LIMIT = 64
 TAG_LIMIT = 32
 SECTION_LIMIT = 64
+PREREQUISITE_LIMIT = 16
 ROLL_TABLE_ENTRY_LIMIT = 256
 
 
@@ -221,6 +222,8 @@ def normalize_quest_data(raw: object) -> dict:
         "rewards": rewards,
         "tags": tags,
         "assignees": list(dict.fromkeys(str(value) for value in raw.get('assignees', [])[:32])) if isinstance(raw.get('assignees'), list) else [],
+        # GM planning links to other quests that should be completed first.
+        "prerequisites": list(dict.fromkeys(_short(value, 40) for value in raw.get('prerequisites', [])[:PREREQUISITE_LIMIT] if _short(value, 40))) if isinstance(raw.get('prerequisites'), list) else [],
     }
 
 
@@ -284,6 +287,7 @@ def build_quest_gm_view(*, title: str, data: dict) -> dict:
         "display_rewards": visible_rewards,
         "tags": data["tags"],
         "assignees": data['assignees'],
+        "prerequisites": data["prerequisites"],
     }
 
 

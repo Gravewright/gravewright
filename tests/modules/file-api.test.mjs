@@ -306,3 +306,19 @@ test('HttpClient.upload fourth options bind CSRF and upload to the requested sig
   assert.equal(requests[3].signal, scope.signal);
   assert.equal(Object.hasOwn(requests[3], 'timeoutMs'), false);
 });
+
+test('HTTP errors retain stable codes and the server display message for JSON and file reads', async t => {
+  browser(t);
+  const message = 'This deleted document uses files that are missing. Restore the files before trying again.';
+  const payload = JSON.stringify({ error: 'invalid_data', message });
+  const client = new HttpClient({
+    send: async () => ({ ok: false, status: 400, text: payload }),
+    request: async () => new Response(payload, { status: 400 }),
+  });
+  for (const read of [() => client.get('/api/resource'), () => client.download('/api/resource')])
+    await assert.rejects(read(), { name: 'ApiError', code: 'invalid_data', status: 400, message });
+  const legacy = new HttpClient({ send: async () => ({ ok: false, status: 409, text: '{"error":"conflict"}' }) });
+  await assert.rejects(legacy.get('/api/resource'), { code: 'conflict', message: 'conflict' });
+  const malformed = new HttpClient({ send: async () => ({ ok: false, status: 500, text: '<html>Failed</html>' }) });
+  await assert.rejects(malformed.get('/api/resource'), { code: 'request_failed', message: 'request_failed' });
+});

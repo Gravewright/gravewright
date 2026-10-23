@@ -107,6 +107,21 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
         for (const change of result.changes?.journals || []) if (change.after) {
             line('Quest', `${change.after.title || change.before?.title || t('Quest')} · ${questStatus(change.before?.status)} → ${questStatus(change.after.status)}`);
         }
+        for (const change of result.changes?.clocks || []) if (change.after) {
+            const label = change.after.name || change.before?.name || t('Clock');
+            const row = make('p', { 'data-playtest-clock': change.id });
+            row.append(make('strong', {}, `${t('Clock')}: `), make('span', { translate: 'no' },
+                `${label} · ${change.before?.value ?? 0}/${change.after.segments} → ${change.after.value}/${change.after.segments}`));
+            results.append(row);
+        }
+        for (const change of result.changes?.clues || []) if (change.after) {
+            const label = change.after.name || change.before?.name || t('Clue');
+            const visibility = value => t(value === 'gm' ? 'GM only' : 'Visible to players');
+            const row = make('p', { 'data-playtest-clue': change.id });
+            row.append(make('strong', {}, `${t('Clue')}: `), make('span', { translate: 'no' },
+                `${label} · ${change.before?.value ?? 0}/${change.after.segments} → ${change.after.value}/${change.after.segments} · ${visibility(change.before?.visibility)} → ${visibility(change.after.visibility)}`));
+            results.append(row);
+        }
         const variables = format.variableChanges(result.changes?.sceneVariables?.before, result.changes?.sceneVariables?.after, t('Scene'));
         if (variables.length) line('Variables', variables.join(' · '));
         if (JSON.stringify(result.changes?.audio?.before) !== JSON.stringify(result.changes?.audio?.after)) line('Sound', t('Playback would change'));

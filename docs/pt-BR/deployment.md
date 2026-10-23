@@ -2,7 +2,7 @@
 
 [Documentação](../README.pt-BR.md) · [English](../en/deployment.md)
 
-Este guia cobre a implantação em servidores. Para uma instalação Windows usada apenas no próprio computador, use o [Gravewright Runner](windows-runner.md), que administra o armazenamento pessoal e um perfil local com um único processo.
+Este guia cobre a implantação em servidores. Para uso local, use o Gravewright Runner para [Windows](windows-runner.md), [Linux](linux-runner.md) ou [macOS](macos-runner.md), que administra o armazenamento dentro da instalação e um perfil local com um único processo. Antes de atualizar para a **0.3.2**, siga o [guia de atualização e recuperação](upgrading.md).
 
 ## HTTPS e WebSockets
 
@@ -16,7 +16,7 @@ A origem pública define uma origem permitida; não cria um listener TLS nem con
 
 Use um checkout versionado e uma conta com escrita no banco e no armazenamento privado. Configure `DJANGO_SECRET_KEY` persistente e privada, `DJANGO_DEBUG=false`, hosts explícitos, origem pública e URL do Redis. A origem deve ser HTTP(S), sem caminho ou barra final. HTTPS ativa cookies de sessão/CSRF seguros e HSTS nas configurações.
 
-Gere a chave localmente e guarde em configuração protegida, mantendo-a entre reinicializações:
+Antes de executar uv, configure o [armazenamento das ferramentas dentro da instalação](upgrading.md#armazenamento-local-das-ferramentas) no mesmo terminal. Gere a chave localmente e guarde em configuração protegida, mantendo-a entre reinicializações:
 
 ```bash
 uv run --locked python -c 'import secrets; print(secrets.token_urlsafe(64))'
@@ -32,7 +32,7 @@ uv run --locked --no-dev python manage.py check --deploy
 uv run --locked --no-dev daphne -b 127.0.0.1 -p 3000 config.asgi:application
 ```
 
-Esses comandos pressupõem os valores de produção configurados e pastas existentes. `check --deploy` pode indicar decisões pendentes de configuração; verifique também o endereço público conforme descrito abaixo. O último comando usa HTTP em loopback atrás do proxy TLS. `main.py` usa o `runserver` de desenvolvimento; `config.wsgi` não atende WebSockets.
+Esses comandos pressupõem os valores de produção configurados e pastas existentes. `check --deploy` pode indicar decisões pendentes de configuração; verifique também o endereço público conforme descrito abaixo. O último comando usa HTTP em loopback atrás do proxy TLS. A execução normal de `main.py` inicia o supervisor gerenciado e o Daphne; `main.py --dev` usa o `runserver` de desenvolvimento. A execução direta do Daphne acima deixa supervisão de processos e atualizações com o operador. `config.wsgi` não atende WebSockets.
 
 ## Proxy reverso Nginx
 
@@ -103,7 +103,7 @@ Nginx redireciona HTTP para HTTPS; este checkout não ativa o redirecionamento S
 
 Sirva `/static/` a partir de `staticfiles/`, gerado por `collectstatic`. Recursos atendidos por views próprias, inclusive módulos de frontend, continuam dependendo das rotas da aplicação. Com debug desativado, o Django não serve automaticamente os arquivos coletados pelo handler estático de desenvolvimento.
 
-Mantenha `MEDIA_ROOT` privado: mapas, PDFs, diários, áudio, cartas e pacotes de módulos são atendidos por rotas protegidas. Um alias público `/media/` ignoraria as verificações. Faça backup do armazenamento junto com o banco. Coleções opcionais em `data/vtt/compendiums/` também precisam de backup.
+Mantenha `MEDIA_ROOT` privado: mapas, PDFs, diários, áudio, cartas e pacotes de módulos são atendidos por rotas protegidas. Um alias público `/media/` ignoraria as verificações. Faça backup do armazenamento junto com o banco, incluindo anexos retidos pelo histórico de diários excluídos. Coleções opcionais no `GRAVEWRIGHT_CONTENT_ROOT` configurado também precisam de backup: configurações padrão usam `data/vtt/compendiums/`, enquanto o Runner usa `data/compendiums/`.
 
 Configure limites de upload e timeouts do servidor externo. O limite padrão de bytes de mapa é 50 GiB, enquanto pixels decodificados, dimensões e quantidade de tiles têm limites separados; aceitar muitos bytes não significa que haverá memória suficiente para processar o arquivo.
 
@@ -155,7 +155,9 @@ Use um gerenciador de serviços para supervisionar ASGI e Redis, guardar logs e 
 
 ## Backup e restauração
 
-Exportações são pacotes portáveis de conteúdo; snapshots são pontos de recuperação da campanha. Nenhum deles é um backup completo da instância. Exportações omitem ou ajustam vínculos, proprietários e parte do histórico privado; o estado de instalação de módulos está fora do grafo exportado. Consulte [archives.py](../../gravewright/administration/archives.py).
+Exportações são pacotes portáveis de conteúdo; snapshots são pontos de recuperação da campanha. Na **0.3.2**, exportações completas, cópias e snapshots incluem relógios, pistas, preparação de sessões, cronologia, metadados do painel e histórico/lixeira de diários com anexos retidos. Importações portáveis remapeiam referências, sem criar membros na campanha nem restaurar permissões dos usuários de origem. Snapshots restauram painéis somente de mestres atuais. Pacotes antigos sem metadados de preparação preservam a preparação e o histórico existentes no destino. Consulte [gestão de campanha](campaign-management.md) para as regras de seleção/painel e [archives.py](../../gravewright/administration/archives.py) para o grafo de conteúdo.
+
+Nenhum formato é um backup completo da instância: contas de usuário, configurações do host, estado dos módulos instalados, recibos de comandos e esperas pendentes do Blueprint ficam fora dos pacotes portáveis. Um backup completo de banco/mídia os inclui. Anexos da lixeira continuam ocupando armazenamento privado até serem liberados pela limpeza do histórico; não remova esses arquivos manualmente.
 
 Para um backup completo consistente:
 
@@ -208,12 +210,12 @@ para habilitar o fluxo da interface nessa instalação antiga.
 
 A atualização substitui os arquivos na pasta original do projeto, incluindo `Install Windows.bat`, scripts, assets e o runner gerado. Arquivos da versão anterior que não existem na release nova são removidos. `.env`, ambientes Python, caches e diretórios de dados/extensões locais são preservados. As dependências da versão nova são preparadas isoladamente antes da substituição.
 
-A opção **Manter cópia .old para rollback** vem marcada. Após o sucesso, cria uma pasta interna, por exemplo `data/updates/retained/Gravewright-0.2.3.old`, com o código anterior e os snapshots de banco, mídia e outros dados em `.gravewright-rollback`. Se já existir uma cópia, uma nova recebe um identificador no nome; nenhuma cópia anterior é sobrescrita. Desmarcar elimina a cópia temporária após o sucesso. Durante a instalação sempre existe recuperação temporária: falhas de migração, substituição ou inicialização restauram código, inicializadores e dados. Uma transação interrompida é recuperada na próxima inicialização.
+A opção **Manter cópia .old para rollback** vem marcada. Após o sucesso, a pasta `retained/` do atualizador guarda o código anterior e os snapshots correspondentes em `.gravewright-rollback`. O nome vem da pasta de instalação: por exemplo, `data/updates/retained/gravewright.old` para um Runner extraído como `gravewright`; colisões acrescentam um identificador único. A execução normal por `main.py` usa `data/updates/<installation-hash>/retained/`. Use o caminho real registrado pela instalação, em vez de construí-lo pela versão de destino. Desmarcar elimina a cópia temporária após o sucesso. Durante a instalação sempre existe recuperação temporária: falhas de migração, substituição ou inicialização restauram código, inicializadores e dados. Uma transação interrompida é recuperada na próxima inicialização.
 
 Para restaurar uma cópia retida, encerre o Runner e execute com o Python da instalação (o caminho aparece no BAT gerado):
 
 ```bat
-"CAMINHO_DO_PYTHON\python.exe" -X utf8 scripts\rollback_update.py "data\updates\retained\Gravewright-0.2.3.old"
+"CAMINHO_DO_PYTHON\python.exe" -X utf8 scripts\rollback_update.py "data\updates\retained\gravewright.old"
 ```
 
 A restauração também retorna banco e mídia ao momento do backup; alterações feitas depois dele serão perdidas. Preserve a pasta de estado e os ambientes de atualização junto da cópia `.old`, pois ela referencia o Python anterior. Checkouts Git com alterações locais continuam bloqueados contra atualização. Não execute outro servidor contra o mesmo banco durante atualização ou restauração.

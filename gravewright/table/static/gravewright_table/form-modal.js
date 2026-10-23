@@ -27,7 +27,8 @@ export function openFormModal(title, fields, save, {key = 'form', submitLabel} =
     const input = document.createElement(field.options ? 'select' : field.multiline ? 'textarea' : 'input');
     input.name = field.name;
     if (field.options) for (const option of field.options) input.add(new Option(option.label, option.value));
-    else input.type = field.type || 'text';
+    // A textarea's type is read-only; assigning it throws in module code.
+    else if (!field.multiline) input.type = field.type || 'text';
     input.value = field.value ?? '';
     if (field.type === 'checkbox') input.checked = !!field.value;
     input.required = !!field.required;

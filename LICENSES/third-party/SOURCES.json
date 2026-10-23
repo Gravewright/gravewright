@@ -275,9 +275,9 @@
   {
     "file": "LICENSES/third-party/python/pillow/LICENSE",
     "package": "pillow",
-    "version": "12.3.0",
-    "source": "Installed pillow==12.3.0: pillow-12.3.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
-    "sha256": "dda12a98c1979cf3d94df1cff45d27a4cb3f04a60c76f76902ac54cac03ec0ce"
+    "version": "13.0.0",
+    "source": "Pillow 13.0.0 Windows CPython 3.14 wheel, verified against uv.lock: https://files.pythonhosted.org/packages/50/e2/7ad17747517e4c813dca78257d6bb593466f8231baf1384bc98d92745edb/pillow-13.0.0-cp314-cp314-win_amd64.whl; pillow-13.0.0.dist-info/licenses/LICENSE",
+    "sha256": "988ffe8ab3480b0f4e9a0ab2702bffd73d9fb6b47198043fb3ba101a62fac236"
   },
   {
     "file": "LICENSES/third-party/python/playwright/LICENSE",

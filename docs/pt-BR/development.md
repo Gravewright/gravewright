@@ -51,20 +51,27 @@ Os documentos da gramática de dados são mantidos junto à implementação. Os 
 
 ## Identificadores da versão
 
-A release atual é **0.3.1**. Os manifests da aplicação usam estes identificadores, seguindo os formatos exigidos por cada ferramenta:
+A versão atual do projeto é **0.3.2**. Os manifests da aplicação e a release preparada usam estes identificadores, seguindo os formatos exigidos por cada ferramenta:
 
 | Local | Identificador |
 | --- | --- |
-| Nome público completo | `Gravewright 0.3.1 — Alpha` |
-| Versão da aplicação e do Runner | `0.3.1` |
-| Projeto Python e `uv.lock` | `0.3.1` |
-| Pacote frontend, package lock e API de atualização | `0.3.1` |
-| Tag do release | `v0.3.1` |
-| Artefato do código-fonte | `Gravewright-0.3.1-django.zip` |
+| Nome público completo | `Gravewright 0.3.2 — Alpha` |
+| Versão da aplicação e do Runner | `0.3.2` |
+| Projeto Python e `uv.lock` | `0.3.2` |
+| Pacote frontend, package lock e API de atualização | `0.3.2` |
+| Tag planejada da release | `v0.3.2` |
+| Artefato planejado do código-fonte | `Gravewright-0.3.2-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
 
-A release `0.3.1` segue a convenção `stable` de descoberta para identificadores numéricos; o projeto permanece em Alpha. Administração mostra o nome completo da versão, sem seletor de canal. Preferências de canal existentes e compatibilidade da API são preservadas. Veja as [notas da 0.3.1](../releases/0.3.1.md) para mudanças e instruções de atualização.
+A versão `0.3.2` segue a convenção `stable` de descoberta para identificadores numéricos; o projeto permanece em Alpha. Administração mostra o nome completo da versão, sem seletor de canal. Preferências de canal existentes e compatibilidade da API são preservadas. A versão `0.3.2` é maior que `0.3.1`, mas menor que a antiga `3.0.1`, numerada incorretamente. Instalações que informam `3.0.1` precisam de instalação ou migração manual após backup conjunto de código, configuração, banco e mídias; confira primeiro a compatibilidade do esquema em uma cópia descartável. Não execute código antigo contra um banco mais novo para forçar uma redução de versão. Preserve as notas históricas como histórico. Veja as [notas da 0.3.2](../releases/0.3.2.md) e o [guia de atualização](upgrading.md) para mudanças e migrações necessárias. Uma versão, nota ou nome de artefato preparado não significa que uma tag, download ou resultado de CI já tenha sido publicado.
+
+O SDK permanece em `1.0.0`; o registro aditivo do frontend do navegador tem
+versão própria em `gravewright/modules/contracts/frontend.json`. Os novos
+domínios de relógios/pistas e as operações do PDF System exigem um host que os
+implemente, independentemente da faixa de SDK da extensão. Regenere o registro
+do frontend ao alterar o contrato-fonte e confira-o com
+`scripts/generate_frontend_api.py --check`.
 
 ## Gerar o pacote de uma release
 

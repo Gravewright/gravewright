@@ -1,6 +1,22 @@
 {
   "version": "1.2.0",
   "domains": {
+    "clues": {
+      "create": "create",
+      "update": "update",
+      "advance": "advance",
+      "reset": "reset",
+      "reveal": "reveal",
+      "hide": "hide",
+      "delete": "delete"
+    },
+    "clocks": {
+      "create": "create",
+      "update": "update",
+      "advance": "advance",
+      "reset": "reset",
+      "delete": "delete"
+    },
     "actors": {
       "create": "actor.create",
       "update": "actor.update",
@@ -55,7 +71,11 @@
       "pinQuest": "board-pin",
       "reorderQuests": "board-reorder",
       "roll": "roll",
-      "reset": "reset"
+      "reset": "reset",
+      "setPrerequisites": "prerequisites",
+      "restoreRevision": "restore-revision",
+      "restoreDeleted": "restore-deleted",
+      "purgeDeleted": "trash-purge"
     },
     "items": {
       "create": "create",
@@ -189,7 +209,7 @@
   },
   "global": {
     "accounts": ["status", "session", "login", "register", "setup", "logout", "update", "home", "privacy"],
-    "campaigns": ["list", "create", "update", "join", "remove", "invite", "removalCode", "invitationStatus", "revokeInvitation", "banMember", "onboarding", "configureOnboarding", "claimCharacter", "streamerLink", "revokeStreamer", "rulesets", "management"],
+    "campaigns": ["list", "create", "update", "join", "remove", "invite", "removalCode", "invitationStatus", "revokeInvitation", "banMember", "onboarding", "configureOnboarding", "claimCharacter", "streamerLink", "revokeStreamer", "rulesets", "management", "preparation", "prepare", "references", "viewAs", "journalHistory", "journalRevision", "journalTrash"],
     "administration": ["status", "diagnostics", "settings", "updateSettings", "snapshots", "createSnapshot", "snapshotAction", "previewSnapshot", "restoreSnapshot", "deleteSnapshot", "clonePreview", "clone", "exportCampaign", "importCampaign", "updates"],
     "administration.updates": ["check", "notification", "channel", "apply"],
     "modules": ["list", "catalog", "catalogLatest", "status", "install", "state", "configure", "activation", "update", "removalPreview", "remove", "defaultMarketplace", "configureDefaultMarketplace", "acknowledge", "localInstallationInfo", "installLocal"]

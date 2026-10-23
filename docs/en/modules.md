@@ -17,10 +17,13 @@ must document VTT 0.2.1 as their minimum and check optional browser APIs before
 calling them. VTT 0.2.0 already introduced private `context.i18n` catalogs;
 0.2.1 also resolves translated document-type labels in native directories.
 
-Game rules, choices, sheet layouts and game translation catalogs belong to the
-installed system or its trusted companion app. The core validates descriptors,
-authorization and storage without interpreting a game's rules. See the
-[0.2.1 release notes](../releases/0.2.1.md) for installation and upgrade steps.
+Game rules, choices, sheet layouts, automation and game translation catalogs
+belong together in one installable system package. Do not require a separately
+installed Server Rules companion under Modules. The core validates descriptors,
+authorization and storage without interpreting a game's rules. The version
+references above describe historical minimum hosts; see the
+[0.3.2 release notes](../releases/0.3.2.md) for the current upgrade details and
+[API reference](api.md) for the current browser and Python markers.
 
 ## Trust and installation boundaries
 
@@ -344,13 +347,13 @@ Browser tests require the development dependencies and installed Playwright brow
 
 A manifest may declare `locales`, mapping locale IDs to `{ "name": "Português (Brasil)", "path": "locales/pt-BR.json" }`. Catalog files are nonempty JSON objects mapping original UI strings to translations, preserving `{name}`-style placeholders. English is built into the host and cannot be overridden; a package cannot combine `system` and `locales`. Language packages cannot contain Python.
 
-Language packages appear in Installed modules. An owner uses `POST /api/module-packages/activation` with `{ "id": "gravewright.translator", "version": "0.1.0", "enabled": true }` to activate one installation-wide language package. Activation verifies the installed signed archive. Campaign module configuration rejects language packages and the table extension list omits them.
+Language packages appear in Installed modules. An owner uses `POST /api/module-packages/activation` with `{ "id": "gravewright.translator", "version": "<installed-version>", "enabled": true }` to activate one installation-wide language package. Replace the placeholder with the exact installed package version, which is independent of the VTT release. Activation verifies the installed signed archive. Campaign module configuration rejects language packages and the table extension list omits them.
 
 After activation, each authenticated user can choose a language in internal account Settings. The choice is stored in `UserPreference.locale`; a signed cookie supports the anonymous login screen. A different signed-in account does not inherit the previous account's cookie preference. Disabling/revoking the package restores English on the next page load and removes the selector. Reload existing pages after changing global activation.
 
 The host translates application dictionaries and literal template text. Reactive template labels are translated before Datastar processes them to avoid conflicting DOM observers. Browser-created controls use the static catalog; user-authored names, chat and editable content are excluded. This does not translate PDFs, rule content or arbitrary third-party interfaces.
 
-The Translator Django app is maintained at <https://github.com/Gravewright/translator>. Its build command creates the portable signed release input; the Django authoring app is not needed after marketplace installation. See its `VALIDATION.md` for offline/online browser coverage. The host changes in this development checkout are required by the Translator v0.1.0 preview.
+The Translator Django app is maintained at <https://github.com/Gravewright/translator>. Its build command creates the portable signed release input; the Django authoring app is not needed after marketplace installation. See that package's documentation for its build and validation workflow. The host owns the locale activation contract and runtime translation hooks documented here; package versions and VTT versions follow separate release histories.
 
 ### Package library and installation browser
 

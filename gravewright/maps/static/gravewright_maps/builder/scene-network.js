@@ -49,7 +49,7 @@ export function openSceneNetwork({ load, save, discard, campaignId, t, pick, loc
     let catalog = { elements: [] }, network = { nodes: [], edges: [] }, selected = initialElementId, page = 0, zoom = 1;
     let disposed = false, loading = false, child, request = 0, saving = false, width = 0, height = 0, drag, initialOpened = false;
     const kindName = node => t(node.empty === true ? 'Empty Object' : ({ door: 'Door', lever: 'Lever', torch: 'Torch', region: 'Region', image: 'Object' })[node.kind]
-        || ({ light: 'Light', sound: 'Sound', asset: 'Image', handout: 'Handout', user: 'User' })[node.resource] || 'Element');
+        || ({ light: 'Light', sound: 'Sound', asset: 'Image', handout: 'Handout', user: 'User', clock: 'Clock', clue: 'Clue' })[node.resource] || 'Element');
     const label = node => node.missing ? t('Missing target') : node.name || `${kindName(node)} ${node.ordinal || ''}`.trim();
     function resizeZoom(value) {
         const previousZoom = zoom; zoom = Math.max(.4, Math.min(1.5, value));

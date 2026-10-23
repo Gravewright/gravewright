@@ -12,11 +12,11 @@ For local play, use the installer for [Windows](windows-runner.md), [Linux](linu
 
 Extract the whole project into a writable folder first. Installation can download tools and packages; startup uses the prepared environment. Keep the Runner terminal open and press Ctrl+C to stop. The default address is `http://127.0.0.1:3000`. Linux private downloads require glibc; see its guide for recognized distribution families and Alpine/musl limits.
 
-The 0.2.1 archive refreshed on **13 October 2026** includes these Linux/macOS installers alongside Windows. Already-installed 0.2.1 hosts need the refreshed ZIP and matching checksum manually; the automatic updater does not offer the same version again. Stop the Runner, back up `.env`, configured database/media and Runner recovery state, preserve them while replacing application files in the existing folder, then rerun its installer. See the [complete refresh instructions](../releases/0.2.1.md).
+The prepared **0.3.2** release uses **`Gravewright-0.3.2-django.zip`** and its matching checksum, with installers for all three platforms. For an existing installation, follow [upgrading](upgrading.md) before replacing files: this release adds database migrations for clocks, clues, campaign preparation and journal history. The [release notes](../releases/0.3.2.md) describe the resulting behavior and compatibility.
 
 ## Prerequisites
 
-Use Python 3.14 or newer as required by [pyproject.toml](../../pyproject.toml). The project uses Python 3.14 syntax; selecting an older interpreter is not supported. Install uv using its [official installation instructions](https://docs.astral.sh/uv/getting-started/installation/). Run the following commands from the directory containing `manage.py`.
+Use Python 3.14 or newer as required by [pyproject.toml](../../pyproject.toml). The project uses Python 3.14 syntax; selecting an older interpreter is not supported. Install uv using its [official installation instructions](https://docs.astral.sh/uv/getting-started/installation/). Run the following commands from the directory containing `manage.py`, after setting [installation-local tool storage](upgrading.md#local-tool-storage) in that shell. The native installers configure this storage automatically.
 
 ```bash
 uv sync --locked
@@ -31,7 +31,7 @@ uv run --locked python main.py
 
 Open `http://127.0.0.1:3000`. Before an owner exists, `/setup` creates the VTT owner and signs in. Choose a name, email and a password of at least 12 characters. `/register` creates participant accounts after setup; `/login` signs in existing users.
 
-The owner can create campaigns through `/inside`, invite players and enter the table. Campaign membership determines GM/player permissions. See the [user guide](user-guide.md).
+The owner can create campaigns through `/inside`, invite players and enter the table. A GM can also choose **Manage campaign** on a campaign card to prepare sessions, journals, quests, clocks and clues without joining the table. Campaign membership determines GM/player permissions. See the [user guide](user-guide.md) and [campaign management](campaign-management.md).
 
 If you need Django's separate `/admin/` interface:
 
@@ -52,8 +52,10 @@ The generated Runner uses the project `.env` and its database/media paths, while
 | `.env` | Local configuration and private secrets |
 | `data/gravewright.sqlite3` | Default application database |
 | `data/media/` | Default private uploads and installed module packages |
-| `data/vtt/compendiums/` | Optional native content collections read from disk |
-| `staticfiles/` | Output of `collectstatic`; regenerated for deployment |
+| `data/compendiums/` | Runner's disk content collections; standard source settings use `data/vtt/compendiums/` |
+| `data/staticfiles/` | Runner's collected assets; standard source deployment uses root `staticfiles/` |
+| `data/runner/` | Managed tools, environments, caches and temporary files |
+| `data/updates/` | Managed update transactions, releases and retained recovery copies |
 | `data/test-gravewright.sqlite3` | Django test database |
 | `test-results/` | Browser test logs, reports and screenshots |
 

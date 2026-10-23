@@ -8,7 +8,7 @@ As fontes de verdade são [config/environment.py](../../config/environment.py), 
 
 Booleanos aceitam `1/true/yes/y/on` e `0/false/no/n/off`, sem distinguir maiúsculas. Grafias inválidas impedem a inicialização. Limites numéricos do engine devem ser positivos. Nos códigos, mínimo ≤ padrão ≤ máximo; a área do viewport não pode superar largura × altura. `GRAVEWRIGHT_PORT` deve ficar entre 1–65535. Origens públicas normalizam esquema e hostname para minúsculas, preservando portas explícitas e colchetes IPv6; assim, `HTTPS://VTT.EXAMPLE.COM` ativa as mesmas configurações HTTPS que `https://vtt.example.com`. Rejeitam caminhos, barra final, credenciais, portas vazias, caracteres de controle, query e fragmentos, incluindo delimitadores `?` ou `#` vazios. Isso não significa que toda configuração use o mesmo parser numérico ou limite superior.
 
-O [executor Windows](windows-runner.md) lê os padrões do `.env.example` e depois o `.env` na raiz do projeto, com limites de segurança locais impostos por seu perfil específico. Se o `.env` do projeto não existir, gera uma configuração completa a partir de `.env.example`, com uma nova chave privada. Nunca importa configurações da pasta de dados do usuário. A referência abaixo descreve as configurações padrão do servidor; os recursos também se aplicam ao executor, enquanto endereço de escuta, debug, cookies, host/origem, confiança de proxy e Channels em um único processo são fixados para execução local. Configure a porta do executor no `.env` do projeto.
+O Runner nativo para [Windows](windows-runner.md), [Linux](linux-runner.md) e [macOS](macos-runner.md) lê os padrões do `.env.example` e depois o `.env` na raiz do projeto, com limites de segurança locais impostos por seu perfil específico. Se o `.env` do projeto não existir, gera uma configuração completa a partir de `.env.example`, com uma nova chave privada. Nunca importa configurações da pasta de dados do usuário. A referência abaixo descreve as configurações padrão do servidor; os recursos também se aplicam ao Runner, enquanto endereço de escuta, debug, cookies, host/origem, confiança de proxy e Channels em um único processo são fixados para execução local. Configure a porta do Runner no `.env` do projeto.
 
 ## Referência de ambiente
 
@@ -23,6 +23,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `GRAVEWRIGHT_PUBLIC_ORIGIN` | vazio | Origem pública HTTP(S); fixa origem/Host WebSocket incluindo porta, adiciona host e origem CSRF, ativa cookies Secure em HTTPS |
 | `GRAVEWRIGHT_DATABASE` | `data/gravewright.sqlite3` | Arquivo SQLite relativo à raiz; :memory: é aceito |
 | `GRAVEWRIGHT_MEDIA_ROOT` | `data/media` | Armazenamento privado de uploads/módulos relativo à raiz |
+| `GRAVEWRIGHT_CONTENT_ROOT` | `data/vtt/compendiums` | Coleções em disco nas configurações padrão de servidor; o Runner usa `compendiums/` em sua pasta de estado |
 | `GRAVEWRIGHT_MODULES_ROOT` | `GRAVEWRIGHT_MEDIA_ROOT/modules` | Pasta privada onde arquivos ZIP de módulos e pacotes extraídos são instalados; pode ser absoluta ou relativa à raiz |
 | `GRAVEWRIGHT_API_MODULES_ROOT` | `extensions/api` | Pasta padrão dos fontes de módulos de navegador, relativa à raiz; pacotes assinados instalados continuam sob a raiz de mídia |
 | `GRAVEWRIGHT_DJANGO_MODULES_ROOT` | `extensions/django` | Pasta padrão dos apps Django confiáveis, relativa à raiz; acrescentada ao `sys.path` quando existe |
@@ -32,7 +33,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `GRAVEWRIGHT_AUTH_WINDOW_SECONDS` | `300` | Janela de autenticação em segundos |
 | `GRAVEWRIGHT_REDIS_URL` | vazio | URL Redis do Channels; as configurações padrão do servidor permitem vazio/memória somente em debug |
 | `APP_NAME` | `Gravewright` | Nome padrão do produto; preferências persistidas podem substituir |
-| `DEFAULT_LOCALE` | `en` | Idioma padrão; o idioma da instância atualmente suportado é en |
+| `DEFAULT_LOCALE` | `en` | Idioma padrão; idiomas adicionais exigem pacote de tradução instalado e ativo |
 | `PRIVACY_ENABLED` | `false` | Valor inicial de publicação da privacidade; o checkbox salvo em Privacidade prevalece |
 | `CAMPAIGN_JOIN_CODE_ENABLED` | `true` | Ativa fluxo de códigos de entrada |
 | `CAMPAIGN_CLONE_ENABLED` | `true` | Ativa clonagem de campanhas |
@@ -144,18 +145,36 @@ Estas opções são definidas em Python, sem leitura automática de entradas com
 | `DATA_UPLOAD_MAX_MEMORY_SIZE` | 8 MiB para tratamento de dados de requisição Django; não é limite universal de arquivos enviados |
 | `SESSION_COOKIE_AGE` | 12 horas; dados de sessão ficam no banco |
 | `TIME_ZONE` | `America/Sao_Paulo`, com datas que consideram fuso |
-| `STATIC_ROOT` | `staticfiles/` na raiz do código |
-| `GRAVEWRIGHT_CONTENT_ROOT` | Override opcional nas configurações Django para o catálogo; fallback `data/vtt/compendiums/`. Apenas exportar esse nome no `.env` não tem efeito |
+| `STATIC_ROOT` | `staticfiles/` na raiz do código; o Runner usa `staticfiles/` em sua pasta de estado |
 | `MAILERS.default` | Backend de e-mail de console |
 
 Corpos de autenticação têm limite separado de 16 KiB no middleware. Importações/exportações têm limites em `gravewright/administration/archives.py`. Uploads de mapa têm limites independentes de bytes, imagem decodificada e tiles gerados. Confira o código responsável antes de presumir que um limite governa todos os caminhos.
 
 ## Preferências persistidas da instância
 
-`gravewright.administration.preferences` armazena identidade, canais de atualização e conteúdo de privacidade no singleton `HostSettings`. `APP_NAME` e `DEFAULT_LOCALE` são fallbacks, sem substituir obrigatoriamente os valores salvos. A lista de idiomas suportados é `('en',)`. Definir `DEFAULT_LOCALE=pt-BR` não acrescenta uma interface em português.
+`gravewright.administration.preferences` armazena identidade, canais de atualização e conteúdo de privacidade no singleton `HostSettings`. `APP_NAME` e `DEFAULT_LOCALE` são fallbacks, sem substituir obrigatoriamente os valores salvos. Inglês é nativo; a lista de idiomas disponíveis vem dos pacotes compatíveis instalados e ativos globalmente. O instalador nativo instala e ativa o Translator oficial quando `pt-BR` é escolhido. Apenas definir `DEFAULT_LOCALE=pt-BR` em uma instalação manual do código-fonte não instala esse pacote. Escolhas de idioma dos usuários têm prioridade sobre os padrões da instância.
 
 A publicação da privacidade fica ativa se a opção de ambiente ou a persistida for verdadeira. Retenção de snapshots/auditoria é aplicada pelos fluxos das operações, não por um agendador em segundo plano fornecido pelo projeto. Preferências individuais e configurações de campanha são separadas das configurações da instância.
 
 Para HTTPS, defina a origem pública exata acessada pelo navegador, incluindo portas diferentes da padrão. Outras entradas em `DJANGO_ALLOWED_HOSTS` não se tornam origens WebSocket adicionais quando existe origem pública configurada. Sem ela, a validação WebSocket deriva a origem do esquema ASGI e Host; esquema ausente assume HTTP.
 
 O [adaptador de proxy ASGI](../../config/proxy.py) aceita exatamente um cabeçalho `X-Forwarded-Proto` com valor `http` ou `https` apenas do par imediato conectado em `TRUSTED_PROXIES`. Ignora valores duplicados, separados por vírgula, malformados ou de origem não confiável. Mantenha `--proxy-headers` do Daphne desativado para preservar o endereço original nessa verificação. A mesma lista controla o [IP encaminhado](../../gravewright/accounts/client_ip.py). Veja [implantação](deployment.md) para um exemplo de proxy TLS e requisitos de Redis e armazenamento.
+
+## Armazenamento do Runner dentro da instalação
+
+O estado padrão permanece no projeto descompactado: `data/` para logs, locks,
+assets coletados e coleções de conteúdo; `data/runner/` para ferramentas
+gerenciadas, ambientes, caches e arquivos temporários; `data/updates/` para
+transações de atualização e recuperação. Instalador, Runner e `main.py`
+configuram o armazenamento dos processos filhos antes de executar ferramentas.
+Nenhum padrão escolhe configurações ou release ativa em AppData, HOME, XDG ou
+Library do macOS.
+
+`--data-dir` do Runner escolhe sua pasta de estado, inclusive `compendiums/` e
+`staticfiles/`; não muda o banco nem os uploads. Defina os caminhos explícitos
+deles no `.env` do projeto. Um `GRAVEWRIGHT_RUNNER_ROOT` explícito escolhe o
+armazenamento de ferramentas/caches. Caminhos relativos partem da raiz da
+instalação. Uma pasta sem permissão de escrita gera erro, sem trocar para uma
+pasta compartilhada do usuário. Para comandos manuais de terminal, configure o
+[armazenamento local das ferramentas](upgrading.md#armazenamento-local-das-ferramentas)
+antes de executar uv ou npm.

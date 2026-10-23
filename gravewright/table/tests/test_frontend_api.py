@@ -15,6 +15,15 @@ from gravewright.modules import tests as module_fixtures
 class FrontendApiTests(TestCase):
     setUp = fixtures.TableModuleTests.setUp
 
+    def test_native_service_failures_keep_machine_code_and_useful_display_message(self):
+        from gravewright.journals.services import JournalError
+        self.client.force_login(self.gm)
+        message = 'This deleted document uses files that are missing. Restore the files before trying again.'
+        with patch('gravewright.modules.frontend.journals.command', side_effect=JournalError(message)):
+            response = self.call('journals', 'restoreDeleted', {'revision_id': str(uuid.uuid4())})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'error': 'invalid_data', 'message': message})
+
     def call(self, domain, method, payload=None, **extra):
         return self.client.post(f'/api/tables/{self.campaign.pk}/api', {
             'domain': domain, 'method': method, 'payload': payload or {},

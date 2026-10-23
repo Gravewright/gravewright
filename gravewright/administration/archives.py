@@ -20,6 +20,7 @@ from django.db import DataError, IntegrityError, models, transaction
 from gravewright.accounts.services import AuthError
 from gravewright.campaigns.models import Campaign, Membership
 from gravewright.campaigns.systems import default_system_id
+from . import preparation_archives
 
 MAX_ARCHIVE = 256 * 1024 * 1024
 MAX_EXPANDED = 1024 * 1024 * 1024
@@ -46,6 +47,7 @@ GROUPS = {
         "gravewright_journals.journal",
         "gravewright_journals.asset",
         "gravewright_journals.boardentry",
+        "gravewright_journals.revision",
     ],
     "settings": ["gravewright_maps.broadcast"],
     "items": ["gravewright_items.folder", "gravewright_items.item"],
@@ -54,6 +56,9 @@ GROUPS = {
     "combat": ["gravewright_combat.encounter"],
     "compendiums": ["gravewright_compendiums.pack", "gravewright_compendiums.entry", "gravewright_compendiums.entryasset", "gravewright_compendiums.contentaccess"],
     "blueprintTemplates": ["gravewright_maps.blueprinttemplate"],
+    "clocks": ["gravewright_table.progressclock"],
+    "clues": ["gravewright_table.progressclue"],
+    "preparation": ["gravewright_campaigns.sessionplan", "gravewright_campaigns.campaignevent"],
 }
 SNAPSHOT_MODELS = {
     "gravewright_table.documentaccess",
@@ -109,9 +114,11 @@ def records(campaign, selected, *, snapshot=False):
             if "entry" in fields
             else "board__campaign"
         )
-        for record in serializers.serialize(
-            "python", model.objects.filter(**{lookup: campaign})
-        ):
+        queryset = model.objects.filter(**{lookup: campaign})
+        if label in ('gravewright_table.progressclock', 'gravewright_table.progressclue') and not selected['scenes']:
+            queryset = queryset.filter(scene__isnull=True)
+        for record in serializers.serialize("python", queryset):
+            preparation_archives.export_record(record, snapshot=snapshot)
             if not selected["audio"] and label in {
                 "gravewright_maps.sceneobject", "gravewright_maps.mapbuilderproject"
             }:
@@ -187,6 +194,7 @@ def export_campaign(campaign, selected=None, *, include_files=True, snapshot=Fal
         Campaign.objects.select_for_update().get(pk=campaign.pk)
         rows = records(campaign, selected, snapshot=snapshot)
         if resource is not None:
+            rows = [row for row in rows if row['model'] not in preparation_archives.LABELS]
             if resource[0]=='gravewright_cards.deck':
                 for record in rows:
                     if record['model']=='gravewright_cards.card':
@@ -206,6 +214,8 @@ def export_campaign(campaign, selected=None, *, include_files=True, snapshot=Fal
             },
             "records": rows,
         }
+        if resource is None:
+            payload['preparation'] = preparation_archives.export_metadata(campaign, selected)
         if resource is not None:payload['resource']={'model':resource[0],'id':resource[1]}
         files = {}
         if include_files and campaign.cover and resource is None:
@@ -220,6 +230,12 @@ def export_campaign(campaign, selected=None, *, include_files=True, snapshot=Fal
                         files[record["fields"][field.name]] = None
                     else:
                         record["fields"][field.name] = ""
+            for asset in preparation_archives.retained_files(record):
+                if asset.get('file'):
+                    if include_files:
+                        files[asset['file']] = None
+                    else:
+                        raise AuthError('Archive files are required to preserve deleted journal attachments.')
         blobs = {}
         for name in files:
             with default_storage.open(name, "rb") as source:
@@ -307,6 +323,15 @@ def read_archive(raw):
                 record["fields"], dict
             ):
                 raise ValueError()
+            if record['model'] == 'gravewright_table.progressclock':
+                validate_archived_clock(record['fields'])
+            if record['model'] == 'gravewright_table.progressclue':
+                validate_archived_clue(record['fields'])
+        if sum(record['model'] == 'gravewright_table.progressclock' for record in payload['records']) > 128:
+            raise ValueError()
+        if sum(record['model'] == 'gravewright_table.progressclue' for record in payload['records']) > 128:
+            raise ValueError()
+        preparation_archives.validate_payload(payload)
         if set(payload["files"].values()) != set(blobs):
             raise ValueError()
         return payload, blobs
@@ -342,6 +367,36 @@ def rewrite(value, identifiers, paths):
             value,
         )
     return value
+
+
+def validate_archived_clock(fields):
+    """Apply the public clock limits before importing untrusted archive fields."""
+    from gravewright.maps.services import MapError
+    from gravewright.table.clocks import CONFIG_FIELDS, validate_clock_fields
+    try:
+        if 'scene' not in fields or 'campaign' not in fields:
+            raise ValueError()
+        clean = validate_clock_fields({key: fields[{'playersCanEdit': 'players_can_edit'}.get(key, key)] for key in CONFIG_FIELDS})
+        if type(fields.get('version')) is not int or not 1 <= fields['version'] <= 2**31 - 1:
+            raise ValueError()
+        return {{'playersCanEdit': 'players_can_edit'}.get(key, key): value for key, value in clean.items()}
+    except (MapError, KeyError, TypeError, ValueError):
+        raise AuthError('invalid_archive') from None
+
+
+def validate_archived_clue(fields):
+    """Validate authored clue text and counters without changing resource scope."""
+    from gravewright.maps.services import MapError
+    from gravewright.table.clues import CONFIG_FIELDS, validate_clue_fields
+    try:
+        if 'scene' not in fields or 'campaign' not in fields:
+            raise ValueError()
+        clean = validate_clue_fields({key: fields[{'gmNotes': 'gm_notes'}.get(key, key)] for key in CONFIG_FIELDS})
+        if type(fields.get('version')) is not int or not 1 <= fields['version'] <= 2**31 - 1:
+            raise ValueError()
+        return {{'gmNotes': 'gm_notes'}.get(key, key): value for key, value in clean.items()}
+    except (MapError, KeyError, TypeError, ValueError):
+        raise AuthError('invalid_archive') from None
 
 
 def preserve_shader_text(record, field_name, rewritten):
@@ -488,6 +543,10 @@ def remap_omitted_bindings(record, field_name, rewritten, model_ids, inert_ids):
                             node.get("destinationId"), "gravewright_maps.sceneobject")
                     elif node.get("type") in ("showHandout", "setQuestStatus"):
                         cloned["journalId"] = binding(node.get("journalId"), "gravewright_journals.journal")
+                    elif node.get("type") == "clockControl":
+                        cloned["clockId"] = binding(node.get("clockId"), "gravewright_table.progressclock")
+                    elif node.get("type") == "clueControl":
+                        cloned["clueId"] = binding(node.get("clueId"), "gravewright_table.progressclue")
                     if node.get("type") in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
                         audience = node.get("audience", {})
                         if audience.get("scope") == "users" and isinstance(audience.get("userIds"), list):
@@ -524,9 +583,13 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                 campaign = Campaign.objects.select_for_update().get(pk=target.pk)
                 # Remove only native content, preserving members, codes and backup history.
                 for label in ([] if merge else reversed(list(ALLOWED | SNAPSHOT_MODELS))):
+                    if label in preparation_archives.LABELS and 'preparation' not in payload:
+                        continue
                     model = apps.get_model(label)
                     if any(f.name == "campaign" for f in model._meta.fields):
                         model.objects.filter(campaign=campaign).delete()
+                if not merge and 'preparation' in payload:
+                    preparation_archives.clear_preparation(campaign)
             else:
                 campaign = Campaign.objects.create(owner=user, name=name.strip())
                 Membership.objects.create(campaign=campaign, user=user, role="gm")
@@ -537,6 +600,15 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                     payload["campaign"].get("system", default_system_id())
                 )[:120]
                 campaign.image_url = str(payload["campaign"].get("image_url", ""))[:2048]
+            from gravewright.table.models import ProgressClock
+            incoming_clocks = sum(record['model'] == 'gravewright_table.progressclock' for record in payload['records'])
+            if ProgressClock.objects.filter(campaign=campaign).count() + incoming_clocks > 128:
+                raise AuthError('invalid_archive')
+            from gravewright.table.models import ProgressClue
+            incoming_clues = sum(record['model'] == 'gravewright_table.progressclue' for record in payload['records'])
+            if ProgressClue.objects.filter(campaign=campaign).count() + incoming_clues > 128:
+                raise AuthError('invalid_archive')
+            preparation_archives.validate_import_limits(campaign, payload)
             identifiers = {str(payload["campaign"]["id"]): str(campaign.pk)}
             model_ids = {}
             for record in payload["records"]:
@@ -595,6 +667,9 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                     }
                     if set(fields) - valid_fields.keys():
                         raise AuthError("invalid_archive")
+                    if record['model'] in preparation_archives.LABELS:
+                        fields = preparation_archives.import_record(record, model_ids, inert_ids, paths,
+                            identifiers, snapshot=bool(target and not merge))
                     kwargs = {}
                     defer = False
                     for field_name, value in fields.items():
@@ -608,7 +683,9 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             else:
                                 key = (label, str(value))
                                 if key not in model_ids:
-                                    if (record["model"] == "gravewright_maps.mapasset"
+                                    if record['model'] in ('gravewright_table.progressclock', 'gravewright_table.progressclue') and field_name == 'scene':
+                                        raise AuthError('invalid_archive')
+                                    elif (record["model"] == "gravewright_maps.mapasset"
                                             and field_name == "generated_for"):
                                         raise AuthError("invalid_archive")
                                     elif field.null:
@@ -628,6 +705,12 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             kwargs[field_name] = paths.get(value, "")
                         elif field_name == "permissions":
                             kwargs[field_name] = value if target and not merge else {}
+                        elif record['model'] == 'gravewright_table.progressclock' and field_name == 'name':
+                            kwargs[field_name] = value
+                        elif record['model'] == 'gravewright_table.progressclue' and field_name in ('name', 'content', 'gm_notes'):
+                            kwargs[field_name] = value
+                        elif record['model'] in preparation_archives.LABELS:
+                            kwargs[field_name] = value
                         elif record["model"] == "gravewright_maps.blueprinttemplate" and field_name == "definition":
                             from gravewright.maps.blueprint_templates import clean_definition
                             from gravewright.maps.services import MapError
@@ -661,6 +744,10 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                                         rewritten["family"] = original["family"]
                     if defer:
                         continue
+                    if record['model'] == 'gravewright_table.progressclock':
+                        kwargs.update(validate_archived_clock(fields))
+                    if record['model'] == 'gravewright_table.progressclue':
+                        kwargs.update(validate_archived_clue(fields))
                     pkfield = model._meta.pk
                     if pkfield.is_relation:
                         key = (
@@ -682,11 +769,17 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                         kwargs["pk"] = model_ids[(record["model"], str(record["pk"]))]
                     obj = model(**kwargs)
                     obj.save(force_insert=True)
+                    if record['model'] in preparation_archives.LABELS:
+                        model.objects.filter(pk=obj.pk).update(**{key: fields[key]
+                            for key in ('created_at', 'updated_at') if key in fields})
                     model_ids[(record["model"], str(record["pk"]))] = obj.pk
                     pending.remove(record)
                     progress = True
                 if not progress:
                     raise AuthError("invalid_archive")
+            preparation_archives.import_dashboards(payload, campaign, user, model_ids, inert_ids,
+                snapshot=bool(target and not merge), merge=merge)
+            preparation_archives.validate_imported_quests(campaign, model_ids)
             from gravewright.maps.surface_validation import validate_campaign_surfaces
             from gravewright.maps.blueprint_actions import validate_campaign_sprites
             from gravewright.maps.builder_services import validate_imported_projects

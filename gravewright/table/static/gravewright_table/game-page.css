@@ -237,7 +237,7 @@
   .game-table { --game-dock-height: calc(var(--size-89) + var(--size-8)); }
 }
 
-.game-menubar__actions .game-menubar__library { display: flex; width: auto; gap: var(--space-1); padding-inline: var(--space-2); white-space: nowrap; }
+.game-menubar__actions :is(.game-menubar__library, .game-menubar__clocks, .game-menubar__clues) { display: flex; width: auto; gap: var(--space-1); padding-inline: var(--space-2); white-space: nowrap; }
 .game-menubar__layers { min-width: 0; overflow-x: auto; flex-shrink: 1; }
 .game-menubar__layer { flex-shrink: 0; }
 @media (max-width: 960px) {
@@ -249,7 +249,7 @@
   .game-menubar__actions { grid-column: 3; grid-row: 1; }
 }
 @media (max-width: 610px) {
-  .game-menubar .individual-audio__volume, .game-menubar__library > span { display: none; }
+  .game-menubar .individual-audio__volume, :is(.game-menubar__library, .game-menubar__clocks, .game-menubar__clues) > span { display: none; }
 }
 
 .game-panel--visibility:not(.game-panel--minimized):not(.game-panel--detached) {bottom:auto;height:auto;width:min(var(--size-420),calc(100vw - var(--size-26)));max-height:calc(100vh - var(--size-144));}
