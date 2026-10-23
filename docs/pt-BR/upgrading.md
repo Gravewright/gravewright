@@ -97,7 +97,7 @@ recuperação exige código, banco e mídias correspondentes.
 
 ## Migrações de banco da 0.3.2
 
-Em comparação com a 0.3.1, esta release acrescenta seis migrações:
+Em comparação com a 0.3.1, esta release acrescenta sete migrações:
 
 | Migração | Capacidade armazenada |
 | --- | --- |
@@ -107,6 +107,7 @@ Em comparação com a 0.3.1, esta release acrescenta seis migrações:
 | [table/0006_clock_description.py](../../gravewright/table/migrations/0006_clock_description.py) | Descrições autorais de relógios, vazias nos relógios existentes |
 | [campaigns/0005_preparation.py](../../gravewright/campaigns/migrations/0005_preparation.py) | Painéis pessoais de mestre, planos de sessão, eventos e recibos de preparação |
 | [journals/0004_revision.py](../../gravewright/journals/migrations/0004_revision.py) | Revisões de diários, lixeira e metadados de anexos retidos |
+| [pdf_system/0001_initial.py](../../gravewright/pdf_system/migrations/0001_initial.py) | Modelos reutilizáveis de mapeamento PDF, seus pacotes e revisões |
 
 Execute o comando normal de migração em vez de aplicar somente esses arquivos:
 o Django ordena as dependências e inclui migrações anteriores pendentes. As novas

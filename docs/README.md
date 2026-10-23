@@ -36,6 +36,6 @@ Project policies: [contributing](../CONTRIBUTING.md), [security](../SECURITY.md)
 
 For the dice implementation, see the existing [grammar architecture](../gravewright/dice/grammar/ARCHITECTURE.md) and [notation reference](../gravewright/dice/grammar/notation/GRAMMAR.md). Machine-readable module contracts live in [contracts/](../gravewright/modules/contracts/); the [transport note](../gravewright/modules/contracts/transport.md) accompanies them.
 
-Current project version: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). The release notes cover campaign preparation, journal history/trash, clocks and clues, collaborative mind maps, PDF mapping/actions, MapBuilder integration, Pillow 13 and six new database migrations relative to 0.3.1. See [upgrade and recovery](en/upgrading.md) before updating an existing installation.
+Current project version: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). The release notes cover campaign preparation, journal history/trash, clocks and clues, collaborative mind maps, PDF mapping/actions, MapBuilder integration, Pillow 13 and seven new database migrations relative to 0.3.1. See [upgrade and recovery](en/upgrading.md) before updating an existing installation.
 
 Historical notes remain unchanged: [0.3.1](releases/0.3.1.md) covers forms, object models and scene synchronization; [0.3.0](releases/0.3.0.md) covers the original Map Builder and Universal VTT support; [0.2.3](releases/0.2.3.md) retains the earlier release history. Historical numbering and migration statements describe those releases, not the current version.

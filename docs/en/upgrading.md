@@ -94,7 +94,7 @@ it; recovery requires matching source, database and media.
 
 ## Database migrations in 0.3.2
 
-Compared with 0.3.1, this release adds six migrations:
+Compared with 0.3.1, this release adds seven migrations:
 
 | Migration | Stored capability |
 | --- | --- |
@@ -104,6 +104,7 @@ Compared with 0.3.1, this release adds six migrations:
 | [table/0006_clock_description.py](../../gravewright/table/migrations/0006_clock_description.py) | Authored clock descriptions, empty on existing clocks |
 | [campaigns/0005_preparation.py](../../gravewright/campaigns/migrations/0005_preparation.py) | Personal GM dashboards, session plans, timeline events and preparation receipts |
 | [journals/0004_revision.py](../../gravewright/journals/migrations/0004_revision.py) | Journal revisions, trash and retained attachment metadata |
+| [pdf_system/0001_initial.py](../../gravewright/pdf_system/migrations/0001_initial.py) | Reusable PDF mapping templates, their bundles and revisions |
 
 Run the normal migration command rather than applying only these files: Django
 orders their dependencies and also includes missing earlier migrations. The

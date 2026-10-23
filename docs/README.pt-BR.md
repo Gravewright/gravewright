@@ -38,6 +38,6 @@ Para a implementação de dados, consulte os documentos existentes de [arquitetu
 
 Os contratos de módulos processáveis por máquina ficam em [contracts/](../gravewright/modules/contracts/), acompanhados da [nota de transporte](../gravewright/modules/contracts/transport.pt-BR.md).
 
-Versão atual do projeto: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). As notas da release apresentam preparação de campanha, histórico/lixeira de diários, relógios e pistas, mapas mentais colaborativos, mapeamento/ações de PDF, integração do MapBuilder, Pillow 13 e seis novas migrações de banco em relação à 0.3.1. Veja [atualização e recuperação](pt-BR/upgrading.md) antes de atualizar uma instalação existente.
+Versão atual do projeto: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). As notas da release apresentam preparação de campanha, histórico/lixeira de diários, relógios e pistas, mapas mentais colaborativos, mapeamento/ações de PDF, integração do MapBuilder, Pillow 13 e sete novas migrações de banco em relação à 0.3.1. Veja [atualização e recuperação](pt-BR/upgrading.md) antes de atualizar uma instalação existente.
 
 As notas históricas permanecem: [0.3.1](releases/0.3.1.md) cobre formulários, modelos de objetos e sincronização de cenas; [0.3.0](releases/0.3.0.md) cobre o Map Builder original e o suporte a Universal VTT; [0.2.3](releases/0.2.3.md) preserva o histórico anterior. A numeração e as informações de migração históricas descrevem aquelas releases, não a versão atual.
