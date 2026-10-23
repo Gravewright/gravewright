@@ -2689,5 +2689,14 @@
   "Edit Scene": "Editar escena",
   "Campaign tools": "Herramientas de campaña",
   "Type / to insert blocks or @ to insert references": "Escribe / para insertar bloques o @ para insertar referencias",
-  "The reference insertion point changed. Type @ again.": "El punto de inserción de la referencia cambió. Escribe @ de nuevo."
+  "The reference insertion point changed. Type @ again.": "El punto de inserción de la referencia cambió. Escribe @ de nuevo.",
+  "Disable manual lighting": "Desactivar iluminación manual",
+  "Full vision": "Visión completa",
+  "Manual lighting is active.": "La iluminación manual está activa.",
+  "Manual lighting is off. Choose an initial state to enable it.": "La iluminación manual está desactivada. Elige un estado inicial para activarla.",
+  "Off": "Desactivado",
+  "Paint revealed areas by hand, independently of tokens and lights.": "Pinta a mano las áreas reveladas, independientemente de las fichas y las luces.",
+  "Players only see what their tokens and lights reach. Walls block vision.": "Los jugadores solo ven lo que alcanzan sus fichas y luces. Las paredes bloquean la visión.",
+  "The whole map is visible to everyone. Nothing is hidden.": "Todo el mapa es visible para todos. Nada está oculto.",
+  "— none —": "— ninguno —"
 }

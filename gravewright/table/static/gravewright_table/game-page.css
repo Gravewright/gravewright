@@ -244,6 +244,7 @@
 .game-menubar__layer { flex-shrink: 0; }
 @media (max-width: 960px) {
   .game-menubar { gap: var(--space-2); }
+  .game-panel--visibility:not(.game-panel--detached) { top: calc(var(--size-34) * 2 + var(--space-2)); }
   .game-menubar__brand { min-width: 0; flex: 1; }
   .game-menubar__brand strong { max-width: 100%; }
   .game-menubar:has(.game-menubar__layers) { display: grid; height: auto; grid-template-columns: var(--size-34) minmax(0, 1fr) auto; row-gap: var(--space-0); }

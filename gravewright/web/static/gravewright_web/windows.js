@@ -30,12 +30,19 @@ function mount(element) {
             peer.element.style.zIndex = String(peer.base + index);
         }
     }
+    function topBoundary() {
+        const selector = element.dataset.windowTopBoundary;
+        const boundary = selector && doc.querySelector(selector);
+        const top = boundary && visible(boundary) ? Math.max(8, boundary.getBoundingClientRect().bottom + 8) : 8;
+        return Math.min(top, Math.max(8, view.innerHeight - 55));
+    }
     function place(value) {
         if (!value || !['x','y','width','height'].every(name => Number.isFinite(value[name])) || value.width < 80 || value.height < 30) return;
-        const width = Math.min(value.width, view.innerWidth - 16), height = Math.min(value.height, view.innerHeight - 16);
+        const top = topBoundary();
+        const width = Math.min(value.width, view.innerWidth - 16), height = Math.min(value.height, view.innerHeight - top - 8);
         Object.assign(element.style, {position:'fixed',width:`${width}px`,height:`${height}px`,
             left:`${Math.max(8, Math.min(value.x, view.innerWidth - width - 8))}px`,
-            top:`${Math.max(8, Math.min(value.y, view.innerHeight - height - 8))}px`,right:'auto',bottom:'auto',transform:'none'});
+            top:`${Math.max(top, Math.min(value.y, view.innerHeight - height - 8))}px`,right:'auto',bottom:'auto',transform:'none'});
     }
     function save() {
         if (!scope || !key || element.ownerDocument !== document || !visible(element) || minimized(element)) return;
@@ -57,6 +64,8 @@ function mount(element) {
         const on = visible(element);
         if (on && !wasVisible) {
             if (!seen && layouts.has(key)) place(layouts.get(key));
+            if (element.dataset.windowTopBoundary && !isMinimized && element.getBoundingClientRect().top < topBoundary())
+                element.style.top = `${topBoundary()}px`;
             seen = true; restoredWindows.add(element); raise();
         }
         wasVisible = on;
@@ -74,7 +83,8 @@ function mount(element) {
         const move = next => {
             if (next.pointerId !== event.pointerId) return;
             element.style.left = `${Math.min(view.innerWidth - 55, Math.max(55 - element.offsetWidth, next.clientX - offsetX))}px`;
-            element.style.top = `${Math.min(view.innerHeight - 55, Math.max(0, next.clientY - offsetY))}px`;
+            const top = element.dataset.windowTopBoundary ? topBoundary() : 0;
+            element.style.top = `${Math.max(top, Math.min(view.innerHeight - 55, next.clientY - offsetY))}px`;
         };
         const up = () => {
             doc.removeEventListener('pointermove', move); doc.removeEventListener('pointerup', up); doc.removeEventListener('pointercancel', up); view.removeEventListener('blur', up);

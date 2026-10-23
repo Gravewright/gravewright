@@ -1,5 +1,7 @@
 import { sourceController } from "./sources/sources.js";
 import { detachWindow } from '/static/gravewright_table/window-controls.js';
+import { createTranslator } from '/static/gravewright_modules/i18n.js';
+import { mountVisibilityPanelText } from './visibility-panel.js';
 import { lightPresets, paintAnimatedLight } from "./sources/light-profiles.js";
 import {
   getPath,
@@ -8,10 +10,11 @@ import {
 import { renderingPreferences } from "./render-profile.js";
 import { node, clone, icon, patchSVG } from "./layers.js";
 export function lightingWorkspace(surface, board, map, gm, api) {
+  const translator = createTranslator();
   let state = api.state,
     closed = false,
     controller,
-    panel,
+    panel, panelText,
     popup,
     picker,
     editor,
@@ -88,29 +91,32 @@ export function lightingWorkspace(surface, board, map, gm, api) {
     }
   }
   const fire = (...args) => void command(...args).catch(() => {});
+  function closePanel() {
+    panelText?.destroy();
+    panelText = undefined;
+    popup?.close();
+    popup = undefined;
+    panel?.remove();
+    panel = undefined;
+  }
   function tool(value) {
     mergePatch({ _tool: value });
     sync();
   }
   function openPanel() {
     if (panel) {
-      popup?.close();
-      panel.remove();
-      panel = undefined;
+      closePanel();
       return;
     }
     panel = clone("visibility");
-    panel.querySelector("[data-visibility-action=close]").onclick = () => {
-      popup?.close();
-      panel.remove();
-      panel = undefined;
-    };
+    panelText = mountVisibilityPanelText(panel, { translator, getPopup: () => popup });
+    panel.querySelector("[data-visibility-action=close]").onclick = closePanel;
     panel.querySelector("[data-visibility-action=detach]").onclick = () => {
       if (popup && !popup.closed) {
         popup.focus();
         return;
       }
-      popup = detachWindow(panel, 'map-visibility', 'Visibility', {width:420,height:700});
+      popup = detachWindow(panel, 'map-visibility', translator.t('Visibility'), {width:420,height:700});
     };
     panel.querySelector("[data-visibility-action=minimize]").onclick = () =>
       panel.classList.toggle("game-panel--minimized");
@@ -400,19 +406,12 @@ export function lightingWorkspace(surface, board, map, gm, api) {
         panel.querySelector("fieldset").disabled = !gm;
         for (const button of panel.querySelectorAll("[data-mode],[data-fog-action]")) button.disabled = busy || (button.dataset.mode === 'dynamic' && state.capabilities?.dynamicLighting === false);
         panel.querySelector("[role=alert]").hidden = !error;
-        panel.querySelector("[role=alert]").textContent = error;
+        panelText.update({ mode: lighting.mode, fogEnabled: state.fog.enabled, shape, error });
         for (const b of panel.querySelectorAll("[data-mode]"))
           b.setAttribute(
             "aria-pressed",
             String(b.dataset.mode === lighting.mode),
           );
-        panel.querySelector("[data-mode-hint]").textContent = {
-          none: "The whole map is visible to everyone. Nothing is hidden.",
-          dynamic:
-            "Players only see what their tokens and lights reach. Walls block vision.",
-          manual:
-            "Paint revealed areas by hand, independently of tokens and lights.",
-        }[lighting.mode];
         for (const el of panel.querySelectorAll("[data-mode-section]"))
           el.hidden = el.dataset.modeSection !== lighting.mode;
         for (const b of panel.querySelectorAll("[data-lights]"))
@@ -420,9 +419,6 @@ export function lightingWorkspace(surface, board, map, gm, api) {
             "aria-pressed",
             String(b.dataset.lights === (lighting.lights_out ? "off" : "on")),
           );
-        panel.querySelector("[data-fog-status]").textContent = state.fog.enabled
-          ? "Manual lighting is active."
-          : "Manual lighting is off. Choose an initial state to enable it.";
         panel.querySelector("[data-fog-disabled]").hidden = state.fog.enabled;
         panel.querySelector("[data-fog-enabled]").hidden = !state.fog.enabled;
         for (const b of panel.querySelectorAll("[data-brush]"))
@@ -447,10 +443,6 @@ export function lightingWorkspace(surface, board, map, gm, api) {
                 : value;
         }
         panel.querySelector("[data-brush-size]").hidden = shape === "polygon";
-        panel.querySelector("[data-brush-hint]").textContent =
-          shape === "polygon"
-            ? "Click to add points. Click the first point to close."
-            : "Alt+scroll no mapa para ajustar rapidamente.";
       }
       const brush =
         gm &&
@@ -710,7 +702,7 @@ export function lightingWorkspace(surface, board, map, gm, api) {
     destroy() {
       closed = true;
       clearTimeout(strokeTimer); clearTimeout(darknessTimer); cancelAnimationFrame(previewFrame); cancelAnimationFrame(fogFrame);
-      popup?.close();
+      closePanel();
       controller.destroy();
       for (const el of [svg, fog, panel, picker, editor, context, confirm])
         el?.remove();

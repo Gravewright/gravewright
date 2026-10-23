@@ -161,6 +161,13 @@ class LocalizationTests(TestCase):
         self.assertEqual(available['es']['messages']['Create table'], 'Crear mesa')
         self.assertEqual(available['es']['messages']['Character sheet'], 'Ficha de personaje')
         self.assertEqual(available['es']['messages']['New quest'], 'Nueva misión')
+        for locale, title, hint in (
+            ('pt-BR', 'Visão completa', 'Todo o mapa é visível para todos. Nada fica oculto.'),
+            ('es', 'Visión completa', 'Todo el mapa es visible para todos. Nada está oculto.'),
+        ):
+            self.assertEqual(available[locale]['messages']['Full vision'], title)
+            self.assertEqual(available[locale]['messages'][
+                'The whole map is visible to everyone. Nothing is hidden.'], hint)
         self.assertEqual(available['en']['messages'], {})
         translated = translate_tree(native_messages(), messages)
         self.assertEqual(translated['inside']['campaigns']['create'], 'Criar mesa')

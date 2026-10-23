@@ -7,7 +7,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PARAMETERS = re.compile(r'\{(?:[A-Za-z_][A-Za-z0-9_.]*|\d+)\}')
-CALLS = re.compile(r'''\b(?:gwText|modalText|text|label)\(\s*((?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'))''')
+CALLS = re.compile(r'''\b(?:gwText|modalText|text|label|t)\s*\(\s*((?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'))''')
 
 
 def audit(catalog_root):
