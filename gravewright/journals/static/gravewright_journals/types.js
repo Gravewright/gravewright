@@ -14,7 +14,7 @@ function image(el, src, alt = '') { show(el, !!src); if (src)
     el.src = src;
 else
     el.removeAttribute('src'); el.alt = alt; }
-function editor(w, host, value, label, save, upload) { const instance = richText(host, value, !w.editing, file => upload(w.draft.id, file), label, next => { save(next); w.touch(); }); w.cleanups.push(() => instance.destroy()); w.typeEditors.push(instance.editor); }
+function editor(w, host, value, label, save, upload) { const instance = richText(host, value, !w.editing, file => upload(w.draft.id, file), label, next => { save(next); w.touch(); }, { journalId: w.draft.id, presentationTicket: w.draft.presentation_ticket }); w.cleanups.push(() => instance.destroy()); w.typeEditors.push(instance.editor); }
 export function renderType(w, state, upload, open) {
     w.destroyEditors();
     w.typeEditors = [];

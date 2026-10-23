@@ -9,7 +9,8 @@ use the same saved clues, independently of the campaign's game system.
 
 ## Prepare a clue
 
-Open **Clues** in the table menu bar, or select **Clues** in **Manage campaign**.
+Open **Clues** from its icon in the table's lower dock, or select **Clues** in
+**Manage campaign**.
 A campaign GM can create and edit clues with these fields:
 
 | Field | Meaning |
@@ -47,6 +48,13 @@ Only campaign GMs can configure clues or change their progress directly.
 Players and streamers can open permitted findings as read-only content.
 Pinning a clue follows the same discovery and visibility checks as the full list.
 
+A GM can left-click the clue's progress bar to advance one step or right-click
+to reduce one. Focus the bar and use Right/Up to advance or Left/Down to reduce;
+the full list and manager also provide **+** and **−** controls. This works in the campaign
+manager, the full table list and the pinned display, with the same segment
+bounds, revision and pending-operation checks. Players and streamers cannot
+change clue progress through these gestures.
+
 | GM operation | Result |
 | --- | --- |
 | Advance or reduce | Change progress within its segment bounds |
@@ -60,6 +68,31 @@ views until it is complete again. Hiding a clue removes its current presentation
 participants may already remember content they previously discovered.
 Closing a window does not delete saved clues. Reloading restores their saved
 configuration and progress.
+
+Double-click a clue's name, or focus it and press Enter or Space. A GM opens the
+native clue editor. Players and streamers open a simple read-only modal showing
+the discovered clue's Content as its description. It never includes GM notes.
+Current discovery and visibility checks still apply when opening or refreshing
+the modal. No additional description field is stored for clues.
+
+## Arrange pinned clues
+
+Clue cards and unfilled steps have transparent backgrounds. Pinned clues show
+only their name and progress bar; use the name to open the editor or description.
+Each pinned clue
+on the table moves independently when you drag its title. Focus the title and
+use the arrow keys to move one pixel, or Shift plus an arrow to move ten.
+Escape cancels an active drag. Resizing the browser keeps indicators within its
+visible area.
+
+Each account's positions are saved for that campaign and indicator in the
+current browser and restored after reload. Wide and narrow screens keep separate
+positions, restoring each layout when you resize back. Moving an indicator sends no
+position command or broadcast, changes no campaign/scene/progress data and
+leaves other participants' layouts unchanged. Players and streamers can arrange
+their permitted discoveries locally while their clue content and progress
+remain read-only. Pinning and visibility remain shared GM settings; undiscovered
+clues are still omitted by the server.
 
 ## MapBuilder mechanisms
 

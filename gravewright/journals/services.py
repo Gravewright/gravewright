@@ -79,7 +79,7 @@ def asset_ids(value):
             yield from asset_ids(child)
 
 
-def clean_data(raw, journal, who):
+def clean_data(raw, journal, who, *, _trusted_links=False):
     """Normalize document data while preserving hidden content and asset ownership."""
     if not isinstance(raw, dict) or len(json.dumps(raw)) > 512_000:
         raise JournalError('The document is too large.')
@@ -91,10 +91,28 @@ def clean_data(raw, journal, who):
         available |= {str(pk) for pk in Asset.objects.filter(journal=journal,uploader_id=who.user_id).values_list('pk',flat=True)} - linked
         if not set(asset_ids(raw)) <= available:
             raise JournalError('A file is not available to this editor.')
+    existing = None
+    source = raw
     try:
-        clean = shapes.normalize_data_for(journal.type,raw)
+        if journal.type == 'diary':
+            existing = shapes.normalize_diary_data(journal.data)
+            source = deepcopy(raw)
+            if 'chapters' not in source:
+                # Old clients send only page categories. Keep independent empty
+                # chapters, exposing no hidden chapter name to their adapter.
+                from gravewright.table.ownership import page_level
+                source['chapters'] = deepcopy(existing['chapters'] if who.role == 'gm' else
+                    visible_chapters(existing, [page for page in existing['sections']
+                        if page_level(journal, page, who) in {'read', 'owner'}]))
+            shapes.validate_diary_structure(source)
+        clean = shapes.normalize_data_for(journal.type,source)
+        if journal.type == 'diary':
+            shapes.validate_diary_structure(clean)
     except (TypeError,ValueError,AttributeError):
         raise JournalError('Invalid document content.') from None
+    # Validate submitted atoms before merging server-owned hidden content.
+    from . import links
+    clean = links.clean(clean, journal, who, trusted=_trusted_links)
     if journal.type == 'diary':
         sections=clean['sections']
         if len(raw.get('sections',[])) > 64 or len({s['id'] for s in sections}) != len(sections):
@@ -105,7 +123,11 @@ def clean_data(raw, journal, who):
             section['src']=f'/game/journal/asset/{aid}' if aid else ''
         if who.role != 'gm':
             from gravewright.table.ownership import page_level
-            existing=shapes.normalize_diary_data(journal.data)
+            visible_ids = {chapter['id'] for chapter in visible_chapters(existing, [page for page in existing['sections']
+                           if page_level(journal, page, who) in {'read', 'owner'}])}
+            hidden_ids = {chapter['id'] for chapter in existing['chapters']} - visible_ids
+            if any(chapter['id'] in hidden_ids or chapter['parentId'] in hidden_ids for chapter in clean['chapters']):
+                raise JournalError('Chapter not found or access denied.')
             clean['gm']=existing['gm']
             clean['content']=preserve_secrets(clean['content'],existing['content'])
             old={s['id']:s for s in existing['sections']}
@@ -121,7 +143,33 @@ def clean_data(raw, journal, who):
             clean['sections']=sorted(sections+[s for s in existing['sections'] if s['id'] not in submitted and page_level(journal,s,who) != 'owner'], key=lambda s:s['sortOrder'])
             if len(clean['sections'])>64:
                 raise JournalError('This journal already has 64 pages.')
+            protected = hidden_ids | {page['chapterId'] for page in existing['sections']
+                                      if page_level(journal, page, who) != 'owner' and page['chapterId']}
+            previous = {chapter['id']: chapter for chapter in existing['chapters']}
+            submitted_chapters = {chapter['id']: chapter for chapter in clean['chapters']}
+            effective_chapters = {**previous, **submitted_chapters}
+            pending = list(protected)
+            while pending:
+                identifier = pending.pop()
+                if identifier in visible_ids and identifier not in submitted_chapters and 'chapters' in raw:
+                    raise JournalError('A chapter with protected pages cannot be removed.')
+                chapter = effective_chapters.get(identifier)
+                if chapter and chapter['parentId'] and chapter['parentId'] not in protected:
+                    protected.add(chapter['parentId']); pending.append(chapter['parentId'])
+            clean['chapters'].extend(deepcopy(chapter) for chapter in existing['chapters']
+                                     if chapter['id'] in protected and chapter['id'] not in submitted_chapters)
+        try:
+            shapes.validate_diary_structure(clean)
+        except ValueError:
+            raise JournalError('Invalid journal chapters.') from None
+        chapter_names = {chapter['id']: chapter['name'] for chapter in clean['chapters']}
+        for page in clean['sections']:
+            page['category'] = chapter_names.get(page['chapterId'], '')
     clean = types.clean_type(raw, clean, journal, who)
+    # Hidden blocks/pages added back above count toward the portable document
+    # limit, but must never be re-authorized as if the player submitted them.
+    if sum(1 for _ in links.nodes(clean)) > links.MAX_LINKS:
+        raise JournalError('Use up to 512 resource references per document.')
     requested=set(asset_ids(clean))
     allowed={str(pk) for pk in Asset.objects.filter(journal=journal).values_list('pk',flat=True)}
     if not requested <= allowed:
@@ -160,7 +208,25 @@ def preserve_secrets(submitted, stored):
     return public
 
 
-def projection(journal, who):
+def visible_chapters(clean, pages, *, page_only=False):
+    """Show readable page paths and independent empty branches, without secrets."""
+    chapters = {chapter['id']: chapter for chapter in clean['chapters']}
+    occupied, visible = set(), {page['chapterId'] for page in pages if page['chapterId']}
+    def ancestors(values):
+        pending, seen = list(values), set(values)
+        while pending:
+            chapter = chapters.get(pending.pop())
+            if chapter and chapter['parentId'] and chapter['parentId'] not in seen:
+                seen.add(chapter['parentId']); pending.append(chapter['parentId'])
+        return seen
+    if not page_only:
+        occupied = ancestors({page['chapterId'] for page in clean['sections'] if page['chapterId']})
+        visible |= set(chapters) - occupied
+    wanted = ancestors(visible)
+    return [deepcopy(chapter) for chapter in clean['chapters'] if chapter['id'] in wanted]
+
+
+def projection(journal, who, *, _resolve_links=True, _resolver=None):
     """Build recipient-visible content and omit GM-only fields, pages and blocks."""
     gm=who.role=='gm'
     clean=shapes.normalize_data_for(journal.type,journal.data)
@@ -177,9 +243,22 @@ def projection(journal, who):
         view['sections']=[{**s,'can_edit':page_level(journal,s,who)=='owner','content':documents.filter_doc_for_role(s['content'],is_gm=gm)} for s in clean['sections'] if page_level(journal,s,who) in {'read','owner'}]
         view['editable_sections']=deepcopy(view['sections'])
         if gm: view['diary']={'gm':clean['gm']}
+        if (str(journal.pk) == getattr(who, '_presentation_journal_id', None)
+                and getattr(who, '_presentation_page_id', None)):
+            # Ticket access to one page must not enrich links or assets from
+            # other pages before the presentation's outer projection filters.
+            page_id = who._presentation_page_id
+            view['sections'] = [page for page in view['sections'] if page['id'] == page_id]
+            view['editable_sections'] = deepcopy(view['sections'])
+            view['content_doc'], view['cover_image'] = {}, {}
+        view['chapters'] = deepcopy(clean['chapters']) if gm else visible_chapters(clean, view['sections'],
+            page_only=bool(getattr(who, '_presentation_page_id', None)))
     view.update(types.project(journal, who, clean))
     view['listed'] = permissions(journal, who)[0]
     view['can_open'] = view['listed'] or types.via_board(journal, who)
+    if _resolve_links:
+        from .links import project
+        view = project(view, journal, who, _resolver)
     return view
 
 
@@ -202,6 +281,23 @@ def directory_rows(campaign_id):
 
 def state(campaign_id,user_id):
     who=member(campaign_id,user_id)
+    return _state(who)
+
+
+def metadata_state(who):
+    """Native authorized directory for resource indexing, without nested links."""
+    return _state(who, resolve_links=False)
+
+
+def _state(who, *, resolve_links=True):
+    campaign_id, user_id = who.campaign_id, who.user_id
+    resolver = None
+    def get_resolver():
+        nonlocal resolver
+        from gravewright.table.resource_links import Resolver
+        if resolver is None:
+            resolver = Resolver(who)
+        return resolver
     from gravewright.table.ownership import allows, journal_grants
     journals=[]
     rows=directory_rows(campaign_id)
@@ -212,7 +308,7 @@ def state(campaign_id,user_id):
         campaign_id=campaign_id,pk__in=assigned).only('id','name','permissions') if actor_access(actor,who)}
     for j in rows:
         if permissions(j,who)[0] or types.via_board(j,who):
-            journals.append(projection(j,who))
+            journals.append(projection(j,who,_resolve_links=resolve_links,_resolver=get_resolver))
         elif allows(journal_grants(j,who),who,listing=True):
             journals.append({'id':str(j.pk),'title':j.title,'type':j.type,'folder_id':str(j.folder_id) if j.folder_id else None,'visibility':j.visibility,'version':j.version,'can_edit':False,'can_open':False,'listed':True})
     folders=list(Folder.objects.filter(campaign_id=campaign_id))

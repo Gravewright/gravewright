@@ -365,6 +365,17 @@ def command(user, campaign_id, action, payload, request_id):
 
 def _outgoing(data):
     found = re.findall(r'document=(actor|item|journal|scene):([0-9a-f-]{36})', json.dumps(data))
+    found = [(kind, value) for kind, value in found if _uuid.fullmatch(value)]
+    from gravewright.journals.links import canonical, nodes
+    from gravewright.journals.services import JournalError
+    for node in nodes(data):
+        try:
+            ref = canonical(node.get('attrs', {}).get('reference'))
+        except JournalError:
+            continue
+        kind = 'journal' if ref['kind'] == 'journal-page' else ref['kind']
+        if kind in {'actor', 'item', 'journal', 'scene'}:
+            found.append((kind, ref['id']))
     return list(dict.fromkeys(found))
 
 
@@ -372,17 +383,17 @@ def references(user, campaign_id, kind, value):
     """List what one document links to and every place that uses it."""
     campaign, _ = management.authorize(user, campaign_id)
     target = _ref({'type': kind, 'id': value}, campaign.pk, ('actor', 'item', 'journal', 'scene'))
-    marker = f'document={target["type"]}:{target["id"]}'
     used, links = [], []
     for row in Journal.objects.filter(campaign=campaign).only('id', 'title', 'type', 'data'):
+        outgoing = _outgoing(row.data)
         if str(row.pk) == target['id']:
-            links = [{'type': t, 'id': i} for t, i in _outgoing(row.data)]
+            links = [{'type': t, 'id': i} for t, i in outgoing]
             if row.type == 'quest':
                 quest = normalize_quest_data(row.data)
                 links += [{'type': 'actor', 'id': pk, 'via': 'assigned'} for pk in quest['assignees']]
                 links += [{'type': 'journal', 'id': pk, 'via': 'prerequisite'} for pk in quest['prerequisites']]
             continue
-        if marker in json.dumps(row.data):
+        if (target['type'], target['id']) in outgoing:
             used.append({'type': 'journal', 'id': str(row.pk), 'title': row.title, 'kind': row.type, 'via': 'link'})
         if row.type == 'quest':
             quest = normalize_quest_data(row.data)

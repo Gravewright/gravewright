@@ -17,9 +17,9 @@ const http = new HttpClient();
 const $ = selector => root.querySelector(selector);
 const errorBox = $('[data-manager-error]');
 let overview = JSON.parse(document.getElementById('campaign-management-overview').textContent);
-let section = 'overview', selectedScene = null, library, decks, timer, searching, audioSignature, clocksWidget, cluesWidget;
+let section = 'overview', selectedScene = null, library, decks, timer, searching, audioSignature, clocksWidget, cluesWidget, mindmapsWidget;
 const mounted = new Set();
-const labels = { overview: 'Overview', journals: 'Journals', quests: 'Quests', clocks: 'Clocks', clues: 'Clues', actors: 'Characters', items: 'Items',
+const labels = { overview: 'Overview', journals: 'Journals', quests: 'Quests', clocks: 'Clocks', clues: 'Clues', mindmaps: 'Mind maps', actors: 'Characters', items: 'Items',
   maps: 'Scenes', library: 'File library', audio: 'Audio', cards: 'Cards', compendiums: 'Compendiums', combat: 'Encounters', members: 'Participants',
   sessions: 'Session planner', timeline: 'Timeline', connections: 'Connections', 'player-view': 'View as player', history: 'History and trash' };
 const statuses = { draft: 'Draft', available: 'Available', active: 'Active', completed: 'Completed', failed: 'Failed', archived: 'Archived' };
@@ -61,6 +61,7 @@ function revoke() {
   library?.destroy(); decks?.destroy();
   clocksWidget?.destroy();
   cluesWidget?.destroy();
+  mindmapsWidget?.destroy();
   preparation?.destroy();
   window.dispatchEvent(new Event('gravewright:access-revoked'));
   for (const panel of root.querySelectorAll('[data-native-directory]')) panel._content?.dispose();
@@ -93,6 +94,8 @@ const transport = managementTransport({ api, execute: executeNative, report, rev
     if (domain === 'audio') renderAudio(value);
     if (domain === 'clocks' && (context.sceneId ?? null) === selectedScene) clocksWidget?.update(value);
     if (domain === 'clues' && (context.sceneId ?? null) === selectedScene) cluesWidget?.update(value);
+    if (domain === 'mindmaps') mindmapsWidget?.update(value);
+    else if (mindmapsWidget) void transport.read('mindmaps').catch(report);
   },
 });
 window.gravewrightRealtime = transport;
@@ -100,6 +103,10 @@ window.gravewrightRealtime = transport;
 window.gravewrightMaps = {
   get current() { return transport.states.get('maps')?.maps.find(scene => scene.id === selectedScene) || null; },
   view(id) { selectSection('maps'); selectScene(id); },
+};
+window.gravewrightMindMaps = window.gravewrightMindmaps = {
+  async open(id, nodeId) { await selectSection('mindmaps'); return mindmapsWidget?.open(id, nodeId); },
+  showDirectory() { return selectSection('mindmaps'); },
 };
 const scenes = mountManagedScenes({ root, api, transport, http, t, report,
   selectedScene: () => selectedScene, onSelect: id => selectScene(id) });
@@ -274,6 +281,17 @@ async function selectSection(next, { history = true } = {}) {
     }
     await transport.subscribeModule('clues', selectedScene);
   }
+  if (next === 'mindmaps') {
+    if (!mindmapsWidget) {
+      const { mountMindmaps } = await import('/static/gravewright_table/mindmaps.js');
+      if (transport.signal.aborted) return;
+      mindmapsWidget = mountMindmaps($('[data-manager-view="mindmaps"] [data-mindmaps-root]'), { api,
+        sceneId: () => selectedScene, scenes: () => transport.states.get('maps')?.maps || [], t, signal: transport.signal,
+        onChange: state => { transport.invalidate('mindmaps'); transport.states.set('mindmaps', state); mindmapsWidget?.update(state); },
+      });
+    }
+    await transport.subscribeModule('mindmaps');
+  }
   if (next === 'audio') await transport.subscribeModule('audio', selectedScene);
   if (next === 'cards' && !decks) decks = window.gravewrightTableMedia.mountDecks($('[data-manager-decks]'));
   if (next === 'library' && !library) {
@@ -338,7 +356,7 @@ $('[data-manager-audio-workspace]').addEventListener('click', () => void run(asy
 window.addEventListener('focus', () => { if (!document.hidden) void run(() => transport.refresh()); }, { signal: transport.signal });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void run(() => transport.refresh()); }, { signal: transport.signal });
 window.addEventListener('pagehide', () => {
-  clearInterval(timer); clearTimeout(searching); clearContent(); stopPreviews(); library?.destroy(); decks?.destroy(); clocksWidget?.destroy(); cluesWidget?.destroy(); preparation.destroy(); scenes.destroy(); transport.close();
+  clearInterval(timer); clearTimeout(searching); clearContent(); stopPreviews(); library?.destroy(); decks?.destroy(); clocksWidget?.destroy(); cluesWidget?.destroy(); mindmapsWidget?.destroy(); preparation.destroy(); scenes.destroy(); transport.close();
 }, { once: true });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); }, { once: true });
 language.onChange(() => { renderOverview(); renderDocuments(); renderMembers(); renderSceneChoices(); preparation.refreshLabels(section); $('[data-manager-heading]').textContent = t(labels[section]); });

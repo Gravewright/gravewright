@@ -23,12 +23,14 @@ class ClockFrontendTests(TestCase):
     def test_browser_creation_updates_and_conflicts_keep_the_native_receipt(self):
         self.client.force_login(self.gm)
         rid = uuid.uuid4()
-        payload = {'name': 'Browser clock', 'segments': 8, 'visibility': 'players', 'playersCanEdit': True,
+        payload = {'name': 'Browser clock', 'description': '  Browser-authored notes á\nSecond line  ',
+                   'segments': 8, 'visibility': 'players', 'playersCanEdit': True,
                    'scopeSceneId': None, 'sceneId': str(self.scene.pk), 'mapId': str(self.scene.pk)}
         with patch('gravewright.realtime.dispatch.send') as published, self.captureOnCommitCallbacks(execute=True):
             first = self.call('create', payload, rid)
         self.assertEqual(first.status_code, 200, first.content)
         clock = first.json()['value']['clock']
+        self.assertEqual(clock['description'], payload['description'])
         self.assertIsNone(clock['sceneId'])
         self.assertEqual(published.call_args.args[1], {'type': 'room.resources', 'module': 'clocks'})
         self.assertEqual(self.call('create', payload, rid).json(), first.json())
@@ -37,6 +39,7 @@ class ClockFrontendTests(TestCase):
         advanced = self.call('advance', {'id': clock['id'], 'version': clock['version'], 'delta': 1})
         self.assertEqual(advanced.status_code, 200, advanced.content)
         self.assertFalse(advanced.json()['value']['clock']['canConfigure'])
+        self.assertEqual(advanced.json()['value']['clock']['description'], payload['description'])
         conflict = self.call('advance', {'id': clock['id'], 'version': clock['version'], 'delta': 1})
         self.assertEqual(conflict.status_code, 409, conflict.content)
         self.assertEqual(ProgressClock.objects.get().value, 1)

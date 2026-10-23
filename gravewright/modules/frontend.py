@@ -18,7 +18,7 @@ from .packages import ModuleFailure
 
 CONTRACT = json.loads((Path(__file__).parent / 'contracts/frontend.json').read_text(encoding='utf-8'))
 DOMAINS = {'actors': actors, 'tokens': tokens, 'maps': maps, 'journals': journals}
-RESOURCE_DOMAINS = {'items', 'combat', 'cards', 'audio', 'compendiums', 'clocks', 'clues'}
+RESOURCE_DOMAINS = {'items', 'combat', 'cards', 'audio', 'compendiums', 'clocks', 'clues', 'mindmaps'}
 
 
 def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene_id=None):
@@ -33,7 +33,7 @@ def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene
     p = dict(payload)
     # A mounted scene is authoritative; a payload cannot silently retarget it.
     if scene_id is not None:
-        if domain in ('clocks', 'clues') and p.get('scopeSceneId') is not None and str(p['scopeSceneId']) != str(scene_id):
+        if domain in ('clocks', 'clues', 'mindmaps') and p.get('scopeSceneId') is not None and str(p['scopeSceneId']) != str(scene_id):
             raise ModuleFailure('stale_context')
         if domain == 'maps' and method == 'navigate' and any(key in p and p[key] is None for key in ('sceneId', 'mapId')):
             raise ModuleFailure('stale_context')
@@ -41,8 +41,30 @@ def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene
             if p.get(key) is not None and str(p[key]) != str(scene_id):
                 raise ModuleFailure('stale_context')
         p['sceneId'] = p['mapId'] = str(scene_id)
+    if domain == 'mindmaps' and 'sceneId' in p and 'mapId' in p and str(p['sceneId']) != str(p['mapId']):
+        raise ModuleFailure('invalid_data')
     scene = p.get('sceneId') or p.get('mapId')
     try:
+        if domain == 'journals' and method in ('resources', 'resolve'):
+            allowed = {'resources': {'query', 'kinds', 'limit'}, 'resolve': {'reference'}}[method] | {'sceneId', 'mapId'}
+            if set(p) - allowed or ('sceneId' in p and 'mapId' in p and p['sceneId'] != p['mapId']):
+                raise ModuleFailure('invalid_data')
+            if method == 'resources':
+                return journals.resources(campaign_id, user_id, query=p.get('query', ''),
+                    kinds=p.get('kinds'), limit=p.get('limit', 80), scene_id=scene)
+            return journals.resolve(campaign_id, user_id, p.get('reference'))
+        if domain == 'mindmaps' and method in ('read', 'resources', 'resolve'):
+            from gravewright.table import mindmaps
+            contexts = {'sceneId', 'mapId'}
+            allowed = {'read': {'id'}, 'resources': {'query', 'kinds', 'limit'}, 'resolve': {'reference'}}[method] | contexts
+            if set(p) - allowed:
+                raise ModuleFailure('invalid_data')
+            if method == 'read':
+                return mindmaps.public_read(campaign_id, user_id, p.get('id'), scene)
+            if method == 'resources':
+                return mindmaps.public_resources(campaign_id, user_id, query=p.get('query', ''),
+                    kinds=p.get('kinds'), limit=p.get('limit', 80), scene_id=scene)
+            return mindmaps.public_resolve(campaign_id, user_id, p.get('reference'))
         if domain in ('mapBuilder', 'blueprints') or domain == 'maps' and method == 'exportUniversalVtt':
             if method != 'state' and method not in CONTRACT['domains'].get(domain, {}):
                 raise ModuleFailure('unavailable')

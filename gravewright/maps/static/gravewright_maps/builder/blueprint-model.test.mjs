@@ -135,7 +135,7 @@ test('door instance ports expose verbs and native state without adding object da
         ['door', 'lever', 'torch', 'region', 'event', 'light', 'sound', 'state', 'interact', 'flame', 'sprite', 'condition', 'sequence', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'clockControl', 'clueControl',
             'getVariable', 'setVariable', 'compareValue', 'emitEvent', 'counter', 'once', 'cooldown', 'delay', 'timer', 'switch', 'random',
             'elementGroup', 'lightReference', 'soundReference', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
-            'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance']);
+            'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'openMindMap', 'mindMapNode', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance']);
     assert.throws(() => { blueprintContract.nodes.door.outputs[0].color = 'red'; }, TypeError);
     assert.throws(() => doorInstanceNode({ id: 'another', state: 'fake' }), /Invalid/);
 });

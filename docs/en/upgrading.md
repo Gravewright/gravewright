@@ -2,10 +2,9 @@
 
 [Documentation](../README.md) · [Português](../pt-BR/upgrading.md)
 
-This guide covers the prepared **Gravewright 0.3.2 — Alpha** release. Its source
+This guide covers the **Gravewright 0.3.2 — Alpha** release. Its source
 artifact is `Gravewright-0.3.2-django.zip`, with the matching
-`Gravewright-0.3.2-django.zip.sha256`. Preparing these files or documenting the
-version does not mean they have been published. See the [release notes](../releases/0.3.2.md)
+`Gravewright-0.3.2-django.zip.sha256`. See the [release notes](../releases/0.3.2.md)
 for features and [deployment](deployment.md) for public-server configuration.
 
 ## Before upgrading
@@ -32,7 +31,7 @@ storage overrides remain supported, and must be backed up as well.
 ## Upgrade paths
 
 After completing the stopped-instance backup, restart the **current** Runner
-for a compatible managed installation. Once the release is published, use
+for a compatible managed installation, then use
 **Administration → Updates → Install update**. Keep **Keep a .old copy for rollback**
 enabled when recovery is wanted. Leave that Runner open while the supervisor
 downloads, verifies, prepares dependencies, snapshots data, migrates, replaces
@@ -75,8 +74,8 @@ also apply to public deployments.
 ### Numbering and same-version packages
 
 The release identifier is **0.3.2**, following **0.3.1**. The updater compares
-version numbers, so a compatible installation on 0.3.1 can discover 0.3.2 after
-publication. The project remains in Alpha and the host SDK contract is unchanged;
+version numbers, so a compatible installation on 0.3.1 can discover 0.3.2 through
+its configured release repository. The project remains in Alpha and the host SDK contract is unchanged;
 optional APIs still need capability checks. Historical release notes retain
 their original identifiers.
 
@@ -95,12 +94,14 @@ it; recovery requires matching source, database and media.
 
 ## Database migrations in 0.3.2
 
-Compared with 0.3.1, this release adds:
+Compared with 0.3.1, this release adds six migrations:
 
 | Migration | Stored capability |
 | --- | --- |
 | [table/0003_progress_clock.py](../../gravewright/table/migrations/0003_progress_clock.py) | Progress clocks and retry receipts |
 | [table/0004_progress_clue.py](../../gravewright/table/migrations/0004_progress_clue.py) | Staged clues and their separate retry receipts |
+| [table/0005_mind_maps.py](../../gravewright/table/migrations/0005_mind_maps.py) | Mind-map graphs, visibility, selected editors and separate retry receipts |
+| [table/0006_clock_description.py](../../gravewright/table/migrations/0006_clock_description.py) | Authored clock descriptions, empty on existing clocks |
 | [campaigns/0005_preparation.py](../../gravewright/campaigns/migrations/0005_preparation.py) | Personal GM dashboards, session plans, timeline events and preparation receipts |
 | [journals/0004_revision.py](../../gravewright/journals/migrations/0004_revision.py) | Journal revisions, trash and retained attachment metadata |
 
@@ -114,7 +115,7 @@ migrated database safely.
 
 | Recovery material | What it preserves |
 | --- | --- |
-| Complete campaign export or clone | Selected campaign content, clocks/clues, preparation, timeline, portable dashboard metadata and journal history/trash; references are remapped |
+| Complete campaign export or clone | Selected campaign content, clocks/clues, mind maps, preparation, timeline, portable dashboard metadata and journal history/trash; typed references are remapped |
 | Campaign snapshot | Campaign recovery data, including the new preparation/history content; dashboard restoration applies to current GM memberships |
 | Coordinated full instance backup | Database, private files, accounts, permissions, host/module state and pending automation, together with configuration and matching application source |
 
@@ -145,7 +146,10 @@ a player using a synthetic or copied campaign. Verify the campaign manager and
 table, a mapped PDF, map upload/Universal VTT import, a clock, and a clue whose
 content remains hidden until completion. Check private journal visibility,
 session save/reopen, history/trash restoration and a representative backup round
-trip. Use the [testing guide](testing.md) for isolated automated scenarios.
+trip. Verify a [mind map](mindmaps.md) with a selected player editor: unreadable
+links stay unavailable, ordinary graph edits preserve those links, and a copied
+graph targets copied campaign resources. Use the [testing guide](testing.md) for
+isolated automated scenarios.
 
 If managed installation fails, retain updater transactions, backups and logs;
 the supervisor attempts recovery and handles interrupted transactions on the

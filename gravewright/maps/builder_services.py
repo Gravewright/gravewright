@@ -97,6 +97,7 @@ def catalog(campaign_id, user_id):
     from .blueprint_world import presentation_catalog
     from .blueprint_clocks import catalog as clock_catalog
     from .blueprint_clues import catalog as clue_catalog
+    from .blueprint_mindmaps import catalog as mindmap_catalog
     return {
         "projects": [summary(row, who) for row in MapBuilderProject.objects.filter(campaign=who.campaign).select_related("scene")],
         "assets": [
@@ -110,6 +111,7 @@ def catalog(campaign_id, user_id):
         **presentation_catalog(who),
         "clocks": clock_catalog(who, all_scenes=True),
         "clues": clue_catalog(who, all_scenes=True),
+        "mindmaps": mindmap_catalog(who, all_scenes=True),
         "limits": {**LIMITS, "maxPixels": min(LIMITS["maxPixels"], settings.GRAVEWRIGHT_MAP_MAX_PIXELS)},
     }
 

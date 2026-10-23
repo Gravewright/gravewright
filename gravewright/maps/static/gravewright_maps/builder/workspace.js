@@ -1422,7 +1422,7 @@ function mountWorkspace(root) {
         cancelDrawing();
         activeModal = openSceneNetwork({ campaignId: root.dataset.campaignId, t, pick: pickOnMap,
             load: async () => ({ elements: behaviorElements(), assets: behaviorMaterials(), materials: behaviorMaterials(), lights: state.document.lights,
-                sounds: state.sounds || [], users: state.users || [], handouts: state.handouts || [], clocks: behaviorClocks(), clues: behaviorClues() }),
+                sounds: state.sounds || [], users: state.users || [], handouts: state.handouts || [], clocks: behaviorClocks(), clues: behaviorClues(), mindmaps: behaviorMindmaps() }),
             save: async (owner, blueprint) => {
                 const target = { kind: owner.sourceKind, id: owner.id }, item = itemFor(target);
                 if (!item || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));
@@ -1448,7 +1448,7 @@ function mountWorkspace(root) {
         }).filter(Boolean);
         activeModal = openBlueprintEditor({ element: elements.find(item => item.id === object.id), elements,
             assets, materials: behaviorMaterials(), campaignId: root.dataset.campaignId, linkedScene: Boolean(state.sceneId), users: state.users || [], handouts: state.handouts || [],
-            clocks: behaviorClocks(), clues: behaviorClues(),
+            clocks: behaviorClocks(), clues: behaviorClues(), mindmaps: behaviorMindmaps(),
             lights: state.document.lights, sounds: state.sounds || [], t, pick: pickOnMap,
             onSave: async blueprint => {
                 const current = itemFor(target); if (!current || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));
@@ -1467,11 +1467,15 @@ function mountWorkspace(root) {
         state.assets = result.assets; state.sounds = result.sounds || []; state.users = result.users || []; state.handouts = result.handouts || [];
         state.clocks = result.clocks || [];
         state.clues = result.clues || [];
+        state.mindmaps = result.mindmaps || [];
         state.projects = result.projects; state.limits = result.limits || {};
         renderAssets(); renderProjects(); renderCanvas();
     }
     function behaviorClocks() {
         return (state.clocks || []).filter(clock => !clock.sceneId || clock.sceneId === state.sceneId);
+    }
+    function behaviorMindmaps() {
+        return (state.mindmaps || []).filter(map => !map.sceneId || map.sceneId === state.sceneId);
     }
     function behaviorClues() {
         return (state.clues || []).filter(clue => !clue.sceneId || clue.sceneId === state.sceneId);

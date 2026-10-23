@@ -37,11 +37,12 @@ Every domain below has `state(payload = {}, options)` and the listed command met
 | `actors` | `create`, `update`, `delete`, `setPermissions`, `saveSheet`, `createFolder`, `updateFolder`, `deleteFolder`, `deleteAsset` |
 | `tokens` | `place`, `move`, `remove`, `duplicate`, `setHidden`, `setVision`, `configure`, `addCondition`, `removeCondition` |
 | `maps` | `update`, `move`, `delete`, `activate`, `navigate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder`, `exportUniversalVtt` |
-| `journals` | `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset`, `setPrerequisites`, `restoreRevision`, `restoreDeleted`, `purgeDeleted` |
+| `journals` | `resources`, `resolve`, `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset`, `setPrerequisites`, `restoreRevision`, `restoreDeleted`, `purgeDeleted` |
 | `items` | `create`, `update`, `delete`, `duplicate`, `setPermissions`, `createFolder`, `updateFolder`, `deleteFolder` |
 | `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
 | `clocks` | `create`, `update`, `advance`, `reset`, `delete` |
 | `clues` | `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
+| `mindmaps` | `read`, `resources`, `resolve`, `create`, `update`, `node`, `delete` |
 | `cards` | `define`, `instantiate`, `create`, `draw`, `shuffle`, `reset`, `deleteDeck`, `discard`, `return`, `give`, `place`, `take`, `flip`, `move` |
 | `audio` | `updateTrack`, `deleteTrack`, `createPlaylist`, `updatePlaylist`, `deletePlaylist`, `createSpatialSound`, `updateSpatialSound`, `deleteSpatialSound`, `play`, `pause`, `stop`, `seek`, `setVolume`, `startScore`, `pauseScore`, `resumeScore`, `stopScore`, `nextScore`, `previousScore` |
 | `compendiums` | `create`, `configure`, `read`, `delete`, `add`, `remove`, `import`, `setPermissions` |
@@ -55,8 +56,8 @@ Additional forms:
 
 | Method | Behavior |
 | --- | --- |
-| `actors/tokens/maps/journals/items/clocks/clues.list(payload, options)` | Return the collection from the authorized `state` response |
-| `actors/tokens/maps/journals/items/clocks/clues.get(id, payload, options)` | Find an item in that projected collection, or `not_found` |
+| `actors/tokens/maps/journals/items/clocks/clues/mindmaps.list(payload, options)` | Return the collection from the authorized `state` response |
+| `actors/tokens/maps/journals/items/clocks/clues/mindmaps.get(id, payload, options)` | Find an item in that projected collection, or `not_found` |
 | `actors.update(id, changes, options)` | Convenience overload; reads current version if `changes.version` is absent |
 | `actors.sheet(id, payload, options)` | Read a sheet; supports token context in payload |
 | `maps.layers(payload, options)` | Read authorized scene layers |
@@ -108,7 +109,7 @@ and expected revisions. Their payloads use these public names:
 | `blueprints.templates` / `readTemplate` | `{}` / `{templateId}` |
 | `blueprints.saveTemplate` / `deleteTemplate` | `{templateId, expectedVersion, name, description, definition}` / `{templateId, expectedVersion}` |
 | `blueprints.test` | `{sceneId, elementId, expectedVersion, event, tokenId?, blueprint?}` |
-| `blueprints.testDraft` | `{document, elementId, event, actorId?, projectId?}`; an authorized linked project supplies the original scene scope for clock and clue bindings in the temporary rehearsal |
+| `blueprints.testDraft` | `{document, elementId, event, actorId?, projectId?}`; an authorized linked project supplies the original scene scope for clock, clue and mind-map bindings in the temporary rehearsal |
 | `blueprints.control` | `{sceneId, elementId, expectedVersion, action, value?}` |
 | `maps.exportUniversalVtt` | `{sceneId}`; native interchange JSON |
 | `maps.navigate` | `{mapId}`; explicit `mapId: null` resumes following the broadcast in an unbound context |
@@ -139,7 +140,7 @@ manager. `state({sceneId})` returns campaign clocks plus clocks in that authoriz
 scene, filtered by current membership. The native page adapter uses the existing
 GET resource-state route so read-only stream sessions can view public clocks.
 
-Create accepts `{name, segments?, value?, color?, visibility?, playersCanEdit?,
+Create accepts `{name, description?, segments?, value?, color?, visibility?, playersCanEdit?,
 pinned?, scopeSceneId?}`. Defaults are 4 segments, value 0, `#c9a44c`, `gm`,
 false, false and campaign scope. Segments are integers 2–24; progress is 0–segments;
 there are at most 128 clocks per campaign. Update accepts those configuration
@@ -149,6 +150,11 @@ Reset and delete accept `{id, version}`. Only GMs configure, reset or delete;
 players advance only public clocks with `playersCanEdit: true`. Streamers remain
 read-only. Returned clocks expose `canEdit`, `canConfigure` and their saved
 scope as `sceneId`.
+
+`description` is optional authored text, defaults to `""`, and must be a string
+of at most 4,000 characters. Only GM configuration writes can change it. Omitted
+updates preserve it; readers receive it only when the clock is visible to them.
+The field is additive and introduces no new browser method or SDK version.
 
 `scopeSceneId: null` persists campaign scope; a scene UUID persists scene scope.
 The request's `sceneId`/`mapId` is the viewing context and never relocates a clock.
@@ -186,6 +192,125 @@ as for clocks. Native reads use the streamer-compatible GET resource route.
 below. The MapBuilder `clueControl` node delegates only its authored effect and
 does not grant players direct clue writes. Rehearsals roll back its changes and
 notifications. See [clues](clues.md) for usage and node actions.
+
+### Collaborative mind maps and typed resource links
+
+The `mindmaps` domain reads shared campaign graphs through each member's current
+permissions. It has no implicit current-scene default: `state({})` lists every
+accessible map; `state({sceneId})` selects campaign maps plus maps in that scene.
+An explicitly scene-bound module retains its authoritative scene context.
+
+| Method | Payload and result |
+| --- | --- |
+| `state` / `read` | `{sceneId?}` / `{id, sceneId?}`; the collection envelope / one projected map |
+| `resources` | `{query?, kinds?, limit?, sceneId?}`; `{kinds:[{id,label}], resources:[...], truncated}` |
+| `resolve` | `{reference}`; one live authorized display row or `null` for missing/denied targets |
+| `create` | `{name, visibility?, editorIds?, scopeSceneId?, document?}`; GM-only, defaults to private campaign scope |
+| `update` | `{id, version, name?, document?, visibility?, editorIds?, scopeSceneId?}` |
+| `node` | `{id, version, nodeId, patch}`; update a topic's supplied fields |
+| `delete` | `{id, version}`; GM-only |
+
+`visibility` is `gm` or `players`. `editorIds` contains current campaign player
+UUIDs; selected editors can read/edit even a private map. All GMs can edit, and
+public visibility grants other participants reading only. Players can change
+`name`, `document` and topic fields; configuring scope/access remains GM-only.
+Streamers cannot write. Writes return `{id, version, mindmap}` (delete returns
+`{id}`), use a dedicated retry receipt and require the saved version for existing
+maps. Conflicts require reviewing current state, without replacing the draft's
+expected version silently. `mindmaps.changed` uses the resource-state envelope.
+
+A document is `{nodes, edges}`. Topics have UUID `id`, optional `parentId`,
+`label`, `notes`, hex `color`, `x`, `y`, `collapsed`, `completed`, and `links`.
+Parent links form an acyclic forest. Additional edges are
+`{id, from, to, label?}` between existing topics. Topic patches accept these topic
+fields except `id`. Limits are 64 maps per campaign, 500 topics/1,000 edges per
+map, 16 links per topic/2,048 overall, and 1 MiB per document. Labels have 240
+characters, notes 8,000, and coordinates are bounded to ±100,000.
+
+Canonical resource references are exactly `{kind, id, pageId?}`. The
+[resource registry](../../gravewright/table/resource_links.py) defines 37 types,
+including native numeric IDs, installed compendium entries (`packId/entryId`),
+journal pages (`id: journalId` plus `pageId`) and drawings (`sceneId/drawingId`).
+Discover kind IDs through `resources`, rather than inferring them from labels.
+Search accepts up to 120 characters; `limit` defaults to 80 and is bounded to
+1–200. Labels come from current native projections. Authored labels stay literal;
+optional `labelKey`/`descriptionKey` identify generated text for Translator.
+
+Missing and denied links are both projected as `{unavailable:true, key}` without
+hidden kind/ID/name/URL. Return that opaque placeholder unchanged when editing
+other content, or omit it to remove the link. It cannot authorize a new hidden
+reference. Reopening resolves permissions again; naming a target or sharing a
+map does not grant target access. See [Mind maps](mindmaps.md) for resource types,
+collaboration, MapBuilder nodes and typed archive remapping.
+
+### Journal resource links
+
+`api.journals.resources({query?, kinds?, limit?, sceneId?}, options)` searches the
+same typed campaign catalog used by mind maps. `api.journals.resolve({reference},
+options)` returns `{resource: row | null}` after checking current target access.
+Both are read methods, available to authorized players and streamers. Unbound
+reads do not inherit the table's broadcast scene; an explicitly mounted scene
+remains authoritative.
+
+Rich text retains `gw-journal-doc-v1`, version 1. A reference is an inline atom:
+
+```json
+{"type":"gwResourceLink","attrs":{"reference":{"kind":"journal-page","id":"<journalUUID>","pageId":"page_main"}}}
+```
+
+Stored references contain only `kind`, `id` and optional `pageId`. Recipient
+projections add current display metadata and an opaque `key`; an inaccessible
+target becomes `{unavailable:true,key}` without its identity or title. Return
+that placeholder unchanged to preserve it during an authorized edit. It is
+bound to the source journal and cannot create a new private connection. A
+journal accepts up to 512 reference atoms; normal document size and depth limits
+also apply. Saving uses the existing journal version and operation UUID.
+
+Native reads use `GET /api/containers/{campaign}/journals/resources` with query
+parameters `query`, `kinds` (JSON array), `limit` and optional `sceneId`, and
+`GET /api/containers/{campaign}/journals/resolve?reference=<JSON>`. Responses are
+private and not cached. Python packages use
+`api.journals.resources(campaign_id, user_id, *, query='', kinds=None, limit=80,
+scene_id=None)` and `api.journals.resolve(campaign_id, user_id, reference)`.
+Resource lookup never changes table presence or navigation. See
+[Journals and references](journals.md) for editing, access and portable copies.
+
+### Diary chapters and pages
+
+Diary updates use the existing journal command, expected version and operation
+UUID. The `data` payload can include independent chapters, including empty ones:
+
+```json
+{
+  "chapters": [
+    {"id":"chapter_main", "name":"Chapter one", "parentId":null, "sortOrder":10},
+    {"id":"chapter_child", "name":"A subchapter", "parentId":"chapter_main", "sortOrder":10}
+  ],
+  "sections": [
+    {"id":"page_main", "title":"A page", "kind":"text", "chapterId":"chapter_child"},
+    {"id":"page_loose", "title":"An ungrouped page", "kind":"text", "chapterId":null}
+  ]
+}
+```
+
+Each page belongs to zero or one chapter. Each chapter has zero or one parent
+and can contain zero to many pages and subchapters. IDs are local to the journal;
+copying a campaign preserves them and does not treat them as resource UUIDs.
+Chapter IDs are unique, 1–40 ASCII letters/digits/underscores/hyphens; names are
+1–80 characters. The server allows up to 128 chapters, eight hierarchy levels
+and the existing 64 pages. Missing parents, cycles and dangling page assignments
+are rejected before saving. Chapter sorting uses `sortOrder` within each parent.
+
+Authorized diary projections expose `chapters` alongside `sections`. Private
+pages remain filtered, together with chapter branches containing only unreadable
+pages. Ancestors of readable pages and genuinely empty branches remain visible.
+Page-scoped presentations contain only their page's chapter path. Updates preserve
+server-owned hidden pages and the chapter structure those pages require.
+
+Legacy `sections[].category` names receive stable chapter IDs on normalization;
+`category` remains a compatibility name mirror. An explicit `chapterId: null`
+removes a page's assignment. Older updates omitting `chapters` retain existing
+chapters, including empty ones. History and campaign archives retain the tree.
 
 ### System-owned operations and the PDF System
 
@@ -334,9 +459,10 @@ maps.layersChanged   journals.changed     items.changed
 combat.changed       cards.changed        audio.changed
 compendiums.changed  chat.changed         chat.message
 table.presence       table.lobbyChanged   clocks.changed   clues.changed
+mindmaps.changed
 ```
 
-Collection change subscriptions perform an authorized HTTP read initially, on matching socket invalidations, and on reconnect. Concurrent invalidations are coalesced; they do not carry every intermediate mutation. Actor/token/map/journal callbacks receive the projected state plus table/scene identity; item/combat/card/audio/compendium/clock/clue callbacks receive `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presence, and lobby callbacks forward matching socket payloads rather than automatically reading an initial snapshot. Read their initial state separately as needed.
+Collection change subscriptions perform an authorized HTTP read initially, on matching socket invalidations, and on reconnect. Concurrent invalidations are coalesced; they do not carry every intermediate mutation. Actor/token/map/journal callbacks receive the projected state plus table/scene identity; item/combat/card/audio/compendium/clock/clue/mindmap callbacks receive `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presence, and lobby callbacks forward matching socket payloads rather than automatically reading an initial snapshot. Read their initial state separately as needed.
 
 Subscriptions use the current page's socket event source. A `forTable` handle on `/inside`, or one targeting another table, can make HTTP requests but does not create a socket for that table. Do not assume it receives ongoing changes. Callbacks should be synchronous; start async work explicitly with error handling. The older mount-level `events` interface has different names and delivery caveats documented in the [module guide](modules.md#assets-persistence-and-events).
 
@@ -427,9 +553,10 @@ Public imports and signatures, with `campaign_id`/`user_id` denoting identifiers
 | `api.systems` | `capabilities(campaign_id, user_id)`, `call(campaign_id, user_id, operation, payload, request_id=None, *, scene_id=None)`, `register_api(system_id, operations)`; [provider contract](../../gravewright/campaigns/system_api.py) |
 | `api.library` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, payload, request_id)`; [native library service](../../gravewright/maps/library_services.py) |
 | `api.ownership` | `state(campaign_id, user_id, kind, resource_id)`, `command(campaign_id, user_id, kind, resource_id, payload, request_id)`; [GM document, folder and page service](../../gravewright/table/permission_services.py) |
-| `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)` |
+| `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `resources(campaign_id, user_id, **search)`, `resolve(campaign_id, user_id, reference)` |
 | `api.clocks` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)`; actions `create`, `update`, `advance`, `reset`, `delete` |
 | `api.clues` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)`; actions `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
+| `api.mindmaps` | `state(campaign_id, user_id, scene_id=None)`, `read(campaign_id, user_id, mindmap_id, scene_id=None)`, `resources(campaign_id, user_id, *, query='', kinds=None, limit=80, scene_id=None)`, `resolve(campaign_id, user_id, reference)`, `command(campaign_id, user_id, action, data, request_id)`; actions `create`, `update`, `node`, `delete` |
 | `api.items`, `api.combat`, `api.cards`, `api.audio`, `api.compendiums` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.combat.register_provider` | Trusted system callback registration from `AppConfig.ready()`; see [system combat providers](modules.md#system-combat-providers) |
 | `api.resources` | `state(campaign_id, user_id, name, scene_id=None, preview_token_id=None)`, `command(campaign_id, user_id, name, action, data, request_id)` |
@@ -439,7 +566,7 @@ Public imports and signatures, with `campaign_id`/`user_id` denoting identifiers
 | `api.events` | `Change`, `resource_changed` |
 | `api.errors` | `AuthError`, `JournalError`, `MapError`, `RollError` |
 
-Use positional arguments as illustrated where facade parameter names vary. `resources` selects the native `items`, `combat`, `cards`, `audio`, `compendiums`, `clocks`, or `clues` domain by name. `dice.evaluate` computes locally; `dice.roll` stores/publishes a table roll. Python exceptions preserve their original service types/codes rather than the browser's seven-code normalization.
+Use positional arguments as illustrated where facade parameter names vary. `resources` selects the native `items`, `combat`, `cards`, `audio`, `compendiums`, `clocks`, `clues`, or `mindmaps` domain by name. `dice.evaluate` computes locally; `dice.roll` stores/publishes a table roll. Python exceptions preserve their original service types/codes rather than the browser's seven-code normalization.
 
 ### Transactions and server hooks
 

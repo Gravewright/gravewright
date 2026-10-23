@@ -115,7 +115,7 @@ if (root && !root.dataset.detachedChat?.includes('true')) {
         if (detail?.type !== 'automation.presentation') return;
         const value = detail.payload;
         if (!value || value.tableId !== root.dataset.tableId || typeof value.id !== 'string' || seen.has(value.id)
-            || typeof value.sceneId !== 'string' || !['message', 'handout', 'camera', 'roll'].includes(value.type)) return;
+            || typeof value.sceneId !== 'string' || !['message', 'handout', 'camera', 'roll', 'mindmap'].includes(value.type)) return;
         // Repeated socket delivery must never reopen a window or repeat a camera motion.
         seen.add(value.id); if (seen.size > 256) seen.delete(seen.values().next().value);
         if (value.type === 'message' && typeof value.text === 'string' && [...value.text].length <= 2000) showMessage(value.text);
@@ -124,6 +124,9 @@ if (root && !root.dataset.detachedChat?.includes('true')) {
             && (value.label === undefined || typeof value.label === 'string' && [...value.label].length <= 48)
             && ['public', 'gm'].includes(value.visibility)) showRoll(value);
         if (value.type === 'handout' && typeof value.journalId === 'string') window.gravewrightJournals?.open(value.journalId);
+        if (value.type === 'mindmap' && typeof value.mindMapId === 'string'
+            && (value.nodeId === null || value.nodeId === undefined || typeof value.nodeId === 'string'))
+            window.gravewrightMindMaps?.open(value.mindMapId, value.nodeId);
         if (value.type === 'camera' && followCamera && window.gravewrightMaps?.current?.id === value.sceneId
             && Number.isFinite(value.x) && Number.isFinite(value.y)) window.gravewrightMaps?.board?.ping({ x: value.x, y: value.y }, true);
     }, { signal });

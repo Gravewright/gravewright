@@ -1,6 +1,6 @@
 import { validateBlueprint } from './blueprint-model.js';
 
-export const templateBindingTypes = Object.freeze(['asset', 'element', 'light', 'sound', 'handout', 'user', 'clock', 'clue']);
+export const templateBindingTypes = Object.freeze(['asset', 'element', 'light', 'sound', 'handout', 'user', 'clock', 'clue', 'mindmap', 'mindmapTopic']);
 const fields = (value, required, optional = []) => value && typeof value === 'object' && !Array.isArray(value)
     && required.every(key => Object.hasOwn(value, key)) && Object.keys(value).every(key => [...required, ...optional].includes(key));
 const identifier = /^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/;
@@ -11,8 +11,9 @@ const text = (value, limit, empty = false) => typeof value === 'string' && !valu
 const scalarType = value => typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : typeof value === 'string' ? 'text' : null;
 const validScalar = (type, value) => scalarType(value) === type && (type === 'number' ? Number.isFinite(value) : type !== 'text' || text(value, 2000, true));
 const at = (value, path) => { for (const part of path.slice(0, -1)) value = value[part]; return [value, path.at(-1)]; };
-const catalogs = { asset: 'assets', element: 'elements', light: 'lights', sound: 'sounds', handout: 'handouts', user: 'users', clock: 'clocks', clue: 'clues' };
-const resourcesFor = (catalog, type) => type === 'asset' ? catalog.materials || catalog.assets || [] : catalog[catalogs[type]] || [];
+const catalogs = { asset: 'assets', element: 'elements', light: 'lights', sound: 'sounds', handout: 'handouts', user: 'users', clock: 'clocks', clue: 'clues', mindmap: 'mindmaps' };
+const resourcesFor = (catalog, type) => type === 'asset' ? catalog.materials || catalog.assets || []
+    : type === 'mindmapTopic' ? (catalog.mindmaps || []).flatMap(map => map.nodes || []) : catalog[catalogs[type]] || [];
 
 /** Exact reference fields only; authored UUID-like strings never become bindings. */
 function* resourceSlots(blueprint) {
@@ -20,8 +21,10 @@ function* resourceSlots(blueprint) {
     for (const graph of Object.values(blueprint.graphs || {})) for (const node of graph.nodes || []) {
         const slot = { reference: ['targetId', 'element'], lightReference: ['targetId', 'light'], soundReference: ['trackId', 'sound'],
             light: ['targetId', 'light'], sound: ['trackId', 'sound'], soundControl: ['trackId', 'sound'], clockControl: ['clockId', 'clock'], clueControl: ['clueId', 'clue'],
+            openMindMap: ['mindMapId', 'mindmap'], mindMapNode: ['mindMapId', 'mindmap'],
             showHandout: ['journalId', 'handout'], setQuestStatus: ['journalId', 'handout'], teleport: ['destinationId', 'element'], setAppearance: ['assetId', 'asset'] }[node.type];
         if (slot) yield [node, ...slot];
+        if (['openMindMap', 'mindMapNode'].includes(node.type) && node.nodeId !== null) yield [node, 'nodeId', 'mindmapTopic'];
         if (node.type === 'sprite' && node.appearance === 'asset') yield [node, 'assetId', 'asset'];
         if (node.type === 'elementGroup') {
             if (!['element', 'light', 'sound'].includes(node.memberType) || !Array.isArray(node.targetIds)) fail();
@@ -275,7 +278,7 @@ export async function openTemplateLibrary({ campaignId, blueprint, ownerId, cata
         const bindingControls = new Map();
         for (const binding of definition.bindings) {
             const control = input(binding.label, { limit: 120 }); control.required = true;
-            const typeName = { asset: 'Image', element: 'Element', light: 'Light', sound: 'Sound', handout: 'Handout', user: 'User' }[binding.type];
+            const typeName = { asset: 'Image', element: 'Element', light: 'Light', sound: 'Sound', handout: 'Handout', user: 'User', clock: 'Clock', clue: 'Clue', mindmap: 'Mind map', mindmapTopic: 'Topic' }[binding.type];
             content.append(field(binding.self ? 'This element' : `${t('Binding')} · ${t(typeName)}`, control)); bindingControls.set(binding.id, control);
         }
         const source = structuredClone(definition.blueprint);

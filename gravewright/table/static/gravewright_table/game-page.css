@@ -42,7 +42,7 @@
 .game-menubar__layer:hover { background: rgb(255 255 255 / 8%); color: var(--text); }
 .game-menubar__layers .game-menubar__layer--on, .game-menubar__layers .game-menubar__layer--on:hover { background: rgba(var(--layer-accent-rgb), .16); color: rgb(var(--layer-accent-rgb)); box-shadow: inset 0 calc(-1 * var(--size-2)) currentColor; }
 .game-menubar__layer:focus-visible { outline: var(--size-1) solid var(--focus-ring); outline-offset: calc(-1 * var(--size-1)); }
-.game-menubar__builder { text-transform: none; white-space: nowrap; }
+.game-menubar__builder { font-family: inherit; font-size: var(--text-xs); letter-spacing: normal; text-transform: none; white-space: nowrap; }
 .game-menubar__builder:disabled { cursor: wait; opacity: .55; }
 .game-menubar__actions { display: flex; margin-left: auto; align-items: center; gap: var(--space-half); }
 /* Small glyph, generous hitbox: the target is the full bar height even though the icon is not. */
@@ -81,9 +81,9 @@
 .game-dock__item:disabled { cursor: not-allowed; opacity: .35; }
 .game-dock__item:disabled:hover { transform: none; background: transparent; box-shadow: none; }
 /* The selected tool is filled and ringed, not tinted — at a glance it must be unmistakable. */
-.game-dock__item--on, .game-dock__item--on:hover { background: rgba(var(--layer-accent-rgb), .95); color: #0c100f; box-shadow: 0 0 0 var(--size-1) rgba(var(--layer-accent-rgb), .55), 0 var(--size-8) var(--size-21) calc(var(--size-5) * -1) rgba(var(--layer-accent-rgb), .5); }
+.game-dock__item--on, .game-dock__item--on:hover, .game-dock__item[aria-expanded="true"] { background: rgba(var(--layer-accent-rgb), .95); color: #0c100f; box-shadow: 0 0 0 var(--size-1) rgba(var(--layer-accent-rgb), .55), 0 var(--size-8) var(--size-21) calc(var(--size-5) * -1) rgba(var(--layer-accent-rgb), .5); }
 /* The running dot sits in the dock's own padding, below the tile, the way a dock marks a live app. */
-.game-dock__item--on::after { content: ""; position: absolute; bottom: calc(var(--size-3) * -1); width: var(--size-3); height: var(--size-3); border-radius: var(--radius-circle); background: rgb(var(--layer-accent-rgb)); }
+.game-dock__item--on::after, .game-dock__item[aria-expanded="true"]::after { content: ""; position: absolute; bottom: calc(var(--size-3) * -1); width: var(--size-3); height: var(--size-3); border-radius: var(--radius-circle); background: rgb(var(--layer-accent-rgb)); }
 .game-dock__tip { position: absolute; bottom: calc(100% + var(--size-8)); left: 50%; display: none; align-items: center; gap: var(--space-2); width: max-content; padding: var(--space-half) var(--space-2); border: var(--border-hairline); border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--shadow-lg); color: var(--text); font-size: var(--text-2xs); transform: translateX(-50%); }
 .game-dock__tip kbd { padding: var(--space-0) var(--space-half); border: var(--size-1) solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-muted); font-family: inherit; font-size: var(--text-3xs); }
 .game-dock__item:hover > .game-dock__tip, .game-dock__item:focus-visible > .game-dock__tip { display: flex; }
@@ -213,13 +213,15 @@
 .gw-folder-editor.game-folder-create > header { display: flex; grid-template-columns: none; align-items: center; justify-content: space-between; gap: var(--space-2); padding-left: var(--space-3); }
 .gw-folder-editor.game-folder-create > header strong { flex: 1; text-align: left; }
 @media (max-width: 960px) { .game-scene-editor, .game-scene-settings { left: var(--size-13); width: calc(100vw - var(--size-26)); min-width: 0; } .game-panel:has(+ .game-scene-editor), .game-scene-editor + .game-panel { visibility: hidden; } }
-@media (max-width: 700px) { .game-table__scene { max-height: calc(100vh - var(--size-89)); } .game-panel { top: var(--size-8); right: var(--size-8); bottom: 60px; width: calc(100vw - var(--size-13)); } .game-dock { bottom: var(--size-8); max-width: calc(100vw - var(--size-13)); } .game-scene-editor__grid { grid-template-columns: 1fr 1fr; } .game-scene-editor__range { grid-column: 1 / -1; } }
+@media (max-width: 700px) { .game-table__scene { max-height: calc(100vh - var(--size-89)); } .game-panel { top: var(--size-8); right: var(--size-8); bottom: calc(var(--size-8) + var(--game-dock-height) + var(--size-8)); width: calc(100vw - var(--size-13)); } .game-dock { bottom: var(--size-8); max-width: calc(100vw - var(--size-13)); } .game-scene-editor__grid { grid-template-columns: 1fr 1fr; } .game-scene-editor__range { grid-column: 1 / -1; } }
 .game-directory__file { display: none; }
 
 /* Layers stay in the upper menubar; tools and directories occupy the lower dock. */
 .game-table { --game-dock-height: calc(var(--size-34) + var(--size-8) * 3 + var(--size-2)); --game-panel-width: var(--size-377); }
-.game-dock { flex-direction: column; align-items: center; gap: var(--space-1); max-width: calc(100vw - var(--size-21)); padding: var(--space-2); }
+.game-dock { flex-direction: column; align-items: center; gap: var(--space-1); width: max-content; max-width: calc(100vw - var(--size-21)); padding: var(--space-2); }
 .game-dock__row, .game-dock__group { display: flex; align-items: center; justify-content: center; gap: var(--space-half); }
+.game-dock__row { max-width: 100%; }
+.game-dock__group { min-width: 0; max-width: 100%; flex-wrap: wrap; }
 .game-dock__item { width: calc(var(--size-34) + var(--size-8)); height: calc(var(--size-34) + var(--size-8)); flex: 0 0 auto; }
 .game-dock__split { margin: var(--space-0) var(--space-2); height: var(--size-34); }
 .game-dock__inspector { position: absolute; left: 0; bottom: calc(100% + var(--size-8)); width: min(var(--size-377), calc(100vw - var(--size-21))); max-height: calc(100dvh - var(--size-233)); overflow: auto; border: var(--size-1) solid var(--border); border-radius: var(--radius-lg); background: var(--surface, #14181d); box-shadow: var(--shadow-window); }
@@ -237,7 +239,7 @@
   .game-table { --game-dock-height: calc(var(--size-89) + var(--size-8)); }
 }
 
-.game-menubar__actions :is(.game-menubar__library, .game-menubar__clocks, .game-menubar__clues) { display: flex; width: auto; gap: var(--space-1); padding-inline: var(--space-2); white-space: nowrap; }
+.game-menubar__actions .game-menubar__library { display: flex; width: auto; gap: var(--space-1); padding-inline: var(--space-2); white-space: nowrap; }
 .game-menubar__layers { min-width: 0; overflow-x: auto; flex-shrink: 1; }
 .game-menubar__layer { flex-shrink: 0; }
 @media (max-width: 960px) {
@@ -249,7 +251,7 @@
   .game-menubar__actions { grid-column: 3; grid-row: 1; }
 }
 @media (max-width: 610px) {
-  .game-menubar .individual-audio__volume, :is(.game-menubar__library, .game-menubar__clocks, .game-menubar__clues) > span { display: none; }
+  .game-menubar .individual-audio__volume, .game-menubar__library > span { display: none; }
 }
 
 .game-panel--visibility:not(.game-panel--minimized):not(.game-panel--detached) {bottom:auto;height:auto;width:min(var(--size-420),calc(100vw - var(--size-26)));max-height:calc(100vh - var(--size-144));}

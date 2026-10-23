@@ -42,9 +42,9 @@ NODE_TYPES = ("event", "light", "sound", "state", "interact", "condition", "sequ
               "reference", "reveal", "barrier", "soundControl", "flame", "all", "any",
               "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random",
               "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion",
-              "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "cameraFocus", "teleport", *CONTROL_TYPES)
+              "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport", *CONTROL_TYPES)
 # Node types introduced with version 2; version 1 documents keep their original vocabulary.
-VERSION_2_NODE_TYPES = ("interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "cameraFocus", "teleport", *CONTROL_TYPES)
+VERSION_2_NODE_TYPES = ("interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport", *CONTROL_TYPES)
 BARRIER_CHANNELS = ("movement", "vision", "light", "sound")
 SOUND_CONTROLS = ("stop", "volume")
 PURE_NODE_TYPES = ("property", "compare", "reference", "all", "any", "getVariable", "compareValue", "elementGroup", "lightReference", "soundReference", "eventContext")
@@ -124,6 +124,8 @@ _NODE_FIELDS = {
     "setQuestStatus": {"journalId", "status"},
     "clockControl": {"clockId", "action", "amount"},
     "clueControl": {"clueId", "action", "amount"},
+    "openMindMap": {"mindMapId", "nodeId", "audience"},
+    "mindMapNode": {"mindMapId", "nodeId", "action"},
     "cameraFocus": {"focusX", "focusY", "audience"},
     "teleport": {"destinationId"},
 }
@@ -343,6 +345,15 @@ def _clean_node(raw, event, *, version, assets, lights, tracks, appearance_asset
         if not isinstance(raw["status"], str) or raw["status"] not in QUEST_STATUSES:
             raise MapError("Invalid blueprint quest status.")
         result["status"] = raw["status"]
+    elif kind in ("openMindMap", "mindMapNode"):
+        result["mindMapId"] = _reference(raw["mindMapId"], None, label="mind map")
+        result["nodeId"] = None if kind == "openMindMap" and raw["nodeId"] is None else _reference(raw["nodeId"], None, label="mind-map topic")
+        if kind == "openMindMap":
+            result["audience"] = clean_audience(raw["audience"])
+        else:
+            if not isinstance(raw["action"], str) or raw["action"] not in ("complete", "reset", "toggle"):
+                raise MapError("Invalid blueprint mind-map action.")
+            result["action"] = raw["action"]
     elif kind == "clockControl":
         result["clockId"] = _reference(raw["clockId"], None, label="clock")
         if not isinstance(raw["action"], str) or raw["action"] not in ("advance", "reduce", "set", "reset"):
@@ -765,7 +776,7 @@ def evaluate_graph(blueprint, event, current_state, previous_state=None, doors=N
         node = nodes[identifier]
         result["trace"].append(node["id"])
         kind = node["type"]
-        if kind in ("light", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "cameraFocus", "teleport"):
+        if kind in ("light", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport"):
             action = deepcopy(node)
             source = sources.get((identifier, "target"))
             if source:

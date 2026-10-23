@@ -4,17 +4,19 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **0.3.2**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, relógios de progresso e pistas, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **0.3.2**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, relógios de progresso e pistas, mapas mentais colaborativos, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
 ## Preparação da campanha e jogo
 
 | Ferramenta | O que permite fazer |
 | --- | --- |
+| [Diários e referências](docs/pt-BR/journals.md) | Organizar páginas em capítulos e subcapítulos independentes e vincular fichas, diários, missões e outros recursos no texto, respeitando as permissões de cada destino |
 | [Gestor de campanha](docs/pt-BR/campaign-management.md) | Abrir **Gerenciar campanha** antes de entrar na mesa. Usar documentos, biblioteca de arquivos, fichas e ferramentas de cena nativos, com painel pessoal, planejador de sessões, cronologia/calendário, colunas de missões, conexões, prévia de jogador e histórico/lixeira de diários |
 | [Relógios de progresso](docs/pt-BR/clocks.md) | Acompanhar objetivos por segmentos na mesa e no gestor, com escopo de campanha/cena, controle de público, alteração opcional de progresso por jogadores e exibição fixada |
 | [Pistas](docs/pt-BR/clues.md) | Preparar descobertas e notas privadas do mestre; revelar o conteúdo aos jogadores quando o progresso da descoberta for concluído |
+| [Mapas mentais](docs/pt-BR/mindmaps.md) | Organizar tópicos na mesa e no gestor, conceder edição a jogadores selecionados e vincular 37 tipos de recursos conforme as permissões atuais |
 | [PDF System](docs/pt-BR/pdf-system.md) | Mapear campos de texto, número e checkbox sobre um PDF não editável; vincular campos às barras do token, criar rolagens e cálculos salvos e reutilizar mapeamentos |
-| [Map Builder](docs/pt-BR/map-builder.md) | Criar mapas editáveis, adotar cenas existentes compatíveis, sincronizar edições da mesa e conectar mecanismos de Objetos Inteligentes às ferramentas nativas, relógios e pistas |
+| [Map Builder](docs/pt-BR/map-builder.md) | Criar mapas editáveis, adotar cenas existentes compatíveis, sincronizar edições da mesa e conectar mecanismos de Objetos Inteligentes às ferramentas nativas, relógios, pistas e mapas mentais |
 | [Universal VTT](docs/pt-BR/universal-vtt.md) | Importar mapas `.uvtt`, `.dd2vtt` e `.df2vtt` como cenas nativas ou projetos editáveis do Builder, com avisos de aproximações e limites do formato |
 
 O gestor e a mesa compartilham os registros da campanha. Preparação exclusiva do
@@ -29,9 +31,8 @@ de mapa editável ou colocar elementos interativos sobre uma imagem de mapa pron
 O [guia do Universal VTT](docs/pt-BR/universal-vtt.md) explica como importar
 arquivos `.uvtt`, `.dd2vtt` e `.df2vtt` como cenas nativas, exportar cenas e conferir
 os limites do formato. As [notas da 0.3.2](docs/releases/0.3.2.md) apresentam
-preparação de campanha, relógios e pistas, melhorias do PDF, Pillow 13 e as
-migrações de banco necessárias. As notas preparam a release; não indicam que
-uma tag ou um download já foram publicados.
+preparação de campanha, relógios e pistas, mapas mentais colaborativos, melhorias do PDF, Pillow 13 e as
+migrações de banco necessárias.
 
 Extraia o projeto completo para uma pasta gravável, execute o instalador do seu sistema operacional e depois use o Runner gerado. O instalador prepara ferramentas, dependências, frontend e configurações; o Runner inicia a aplicação já preparada.
 
@@ -41,7 +42,7 @@ Extraia o projeto completo para uma pasta gravável, execute o instalador do seu
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/pt-BR/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/pt-BR/macos-runner.md) |
 
-A distribuição do código inclui os instaladores das três plataformas. Os identificadores preparados para a release são **`v0.3.2`** e **`Gravewright-0.3.2-django.zip`**. Quando a release correspondente for publicada no repositório configurado, instalações gerenciadas poderão usar **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env`, dados configurados e extensões locais antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração, dados e extensões e execute novamente o instalador da plataforma. Veja [atualização e recuperação](docs/pt-BR/upgrading.md) e as [instruções da release](docs/releases/0.3.2.md#download-e-atualização). Esta versão acrescenta migrações de preparação de campanha, histórico de diários, relógios e pistas em relação à 0.3.1; execute o fluxo normal de migrações antes de iniciar o servidor atualizado.
+A distribuição do código inclui os instaladores das três plataformas. Os identificadores da release são **`v0.3.2`** e **`Gravewright-0.3.2-django.zip`**, com o arquivo SHA-256 correspondente. Instalações gerenciadas podem consultar o repositório configurado em **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env`, dados configurados e extensões locais antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração, dados e extensões e execute novamente o instalador da plataforma. Veja [atualização e recuperação](docs/pt-BR/upgrading.md) e as [instruções da release](docs/releases/0.3.2.md#download-e-atualização). Esta versão acrescenta seis migrações de preparação de campanha, histórico de diários, relógios, descrições de relógios, pistas e mapas mentais em relação à 0.3.1; execute o fluxo normal de migrações antes de iniciar o servidor atualizado.
 
 Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
 

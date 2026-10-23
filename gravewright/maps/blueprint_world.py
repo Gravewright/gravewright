@@ -112,6 +112,15 @@ def presentation_for(campaign_id, user_id, payload):
             return None
         if payload["type"] == "handout":
             journals.get(payload["journalId"], who)
+        if payload["type"] == "mindmap":
+            from gravewright.table import mindmaps
+            from .blueprint_mindmaps import scoped_mindmaps
+            row = mindmaps.get(payload["mindMapId"], who)
+            if not scoped_mindmaps(campaign_id, payload["sceneId"]).filter(pk=row.pk).exists():
+                return None
+            if payload.get("nodeId") is not None and not any(
+                    topic['id'] == payload['nodeId'] for topic in row.document.get('nodes', [])):
+                return None
         return payload
     except (journals.JournalError, MapError, KeyError):
         return None
@@ -133,11 +142,13 @@ def present(scene, who, node, context):
         members = members.filter(user_id__in=audience["userIds"])
     entry = {"id": str(uuid.uuid4()), "sceneId": str(scene.pk),
              "type": {"showMessage": "message", "showHandout": "handout", "requestRoll": "roll",
-                      "cameraFocus": "camera"}[node["type"]]}
+                      "cameraFocus": "camera", "openMindMap": "mindmap"}[node["type"]]}
     if node["type"] == "showMessage":
         entry["text"] = node["text"]
     elif node["type"] == "showHandout":
         entry["journalId"] = node["journalId"]
+    elif node["type"] == "openMindMap":
+        entry.update(mindMapId=node['mindMapId'], nodeId=node['nodeId'])
     elif node["type"] == "requestRoll":
         entry.update({key: node[key] for key in ("expression", "label", "visibility")})
     else:

@@ -23,6 +23,7 @@ campanha. Não há uma segunda cópia da campanha para mesclar depois com a mesa
 | Diários e missões | Diários, páginas, missões, quadros de missões e tabelas de rolagem nos editores nativos, com seus anexos e regras de acesso |
 | [Relógios](clocks.md) | Relógios de progresso da campanha ou cena selecionada, com visibilidade, controles dos jogadores e fixação compartilhados com a mesa |
 | [Pistas](clues.md) | Descobertas por etapas compartilhadas com a mesa; jogadores recebem o conteúdo somente após conclusão e visibilidade pública |
+| [Mapas mentais](mindmaps.md) | Grafos de tópicos com notas, ramificações e vínculos nativos; o mestre configura leitores e jogadores editores, que usam os mesmos grafos na mesa |
 | Personagens e [fichas PDF](pdf-system.md) | Atores da campanha e fichas do sistema; no PDF System, seleção de PDF, campos manuais, rolagens salvas, cálculos e mapeamentos reutilizáveis |
 | Itens | Documentos e formulários de itens fornecidos pelo sistema instalado na campanha |
 | Cenas e MapBuilder | Cenas da campanha, projetos editáveis de mapa e cenas existentes compatíveis; gerar ou atualizar uma cena continua sendo uma operação explícita |
@@ -76,9 +77,9 @@ atualização da página, que acontece automaticamente a cada 15 segundos.
 | Ver como jogador | Escolha um jogador para ver os diários, páginas, personagens, itens e cenas que o servidor envia a ele. Os diários abrem numa prévia somente leitura da versão do jogador, sem os blocos exclusivos do mestre |
 | Histórico e lixeira | Versões anteriores de cada diário, comparadas linha a linha com a versão atual. Um mestre pode restaurar qualquer uma delas. Diários excluídos vão para a lixeira, e restaurar um deles traz de volta identificador, páginas, acessos, vínculos com quadros de missões e arquivos, sem restaurar o resto da campanha |
 
-**Inserir referência** no editor de diários também funciona no gerenciador: a
-busca usa a mesma API HTTP autorizada em vez da conexão com a mesa. Uma
-referência pode apontar para um personagem, item, diário ou cena. No
+Digite **@** no texto editável do diário para abrir o seletor de referências no
+gestor. A busca consulta os recursos da campanha pela API HTTP autorizada sem
+entrar na mesa. Cada destino mantém seus controles de acesso. No
 gerenciador, uma referência de cena seleciona essa cena para preparação; na
 mesa, ela abre o diretório de cenas.
 
@@ -110,6 +111,13 @@ correspondente ou o primeiro painel da origem, com preferência pelo proprietár
 sem adicionar participantes ou permissões de usuários. Snapshots restauram o
 painel de cada mestre atual. Arquivos antigos que não armazenavam a preparação
 preservam a preparação e o histórico existentes ao restaurar uma campanha.
+
+Selecione **Mapas mentais** separadamente para copiar os grafos colaborativos.
+Vínculos tipados apontam aos recursos copiados; destinos omitidos ficam
+indisponíveis sem vincular à campanha de origem. Cópias portáteis limpam concessões
+de edição; snapshots as preservam na mesma campanha. Mapas com escopo de cena
+acompanham a seleção das cenas. Veja colaboração e permissões em
+[Mapas mentais](mindmaps.md).
 
 Restaurar uma versão revalida a visibilidade, os pré-requisitos e os arquivos
 antes de salvar. A versão esperada é aquela exibida na comparação; se outro mestre

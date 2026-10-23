@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-import re
 import socket
 import subprocess
 import sys
@@ -99,11 +98,15 @@ def check_browser(base, seed, output, executable, read_snapshot):
             return root.locator(f'[data-clock-id="{clock_id}"]')
 
         def progress(root, clock_id, value, segments):
-            expect(card(root, clock_id).locator('[data-clock-value]')).to_have_text(re.compile(rf'^{value}\s*/\s*{segments}$'))
+            face = card(root, clock_id).locator('[data-clock-face]')
+            expect(face.locator('.clocks__number')).to_have_text(str(value))
+            expect(face.locator('.clocks__sector')).to_have_count(segments)
+            expect(face.locator('.clocks__sector--filled')).to_have_count(value)
 
         def controls_readonly(root, clock_id):
             clock = card(root, clock_id)
             expect(clock.locator('[data-clock-action]:visible:not(:disabled)')).to_have_count(0)
+            expect(clock.locator('[data-clock-face]')).to_have_attribute('role', 'img')
 
         try:
             manager = client('manager', 'gm', manager=True)

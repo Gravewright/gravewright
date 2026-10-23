@@ -30,6 +30,7 @@ class ProgressClock(models.Model):
     campaign = models.ForeignKey('gravewright_campaigns.Campaign', on_delete=models.CASCADE)
     scene = models.ForeignKey('gravewright_maps.Scene', null=True, blank=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=120)
+    description = models.TextField(max_length=4000, blank=True, default='')
     segments = models.PositiveSmallIntegerField(default=4)
     value = models.PositiveSmallIntegerField(default=0)
     color = models.CharField(max_length=7, default='#c9a44c')
@@ -99,3 +100,35 @@ class ClueReceipt(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=['campaign', 'user', 'request_id'],
                                               name='table_unique_clue_command')]
+
+
+class MindMap(models.Model):
+    """A campaign graph with explicit collaborative editors and typed resource links."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    campaign = models.ForeignKey('gravewright_campaigns.Campaign', on_delete=models.CASCADE)
+    scene = models.ForeignKey('gravewright_maps.Scene', null=True, blank=True, on_delete=models.CASCADE)
+    name = models.CharField(max_length=120)
+    visibility = models.CharField(max_length=8, choices=[('gm', 'GM'), ('players', 'Players')], default='gm')
+    editor_ids = models.JSONField(default=list)
+    document = models.JSONField(default=dict)
+    version = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at', 'id']
+        constraints = [models.CheckConstraint(condition=models.Q(visibility__in=['gm', 'players']),
+                                              name='table_mindmap_visibility')]
+
+
+class MindMapReceipt(models.Model):
+    """Mind-map retries cannot replay projections from other private resources."""
+    campaign = models.ForeignKey('gravewright_campaigns.Campaign', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    request_id = models.UUIDField()
+    result = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['campaign', 'user', 'request_id'],
+                                              name='table_unique_mindmap_command')]

@@ -1,4 +1,5 @@
 import { createTranslator } from '/static/gravewright_modules/i18n.js';
+import { createProgressDetails, bindProgressDetailsName } from './progress-details.js';
 
 const sameScene = (a, b) => (a ?? null) === (b ?? null);
 const conflict = error => error?.code === 'conflict' || error?.status === 409;
@@ -49,11 +50,11 @@ export function createClueCommands({ api, signal, refresh, onChange = () => {} }
  * projection after a successful mutation, allowing another panel/HUD to update.
  */
 export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
-  t, pinnedOnly = false, onChange, signal: external, load = path => import(path) } = {}) {
+  t, pinnedOnly = false, onChange, onRender, signal: external, load = path => import(path) } = {}) {
   const document = root.ownerDocument, own = new AbortController();
   const signal = external ? AbortSignal.any([own.signal, external]) : own.signal;
   const translator = createTranslator(), text = t || (key => translator.t(key));
-  const modals = new Set();
+  const modals = new Set(), pendingProgress = new Set(), progressControls = new Map(), focusTargets = new Map();
   let rows = new AbortController(), read, sequence = 0, manualScene;
   let state = { clues: [], is_gm: false, sceneId: null }, editorOpening = false, errorText = '';
   const currentScene = () => (manualScene !== undefined ? manualScene : typeof sceneId === 'function' ? sceneId() : sceneId) || null;
@@ -72,11 +73,10 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
   const accepts = next => alive() && next && Array.isArray(next.clues) && sameScene(next.sceneId, currentScene());
   function apply(next) {
     if (state.is_gm === true && next.is_gm !== true) for (const modal of modals) modal.close?.(true);
-    for (const modal of modals) if (modal.dataset.clueView !== undefined) modal.close?.(true);
     state = next.is_gm === true ? next : { ...next, clues: next.clues
       .filter(clue => clue.discovered === true && clue.visibility === 'players' && clue.value === clue.segments)
       .map(({ gmNotes: _private, ...clue }) => ({ ...clue, canEdit: false, canConfigure: false })) };
-    errorText = ''; render(); return true;
+    errorText = ''; render(); details.update(); return true;
   }
   function update(next) {
     if (!accepts(next)) return false;
@@ -108,7 +108,21 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
     task.promise = promise; read = task; return promise;
   }
   const commands = createClueCommands({ api, signal, refresh, onChange });
+  const details = createProgressDetails({ root, kind: 'clue', signal, text, load, refresh, state: () => state, sceneId: currentScene });
+  async function openName(id) {
+    const context = currentScene(); await refresh({ fresh: true });
+    if (!alive() || context !== currentScene()) return;
+    const clue = state.clues.find(row => row.id === id); if (!clue) return;
+    return state.is_gm === true && clue.canConfigure === true ? openEditor(clue) : details.open(id, { fresh: false });
+  }
   const contextPayload = clue => ({ id: clue.id, version: clue.version, sceneId: currentScene(), mapId: currentScene() });
+  async function advance(clue, delta) {
+    if (!alive() || state.is_gm !== true || clue.canEdit !== true || pendingProgress.has(clue.id)
+      || clue.value + delta < 0 || clue.value + delta > clue.segments) return;
+    pendingProgress.add(clue.id); progressControls.get(clue.id)?.();
+    try { await commands.run('advance', { ...contextPayload(clue), delta }); }
+    finally { pendingProgress.delete(clue.id); progressControls.get(clue.id)?.(); }
+  }
   function action(label, name, work, { symbol, disabled = false, delta } = {}) {
     const button = node('button', 'clues__button', symbol || text(label));
     button.type = 'button'; button.dataset.clueAction = name; button.disabled = disabled;
@@ -137,9 +151,39 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
     }
     return meter;
   }
+  function bindProgress(element, clue, buttons) {
+    if (state.is_gm !== true || clue.canEdit !== true) return;
+    element.setAttribute('role', 'slider'); element.setAttribute('tabindex', '0');
+    const hint = text('Left-click to advance; right-click to reduce. Use the arrow keys to adjust progress.');
+    element.setAttribute('aria-description', hint); element.setAttribute('title', hint);
+    const adjust = delta => advance(clue, delta).catch(report);
+    element.addEventListener('click', event => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.stopPropagation(); adjust(1);
+    }, { signal: rows.signal });
+    element.addEventListener('contextmenu', event => {
+      event.preventDefault(); event.stopPropagation(); adjust(-1);
+    }, { signal: rows.signal });
+    element.addEventListener('keydown', event => {
+      const delta = ['ArrowRight', 'ArrowUp', '+', '=', 'Enter', ' '].includes(event.key) ? 1
+        : ['ArrowLeft', 'ArrowDown', '-'].includes(event.key) ? -1 : 0;
+      if (!delta || event.ctrlKey || event.metaKey || event.altKey) return;
+      event.preventDefault(); event.stopPropagation(); if (!event.repeat) adjust(delta);
+    }, { signal: rows.signal });
+    const busy = () => {
+      const pending = pendingProgress.has(clue.id);
+      element.setAttribute('aria-disabled', String(pending));
+      if (pending) element.setAttribute('aria-busy', 'true'); else element.removeAttribute('aria-busy');
+      for (const button of buttons) button.disabled = pending
+        || clue.value + Number(button.dataset.clueDelta) < 0
+        || clue.value + Number(button.dataset.clueDelta) > clue.segments;
+    };
+    progressControls.set(clue.id, busy); focusTargets.set(`progress:${clue.id}`, element); busy();
+  }
   function render() {
     if (!alive()) return;
-    rows.abort(); rows = new AbortController();
+    const focused = [...focusTargets].find(([, element]) => element === document.activeElement)?.[0];
+    rows.abort(); rows = new AbortController(); progressControls.clear(); focusTargets.clear();
     root.classList.add('clues'); root.classList.toggle('clues--pinned', pinnedOnly);
     root.replaceChildren();
     const visible = pinnedOnly ? state.clues.filter(clue => clue.pinned) : state.clues;
@@ -157,8 +201,11 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
     for (const clue of visible) {
       const card = node('article', 'clues__clue'); card.dataset.clueId = clue.id;
       const heading = node('strong', 'clues__name', clue.name); heading.dataset.clueName = ''; heading.setAttribute('translate', 'no');
+      bindProgressDetailsName(heading, { id: clue.id, kind: 'clue', text, open: openName, report, signal: rows.signal });
+      if (pinnedOnly) { heading.dataset.progressMoveHandle = ''; focusTargets.set(`move:${clue.id}`, heading); }
+      else focusTargets.set(`details:${clue.id}`, heading);
       const value = node('output', 'clues__value', `${clue.value}/${clue.segments}`); value.dataset.clueValue = '';
-      card.append(heading, progress(clue), value);
+      const meter = progress(clue); card.append(heading, meter); if (!pinnedOnly) card.append(value);
       if (!pinnedOnly) {
         const content = node('p', 'clues__content', clue.content); content.dataset.clueContent = ''; content.setAttribute('translate', 'no');
         card.append(content);
@@ -169,11 +216,11 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
         }
       }
       const controls = node('div', 'clues__controls'); controls.setAttribute('role', 'group'); controls.setAttribute('aria-label', text('Clue controls'));
-      if (pinnedOnly) controls.append(action('Read clue', 'open', () => readClue(clue)));
-      if (state.is_gm === true && clue.canEdit === true) controls.append(
-        action('Reduce clue', 'advance', () => commands.run('advance', { ...contextPayload(clue), delta: -1 }), { symbol: '−', delta: -1, disabled: clue.value <= 0 }),
-        action('Advance clue', 'advance', () => commands.run('advance', { ...contextPayload(clue), delta: 1 }), { symbol: '+', delta: 1, disabled: clue.value >= clue.segments }),
-      );
+      const progressButtons = !pinnedOnly && state.is_gm === true && clue.canEdit === true ? [
+        action('Reduce clue', 'advance', () => advance(clue, -1), { symbol: '−', delta: -1, disabled: clue.value <= 0 }),
+        action('Advance clue', 'advance', () => advance(clue, 1), { symbol: '+', delta: 1, disabled: clue.value >= clue.segments }),
+      ] : [];
+      controls.append(...progressButtons); bindProgress(meter, clue, progressButtons);
       if (!pinnedOnly && state.is_gm === true && clue.canConfigure === true) controls.append(
         action('Reveal clue', 'reveal', () => commands.run('reveal', contextPayload(clue)), { disabled: clue.discovered && clue.visibility === 'players' }),
         action('Hide clue', 'hide', () => commands.run('hide', contextPayload(clue)), { disabled: clue.visibility === 'gm' }),
@@ -187,14 +234,17 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
       list.append(card);
     }
     root.append(list);
+    onRender?.(root);
+    if (focused && alive() && (!document.activeElement || document.activeElement === document.body
+      || document.activeElement === document.documentElement)) focusTargets.get(focused)?.focus({ preventScroll: true });
   }
-  async function mountEditor(title, save, build, submitLabel) {
+  async function mountEditor(title, save, build, submitLabel, authorized = () => state.is_gm === true) {
     if (editorOpening || !alive()) return;
     for (const modal of modals) if (modal.isConnected) { modal.focus(); return; }
     editorOpening = true;
     try {
       const { mountModal } = await load('/static/gravewright_table/modal.js');
-      if (!alive()) return;
+      if (!alive() || !authorized()) return;
       const modal = node('section', 'table-form-modal clues-editor'); modal.dataset.clueEditor = '';
       const abort = new AbortController(), modalSignal = AbortSignal.any([signal, abort.signal]);
       const form = node('form'), header = node('header'), titleNode = node('strong', '', text(title));
@@ -267,7 +317,7 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
       field('pinned', 'Pin on the table', { type: 'checkbox' });
       fields.append(node('p', 'clues-editor__hint', text('Players see the clue only when every step is complete and its visibility allows players. GM notes always stay private.')));
       return controls;
-    }, 'Save changes');
+    }, 'Save changes', () => state.is_gm === true && (!snapshot || state.clues.some(row => row.id === snapshot.id && row.canConfigure === true)));
   }
   function remove(clue) {
     const snapshot = { ...clue };
@@ -277,27 +327,12 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
       fields.append(name, node('p', '', text('Delete this clue?'))); return [];
     }, 'Delete clue');
   }
-  async function readClue(clue) {
-    const modal = await mountEditor('Clue details', null, fields => {
-      const current = state.clues.find(row => row.id === clue.id);
-      if (current) {
-        const name = node('strong', 'clues__name', current.name), content = node('p', 'clues__content', current.content);
-        name.setAttribute('translate', 'no'); content.setAttribute('translate', 'no'); content.dataset.clueContent = '';
-        fields.append(name, content);
-      }
-      return [];
-    });
-    if (modal) {
-      modal.dataset.clueView = clue.id;
-      if (!state.clues.some(row => row.id === clue.id)) modal.close(true);
-    }
-  }
   const offLocale = translator.onChange(() => render());
   function destroy() {
     if (own.signal.aborted) return;
-    own.abort(); rows.abort(); read?.controller.abort(); commands.destroy(); offLocale();
+    own.abort(); rows.abort(); read?.controller.abort(); commands.destroy(); details.destroy(); offLocale();
     for (const modal of modals) modal.close?.(true);
-    modals.clear(); root.replaceChildren();
+    modals.clear(); pendingProgress.clear(); progressControls.clear(); focusTargets.clear(); root.replaceChildren();
   }
   if (signal.aborted) destroy();
   else signal.addEventListener('abort', () => { if (!own.signal.aborted) destroy(); }, { once: true });
@@ -305,6 +340,6 @@ export function mountClues(root, { api, sceneId = () => null, scenes = () => [],
   return { refresh, update, setScene(value) {
     manualScene = arguments.length ? value || null : undefined;
     read?.controller.abort(); read = undefined; ++sequence;
-    state = { clues: [], is_gm: state.is_gm, sceneId: currentScene() }; render(); return refresh();
+    state = { clues: [], is_gm: state.is_gm, sceneId: currentScene() }; details.update(); render(); return refresh();
   }, destroy };
 }

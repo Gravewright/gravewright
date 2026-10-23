@@ -192,6 +192,9 @@ def validate_reference_ownership(blueprint, *, campaign_id=None, scene_id=None):
     from .blueprint_clues import validate_clue_references
     validate_clue_references([node['clueId'] for node in nodes if node['type'] == 'clueControl'],
                              campaign_id=campaign_id, scene_id=scene_id)
+    from .blueprint_mindmaps import validate_mindmap_references
+    validate_mindmap_references([node for node in nodes if node['type'] in ('openMindMap', 'mindMapNode')],
+                                campaign_id=campaign_id, scene_id=scene_id)
     destinations = [node["destinationId"] for node in nodes if node["type"] == "teleport"]
     for row in SceneObject.objects.filter(pk__in=destinations).select_related("scene"):
         if (campaign_id is not None and str(row.scene.campaign_id) != str(campaign_id)
@@ -467,11 +470,13 @@ def _steps(graph, result, sound_names):
             step["visible"] = node["visible"]
         elif node["type"] == "setAppearance":
             step["assetId"] = node["assetId"]
-        elif node["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
+        elif node["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus", "openMindMap"):
             step["audience"] = deepcopy(node["audience"])
-            step.update({key: node[key] for key in ("text", "journalId", "expression", "label", "visibility", "focusX", "focusY") if key in node})
+            step.update({key: node[key] for key in ("text", "journalId", "expression", "label", "visibility", "focusX", "focusY", "mindMapId", "nodeId") if key in node})
         elif node["type"] == "setQuestStatus":
             step.update(journalId=node["journalId"], status=node["status"])
+        elif node['type'] == 'mindMapNode':
+            step.update(mindMapId=node['mindMapId'], nodeId=node['nodeId'], action=node['action'])
         elif node['type'] == 'clockControl':
             action = next(action for action in result['actions'] if action['id'] == identifier)
             step.update(clockId=action['clockId'], action=action['action'], amount=action['amount'])
@@ -1025,12 +1030,16 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                     if (target_type in ("light", "lightset")) != (candidate.kind == "lights"):
                         mark_unsupported(node, aim or key)
                         continue
-                if node["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
+                if node["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus", "openMindMap"):
                     world_results[node["id"]] = {"recipients": present(scene, who, node, context)}
                     continue
                 if node["type"] == "setQuestStatus":
                     from .blueprint_world import set_quest_status
                     world_results[node["id"]] = set_quest_status(scene, who, node)
+                    continue
+                if node['type'] == 'mindMapNode':
+                    from .blueprint_mindmaps import control_node
+                    world_results[node['id']] = control_node(scene, who, node)
                     continue
                 if node['type'] == 'clockControl':
                     from .blueprint_clocks import control_clock

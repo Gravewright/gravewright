@@ -41,7 +41,7 @@ Os caminhos internos abaixo são relativos a `gravewright/`.
 | [`accounts/`](../../gravewright/accounts) | `User`, `AuthAttempt`, `UserPreference` | `services.py`, `models.py` | `forms.py` valida contas; `managers.py` normaliza identidades; `client_ip.py` trata proxies confiáveis; `middleware.py` limita requisições de autenticação e define políticas de resposta. |
 | [`campaigns/`](../../gravewright/campaigns) | `Campaign`, `Membership`, `AccessCode`, `JoinAttempt`, `Onboarding`, `StreamerLink`, `SessionPlan`, `CampaignEvent`, `PreparationBoard`, `PreparationReceipt` | `services.py`, `management.py`, `preparation.py` | `management_views.py` fornece o gestor e as ferramentas HTTP; `streamer.py` controla links de leitura; `onboarding.py` e `catalog.py` cuidam das orientações e metadados do sistema nativo. |
 | [`web/`](../../gravewright/web) | Nenhum | `inside.py`, `responses.py` | Compõe páginas de conta, campanha e configurações; `iconography.py` fornece ícones; `jinja2/` e `static/` guardam a interface compartilhada. |
-| [`table/`](../../gravewright/table) | `LobbyState`, `ProgressClock`, `ProgressClue` | `domain.py`, `clocks.py`, `clues.py` | Progresso e descobertas versionados de campanha/cena; `views.py` e `services.py` controlam mesa/lobby, `media.py` entrega áudio/cartas e `events.py` declara sinais confiáveis. |
+| [`table/`](../../gravewright/table) | `LobbyState`, `ProgressClock`, `ProgressClue`, `MindMap`, `MindMapReceipt` | `domain.py`, `clocks.py`, `clues.py`, `mindmaps.py`, `resource_links.py` | Progresso, descobertas e grafos colaborativos versionados; `resource_links.py` projeta vínculos nativos tipados e define metadados de remapeamento; `views.py` e `services.py` controlam mesa/lobby, `media.py` entrega áudio/cartas e `events.py` declara sinais confiáveis. |
 | [`actors/`](../../gravewright/actors) | `Actor`, `Folder`, `Asset` | `services.py` | Views implementam leitura de fichas, uploads e entrega autenticada de PDF/imagens. |
 | [`pdf_system/`](../../gravewright/pdf_system) | `MappingTemplate` | `schema.py`, `public.py`, `templates.py` | `manual_fields.py`, `field_actions.py`, `formulas.py` e `calculated_fields.py` validam layout e automação; `frontend/` contém modelos/controlador editáveis do navegador, `static/` contém a interface e assets preparados. Veja [PDF System](pdf-system.md). |
 | [`tokens/`](../../gravewright/tokens) | `Token` | `services.py` | Vínculos com atores, snapshots, movimento, visão e prévias filtradas de arraste; `views.py` expõe estado. |
@@ -55,10 +55,25 @@ Os caminhos internos abaixo são relativos a `gravewright/`.
 | [`audio/`](../../gravewright/audio) | `Track`, `Playlist`, `Playback` | `services.py`, `transport.py` | `metadata.py` inspeciona arquivos; `soundtrack.py` agenda música; `geometry.py` calcula atenuação pelas paredes. |
 | [`compendiums/`](../../gravewright/compendiums) | `Pack`, `Entry`, `EntryAsset`, `ContentAccess` | `services.py`, `catalog.py` | `graph.py` seleciona dependências portáteis; `assets.py` copia/restaura arquivos; `signals.py` limpa arquivos próprios. |
 | [`realtime/`](../../gravewright/realtime) | `PresenceConnection` | `consumers.py`, `services.py`, `dispatch.py` | `routing.py`, `security.py`, `scene_stream.py`, `gm_guided_prefetch.py` tratam sockets, origem e agendamento de viewport. |
-| [`administration/`](../../gravewright/administration) | `HostSettings`, `Snapshot`, `AuditEvent` | `views.py`, `archives.py`, `preparation_archives.py` | Arquivos de campanha, cópias, snapshots e remapeamento de preparação/histórico; `preferences.py` controla preferências; `updates.py` e `release_metadata.py` consultam e validam releases. |
+| [`administration/`](../../gravewright/administration) | `HostSettings`, `Snapshot`, `AuditEvent` | `views.py`, `archives.py`, `preparation_archives.py`, `mindmap_archives.py` | Arquivos de campanha, cópias, snapshots, preparação/histórico e remapeamento de vínculos tipados dos grafos; `preferences.py` controla preferências; `updates.py` e `release_metadata.py` consultam e validam releases. |
 | [`modules/`](../../gravewright/modules) | Estado de pacotes/catálogo | `packages.py`, `operations.py`, `contracts/` | Instalação de extensões, marketplace e contratos; consulte ao alterar capacidades de pacotes ou declarações geradas da API. |
 
 ## Acompanhando uma funcionalidade
+
+### Um tópico de mapa mental e seus recursos vinculados
+
+1. Mesa e gestor montam `table/static/gravewright_table/mindmaps.js`;
+   `mindmap-model.js` controla edições locais e `resource-links.js` resolve vínculos.
+2. Métodos `mindmaps` do navegador ou [`api.mindmaps`](../../api/mindmaps.py)
+   chegam a `table/mindmaps.py` pelo transporte nativo e por `table/domain.py`.
+3. O serviço revalida escopo, editores e revisões. A validação do grafo usa
+   `resource_links.Resolver`, reaproveitando projeções nativas na requisição;
+   destinos sem acesso permanecem como marcadores opacos.
+4. `MindMapReceipt` evita escrita duplicada e revalida acesso ao repetir a operação.
+   Alterações confirmadas invalidam clientes autorizados. O auxiliar
+   `maps/blueprint_mindmaps.py` delega somente a ação configurada do tópico.
+5. `administration/mindmap_archives.py` remapeia vínculos tipados em cópias e
+   restaurações, preservando o texto autoral. Veja [Mapas mentais](mindmaps.md).
 
 ### Salvamento de ficha de personagem
 

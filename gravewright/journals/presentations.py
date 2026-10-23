@@ -97,9 +97,11 @@ def resolve(value, user_id, campaign_id=None):
         grants = dict(journal_grants(journal, who))
         grants[str(who.user_id)] = 'read'
         viewer = SimpleNamespace(role='player', user_id=who.user_id, campaign_id=who.campaign_id,
+                                 _presentation_journal_id=str(journal.pk),
                                  _ownership_cache={'journals': {str(journal.pk): grants}})
         page_id = data.get('page_id')
         if page_id:
+            viewer._presentation_page_id = page_id
             viewer._ownership_cache['pages'] = {f'{journal.pk}:{page_id}': {'default': 'read'}}
         view = services.projection(journal, viewer)
         if page_id:

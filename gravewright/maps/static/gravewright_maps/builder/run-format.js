@@ -10,7 +10,7 @@ export const STEP_NAMES = { event: 'Event', light: 'Set light', sound: 'Play sou
     elementGroup: 'Element group', lightReference: 'Light reference', soundReference: 'Sound reference', eventContext: 'Event context',
     move: 'Move object', rotate: 'Rotate object', setInteraction: 'Set interaction', setRegion: 'Set region',
     setVisibility: 'Set visibility', setAppearance: 'Set appearance', showMessage: 'Show message',
-    showHandout: 'Show handout', requestRoll: 'Request dice roll', setQuestStatus: 'Set quest status', cameraFocus: 'Focus camera', teleport: 'Teleport token', clockControl: 'Control clock', clueControl: 'Control clue' };
+    showHandout: 'Show handout', requestRoll: 'Request dice roll', setQuestStatus: 'Set quest status', cameraFocus: 'Focus camera', teleport: 'Teleport token', clockControl: 'Control clock', clueControl: 'Control clue', openMindMap: 'Open mind map', mindMapNode: 'Control mind-map topic' };
 const CHANNEL_NAMES = { movement: 'Movement', vision: 'Vision', light: 'Light', sound: 'Sound' };
 const MODE_NAMES = { block: 'Block', pass: 'Pass', attenuate: 'Attenuate' };
 const APPEARANCE_NAMES = { inherit: 'Native appearance', hidden: 'Hidden image', asset: 'Use image' };
@@ -81,6 +81,9 @@ export function createRunFormatter({ t, elements, resolve = id => id, fallbackNa
             setAppearance: () => t('Image'),
             showMessage: () => step.text || t('Message'),
             showHandout: () => t('Handout'),
+            openMindMap: () => t('Mind map'),
+            mindMapNode: () => t({ complete: 'Complete topic', reset: 'Reset topic', toggle: 'Toggle topic completion' }[step.action])
+                + (typeof step.before === 'boolean' && typeof step.completed === 'boolean' ? ` · ${t(step.before ? 'Completed' : 'Open')} → ${t(step.completed ? 'Completed' : 'Open')}` : ''),
             requestRoll: () => `${step.expression || ''}${step.label ? ` · ${step.label}` : ''}`,
             setQuestStatus: () => t({ draft: 'Draft', available: 'Available', active: 'Active', completed: 'Completed', failed: 'Failed', archived: 'Archived' }[step.status] || step.status),
             clockControl: () => `${t({ advance: 'Advance clock', reduce: 'Reduce clock', set: 'Set clock value', reset: 'Reset clock' }[step.action])}`

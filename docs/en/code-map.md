@@ -40,7 +40,7 @@ Paths below are relative to `gravewright/`.
 | [`accounts/`](../../gravewright/accounts) | `User`, `AuthAttempt`, `UserPreference` | `services.py`, `models.py` | `forms.py` validates account input; `managers.py` normalizes identities; `client_ip.py` resolves trusted proxies; `middleware.py` bounds auth bodies and sets response security policy. |
 | [`campaigns/`](../../gravewright/campaigns) | `Campaign`, `Membership`, `AccessCode`, `JoinAttempt`, `Onboarding`, `StreamerLink`, `SessionPlan`, `CampaignEvent`, `PreparationBoard`, `PreparationReceipt` | `services.py`, `management.py`, `preparation.py` | `management_views.py` serves the GM workspace and HTTP preparation tools; `streamer.py` owns read-only links; `onboarding.py` and `catalog.py` handle onboarding and native-system metadata. |
 | [`web/`](../../gravewright/web) | None | `inside.py`, `responses.py` | Composes account/campaign/settings pages; `iconography.py` supplies template icons; `jinja2/` and `static/` contain shared UI. |
-| [`table/`](../../gravewright/table) | `LobbyState`, `ProgressClock`, `ProgressClue` | `domain.py`, `clocks.py`, `clues.py` | Versioned campaign/scene progress and discoveries; `views.py` and `services.py` own table/lobby behavior, `media.py` serves audio/cards, `events.py` declares trusted change signals. |
+| [`table/`](../../gravewright/table) | `LobbyState`, `ProgressClock`, `ProgressClue`, `MindMap`, `MindMapReceipt` | `domain.py`, `clocks.py`, `clues.py`, `mindmaps.py`, `resource_links.py` | Versioned progress, discoveries and collaborative graphs; `resource_links.py` projects typed native links and owns archive remapping metadata; `views.py` and `services.py` own table/lobby behavior, `media.py` serves audio/cards, `events.py` declares trusted change signals. |
 | [`actors/`](../../gravewright/actors) | `Actor`, `Folder`, `Asset` | `services.py` | Views implement sheet reads and authenticated PDF/image uploads and delivery. |
 | [`pdf_system/`](../../gravewright/pdf_system) | `MappingTemplate` | `schema.py`, `public.py`, `templates.py` | `manual_fields.py`, `field_actions.py`, `formulas.py` and `calculated_fields.py` validate layout and automation; `frontend/` contains editable browser models/controller, `static/` contains UI and prepared assets. See [PDF System](pdf-system.md). |
 | [`tokens/`](../../gravewright/tokens) | `Token` | `services.py` | Actor linkage, snapshots, movement, vision and filtered drag previews; `views.py` exposes state. |
@@ -54,10 +54,25 @@ Paths below are relative to `gravewright/`.
 | [`audio/`](../../gravewright/audio) | `Track`, `Playlist`, `Playback` | `services.py`, `transport.py` | `metadata.py` inspects audio; `soundtrack.py` schedules music; `geometry.py` calculates attenuation through walls. |
 | [`compendiums/`](../../gravewright/compendiums) | `Pack`, `Entry`, `EntryAsset`, `ContentAccess` | `services.py`, `catalog.py` | `graph.py` selects portable dependencies; `assets.py` copies/restores linked files; `signals.py` cleans owned files. |
 | [`realtime/`](../../gravewright/realtime) | `PresenceConnection` | `consumers.py`, `services.py`, `dispatch.py` | `routing.py`, `security.py`, `scene_stream.py`, `gm_guided_prefetch.py` own sockets, origin checks and viewport scheduling. |
-| [`administration/`](../../gravewright/administration) | `HostSettings`, `Snapshot`, `AuditEvent` | `views.py`, `archives.py`, `preparation_archives.py` | Campaign files, copies, snapshots and preparation/history remapping; `preferences.py` owns settings; `updates.py` and `release_metadata.py` discover and validate releases. |
+| [`administration/`](../../gravewright/administration) | `HostSettings`, `Snapshot`, `AuditEvent` | `views.py`, `archives.py`, `preparation_archives.py`, `mindmap_archives.py` | Campaign files, copies, snapshots, preparation/history and typed graph-reference remapping; `preferences.py` owns settings; `updates.py` and `release_metadata.py` discover and validate releases. |
 | [`modules/`](../../gravewright/modules) | Package/catalog state | `packages.py`, `operations.py`, `contracts/` | Extension installation, marketplace and transport contracts; inspect this app when changing package capabilities or generated API declarations. |
 
 ## Following a feature through the code
+
+### A mind-map topic and its linked resources
+
+1. The table and campaign manager mount `table/static/gravewright_table/mindmaps.js`;
+   `mindmap-model.js` owns local graph edits and `resource-links.js` resolves links.
+2. Browser `mindmaps` methods or [`api.mindmaps`](../../api/mindmaps.py) reach
+   `table/mindmaps.py` through the native transport and `table/domain.py`.
+3. The service rechecks scope, selected editors and revisions. Graph validation
+   calls `resource_links.Resolver`, reusing native domain projections in one
+   request; unreadable targets remain opaque placeholders.
+4. `MindMapReceipt` deduplicates a write, with fresh access checks on replay.
+   Committed changes invalidate authorized clients. MapBuilder's
+   `maps/blueprint_mindmaps.py` delegates only its configured topic action.
+5. `administration/mindmap_archives.py` remaps typed links during campaign copies
+   and restores while preserving authored graph text. See [Mind maps](mindmaps.md).
 
 ### A character sheet save
 

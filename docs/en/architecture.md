@@ -260,6 +260,31 @@ access or reveal private resource data. Simulation does not execute writes; serv
 rehearsal executes inside a rollback boundary. See [Clocks](clocks.md) and
 [Clues](clues.md).
 
+### Collaborative mind maps and resource identities
+
+`table/mindmaps.py` owns campaign/scene graphs, selected player editors, private
+visibility, structural validation and revision checks. Table clients and the GM
+manager edit the same `MindMap` records. `table/domain.py` serializes mutations
+with dedicated `MindMapReceipt` records; retries recheck current authority and
+return fresh recipient projections. `api/mindmaps.py` and the browser `mindmaps`
+domain expose these native operations without bypassing their checks.
+
+`table/resource_links.py` registers 37 typed native resource identities and archive
+metadata. One request-scoped `Resolver` reuses the owning domains' authorized
+projections, never unrestricted resource names. Stored links contain identities;
+live reads add permitted labels. Missing and denied resources share a neutral
+opaque placeholder, allowing unrelated edits without exposing hidden targets.
+Resource revocation remains authoritative even when an editor has an unsaved
+draft. Topic text belongs to the whole map's audience. See [Mind maps](mindmaps.md)
+and the [API contract](api.md#collaborative-mind-maps-and-typed-resource-links).
+
+MapBuilder's `maps/blueprint_mindmaps.py` validates scene-bound targets and
+delegates only the authored completion effect. Opening checks each recipient's
+read permission; server rehearsal rolls back mutations and notifications.
+`administration/mindmap_archives.py` consumes the typed registry to remap copied
+resources without rewriting authored notes or local topic identities. Portable
+copies clear selected editor grants; snapshots retain same-campaign access.
+
 ### Chat and dice
 
 Chat history combines table-level messages and the selected/current broadcast scene,

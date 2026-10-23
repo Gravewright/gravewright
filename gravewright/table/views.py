@@ -97,6 +97,31 @@ def module_state(request,campaign_id,module):
 
 
 @require_GET
+def mindmap_read(request, campaign_id, method):
+    """Native read routes remain usable by read-only guest streamer sessions."""
+    from django.http import JsonResponse
+    from gravewright.modules.frontend import invoke
+    from gravewright.modules.packages import ModuleFailure
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'permission_denied'}, status=403)
+    if method not in ('read', 'resources', 'resolve'):
+        raise Http404
+    raw = request.GET.get('payload', '{}')
+    try:
+        if len(raw) > 8192:
+            raise ValueError()
+        payload = json.loads(raw)
+        value = invoke(campaign_id, request.user.pk, 'mindmaps', method, payload)
+    except (ValueError, TypeError, RecursionError):
+        return JsonResponse({'error': 'invalid_data'}, status=400)
+    except ModuleFailure as error:
+        return JsonResponse({'error': error.code, 'message': error.message}, status=error.status)
+    response = JsonResponse(value, safe=value is not None)
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@require_GET
 def permission_members(request,campaign_id):
     from django.http import JsonResponse
     from gravewright.journals.services import member,JournalError

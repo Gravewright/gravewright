@@ -4,7 +4,7 @@
 
 ## Instalar, configurar e executar
 
-Use **macOS 13.5 ou superior**, em Intel x64 ou Apple Silicon ARM64, com navegador moderno com WebGL. A alternativa privada do Node.js segue os [requisitos macOS do Node.js 24](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). A release **0.3.2** preparada inclui estes inicializadores no pacote completo **`Gravewright-0.3.2-django.zip`**, gerado por [build_release.py](../../scripts/build_release.py).
+Use **macOS 13.5 ou superior**, em Intel x64 ou Apple Silicon ARM64, com navegador moderno com WebGL. A alternativa privada do Node.js segue os [requisitos macOS do Node.js 24](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). A release **0.3.2** inclui estes inicializadores no pacote completo **`Gravewright-0.3.2-django.zip`**, gerado por [build_release.py](../../scripts/build_release.py).
 
 **Mac Intel exige as Command Line Tools da Apple (ou um Xcode selecionado com compilador e SDK)** para compilar a dependência descrita abaixo. Homebrew não é necessário.
 
@@ -89,7 +89,7 @@ Pare o Runner antes de alterar configurações ou fazer backup. Preserve juntos 
 
 ### Atualizar ou reinstalar a 0.3.2
 
-A versão **0.3.2** mantém o estágio Alpha de desenvolvimento e a convenção de canal das versões numéricas. Use o ZIP completo e seu SHA-256 correspondente. Uma instalação gerenciada compatível pode oferecê-la pela Administração após a publicação. Hosts que já usam 0.3.2 não recebem atualização automática da mesma versão; reinstale esse pacote manualmente.
+A versão **0.3.2** mantém o estágio Alpha de desenvolvimento e a convenção de canal das versões numéricas. Use o ZIP completo e seu SHA-256 correspondente. Uma instalação gerenciada compatível pode encontrá-la pela Administração usando o repositório de releases configurado. Hosts que já usam 0.3.2 não recebem atualização automática da mesma versão; reinstale esse pacote manualmente.
 
 Pare o Runner e faça backup do `.env`, dos caminhos configurados de banco/mídias/módulos e do estado. Substitua os arquivos da aplicação pelo pacote completo na pasta existente, preservando configuração e dados. Abra novamente **`Install macOS.command`** para preparar as dependências fixadas e aplicar migrações; use o Runner regenerado. O script de entrada e seus scripts de apoio precisam ser substituídos juntos. Ao mover o projeto, preserve os caminhos dos dados e prepare a nova pasta com o instalador. Veja o [guia de atualização](upgrading.md) e as [notas da 0.3.2](../releases/0.3.2.md) para as novas migrações.
 

@@ -69,7 +69,7 @@ The installer owns tool/dependency preparation. [create_runner.py](../../scripts
 
 ## Updates and rollback
 
-The prepared **0.3.2** release uses **`Gravewright-0.3.2-django.zip`** and its matching checksum. It adds database migrations for clocks, clues, campaign preparation and journal history. Follow [upgrading](upgrading.md) before installing it. A manual upgrade requires the complete archive and another run of **`Install Windows.bat`**, preserving `.env`, `data/` and explicit storage overrides. Same-version reissues require manual installation because discovery compares version numbers.
+The **0.3.2** release uses **`Gravewright-0.3.2-django.zip`** and its matching checksum. It adds database migrations for clocks, clues, campaign preparation and journal history. Follow [upgrading](upgrading.md) before installing it. A manual upgrade requires the complete archive and another run of **`Install Windows.bat`**, preserving `.env`, `data/` and explicit storage overrides. Same-version reissues require manual installation because discovery compares version numbers.
 
 Updates replace the project files in place, including the installer, and regenerate the runner with the new Python environment. In Administration → Updates, **Keep a .old copy for rollback** controls whether the old code and matching data snapshot are retained after success. Temporary recovery remains available during installation. See [deployment](deployment.md) for restoration instructions.
 

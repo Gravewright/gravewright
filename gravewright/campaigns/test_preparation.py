@@ -125,6 +125,54 @@ class PreparationTests(TestCase):
         with self.assertRaises(preparation.PreparationError):
             preparation.references(self.gm, self.campaign.pk, 'scene', str(self.foreign_scene.pk))
 
+    def test_connections_include_typed_journal_resources_and_pages_without_legacy_duplicates(self):
+        from gravewright.items.models import Item
+        item = Item.objects.create(campaign=self.campaign, name='Synthetic key', type='equipment', system_id='synthetic')
+        target = self.journal('create', {'title': 'Lighthouse pages', 'journal_type': 'diary'})['journal_id']
+        row = Journal.objects.get(pk=target)
+        self.journal('update', {'journal_id': target, 'version': row.version, 'title': row.title,
+                                'data': {'sections': [{'id': 'page', 'title': 'Tower', 'content': doc(paragraph('Tower notes'))}]}})
+        source = self.journal('create', {'title': 'Typed session notes', 'journal_type': 'diary'})['journal_id']
+        refs = [{'kind': 'actor', 'id': str(self.actor.pk)}, {'kind': 'item', 'id': str(item.pk)},
+                {'kind': 'scene', 'id': str(self.scene.pk)}, {'kind': 'journal', 'id': target},
+                {'kind': 'journal-page', 'id': target, 'pageId': 'page'}]
+        typed = {'type': 'paragraph', 'content': [{'type': 'gwResourceLink', 'attrs': {'reference': ref}} for ref in refs]}
+        row = Journal.objects.get(pk=source)
+        self.journal('update', {'journal_id': source, 'version': row.version, 'title': row.title,
+                                'data': {'content': doc(typed,
+                                    paragraph('Legacy journal', f'/game/{self.campaign.pk}?document=journal:{target}'),
+                                    paragraph('Legacy actor', f'/game/{self.campaign.pk}?document=actor:{self.actor.pk}'))}})
+        expected = {('actor', str(self.actor.pk)), ('item', str(item.pk)),
+                    ('scene', str(self.scene.pk)), ('journal', target)}
+        outgoing = preparation.references(self.gm, self.campaign.pk, 'journal', source)['links']
+        self.assertEqual({(link['type'], link['id']) for link in outgoing}, expected)
+        self.assertEqual(len(outgoing), 4)
+        self.assertTrue(all(link['title'] and not link['missing'] for link in outgoing))
+        for kind, identifier in expected:
+            uses = preparation.references(self.gm, self.campaign.pk, kind, identifier)['usedBy']
+            self.assertEqual([(use['id'], use['via']) for use in uses], [(source, 'link')])
+        for user in (self.player, self.host):
+            with self.assertRaises(AuthError):
+                preparation.references(user, self.campaign.pk, 'journal', source)
+        with self.assertRaises(preparation.PreparationError):
+            preparation.references(self.gm, self.campaign.pk, 'scene', str(self.foreign_scene.pk))
+
+    def test_connections_skip_malformed_atoms_and_keep_foreign_titles_private(self):
+        source = self.journal('create', {'title': 'Imported missing references', 'journal_type': 'diary'})['journal_id']
+        # Historical/imported missing destinations remain inert; even a valid
+        # foreign UUID cannot disclose its title through the campaign index.
+        row = Journal.objects.get(pk=source)
+        row.data = {'content': doc({'type': 'paragraph', 'content': [
+            {'type': 'gwResourceLink', 'attrs': {'reference': {'kind': 'scene', 'id': str(self.foreign_scene.pk)}}},
+            {'type': 'gwResourceLink', 'attrs': {'reference': {'kind': 'actor', 'id': '../bad'}}},
+            {'type': 'gwResourceLink', 'attrs': {'reference': {'unavailable': True, 'key': '0' * 64}}}]}),
+            'legacy': 'document=actor:------------------------------------'}
+        row.save()
+        result = preparation.references(self.gm, self.campaign.pk, 'journal', source)
+        self.assertEqual(result['links'], [{'type': 'scene', 'id': str(self.foreign_scene.pk),
+                                           'via': 'link', 'title': '', 'missing': True}])
+        self.assertNotIn('Foreign', json.dumps(result))
+
     def test_quest_prerequisites_reject_cycles_and_survive_editor_saves(self):
         first = self.journal('create', {'title': 'First', 'journal_type': 'quest'})['journal_id']
         second = self.journal('create', {'title': 'Second', 'journal_type': 'quest'})['journal_id']

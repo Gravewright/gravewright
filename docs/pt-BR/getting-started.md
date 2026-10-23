@@ -12,7 +12,7 @@ Para jogar localmente, use o instalador de [Windows](windows-runner.md), [Linux]
 
 Extraia antes o projeto completo para uma pasta gravável. A instalação pode baixar ferramentas e pacotes; a inicialização usa o ambiente preparado. Mantenha o terminal do Runner aberto e pressione Ctrl+C para encerrar. O endereço padrão é `http://127.0.0.1:3000`. Downloads privados Linux exigem glibc; consulte no guia as famílias de distribuição reconhecidas e os limites de Alpine/musl.
 
-A release **0.3.2** preparada usa **`Gravewright-0.3.2-django.zip`** e seu checksum correspondente, com instaladores para as três plataformas. Para uma instalação existente, siga o [guia de atualização](upgrading.md) antes de substituir arquivos: esta versão acrescenta migrações de banco para relógios, pistas, preparação de campanha e histórico de diários. As [notas da release](../releases/0.3.2.md) descrevem o comportamento e a compatibilidade.
+A release **0.3.2** usa **`Gravewright-0.3.2-django.zip`** e seu checksum correspondente, com instaladores para as três plataformas. Para uma instalação existente, siga o [guia de atualização](upgrading.md) antes de substituir arquivos: esta versão acrescenta migrações de banco para relógios, pistas, preparação de campanha e histórico de diários. As [notas da release](../releases/0.3.2.md) descrevem o comportamento e a compatibilidade.
 
 ## Requisitos
 

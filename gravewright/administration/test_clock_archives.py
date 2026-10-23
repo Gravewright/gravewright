@@ -36,9 +36,11 @@ class ClockArchiveTests(TestCase):
         self.scene = Scene.objects.create(campaign=self.campaign, name='Scene scope', width=500, height=500)
         self.global_clock = ProgressClock.objects.create(campaign=self.campaign,
             name='An authored reference ' + str(self.scene.pk), segments=12, value=9, color='#ABCDEF',
+            description='  Authored description ' + str(self.scene.pk) + '\nSecond line á  ',
             visibility='players', players_can_edit=True, pinned=True, version=7)
         self.scene_clock = ProgressClock.objects.create(campaign=self.campaign, scene=self.scene,
-            name=str(self.global_clock.pk), segments=6, value=5, color='#123456', visibility='gm', version=3)
+            name=str(self.global_clock.pk), description=str(self.global_clock.pk), segments=6, value=5,
+            color='#123456', visibility='gm', version=3)
         self.asset = Asset.objects.create(campaign=self.campaign, kind='pdf', name='Synthetic sheet.pdf',
             file=ContentFile(b'%PDF-1.4\n% Synthetic archive test, no licensed content\n%%EOF', name='synthetic.pdf'))
 
@@ -96,6 +98,8 @@ class ClockArchiveTests(TestCase):
                           global_clock.players_can_edit, global_clock.pinned, global_clock.version),
                          (12, 9, '#ABCDEF', 'players', True, True, 7))
         self.assertEqual((scene_clock.segments, scene_clock.value, scene_clock.visibility, scene_clock.version), (6, 5, 'gm', 3))
+        self.assertEqual(global_clock.description, self.global_clock.description)
+        self.assertEqual(scene_clock.description, self.scene_clock.description)
         imported_asset = Asset.objects.get(campaign=cloned)
         self.assertNotEqual(imported_asset.pk, self.asset.pk)
         self.assertNotEqual(imported_asset.file.name, self.asset.file.name)
@@ -107,7 +111,7 @@ class ClockArchiveTests(TestCase):
         raw = self.archive(snapshot=True)
         ids = {self.global_clock.pk, self.scene_clock.pk}
         ProgressClock.objects.filter(pk=self.global_clock.pk).update(name='Changed', value=0, pinned=False,
-                                                                   players_can_edit=False, version=8)
+                                                                   description='Changed description', players_can_edit=False, version=8)
         ProgressClock.objects.filter(pk=self.scene_clock.pk).update(scene=None, value=0, version=4)
         extra = ProgressClock.objects.create(campaign=self.campaign, name='After snapshot')
         restored = import_campaign(raw, self.user, target=self.campaign)
@@ -120,6 +124,8 @@ class ClockArchiveTests(TestCase):
                          (self.global_clock.name, 9, True, True, 7))
         self.assertEqual((scene_clock.name, scene_clock.scene_id, scene_clock.value, scene_clock.version),
                          (self.scene_clock.name, self.scene.pk, 5, 3))
+        self.assertEqual(global_clock.description, self.global_clock.description)
+        self.assertEqual(scene_clock.description, self.scene_clock.description)
         self.assertEqual(Membership.objects.get(campaign=restored, user=self.user).role, 'gm')
 
     def test_clock_and_scene_selection_options_preserve_only_the_selected_scopes(self):
@@ -152,6 +158,8 @@ class ClockArchiveTests(TestCase):
         ] + [{'pinned': value} for value in (1, 'true', None)] + [
             {'color': '#fff'}, {'color': 'javascript:color'}, {'visibility': 'everyone'}, {'visibility': []},
             {'name': ''}, {'name': 'x' * 121}, {'name': None},
+            {'description': None}, {'description': True}, {'description': 1}, {'description': []},
+            {'description': {}}, {'description': 'x' * 4001},
             {'version': True}, {'version': 1.0}, {'version': 0}, {'version': -1}, {'version': 2**31},
             {'unknown_clock_field': 'reject me'},
         ]
@@ -161,6 +169,18 @@ class ClockArchiveTests(TestCase):
                 with self.assertRaises(AuthError):
                     import_campaign(modified, self.user, target=self.campaign)
                 self.assertEqual(self.snapshot_state(), before)
+
+    def test_archives_from_before_descriptions_restore_with_empty_description(self):
+        def older(payload):
+            for row in self.clock_records(payload):
+                row['fields'].pop('description')
+        for snapshot in (False, True):
+            with self.subTest(snapshot=snapshot):
+                raw = self.rewrite_archive(self.archive(snapshot=snapshot), older)
+                read_archive(raw)
+                target = self.campaign if snapshot else None
+                imported = import_campaign(raw, self.user, 'Legacy clock fields', target=target)
+                self.assertEqual(set(ProgressClock.objects.filter(campaign=imported).values_list('description', flat=True)), {''})
 
     def test_missing_or_foreign_scene_references_fail_instead_of_becoming_campaign_clocks(self):
         foreign = Campaign.objects.create(owner=self.user, name='Foreign clock source')

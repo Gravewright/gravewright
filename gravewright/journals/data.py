@@ -7,6 +7,8 @@ retained in the schema; new editing uses gw-journal-doc-v1 documents.
 from __future__ import annotations
 
 import uuid
+import hashlib
+import re
 
 JOURNAL_TYPES = {"diary", "quest", "quest_board", "roll_table"}
 VISIBILITIES = {"private", "shared", "handout"}
@@ -22,6 +24,8 @@ OBJECTIVE_LIMIT = 64
 REWARD_LIMIT = 64
 TAG_LIMIT = 32
 SECTION_LIMIT = 64
+CHAPTER_LIMIT = 128
+CHAPTER_DEPTH_LIMIT = 8
 PREREQUISITE_LIMIT = 16
 ROLL_TABLE_ENTRY_LIMIT = 256
 
@@ -131,6 +135,7 @@ def _normalize_section(raw: object, fallback_order: int) -> dict:
         "id": _short(raw.get("id"), 40) or _gen_id("section"),
         "title": _short(raw.get("title"), 120) or "Untitled",
         "category": _short(raw.get("category"), 80),
+        "chapterId": raw.get("chapterId") if isinstance(raw.get("chapterId"), str) else None,
         "kind": kind,
         "assetId": asset_id,
         "src": src,
@@ -153,6 +158,54 @@ def empty_data_for(journal_type: str) -> dict:
     return {}
 
 
+def legacy_chapter_id(name: str) -> str:
+    """Legacy category identities remain stable across reads, copies and restores."""
+    return 'chapter_' + hashlib.sha256(name.encode('utf-8')).hexdigest()[:24]
+
+
+def validate_diary_structure(raw: dict) -> None:
+    """Reject explicit malformed chapter trees without coercing authored input."""
+    if not isinstance(raw, dict) or not isinstance(raw.get('sections', []), list):
+        raise ValueError('Invalid journal chapters.')
+    chapters = raw.get('chapters', [])
+    if not isinstance(chapters, list) or len(chapters) > CHAPTER_LIMIT:
+        raise ValueError('Invalid journal chapters.')
+    indexed = {}
+    for row in chapters:
+        if (not isinstance(row, dict) or not isinstance(row.get('id'), str)
+                or not re.fullmatch(r'[A-Za-z0-9_-]{1,40}', row['id']) or row['id'] in indexed
+                or not isinstance(row.get('name'), str) or not row['name'].strip() or len(row['name']) > 80
+                or type(row.get('sortOrder', 0)) is not int or abs(row.get('sortOrder', 0)) > 2**31 - 1
+                or row.get('parentId') is not None and not isinstance(row.get('parentId'), str)):
+            raise ValueError('Invalid journal chapters.')
+        indexed[row['id']] = row
+    for row in chapters:
+        cursor, visited = row, set()
+        while cursor is not None:
+            identifier = cursor['id']
+            if identifier in visited or len(visited) >= CHAPTER_DEPTH_LIMIT:
+                raise ValueError('Invalid journal chapters.')
+            visited.add(identifier)
+            parent = cursor.get('parentId')
+            if parent is not None and parent not in indexed:
+                raise ValueError('Invalid journal chapters.')
+            cursor = indexed.get(parent)
+    names = {_short(row['name'], 80) for row in chapters}
+    legacy_names = set()
+    for section in raw.get('sections', []):
+        if not isinstance(section, dict) or 'chapterId' not in section:
+            if isinstance(section, dict):
+                name = _short(section.get('category'), 80)
+                if name and name not in names:
+                    legacy_names.add(name)
+            continue
+        chapter = section['chapterId']
+        if chapter is not None and (not isinstance(chapter, str) or chapter not in indexed):
+            raise ValueError('Invalid journal chapters.')
+    if len(chapters) + len(legacy_names) > CHAPTER_LIMIT:
+        raise ValueError('Invalid journal chapters.')
+
+
 def normalize_diary_data(raw: object) -> dict:
     """Diary body is a ``gw-journal-doc-v1`` block document under ``content``.
 
@@ -161,16 +214,51 @@ def normalize_diary_data(raw: object) -> dict:
     """
     raw = raw if isinstance(raw, dict) else {}
     gm = raw.get("gm") if isinstance(raw.get("gm"), dict) else {}
+    chapter_rows = raw.get('chapters') if isinstance(raw.get('chapters'), list) else []
+    chapters, indexed = [], {}
+    for index, row in enumerate(chapter_rows[:CHAPTER_LIMIT]):
+        if not isinstance(row, dict):
+            continue
+        identifier, name = _short(row.get('id'), 40), _short(row.get('name'), 80)
+        if not identifier or not name or identifier in indexed:
+            continue
+        chapter = {'id': identifier, 'name': name, 'parentId': _short(row.get('parentId'), 40) or None,
+                   'sortOrder': _int(row.get('sortOrder'), (index + 1) * 10)}
+        chapters.append(chapter); indexed[identifier] = chapter
     sections_raw = raw.get("sections") if isinstance(raw.get("sections"), list) else []
     sections = [
         _normalize_section(section, (index + 1) * 10)
         for index, section in enumerate(sections_raw[:SECTION_LIMIT])
     ]
+    by_name = {}
+    for chapter in chapters:
+        by_name.setdefault(chapter['name'], chapter)
+    for section, original in zip(sections, sections_raw[:SECTION_LIMIT]):
+        if isinstance(original, dict) and 'chapterId' not in original and section['category']:
+            name = section['category']
+            if name not in by_name:
+                identifier, suffix = legacy_chapter_id(name), 0
+                while identifier in indexed:
+                    suffix += 1
+                    identifier = legacy_chapter_id(name + ':' + str(suffix))
+                chapter = {'id': identifier, 'name': name, 'parentId': None, 'sortOrder': (len(chapters) + 1) * 10}
+                chapters.append(chapter); indexed[identifier] = chapter; by_name[name] = chapter
+            section['chapterId'] = by_name[name]['id']
+        if section['chapterId'] not in indexed:
+            section['chapterId'] = None
+        section['category'] = indexed[section['chapterId']]['name'] if section['chapterId'] else ''
+    # Stored/legacy input remains readable even if a former import omitted a
+    # parent; write validation rejects dangling parents and cycles explicitly.
+    for chapter in chapters:
+        if chapter['parentId'] not in indexed:
+            chapter['parentId'] = None
+    chapters.sort(key=lambda chapter: chapter['sortOrder'])
     sections.sort(key=lambda section: section["sortOrder"])
     return {
         "content": _doc(raw.get("content")),
         "cover": _normalize_image(raw.get("cover")),
         "sections": sections,
+        "chapters": chapters,
         "gm": {
             "notes": _doc(gm.get("notes")),
             "secrets": _doc(gm.get("secrets")),

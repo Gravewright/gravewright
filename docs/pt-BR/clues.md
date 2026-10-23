@@ -9,7 +9,7 @@ usam as mesmas pistas salvas, independentemente do sistema da campanha.
 
 ## Preparar uma pista
 
-Abra **Pistas** na barra de menus da mesa ou selecione **Pistas** em
+Abra **Pistas** pelo ícone no dock inferior da mesa ou selecione **Pistas** em
 **Gerenciar campanha**. Um mestre da campanha pode criar e editar estes campos:
 
 | Campo | Significado |
@@ -49,6 +49,13 @@ diretamente. Jogadores e espectadores podem abrir descobertas permitidas em modo
 somente leitura. A fixação segue as mesmas verificações de descoberta e
 visibilidade da lista completa.
 
+O mestre pode clicar com o botão esquerdo na barra de progresso para avançar uma
+etapa ou com o direito para recuar uma. Foque a barra e use Direita/Cima para
+avançar ou Esquerda/Baixo para recuar; os controles **+** e **−** continuam na
+lista completa e no gerenciador. Isso funciona no gerenciador, na lista da mesa e na
+exibição fixada, com os mesmos limites de segmentos, revisão e operação pendente.
+Jogadores e espectadores não podem alterar o progresso por esses gestos.
+
 | Operação do mestre | Resultado |
 | --- | --- |
 | Avançar ou recuar | Mudar o progresso dentro dos limites de segmentos |
@@ -62,6 +69,32 @@ exibição para jogadores até que ela esteja completa novamente. Ocultar remove
 sua apresentação atual; participantes podem lembrar conteúdo já descoberto.
 Fechar uma janela não exclui pistas salvas. Recarregar restaura a configuração e
 o progresso persistidos.
+
+Dê dois cliques no nome da pista ou foque-o e pressione Enter ou Espaço. O mestre
+abre o editor nativo. Jogadores e espectadores abrem uma modal simples somente
+de leitura, usando o Conteúdo da descoberta como descrição, sem notas do mestre.
+As regras atuais de descoberta e visibilidade continuam valendo ao abrir ou
+atualizar a modal. Pistas não recebem outro campo de descrição.
+
+## Organizar pistas fixadas
+
+Os cards e etapas vazias têm fundo transparente. Pistas fixadas mostram somente
+nome e barra de progresso; use o nome para abrir o editor ou a descrição.
+Cada pista fixada na mesa pode
+ser movida independentemente ao arrastar seu título. Foque o título e use as
+setas para mover um pixel, ou Shift com uma seta para mover dez. Escape cancela
+um arraste ativo. Redimensionar o navegador mantém os indicadores na área
+visível.
+
+As posições de cada conta são salvas por campanha e indicador no navegador
+atual e restauradas ao recarregar. Telas largas e estreitas mantêm posições
+separadas, restaurando cada layout quando você retorna ao tamanho anterior.
+Mover um indicador não envia comando de
+posição ou transmissão, não altera dados de campanha/cena/progresso e preserva
+os layouts dos demais participantes. Jogadores e espectadores podem organizar
+localmente suas descobertas permitidas, enquanto conteúdo e progresso continuam
+somente leitura. Fixação e visibilidade permanecem configurações compartilhadas
+do mestre; o servidor continua omitindo pistas não descobertas.
 
 ## Mecanismos do MapBuilder
 

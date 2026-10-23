@@ -170,12 +170,13 @@ const regionOutputs = blueprintVerbEventsFor('region').map(eventOutput);
 const versionTwoTypes = ['sequence', 'sprite', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'flame',
     'getVariable', 'setVariable', 'compareValue', 'emitEvent', ...controlNodeTypes, 'delay', 'timer', 'switch', 'random',
     'elementGroup', 'lightReference', 'soundReference', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
-    'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'interact', 'clockControl', 'clueControl'];
+    'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'interact', 'clockControl', 'clueControl', 'openMindMap', 'mindMapNode'];
 export const questStatuses = Object.freeze(['draft', 'available', 'active', 'completed', 'failed', 'archived']);
 export const barrierChannels = Object.freeze(['movement', 'vision', 'light', 'sound']);
 export const soundControls = Object.freeze(['stop', 'volume']);
 export const clockControls = Object.freeze(['advance', 'reduce', 'set', 'reset']);
 export const clueControls = Object.freeze(['advance', 'reduce', 'set', 'reset', 'reveal', 'hide']);
+export const mindMapControls = Object.freeze(['complete', 'reset', 'toggle']);
 // A connected Target replaces "Self" with a referenced element. The persisted
 // reference output ID remains "door" for existing version-two documents.
 const targetInput = { id: 'target', kind: 'value', type: 'element', label: 'Target' };
@@ -245,6 +246,8 @@ export const blueprintContract = freeze({
         showHandout: { category: 'action', label: 'Show handout', inputs: [executionInput], outputs: [executionNext] },
         requestRoll: { category: 'action', label: 'Request dice roll', inputs: [executionInput], outputs: [executionNext] },
         setQuestStatus: { category: 'action', label: 'Set quest status', inputs: [executionInput], outputs: [executionNext] },
+        openMindMap: { category: 'action', label: 'Open mind map', inputs: [executionInput], outputs: [executionNext] },
+        mindMapNode: { category: 'action', label: 'Control mind-map topic', inputs: [executionInput], outputs: [executionNext] },
         cameraFocus: { category: 'action', label: 'Focus camera', inputs: [executionInput], outputs: [executionNext] },
         teleport: { category: 'action', label: 'Teleport token', inputs: [executionInput], outputs: [executionNext] },
         setVisibility: { category: 'action', label: 'Set visibility', inputs: [executionInput, elementTargets], outputs: [executionNext] },
@@ -352,7 +355,7 @@ const nodeFields = {
     event: ['event'], light: ['targetId', 'enabled'], sound: ['trackId', 'volume'], state: ['targetState'], condition: ['state'],
     sequence: [], interact: [], sprite: ['appearance'], property: ['property'], compare: ['state'], all: [], any: [], reference: ['targetId'], reveal: [],
     barrier: ['channel', 'mode'], soundControl: ['trackId', 'action', 'volume'], clockControl: ['clockId', 'action', 'amount'],
-    clueControl: ['clueId', 'action', 'amount'], flame: ['enabled'],
+    clueControl: ['clueId', 'action', 'amount'], openMindMap: ['mindMapId', 'nodeId', 'audience'], mindMapNode: ['mindMapId', 'nodeId', 'action'], flame: ['enabled'],
     getVariable: ['scope', 'name', 'valueType', 'default'], setVariable: ['scope', 'name', 'valueType', 'value'],
     compareValue: ['valueType', 'operator', 'expected'], emitEvent: ['scope', 'name'],
     counter: ['target'], once: [], cooldown: ['seconds'], delay: ['seconds'], timer: ['name', 'action'],
@@ -412,6 +415,9 @@ function validateGraph(graph, event, version) {
             || !Number.isInteger(node.amount) || node.amount < 0 || node.amount > 24)) throw new Error('Invalid blueprint clock action.');
         if (node.type === 'clueControl' && (!validUuid(node.clueId) || !clueControls.includes(node.action)
             || !Number.isInteger(node.amount) || node.amount < 0 || node.amount > 24)) throw new Error('Invalid blueprint clue action.');
+        if (['openMindMap', 'mindMapNode'].includes(node.type) && (!validUuid(node.mindMapId)
+            || !(node.type === 'openMindMap' && node.nodeId === null) && !validUuid(node.nodeId)
+            || node.type === 'mindMapNode' && !mindMapControls.includes(node.action))) throw new Error('Invalid blueprint mind-map action.');
         if (node.type === 'switch' && (!variableTypes.includes(node.valueType) || !typedValue(node.valueType, node.value)
             || !Array.isArray(node.cases) || node.cases.length < 1 || node.cases.length > 4
             || !Array.from(node.cases).every(row => exactFields(row, ['id', 'value']) && switchCaseIds.includes(row.id) && typedValue(node.valueType, row.value))
@@ -426,7 +432,7 @@ function validateGraph(graph, event, version) {
         if (node.type === 'move' && ![node.dx, node.dy].every(value => Number.isFinite(value) && Math.abs(value) <= 1000)
             || node.type === 'rotate' && (!Number.isFinite(node.degrees) || Math.abs(node.degrees) > 36000)
             || ['setInteraction', 'setRegion'].includes(node.type) && typeof node.enabled !== 'boolean') throw new Error('Invalid blueprint action.');
-        if (['showMessage', 'showHandout', 'requestRoll', 'cameraFocus'].includes(node.type)) validateAudience(node.audience);
+        if (['showMessage', 'showHandout', 'requestRoll', 'cameraFocus', 'openMindMap'].includes(node.type)) validateAudience(node.audience);
         if (node.type === 'requestRoll' && (typeof node.expression !== 'string' || !node.expression.trim() || node.expression.includes('\0')
             || Array.from(node.expression).length > 512 || typeof node.label !== 'string' || node.label.includes('\0')
             || Array.from(node.label).length > 48 || !['public', 'gm'].includes(node.visibility))) throw new Error('Invalid blueprint dice request.');
@@ -455,7 +461,7 @@ export function validateBlueprintImageTargets(blueprint, element) {
     if (Object.values(blueprint.states || {}).some(state => state.appearance !== 'inherit')) invalid();
     return blueprint;
 }
-export function validateBlueprint(blueprint, { assets = [], materials = assets, lights = [], sounds = [], clocks, clues, element } = {}) {
+export function validateBlueprint(blueprint, { assets = [], materials = assets, lights = [], sounds = [], clocks, clues, mindmaps, element } = {}) {
     supportedBlueprint(blueprint);
     const states = blueprintStatesFor(blueprint.kind);
     if (!exactFields(blueprint, ['version', 'kind', 'states', 'graphs']) || !exactFields(blueprint.states, states)) throw new Error('Invalid blueprint state.');
@@ -490,6 +496,11 @@ export function validateBlueprint(blueprint, { assets = [], materials = assets, 
                 && !clocks.some(clock => clock.id.toLowerCase() === node.clockId.toLowerCase())) throw new Error('Choose a clock from this campaign.');
             if (node.type === 'clueControl' && clues !== undefined
                 && !clues.some(clue => clue.id.toLowerCase() === node.clueId.toLowerCase())) throw new Error('Choose a clue from this campaign.');
+            if (['openMindMap', 'mindMapNode'].includes(node.type) && mindmaps !== undefined) {
+                const map = mindmaps.find(row => row.id.toLowerCase() === node.mindMapId.toLowerCase());
+                if (!map || node.nodeId !== null && !map.nodes?.some(topic => topic.id.toLowerCase() === node.nodeId.toLowerCase()))
+                    throw new Error('Choose a mind map and topic from this campaign.');
+            }
             if (node.type === 'sprite' && node.appearance === 'asset' && !assetIds.has(node.assetId) && !materialIds.has(node.assetId)) throw new Error('Choose an image for each Change sprite node.');
             if (node.type === 'setAppearance' && !materialIds.has(node.assetId)) throw new Error('Choose an image for each Set appearance node.');
         }
@@ -580,7 +591,7 @@ export function simulateGraph(blueprint, event, currentState, previousState = cu
             return;
         }
         if (['light', 'sound', 'state', 'interact', 'sprite', 'reveal', 'barrier', 'soundControl', 'flame', 'setVariable', 'emitEvent', 'timer',
-            'move', 'rotate', 'setInteraction', 'setRegion', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'clockControl', 'clueControl'].includes(node.type)) {
+            'move', 'rotate', 'setInteraction', 'setRegion', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'clockControl', 'clueControl', 'openMindMap', 'mindMapNode'].includes(node.type)) {
             const action = structuredClone(node), aim = source(node.id, 'target');
             if (aim) action.target = structuredClone(value(aim));
             const input = node.type === 'setVariable' && source(node.id, 'value');

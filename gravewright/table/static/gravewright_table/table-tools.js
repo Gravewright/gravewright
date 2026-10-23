@@ -2,6 +2,19 @@ import { registerEscapeClose } from '/static/gravewright_web/escape.js';
 import { mountCommandPalette } from './command-palette.js';
 
 const table = document.querySelector('#table-workspace');
+const dock = table?.querySelector('.game-dock');
+if (dock) {
+  let previousHeight;
+  const observer = new ResizeObserver(() => {
+    const height = Math.ceil(dock.getBoundingClientRect().height);
+    if (height === previousHeight) return;
+    previousHeight = height;
+    table.style.setProperty('--game-dock-height', `${height}px`);
+    window.dispatchEvent(new Event('gravewright:dock-resize'));
+  });
+  observer.observe(dock);
+  window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
+}
 const palette = document.querySelector('[data-command-palette]');
 const lobby = document.querySelector('[data-lobby-panel-window]');
 const send = (type, value) => window.gravewrightRealtime?.tableTool(type, value);

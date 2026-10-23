@@ -12,10 +12,12 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | [Getting started](en/getting-started.md) | Dependencies, configuration, migrations and first login |
 | [Upgrade and recovery](en/upgrading.md) | Preparing for 0.3.2, required migrations, dependency updates and recovery from a backup |
 | [User guide](en/user-guide.md) | Campaigns, scenes, sheets, journals and table workflows |
+| [Journals and references](en/journals.md) | Insert links to campaign resources in rich text, open native tools and preserve private targets during edits and campaign copies |
 | [Campaign management](en/campaign-management.md) | GM workspace, personal dashboard, session planner, timeline, quest columns, connections, player preview and history/trash |
 | [PDF System](en/pdf-system.md) | Manual fields for non-editable PDFs, token bars, saved dice rolls, calculations, reusable mappings, export and diagnostics |
 | [Progress clocks](en/clocks.md) | Shared progress, audience controls, scene scope and pinned clocks on the table and in campaign management |
 | [Clues](en/clues.md) | Progressive discoveries, private GM notes, player revelation and MapBuilder mechanisms |
+| [Mind maps](en/mindmaps.md) | Collaborative topic graphs, permission-filtered links to 37 native resource types and MapBuilder actions |
 | [Map Builder](en/map-builder.md) | First project, Tiles/Painting, finished-map backgrounds, layers, saving, Smart Objects and scene updates |
 | [Universal VTT importer/exporter](en/universal-vtt.md) | Import workflows, native maps/walls/doors/lights, warnings and error recovery |
 | [Smart Objects direction](en/smart-objects-direction.md) | Delivered node-editor stages, element capabilities, references and proposed extensions |
@@ -34,6 +36,6 @@ Project policies: [contributing](../CONTRIBUTING.md), [security](../SECURITY.md)
 
 For the dice implementation, see the existing [grammar architecture](../gravewright/dice/grammar/ARCHITECTURE.md) and [notation reference](../gravewright/dice/grammar/notation/GRAMMAR.md). Machine-readable module contracts live in [contracts/](../gravewright/modules/contracts/); the [transport note](../gravewright/modules/contracts/transport.md) accompanies them.
 
-Current project version: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). The prepared notes cover campaign preparation, journal history/trash, clocks and clues, PDF mapping/actions, MapBuilder integration, Pillow 13 and four new database migrations relative to 0.3.1. Publication and download availability are separate steps; see [upgrade and recovery](en/upgrading.md).
+Current project version: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). The release notes cover campaign preparation, journal history/trash, clocks and clues, collaborative mind maps, PDF mapping/actions, MapBuilder integration, Pillow 13 and six new database migrations relative to 0.3.1. See [upgrade and recovery](en/upgrading.md) before updating an existing installation.
 
 Historical notes remain unchanged: [0.3.1](releases/0.3.1.md) covers forms, object models and scene synchronization; [0.3.0](releases/0.3.0.md) covers the original Map Builder and Universal VTT support; [0.2.3](releases/0.2.3.md) retains the earlier release history. Historical numbering and migration statements describe those releases, not the current version.

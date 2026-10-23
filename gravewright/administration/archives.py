@@ -20,7 +20,7 @@ from django.db import DataError, IntegrityError, models, transaction
 from gravewright.accounts.services import AuthError
 from gravewright.campaigns.models import Campaign, Membership
 from gravewright.campaigns.systems import default_system_id
-from . import preparation_archives
+from . import preparation_archives, mindmap_archives, journal_archives
 
 MAX_ARCHIVE = 256 * 1024 * 1024
 MAX_EXPANDED = 1024 * 1024 * 1024
@@ -58,6 +58,7 @@ GROUPS = {
     "blueprintTemplates": ["gravewright_maps.blueprinttemplate"],
     "clocks": ["gravewright_table.progressclock"],
     "clues": ["gravewright_table.progressclue"],
+    "mindmaps": ["gravewright_table.mindmap"],
     "preparation": ["gravewright_campaigns.sessionplan", "gravewright_campaigns.campaignevent"],
 }
 SNAPSHOT_MODELS = {
@@ -115,10 +116,11 @@ def records(campaign, selected, *, snapshot=False):
             else "board__campaign"
         )
         queryset = model.objects.filter(**{lookup: campaign})
-        if label in ('gravewright_table.progressclock', 'gravewright_table.progressclue') and not selected['scenes']:
+        if label in ('gravewright_table.progressclock', 'gravewright_table.progressclue', 'gravewright_table.mindmap') and not selected['scenes']:
             queryset = queryset.filter(scene__isnull=True)
         for record in serializers.serialize("python", queryset):
             preparation_archives.export_record(record, snapshot=snapshot)
+            mindmap_archives.export_record(record, snapshot=snapshot)
             if not selected["audio"] and label in {
                 "gravewright_maps.sceneobject", "gravewright_maps.mapbuilderproject"
             }:
@@ -327,11 +329,14 @@ def read_archive(raw):
                 validate_archived_clock(record['fields'])
             if record['model'] == 'gravewright_table.progressclue':
                 validate_archived_clue(record['fields'])
+            mindmap_archives.validate_record(record)
+            journal_archives.validate_record(record)
         if sum(record['model'] == 'gravewright_table.progressclock' for record in payload['records']) > 128:
             raise ValueError()
         if sum(record['model'] == 'gravewright_table.progressclue' for record in payload['records']) > 128:
             raise ValueError()
         preparation_archives.validate_payload(payload)
+        mindmap_archives.validate_limit(payload['records'])
         if set(payload["files"].values()) != set(blobs):
             raise ValueError()
         return payload, blobs
@@ -376,6 +381,9 @@ def validate_archived_clock(fields):
     try:
         if 'scene' not in fields or 'campaign' not in fields:
             raise ValueError()
+        # Archives created before descriptions remain valid, without relaxing
+        # validation of a description explicitly provided by an archive.
+        fields = {'description': '', **fields}
         clean = validate_clock_fields({key: fields[{'playersCanEdit': 'players_can_edit'}.get(key, key)] for key in CONFIG_FIELDS})
         if type(fields.get('version')) is not int or not 1 <= fields['version'] <= 2**31 - 1:
             raise ValueError()
@@ -547,7 +555,12 @@ def remap_omitted_bindings(record, field_name, rewritten, model_ids, inert_ids):
                         cloned["clockId"] = binding(node.get("clockId"), "gravewright_table.progressclock")
                     elif node.get("type") == "clueControl":
                         cloned["clueId"] = binding(node.get("clueId"), "gravewright_table.progressclue")
-                    if node.get("type") in ("showMessage", "showHandout", "requestRoll", "cameraFocus"):
+                    elif node.get("type") in ("openMindMap", "mindMapNode"):
+                        cloned["mindMapId"] = binding(node.get("mindMapId"), "gravewright_table.mindmap")
+                        # Topic identities belong to their map, not the campaign
+                        # model namespace; UUID-looking authored IDs stay exact.
+                        cloned["nodeId"] = node.get("nodeId")
+                    if node.get("type") in ("showMessage", "showHandout", "requestRoll", "cameraFocus", "openMindMap"):
                         audience = node.get("audience", {})
                         if audience.get("scope") == "users" and isinstance(audience.get("userIds"), list):
                             cloned["audience"]["userIds"] = [binding(identifier, "gravewright_accounts.user")
@@ -609,6 +622,8 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
             if ProgressClue.objects.filter(campaign=campaign).count() + incoming_clues > 128:
                 raise AuthError('invalid_archive')
             preparation_archives.validate_import_limits(campaign, payload)
+            from gravewright.table.models import MindMap
+            mindmap_archives.validate_limit(payload['records'], MindMap.objects.filter(campaign=campaign).count())
             identifiers = {str(payload["campaign"]["id"]): str(campaign.pk)}
             model_ids = {}
             for record in payload["records"]:
@@ -660,6 +675,11 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
             while pending:
                 progress = False
                 for record in pending[:]:
+                    if record['model'] == mindmap_archives.LABEL and any(
+                            row['model'] != mindmap_archives.LABEL for row in pending):
+                        # Numeric native resource keys are assigned on insert.
+                        # Resolve their links after all other records exist.
+                        continue
                     model = apps.get_model(record["model"])
                     fields = record["fields"]
                     valid_fields = {
@@ -670,6 +690,9 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                     if record['model'] in preparation_archives.LABELS:
                         fields = preparation_archives.import_record(record, model_ids, inert_ids, paths,
                             identifiers, snapshot=bool(target and not merge))
+                    if record['model'] == mindmap_archives.LABEL:
+                        fields = mindmap_archives.import_record(record, model_ids, inert_ids, identifiers,
+                            snapshot=bool(target and not merge))
                     kwargs = {}
                     defer = False
                     for field_name, value in fields.items():
@@ -683,7 +706,7 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             else:
                                 key = (label, str(value))
                                 if key not in model_ids:
-                                    if record['model'] in ('gravewright_table.progressclock', 'gravewright_table.progressclue') and field_name == 'scene':
+                                    if record['model'] in ('gravewright_table.progressclock', 'gravewright_table.progressclue', mindmap_archives.LABEL) and field_name == 'scene':
                                         raise AuthError('invalid_archive')
                                     elif (record["model"] == "gravewright_maps.mapasset"
                                             and field_name == "generated_for"):
@@ -705,11 +728,15 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             kwargs[field_name] = paths.get(value, "")
                         elif field_name == "permissions":
                             kwargs[field_name] = value if target and not merge else {}
-                        elif record['model'] == 'gravewright_table.progressclock' and field_name == 'name':
+                        elif record['model'] == 'gravewright_table.progressclock' and field_name in ('name', 'description'):
                             kwargs[field_name] = value
                         elif record['model'] == 'gravewright_table.progressclue' and field_name in ('name', 'content', 'gm_notes'):
                             kwargs[field_name] = value
+                        elif record['model'] == 'gravewright_journals.journal' and field_name == 'title':
+                            kwargs[field_name] = value
                         elif record['model'] in preparation_archives.LABELS:
+                            kwargs[field_name] = value
+                        elif record['model'] == mindmap_archives.LABEL:
                             kwargs[field_name] = value
                         elif record["model"] == "gravewright_maps.blueprinttemplate" and field_name == "definition":
                             from gravewright.maps.blueprint_templates import clean_definition
@@ -777,6 +804,8 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                     progress = True
                 if not progress:
                     raise AuthError("invalid_archive")
+            journal_archives.import_documents(payload, model_ids, inert_ids, paths, identifiers,
+                snapshot=bool(target and not merge))
             preparation_archives.import_dashboards(payload, campaign, user, model_ids, inert_ids,
                 snapshot=bool(target and not merge), merge=merge)
             preparation_archives.validate_imported_quests(campaign, model_ids)

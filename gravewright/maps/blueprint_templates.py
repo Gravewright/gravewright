@@ -27,7 +27,7 @@ MAX_TEMPLATES = 128
 MAX_BINDINGS = 256
 MAX_PARAMETERS = 64
 MAX_DEFINITION_BYTES = 262144
-BINDING_TYPES = ("asset", "element", "light", "sound", "handout", "user", "clock", "clue")
+BINDING_TYPES = ("asset", "element", "light", "sound", "handout", "user", "clock", "clue", "mindmap", "mindmapTopic")
 _IDENTIFIER = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 
 
@@ -74,10 +74,14 @@ def resource_slots(blueprint):
                     "showHandout": ("journalId", "handout"), "setQuestStatus": ("journalId", "handout"),
                     "clockControl": ("clockId", "clock"),
                     "clueControl": ("clueId", "clue"),
+                    "openMindMap": ("mindMapId", "mindmap"),
+                    "mindMapNode": ("mindMapId", "mindmap"),
                     "teleport": ("destinationId", "element"),
                     "setAppearance": ("assetId", "asset")}.get(kind)
             if slot:
                 yield node, *slot
+            if kind in ("openMindMap", "mindMapNode") and node.get("nodeId") is not None:
+                yield node, "nodeId", "mindmapTopic"
             if kind == "sprite" and node.get("appearance") == "asset":
                 yield node, "assetId", "asset"
             if kind == "elementGroup":

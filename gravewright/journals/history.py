@@ -139,8 +139,18 @@ def readable(title, kind, data):
     lines = ['# ' + title]
     if kind == 'diary':
         lines += _doc_lines(clean['content'])
+        chapters = {chapter['id']: chapter for chapter in clean['chapters']}
+        def chapter_path(identifier):
+            path, seen, current = [], set(), chapters.get(identifier)
+            while current and current['id'] not in seen and len(seen) < shapes.CHAPTER_DEPTH_LIMIT:
+                seen.add(current['id']); path.append(current['name'])
+                current = chapters.get(current['parentId'])
+            return list(reversed(path))
+        for chapter in clean['chapters']:
+            lines.append('## Chapter: ' + ' / '.join(chapter_path(chapter['id'])))
         for page in clean['sections']:
-            lines.append('## ' + page['title'] + (' [GM]' if page['audience'] == 'gm' else ''))
+            lines.append('## ' + ' / '.join([*chapter_path(page['chapterId']), page['title']])
+                         + (' [GM]' if page['audience'] == 'gm' else ''))
             lines += _doc_lines(page['content'])
         for key in ('notes', 'secrets'):
             body = _doc_lines(clean['gm'][key])
@@ -181,7 +191,12 @@ def restore_revision(journal, revision_id, who):
     if row is None or row.type != journal.type:
         raise JournalError('That version is no longer available.', 'not_found')
     _prerequisites(row.data, journal, who)
-    data = clean_data(row.data, journal, who)
+    source = row.data
+    if journal.type == 'diary' and isinstance(source, dict):
+        # A historical snapshot is complete, unlike an old client's partial
+        # save. Legacy snapshots must not inherit today's empty chapters.
+        source = {**source, 'chapters': source.get('chapters', [])}
+    data = clean_data(source, journal, who, _trusted_links=True)
     requested = set(asset_ids(data))
     owned = {str(asset.pk): asset for asset in Asset.objects.filter(journal=journal)}
     if not requested <= owned.keys():
@@ -267,7 +282,7 @@ def restore_deleted(revision_id, who):
         Asset.objects.create(id=asset['id'], journal=journal, file=asset['file'], name=asset['name'],
                              content_type=asset['contentType'],
                              uploader_id=asset['uploader'] if asset['uploader'] in members else None)
-    journal.data = clean_data(row.data, journal, who)
+    journal.data = clean_data(row.data, journal, who, _trusted_links=True)
     journal.save(update_fields=['data'])
     existing = {str(pk) for pk in Journal.objects.filter(campaign_id=who.campaign_id).values_list('pk', flat=True)}
     for link in row.retained.get('boards', []):

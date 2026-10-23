@@ -11,7 +11,6 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-import re
 import socket
 import subprocess
 import sys
@@ -123,7 +122,11 @@ def check_browser(base, seed, output, executable, read_snapshot):
             return root.locator(f'[data-clue-id="{identifier}"]')
 
         def progress(root, identifier, value, segments):
-            expect(card(root, identifier).locator('[data-clue-value]')).to_have_text(re.compile(rf'^{value}\s*/\s*{segments}$'))
+            meter = card(root, identifier).locator('[data-clue-progress]')
+            expect(meter).to_have_attribute('aria-valuenow', str(value))
+            expect(meter).to_have_attribute('aria-valuemax', str(segments))
+            expect(meter.locator('.clues__step')).to_have_count(segments)
+            expect(meter.locator('.clues__step--filled')).to_have_count(value)
 
         def player_privacy(page, name):
             projection = state(page)
@@ -248,17 +251,19 @@ def check_browser(base, seed, output, executable, read_snapshot):
             expect(card(player_panel, immediate_id)).to_contain_text(NAME)
             player.keyboard.press('Escape')
             expect(player_panel).to_have_count(0)
-            card(player.locator('[data-clue-hud]'), immediate_id).locator('[data-clue-action=open]').click()
-            reader = player.locator('[data-clue-editor]')
+            card(player.locator('[data-clue-hud]'), immediate_id).locator('[data-clue-name]').dblclick()
+            reader = player.locator(f'[data-clue-view="{immediate_id}"]')
             expect(reader).to_be_visible()
             expect(reader).to_contain_text(CONTENT.strip())
             expect(reader.locator('[name=gmNotes]')).to_have_count(0)
             expect(reader.locator('[type=submit]:visible')).to_have_count(0)
+            expect(reader.locator('input,textarea,select')).to_have_count(0)
             player.keyboard.press('Escape')
             expect(reader).to_have_count(0)
             player_panel = panel(player)
             for root in (player_panel, streamer_panel):
-                expect(root.locator('[data-clue-action]:not([data-clue-action=open]):visible')).to_have_count(0)
+                expect(root.locator('[data-clue-action]:visible')).to_have_count(0)
+                expect(card(root, immediate_id).locator('[data-clue-progress]')).to_have_attribute('role', 'progressbar')
             for name, page in (('player', player), ('streamer', streamer)):
                 player_privacy(page, name)
             manager.evaluate("window.dispatchEvent(new Event('focus'))")

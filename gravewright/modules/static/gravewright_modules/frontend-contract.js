@@ -2,6 +2,15 @@
 export const FRONTEND_CONTRACT = {
   "version": "1.2.0",
   "domains": {
+    "mindmaps": {
+      "create": "create",
+      "update": "update",
+      "node": "node",
+      "delete": "delete",
+      "read": "read",
+      "resources": "resources",
+      "resolve": "resolve"
+    },
     "clues": {
       "create": "create",
       "update": "update",
@@ -53,6 +62,8 @@ export const FRONTEND_CONTRACT = {
       "exportUniversalVtt": "export-universal-vtt"
     },
     "journals": {
+      "resources": "resources",
+      "resolve": "resolve",
       "create": "create",
       "update": "update",
       "delete": "delete",
@@ -186,6 +197,15 @@ export const FRONTEND_CONTRACT = {
     }
   },
   "reads": {
+    "mindmaps": [
+      "read",
+      "resources",
+      "resolve"
+    ],
+    "journals": [
+      "resources",
+      "resolve"
+    ],
     "actors": [
       "sheet"
     ],

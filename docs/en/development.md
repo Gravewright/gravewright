@@ -51,7 +51,7 @@ The existing dice grammar documents are maintained next to their implementation.
 
 ## Release identifiers
 
-The current project version is **0.3.2**. The application manifests and prepared release use these identifiers, following the formats required by each tool:
+The current project version is **0.3.2**. The application manifests and release use these identifiers, following the formats required by each tool:
 
 | Location | Identifier |
 | --- | --- |
@@ -59,18 +59,23 @@ The current project version is **0.3.2**. The application manifests and prepared
 | Application and Runner version | `0.3.2` |
 | Python project and `uv.lock` | `0.3.2` |
 | Frontend package, package lock and update API | `0.3.2` |
-| Planned release tag | `v0.3.2` |
-| Planned source release artifact | `Gravewright-0.3.2-django.zip` |
+| Release tag | `v0.3.2` |
+| Source release artifact | `Gravewright-0.3.2-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) is the source of the installed version. [`gravewright/version.py`](../../gravewright/version.py) derives its public identifier and label; keep the frontend package metadata aligned when changing it. API/SDK contract versions and third-party module versions have independent lifecycles.
 
-Version `0.3.2` follows the `stable` update-discovery convention for numeric version identifiers; the project remains in Alpha. Administration displays the full release name without a channel selector. Existing host channel preferences and API compatibility are preserved. Version `0.3.2` is greater than `0.3.1`, but lower than the earlier incorrectly numbered `3.0.1`. Installations reporting `3.0.1` need a manual installation or migration after a coordinated backup of code, configuration, database and media; verify schema compatibility on a disposable copy first. Do not run older code against a newer database to force a version downgrade. Preserve the historical release notes as history. See the [0.3.2 release notes](../releases/0.3.2.md) and [upgrade guide](upgrading.md) for changes and required migrations. A prepared version, release note or artifact name does not establish that a tag, download or CI result has been published.
+Version `0.3.2` follows the `stable` update-discovery convention for numeric version identifiers; the project remains in Alpha. Administration displays the full release name without a channel selector. Existing host channel preferences and API compatibility are preserved. Version `0.3.2` is greater than `0.3.1`, but lower than the earlier incorrectly numbered `3.0.1`. Installations reporting `3.0.1` need a manual installation or migration after a coordinated backup of code, configuration, database and media; verify schema compatibility on a disposable copy first. Do not run older code against a newer database to force a version downgrade. Preserve the historical release notes as history. See the [0.3.2 release notes](../releases/0.3.2.md) and [upgrade guide](upgrading.md) for changes and required migrations.
 
 The SDK remains `1.0.0`; the additive browser frontend registry has its own
 version in `gravewright/modules/contracts/frontend.json`. New clock/clue domains
 and PDF system operations require a host that implements them, regardless of an
 extension's SDK range. Regenerate the frontend registry after changing its source
-contract, and verify it with `scripts/generate_frontend_api.py --check`.
+contract, then review the generated diff:
+
+```bash
+uv run --locked python scripts/generate_frontend_api.py
+git diff -- gravewright/modules/static/gravewright_modules/frontend-contract.js
+```
 
 ## Build a release archive
 

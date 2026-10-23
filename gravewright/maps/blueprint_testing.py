@@ -31,6 +31,7 @@ def _payload(raw, required, optional=()):
 def _snapshot(scene):
     from gravewright.journals.models import Journal
     from gravewright.table.models import ProgressClock, ProgressClue
+    from .blueprint_mindmaps import scoped_mindmaps
     from django.db.models import Q
     from .blueprint_clocks import effective_scene_id
     scene.refresh_from_db()
@@ -48,11 +49,14 @@ def _snapshot(scene):
                           "visibility": row.visibility, "discovered": row.value == row.segments, "version": row.version}
              for row in ProgressClue.objects.filter(campaign_id=scene.campaign_id).filter(
                  Q(scene__isnull=True) | Q(scene_id=effective_scene_id(scene.pk)))}
+    mindmaps = {str(row.pk): {'name': row.name, 'version': row.version,
+                'nodes': [{'id': topic['id'], 'completed': topic.get('completed', False)} for topic in row.document.get('nodes', [])]}
+                for row in scoped_mindmaps(scene.campaign_id, scene.pk)}
     waits = {str(row["id"]): {**{key: value for key, value in row.items() if key not in ("id", "element_id", "due_at")},
                                "elementId": str(row["element_id"]), "dueAt": row["due_at"].isoformat()}
              for row in AutomationDelay.objects.filter(scene=scene).values(
                  "id", "element_id", "kind", "name", "event", "seconds", "status", "due_at")}
-    return {"elements": elements, "tokens": tokens, "journals": journals, "clocks": clocks, "clues": clues, "audio": playback,
+    return {"elements": elements, "tokens": tokens, "journals": journals, "clocks": clocks, "clues": clues, "mindmaps": mindmaps, "audio": playback,
             "sceneVariables": deepcopy(scene.settings.get("automationVariables", {})), "scheduled": waits}
 
 
@@ -101,7 +105,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
            next((entry for entry in runs if entry["elementId"] == str(row.pk)), None))
     run = deepcopy(run or {"stateBefore": element_state(row), "stateAfter": element_state(row), "events": []})
     changes = {}
-    for kind in ("elements", "tokens", "journals", "clocks", "clues"):
+    for kind in ("elements", "tokens", "journals", "clocks", "clues", "mindmaps"):
         changes[kind] = []
         for key in dict.fromkeys([*before[kind], *after[kind]]):
             old, value = before[kind].get(key), after[kind].get(key)
@@ -122,7 +126,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
         warnings.append("destruction-timing-cancelled")
     if any(step["type"] in ("delay", "timer") for step in steps):
         warnings.append("timing-not-advanced")
-    if any(step["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus") for step in steps):
+    if any(step["type"] in ("showMessage", "showHandout", "requestRoll", "cameraFocus", "openMindMap") for step in steps):
         warnings.append("presentation-not-delivered")
     if scene.settings.get("automationPaused") is True:
         warnings.append("automation-paused")
@@ -130,7 +134,7 @@ def _execute(scene, who, row, payload, *, token=None, source_ids=None):
         warnings.append("missing-test-token")
     if error is not None:
         # A real command would roll back the whole chain, including earlier actions.
-        changes = {"elements": [], "tokens": [], "journals": [], "clocks": [], "clues": [], **{kind: {"before": before[kind], "after": before[kind]}
+        changes = {"elements": [], "tokens": [], "journals": [], "clocks": [], "clues": [], "mindmaps": [], **{kind: {"before": before[kind], "after": before[kind]}
                     for kind in ("audio", "sceneVariables")}}
         scheduled = []
     # The run records its chain's end; presence passes that follow a teleport or

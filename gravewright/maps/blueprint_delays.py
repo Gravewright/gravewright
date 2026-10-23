@@ -122,14 +122,17 @@ def _required_elements(blueprint, event, continuation=None):
             "handouts": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "showHandout"},
             "quests": {nodes[key]["journalId"] for key in wanted if nodes[key]["type"] == "setQuestStatus"},
             "clocks": {nodes[key]['clockId'] for key in wanted if nodes[key]['type'] == 'clockControl'},
-            "clues": {nodes[key]['clueId'] for key in wanted if nodes[key]['type'] == 'clueControl'}}
+            "clues": {nodes[key]['clueId'] for key in wanted if nodes[key]['type'] == 'clueControl'},
+            "mindmaps": {nodes[key]['mindMapId'] for key in wanted if nodes[key]['type'] in ('openMindMap', 'mindMapNode')}}
     required["elements"].update(nodes[key]["destinationId"] for key in wanted if nodes[key]["type"] == "teleport")
     required["assets"].update(nodes[key]["assetId"] for key in wanted if nodes[key]["type"] == "setAppearance")
     for key in wanted:
         node = nodes[key]
         if node["type"] == "elementGroup":
             required[{"element": "elements", "light": "lights", "sound": "sounds"}[node["memberType"]]].update(node["targetIds"])
-    return required
+    topics = {(nodes[key]['mindMapId'], nodes[key]['nodeId']) for key in wanted
+              if nodes[key]['type'] in ('openMindMap', 'mindMapNode') and nodes[key].get('nodeId') is not None}
+    return required, topics
 
 
 def invalid_reason(row, element=None):
@@ -159,7 +162,8 @@ def invalid_reason(row, element=None):
     from gravewright.journals.models import Journal
     from .blueprint_clocks import scoped_clocks
     from .blueprint_clues import scoped_clues
-    required = _required_elements(blueprint, row.event, continuation)
+    from .blueprint_mindmaps import scoped_mindmaps
+    required, required_topics = _required_elements(blueprint, row.event, continuation)
     # Native validation keeps every authored resource binding campaign-local,
     # including those in other events and before the wait. If one disappears,
     # cancel explicitly rather than failing halfway through a resumed effect.
@@ -176,9 +180,14 @@ def invalid_reason(row, element=None):
                  "handouts": Journal.objects.filter(campaign_id=row.scene.campaign_id),
                  "quests": Journal.objects.filter(campaign_id=row.scene.campaign_id, type="quest"),
                  "clocks": scoped_clocks(row.scene.campaign_id, row.scene_id),
-                 "clues": scoped_clues(row.scene.campaign_id, row.scene_id)}
+                 "clues": scoped_clues(row.scene.campaign_id, row.scene_id),
+                 "mindmaps": scoped_mindmaps(row.scene.campaign_id, row.scene_id)}
     if any(identifiers != {str(pk) for pk in resources[kind].filter(pk__in=identifiers).values_list("pk", flat=True)}
            for kind, identifiers in required.items() if identifiers):
+        return "A delayed blueprint target is missing."
+    topics = {str(item.pk): {topic['id'] for topic in item.document.get('nodes', [])}
+              for item in resources['mindmaps'].filter(pk__in=required['mindmaps'])}
+    if any(topic_id not in topics.get(map_id, set()) for map_id, topic_id in required_topics):
         return "A delayed blueprint target is missing."
     return None
 

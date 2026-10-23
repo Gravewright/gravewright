@@ -3,6 +3,7 @@ import { createTranslator } from '/static/gravewright_modules/i18n.js';
 import { afterContentReady } from './content-state.js';
 import { mountModal } from './modal.js';
 import { mountClocks } from './clocks.js';
+import { mountProgressHudLayout } from './progress-hud-layout.js';
 
 const workspace = document.querySelector('#table-workspace');
 const toggle = workspace?.querySelector('[data-clocks-open]');
@@ -26,7 +27,10 @@ if (toggle && workspace.dataset.management !== 'true') {
     hud.hidden = !state.clocks.some(clock => clock.pinned);
     pinned.update(state); editor?.update(state);
   }
-  const pinned = mountClocks(hud, { api, sceneId, scenes, pinnedOnly: true, t, onChange: receive });
+  const layout = mountProgressHudLayout(hud, { profileId: workspace.dataset.profileId,
+    campaignId: workspace.dataset.tableId, kind: 'clock', t, signal });
+  const pinned = mountClocks(hud, { api, sceneId, scenes, pinnedOnly: true, t,
+    signal, onChange: receive, onRender: () => layout.refresh() });
   function clear() {
     feedEpoch += 1;
     latest = undefined; hud.hidden = true;
@@ -86,7 +90,7 @@ if (toggle && workspace.dataset.management !== 'true') {
   window.addEventListener('gravewright:connected', () => { subscribe(); void refresh(); }, { signal });
   function dispose() {
     if (signal.aborted) return;
-    scope.abort(); editor?.destroy(); panel?.close(true); pinned.destroy(); hud.remove(); latest = undefined;
+    scope.abort(); editor?.destroy(); panel?.close(true); pinned.destroy(); layout.destroy(); hud.remove(); latest = undefined;
     toggle.hidden = true;
   }
   window.addEventListener('gravewright:access-revoked', dispose, { signal });

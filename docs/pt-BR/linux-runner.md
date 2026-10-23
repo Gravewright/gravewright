@@ -4,7 +4,7 @@
 
 ## Instalar, configurar e executar
 
-A release **0.3.2** preparada inclui estes inicializadores no pacote completo **`Gravewright-0.3.2-django.zip`**, gerado por [build_release.py](../../scripts/build_release.py). Para uma instalação existente, leia o [guia de atualização](upgrading.md) antes de substituir arquivos ou migrar o banco.
+A release **0.3.2** inclui estes inicializadores no pacote completo **`Gravewright-0.3.2-django.zip`**, gerado por [build_release.py](../../scripts/build_release.py). Para uma instalação existente, leia o [guia de atualização](upgrading.md) antes de substituir arquivos ou migrar o banco.
 
 1. Use um checkout completo ou novo ZIP que contenha **`Install Linux.sh`**. Coloque-o em uma pasta local gravável, mantendo todos os arquivos juntos. Use Linux x64 ou ARM64 e navegador moderno com WebGL.
 2. Abra um terminal nessa pasta e execute:
@@ -72,7 +72,7 @@ Pare o Runner antes de reconfigurar ou fazer backup. Preserve juntos banco confi
 
 ### Atualizar ou reinstalar a 0.3.2
 
-A versão **0.3.2** mantém o estágio Alpha de desenvolvimento e a convenção de canal das versões numéricas. Use o ZIP completo **e seu SHA-256 correspondente**. Uma instalação gerenciada compatível pode oferecê-la pela Administração após a publicação. Um host que já usa 0.3.2 não recebe atualização automática para essa mesma versão; reinstale esse pacote manualmente.
+A versão **0.3.2** mantém o estágio Alpha de desenvolvimento e a convenção de canal das versões numéricas. Use o ZIP completo **e seu SHA-256 correspondente**. Uma instalação gerenciada compatível pode encontrá-la pela Administração usando o repositório de releases configurado. Um host que já usa 0.3.2 não recebe atualização automática para essa mesma versão; reinstale esse pacote manualmente.
 
 Pare o Runner e faça backup de `.env`, dos caminhos configurados de banco/mídias/módulos e do estado do Runner. Substitua os arquivos da aplicação pelo pacote completo na pasta existente, preservando configuração e dados. Execute novamente `bash "./Install Linux.sh"` para preparar as dependências fixadas e aplicar migrações; use o Runner regenerado. Não substitua somente o script de entrada: os scripts de apoio também fazem parte da atualização. Se mover o projeto, preserve os caminhos de armazenamento e instale novamente na nova pasta. Veja nas [notas da 0.3.2](../releases/0.3.2.md) as novas migrações.
 

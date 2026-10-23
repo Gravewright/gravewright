@@ -268,6 +268,32 @@ edição geral ao participante nem revelam dados privados. Simulação não escr
 o ensaio no servidor executa dentro de uma transação revertida. Veja
 [Relógios](clocks.md) e [Pistas](clues.md).
 
+### Mapas mentais colaborativos e identidades de recursos
+
+`table/mindmaps.py` controla grafos de campanha/cena, jogadores editores,
+visibilidade privada, validação estrutural e revisões. Mesa e gestor editam os
+mesmos registros `MindMap`. `table/domain.py` serializa escritas com recibos
+`MindMapReceipt` separados; novas tentativas revalidam a autorização e retornam
+projeções atuais. `api/mindmaps.py` e o domínio `mindmaps` do navegador expõem
+essas operações nativas sem contornar suas verificações.
+
+`table/resource_links.py` registra 37 identidades nativas tipadas e metadados de
+arquivos. Um `Resolver` por requisição reaproveita projeções autorizadas dos
+domínios, sem buscar nomes irrestritos. Vínculos armazenam identidades; leituras
+atuais acrescentam rótulos permitidos. Recursos ausentes e negados usam o mesmo
+marcador opaco para permitir outras edições sem revelar os destinos. Revogar
+acesso ao recurso continua valendo mesmo com um rascunho não salvo. O texto dos
+tópicos pertence ao público do mapa inteiro. Veja [Mapas mentais](mindmaps.md)
+e o [contrato da API](api.md#mapas-mentais-colaborativos-e-vínculos-tipados).
+
+O auxiliar `maps/blueprint_mindmaps.py` valida destinos de cena e delega somente
+o efeito de conclusão criado pelo mestre. Abrir verifica a leitura de cada
+destinatário; o ensaio no servidor reverte escritas e notificações.
+`administration/mindmap_archives.py` usa o registro tipado para remapear recursos
+copiados sem reescrever notas autorais ou identidades locais dos tópicos.
+Cópias portáteis limpam editores selecionados; snapshots mantêm o acesso na
+mesma campanha.
+
 ### Chat e dados
 
 O histórico combina mensagens da mesa e da cena selecionada ou transmitida,

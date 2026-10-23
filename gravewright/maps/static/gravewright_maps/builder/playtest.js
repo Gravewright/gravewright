@@ -107,6 +107,11 @@ export function openPlaytest({ elements, actors = [], tokens = [], draft = false
         for (const change of result.changes?.journals || []) if (change.after) {
             line('Quest', `${change.after.title || change.before?.title || t('Quest')} · ${questStatus(change.before?.status)} → ${questStatus(change.after.status)}`);
         }
+        for (const change of result.changes?.mindmaps || []) if (change.after) {
+            const before = new Map((change.before?.nodes || []).map(topic => [topic.id, topic.completed]));
+            const changed = (change.after.nodes || []).filter(topic => before.get(topic.id) !== topic.completed);
+            line('Mind map', `${change.after.name || change.before?.name || t('Mind map')} · ${changed.length} ${t('Topics changed')}`);
+        }
         for (const change of result.changes?.clocks || []) if (change.after) {
             const label = change.after.name || change.before?.name || t('Clock');
             const row = make('p', { 'data-playtest-clock': change.id });

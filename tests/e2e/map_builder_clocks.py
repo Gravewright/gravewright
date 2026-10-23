@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
-import re
 import sqlite3
 
 import map_builder_blueprints as harness
@@ -69,8 +68,10 @@ def check_browser(base, seed, output, executable):
             return next(row['value'] for row in clocks(target) if row['id'] == identifier)
 
         def hud_progress(target, identifier, value):
-            expect(target.locator(f'[data-clock-hud] [data-clock-id="{identifier}"] [data-clock-value]')).to_have_text(
-                re.compile(rf'^{value}\s*/\s*8$'))
+            face = target.locator(f'[data-clock-hud] [data-clock-id="{identifier}"] [data-clock-face]')
+            expect(face.locator('.clocks__number')).to_have_text(str(value))
+            expect(face.locator('.clocks__sector')).to_have_count(8)
+            expect(face.locator('.clocks__sector--filled')).to_have_count(value)
 
         def open_editor(owner):
             builder_tool(page, 'select')

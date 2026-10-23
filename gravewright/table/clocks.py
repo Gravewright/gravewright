@@ -13,7 +13,7 @@ from gravewright.maps.services import MapError, color, scene, title
 from .models import ProgressClock
 
 MAX_CLOCKS = 128
-DEFAULT_FIELDS = {'name': '', 'segments': 4, 'value': 0, 'color': '#c9a44c',
+DEFAULT_FIELDS = {'name': '', 'description': '', 'segments': 4, 'value': 0, 'color': '#c9a44c',
                   'visibility': 'gm', 'playersCanEdit': False, 'pinned': False}
 CONFIG_FIELDS = frozenset(DEFAULT_FIELDS)
 CONTEXT_FIELDS = {'sceneId', 'mapId'}
@@ -54,8 +54,10 @@ def validate_clock_fields(fields):
         raise MapError(_INVALID)
     if type(fields['playersCanEdit']) is not bool or type(fields['pinned']) is not bool:
         raise MapError(_INVALID)
+    if not isinstance(fields['description'], str) or len(fields['description']) > 4000:
+        raise MapError(_INVALID)
     return {
-        'name': title(fields['name']), 'segments': segments,
+        'name': title(fields['name']), 'description': fields['description'], 'segments': segments,
         'value': _integer(fields['value'], 0, segments), 'color': color(fields['color']),
         'visibility': fields['visibility'], 'playersCanEdit': fields['playersCanEdit'],
         'pinned': fields['pinned'],

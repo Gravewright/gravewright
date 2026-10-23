@@ -22,6 +22,7 @@ There is no second campaign copy to merge back into the table.
 | Journals and quests | Diaries, pages, quests, quest boards and roll tables in the native journal editors, with their normal attachments and access rules |
 | [Clocks](clocks.md) | Progress clocks for the campaign or selected scene, with visibility, player controls and pinning shared with the table |
 | [Clues](clues.md) | Staged discoveries shared with the table; content is delivered to players only after completion and public visibility |
+| [Mind maps](mindmaps.md) | Topic graphs with notes, branches and links to native resources; the GM configures readers and selected player editors, who use the same graphs on the table |
 | Characters and [PDF sheets](pdf-system.md) | Campaign actors and system sheets; in the PDF System, PDF selection, manual fields, saved rolls, calculations and reusable mappings |
 | Items | Item documents and forms supplied by the campaign's installed system |
 | Scenes and MapBuilder | Campaign scenes, editable map projects and compatible existing scenes; generating or updating a scene remains an explicit operation |
@@ -72,9 +73,9 @@ records the next time the page refreshes, which happens automatically every
 | View as player | Choose a player to see the journals, pages, characters, items and scenes the server sends that player. Journals open in a read-only preview of the player's version, with GM-only blocks removed |
 | History and trash | Earlier versions of each journal, compared line by line with the current version. A GM can restore any of them. Deleted journals go to the trash, and restoring one brings back its identifier, pages, access, quest board links and files without restoring the rest of the campaign |
 
-**Insert reference** in the journal editor also works in the manager: it
-searches through the same authorized HTTP API instead of the table connection.
-A reference can point to a character, item, journal or scene. In the manager, a
+Type **@** in editable journal text to open the reference picker in the manager.
+It searches campaign resources through the authorized HTTP API without joining
+the table. Each target retains its own access controls. In the manager, a
 scene reference selects that scene for preparation; on the table it opens the
 scene directory.
 
@@ -106,6 +107,12 @@ the first source dashboard, with the source owner's dashboard preferred), withou
 adding campaign members or user permissions. Snapshots restore each current GM's
 own dashboard. Older archives that did not store preparation keep existing
 preparation and history when restored into a campaign.
+
+Select **Mind maps** separately to copy collaborative graphs. Typed links point
+to copied resources; omitted targets become unavailable without binding to the
+source campaign. Portable copies clear selected editor grants, while snapshots
+preserve them in the same campaign. Scene-scoped maps follow the scene selection.
+See [Mind maps](mindmaps.md) for collaboration and resource permissions.
 
 Restoring a revision revalidates document visibility, prerequisite quests and
 files before saving. Its expected version is the one displayed in the comparison;

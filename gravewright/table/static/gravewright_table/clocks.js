@@ -1,4 +1,5 @@
 import { createTranslator } from '/static/gravewright_modules/i18n.js';
+import { createProgressDetails, bindProgressDetailsName } from './progress-details.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const PRESETS = [4, 6, 8, 10, 12];
@@ -22,7 +23,7 @@ export function clockSectors(segments) {
 /** Read context and persisted scope are distinct; an editor retains its opening revision. */
 export function clockConfigPayload(clock, values, sceneId) {
   return { ...(clock ? { id: clock.id, version: clock.version } : {}),
-    name: values.name.trim(), segments: Number(values.segments), value: Number(values.value),
+    name: values.name.trim(), description: values.description ?? '', segments: Number(values.segments), value: Number(values.value),
     color: values.color, visibility: values.visibility,
     playersCanEdit: values.playersCanEdit === true, pinned: values.pinned === true,
     scopeSceneId: values.sceneId || null, sceneId: sceneId || null, mapId: sceneId || null,
@@ -63,11 +64,11 @@ export function createClockCommands({ api, signal, refresh, onChange = () => {} 
  * projection after a successful mutation, allowing another panel/HUD to update.
  */
 export function mountClocks(root, { api, sceneId = () => null, scenes = () => [],
-  t, pinnedOnly = false, onChange, signal: external, load = path => import(path) } = {}) {
+  t, pinnedOnly = false, onChange, onRender, signal: external, load = path => import(path) } = {}) {
   const document = root.ownerDocument, own = new AbortController();
   const signal = external ? AbortSignal.any([own.signal, external]) : own.signal;
   const translator = createTranslator(), text = t || (key => translator.t(key));
-  const modals = new Set();
+  const modals = new Set(), pendingProgress = new Set(), progressControls = new Map(), focusTargets = new Map();
   let rows = new AbortController(), read, sequence = 0, manualScene;
   let state = { clocks: [], is_gm: false, sceneId: null }, editorOpening = false, errorText = '';
   const currentScene = () => (manualScene !== undefined ? manualScene : typeof sceneId === 'function' ? sceneId() : sceneId) || null;
@@ -85,7 +86,8 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
   };
   const accepts = next => alive() && next && Array.isArray(next.clocks) && sameScene(next.sceneId, currentScene());
   function apply(next) {
-    state = next; errorText = ''; render(); return true;
+    if (state.is_gm === true && next.is_gm !== true) for (const modal of modals) modal.close?.(true);
+    state = next; errorText = ''; render(); details.update(); return true;
   }
   function update(next) {
     if (!accepts(next)) return false;
@@ -117,7 +119,21 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
     task.promise = promise; read = task; return promise;
   }
   const commands = createClockCommands({ api, signal, refresh, onChange });
+  const details = createProgressDetails({ root, kind: 'clock', signal, text, load, refresh, state: () => state, sceneId: currentScene });
+  async function openName(id) {
+    const context = currentScene(); await refresh({ fresh: true });
+    if (!alive() || context !== currentScene()) return;
+    const clock = state.clocks.find(row => row.id === id); if (!clock) return;
+    return state.is_gm === true && clock.canConfigure === true ? openEditor(clock) : details.open(id, { fresh: false });
+  }
   const contextPayload = clock => ({ id: clock.id, version: clock.version, sceneId: currentScene(), mapId: currentScene() });
+  async function advance(clock, delta) {
+    if (!alive() || clock.canEdit !== true || pendingProgress.has(clock.id)
+      || clock.value + delta < 0 || clock.value + delta > clock.segments) return;
+    pendingProgress.add(clock.id); progressControls.get(clock.id)?.();
+    try { await commands.run('advance', { ...contextPayload(clock), delta }); }
+    finally { pendingProgress.delete(clock.id); progressControls.get(clock.id)?.(); }
+  }
   function action(label, name, work, { symbol, disabled = false, delta } = {}) {
     const button = node('button', 'clocks__button', symbol || text(label));
     button.type = 'button'; button.dataset.clockAction = name; button.disabled = disabled;
@@ -148,9 +164,41 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
     count.setAttribute('class', 'clocks__number'); count.textContent = String(clock.value); svg.append(count);
     return svg;
   }
+  function bindProgress(element, clock, buttons) {
+    if (clock.canEdit !== true) return;
+    element.setAttribute('role', 'slider'); element.setAttribute('tabindex', '0');
+    element.setAttribute('aria-valuemin', '0'); element.setAttribute('aria-valuemax', String(clock.segments));
+    element.setAttribute('aria-valuenow', String(clock.value));
+    const hint = text('Left-click to advance; right-click to reduce. Use the arrow keys to adjust progress.');
+    element.setAttribute('aria-description', hint); element.setAttribute('title', hint);
+    const adjust = delta => advance(clock, delta).catch(report);
+    element.addEventListener('click', event => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.stopPropagation(); adjust(1);
+    }, { signal: rows.signal });
+    element.addEventListener('contextmenu', event => {
+      event.preventDefault(); event.stopPropagation(); adjust(-1);
+    }, { signal: rows.signal });
+    element.addEventListener('keydown', event => {
+      const delta = ['ArrowRight', 'ArrowUp', '+', '=', 'Enter', ' '].includes(event.key) ? 1
+        : ['ArrowLeft', 'ArrowDown', '-'].includes(event.key) ? -1 : 0;
+      if (!delta || event.ctrlKey || event.metaKey || event.altKey) return;
+      event.preventDefault(); event.stopPropagation(); if (!event.repeat) adjust(delta);
+    }, { signal: rows.signal });
+    const busy = () => {
+      const pending = pendingProgress.has(clock.id);
+      element.setAttribute('aria-disabled', String(pending));
+      if (pending) element.setAttribute('aria-busy', 'true'); else element.removeAttribute('aria-busy');
+      for (const button of buttons) button.disabled = pending
+        || clock.value + Number(button.dataset.clockDelta) < 0
+        || clock.value + Number(button.dataset.clockDelta) > clock.segments;
+    };
+    progressControls.set(clock.id, busy); focusTargets.set(`progress:${clock.id}`, element); busy();
+  }
   function render() {
     if (!alive()) return;
-    rows.abort(); rows = new AbortController();
+    const focused = [...focusTargets].find(([, element]) => element === document.activeElement)?.[0];
+    rows.abort(); rows = new AbortController(); progressControls.clear(); focusTargets.clear();
     root.classList.add('clocks'); root.classList.toggle('clocks--pinned', pinnedOnly);
     root.replaceChildren();
     const visible = pinnedOnly ? state.clocks.filter(clock => clock.pinned) : state.clocks;
@@ -168,13 +216,17 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
     for (const clock of visible) {
       const card = node('article', 'clocks__clock'); card.dataset.clockId = clock.id;
       const heading = node('strong', 'clocks__name', clock.name); heading.dataset.clockName = ''; heading.setAttribute('translate', 'no');
+      bindProgressDetailsName(heading, { id: clock.id, kind: 'clock', text, open: openName, report, signal: rows.signal });
+      if (pinnedOnly) { heading.dataset.progressMoveHandle = ''; focusTargets.set(`move:${clock.id}`, heading); }
+      else focusTargets.set(`details:${clock.id}`, heading);
       const value = node('output', 'clocks__value', `${clock.value}/${clock.segments}`); value.dataset.clockValue = '';
-      card.append(heading, face(clock), value);
+      const progress = face(clock); card.append(heading, progress); if (!pinnedOnly) card.append(value);
       const controls = node('div', 'clocks__controls'); controls.setAttribute('role', 'group'); controls.setAttribute('aria-label', text('Clock controls'));
-      if (clock.canEdit === true) controls.append(
-        action('Reduce clock', 'advance', () => commands.run('advance', { ...contextPayload(clock), delta: -1 }), { symbol: '−', delta: -1, disabled: clock.value <= 0 }),
-        action('Advance clock', 'advance', () => commands.run('advance', { ...contextPayload(clock), delta: 1 }), { symbol: '+', delta: 1, disabled: clock.value >= clock.segments }),
-      );
+      const progressButtons = !pinnedOnly && clock.canEdit === true ? [
+        action('Reduce clock', 'advance', () => advance(clock, -1), { symbol: '−', delta: -1, disabled: clock.value <= 0 }),
+        action('Advance clock', 'advance', () => advance(clock, 1), { symbol: '+', delta: 1, disabled: clock.value >= clock.segments }),
+      ] : [];
+      controls.append(...progressButtons); bindProgress(progress, clock, progressButtons);
       if (!pinnedOnly && clock.canConfigure === true) controls.append(
         action('Reset clock', 'reset', () => commands.run('reset', contextPayload(clock)), { disabled: clock.value === 0 }),
         action('Edit clock', 'edit', () => openEditor(clock)),
@@ -185,14 +237,17 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
       list.append(card);
     }
     root.append(list);
+    onRender?.(root);
+    if (focused && alive() && (!document.activeElement || document.activeElement === document.body
+      || document.activeElement === document.documentElement)) focusTargets.get(focused)?.focus({ preventScroll: true });
   }
-  async function mountEditor(title, save, build, submitLabel) {
+  async function mountEditor(title, save, build, submitLabel, authorized = () => state.is_gm === true) {
     if (editorOpening || !alive()) return;
     for (const modal of modals) if (modal.isConnected) { modal.focus(); return; }
     editorOpening = true;
     try {
       const { mountModal } = await load('/static/gravewright_table/modal.js');
-      if (!alive()) return;
+      if (!alive() || !authorized()) return;
       const modal = node('section', 'table-form-modal clocks-editor'); modal.dataset.clockEditor = '';
       const abort = new AbortController(), modalSignal = AbortSignal.any([signal, abort.signal]);
       const form = node('form'), header = node('header'), titleNode = node('strong', '', text(title));
@@ -232,7 +287,7 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
   function openEditor(clock) {
     const snapshot = clock ? { ...clock } : null;
     const editingContext = currentScene();
-    const draft = { name: '', segments: 4, value: 0, color: '#c9a44c', visibility: 'gm',
+    const draft = { name: '', description: '', segments: 4, value: 0, color: '#c9a44c', visibility: 'gm',
       playersCanEdit: false, pinned: false, sceneId: currentScene(), ...snapshot };
     const attemptKey = snapshot?.id || `create:${crypto.randomUUID()}`;
     return mountEditor(snapshot ? 'Edit clock' : 'New clock', async (controls, modalSignal) => {
@@ -241,13 +296,14 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
     }, (fields, modalSignal) => {
       const controls = [], field = (key, label, { type = 'text', options, value = draft[key] } = {}) => {
         const wrapper = node('label', type === 'checkbox' ? 'clocks-editor__checkbox' : '');
-        const input = node(options ? 'select' : 'input'); input.name = key;
+        const input = node(options ? 'select' : type === 'textarea' ? 'textarea' : 'input'); input.name = key;
         if (options) for (const option of options) { const item = node('option', '', option.label); item.value = String(option.value); input.append(item); }
-        else input.type = type;
+        else if (type !== 'textarea') input.type = type;
         if (type === 'checkbox') input.checked = Boolean(value); else input.value = String(value ?? '');
         wrapper.append(node('span', '', text(label)), input); fields.append(wrapper); controls.push(input); return input;
       };
       const name = field('name', 'Clock name'); name.required = true; name.maxLength = 120; name.setAttribute('translate', 'no');
+      const description = field('description', 'Clock description', { type: 'textarea' }); description.rows = 4; description.maxLength = 4000; description.setAttribute('translate', 'no');
       const preset = field('preset', 'Clock preset', { value: PRESETS.includes(draft.segments) ? draft.segments : 'custom',
         options: [...PRESETS.map(value => ({ value, label: String(value) })), { value: 'custom', label: text('Custom') }] });
       const segments = field('segments', 'Segments', { type: 'number' }); segments.required = true; segments.min = '2'; segments.max = '24'; segments.step = '1';
@@ -264,7 +320,7 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
       field('playersCanEdit', 'Players can advance this clock', { type: 'checkbox' });
       field('pinned', 'Pin on the table', { type: 'checkbox' });
       return controls;
-    }, 'Save changes');
+    }, 'Save changes', () => state.is_gm === true && (!snapshot || state.clocks.some(row => row.id === snapshot.id && row.canConfigure === true)));
   }
   function remove(clock) {
     const snapshot = { ...clock };
@@ -277,15 +333,15 @@ export function mountClocks(root, { api, sceneId = () => null, scenes = () => []
   const offLocale = translator.onChange(() => render());
   function destroy() {
     if (own.signal.aborted) return;
-    own.abort(); rows.abort(); read?.controller.abort(); commands.destroy(); offLocale();
+    own.abort(); rows.abort(); read?.controller.abort(); commands.destroy(); details.destroy(); offLocale();
     for (const modal of modals) modal.close?.(true);
-    modals.clear(); root.replaceChildren();
+    modals.clear(); pendingProgress.clear(); progressControls.clear(); focusTargets.clear(); root.replaceChildren();
   }
   signal.addEventListener('abort', () => { if (!own.signal.aborted) destroy(); }, { once: true });
   render();
   return { refresh, update, setScene(value) {
     manualScene = arguments.length ? value || null : undefined;
     read?.controller.abort(); read = undefined; ++sequence;
-    state = { clocks: [], is_gm: state.is_gm, sceneId: currentScene() }; render(); return refresh();
+    state = { clocks: [], is_gm: state.is_gm, sceneId: currentScene() }; details.update(); render(); return refresh();
   }, destroy };
 }

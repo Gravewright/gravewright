@@ -13,6 +13,7 @@ from api.errors import JournalError, MapError
 from gravewright.accounts.models import User
 from gravewright.campaigns.models import Campaign, Membership, StreamerLink
 from gravewright.maps.models import Broadcast, Receipt as SharedReceipt, Scene
+from gravewright.journals.services import JournalError
 from gravewright.table import clocks as service
 from gravewright.table.models import ClockReceipt, DocumentAccess, ProgressClock
 
@@ -85,7 +86,7 @@ class ProgressClockTests(TestCase):
     def test_defaults_and_explicit_configuration_are_persisted_without_scene_context_retargeting(self):
         clock = self.create(sceneId=str(self.scene.pk), mapId=str(self.scene.pk))
         self.assertEqual({key: clock[key] for key in service.CONFIG_FIELDS}, {
-            'name': 'Progress', 'segments': 4, 'value': 0, 'color': '#c9a44c',
+            'name': 'Progress', 'description': '', 'segments': 4, 'value': 0, 'color': '#c9a44c',
             'visibility': 'gm', 'playersCanEdit': False, 'pinned': False,
         })
         self.assertIsNone(clock['sceneId'])
@@ -355,6 +356,38 @@ class ProgressClockTests(TestCase):
         for invalid in ({'segments': 1}, {'segments': 25}, {'segments': 4, 'value': 5}, {'visibility': 'unknown'}):
             with self.subTest(invalid=invalid), self.assertRaises(IntegrityError), transaction.atomic():
                 ProgressClock.objects.create(campaign=self.campaign, name='Bad persisted clock', **invalid)
+
+    def test_descriptions_preserve_authored_text_and_follow_clock_visibility_and_gm_configuration(self):
+        authored = '  Expedition notes: ' + str(self.scene.pk) + '\n<script>Authored text, not markup</script> á  '
+        private = self.create(name='Private description', description='PRIVATE_CLOCK_DESCRIPTION')
+        public = self.create(name='Public description', description=authored, visibility='players', playersCanEdit=True)
+        self.assertEqual(self.create(name='Older client without description')['description'], '')
+        for user in (self.player, self.streamer):
+            state = self.state(user)
+            self.assertEqual(next(row for row in state['clocks'] if row['id'] == public['id'])['description'], authored)
+            self.assertNotIn('PRIVATE_CLOCK_DESCRIPTION', str(state))
+            self.assertNotIn(private['id'], str(state))
+            with self.assertRaises(JournalError if user == self.streamer else MapError):
+                self.command('update', {'id': public['id'], 'version': 1, 'description': 'Unauthorized'}, user)
+        updated = self.command('update', {'id': public['id'], 'version': 1, 'name': 'Rename only'})['clock']
+        self.assertEqual(updated['description'], authored)
+        advanced = self.command('advance', {'id': public['id'], 'version': 2, 'delta': 1}, self.player)['clock']
+        self.assertEqual(advanced['description'], authored)
+        self.assertEqual(ProgressClock.objects.get(pk=public['id']).description, authored)
+
+    def test_description_validation_rejects_invalid_candidates_atomically_and_accepts_exact_limit(self):
+        public = self.create(description='x' * 4000)
+        before = ClockReceipt.objects.count()
+        for invalid in (None, True, 4, [], {}, 'x' * 4001):
+            with self.subTest(invalid=type(invalid).__name__):
+                with self.assertRaises(MapError):
+                    self.create(description=invalid)
+                with self.assertRaises(MapError):
+                    self.command('update', {'id': public['id'], 'version': 1,
+                                            'name': 'Partial rejected change', 'description': invalid})
+        row = ProgressClock.objects.get(pk=public['id'])
+        self.assertEqual((row.name, row.description, row.version), ('Progress', 'x' * 4000, 1))
+        self.assertEqual(ClockReceipt.objects.count(), before)
 
     def test_scene_deletion_removes_its_clocks_and_preserves_campaign_clocks(self):
         campaign_clock = self.create()

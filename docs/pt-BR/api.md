@@ -37,11 +37,12 @@ Todo domínio abaixo possui `state(payload = {}, options)` e os métodos listado
 | `actors` | `create`, `update`, `delete`, `setPermissions`, `saveSheet`, `createFolder`, `updateFolder`, `deleteFolder`, `deleteAsset` |
 | `tokens` | `place`, `move`, `remove`, `duplicate`, `setHidden`, `setVision`, `configure`, `addCondition`, `removeCondition` |
 | `maps` | `update`, `move`, `delete`, `activate`, `navigate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder`, `exportUniversalVtt` |
-| `journals` | `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset`, `setPrerequisites`, `restoreRevision`, `restoreDeleted`, `purgeDeleted` |
+| `journals` | `resources`, `resolve`, `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset`, `setPrerequisites`, `restoreRevision`, `restoreDeleted`, `purgeDeleted` |
 | `items` | `create`, `update`, `delete`, `duplicate`, `setPermissions`, `createFolder`, `updateFolder`, `deleteFolder` |
 | `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
 | `clocks` | `create`, `update`, `advance`, `reset`, `delete` |
 | `clues` | `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
+| `mindmaps` | `read`, `resources`, `resolve`, `create`, `update`, `node`, `delete` |
 | `cards` | `define`, `instantiate`, `create`, `draw`, `shuffle`, `reset`, `deleteDeck`, `discard`, `return`, `give`, `place`, `take`, `flip`, `move` |
 | `audio` | `updateTrack`, `deleteTrack`, `createPlaylist`, `updatePlaylist`, `deletePlaylist`, `createSpatialSound`, `updateSpatialSound`, `deleteSpatialSound`, `play`, `pause`, `stop`, `seek`, `setVolume`, `startScore`, `pauseScore`, `resumeScore`, `stopScore`, `nextScore`, `previousScore` |
 | `compendiums` | `create`, `configure`, `read`, `delete`, `add`, `remove`, `import`, `setPermissions` |
@@ -55,8 +56,8 @@ Formas adicionais:
 
 | Método | Comportamento |
 | --- | --- |
-| `actors/tokens/maps/journals/items/clocks/clues.list(payload, options)` | Retorna a coleção da resposta autorizada de `state` |
-| `actors/tokens/maps/journals/items/clocks/clues.get(id, payload, options)` | Procura na coleção projetada ou gera `not_found` |
+| `actors/tokens/maps/journals/items/clocks/clues/mindmaps.list(payload, options)` | Retorna a coleção da resposta autorizada de `state` |
+| `actors/tokens/maps/journals/items/clocks/clues/mindmaps.get(id, payload, options)` | Procura na coleção projetada ou gera `not_found` |
 | `actors.update(id, changes, options)` | Atalho que lê a versão atual se `changes.version` não foi fornecido |
 | `actors.sheet(id, payload, options)` | Lê ficha, inclusive com contexto de token no payload |
 | `maps.layers(payload, options)` | Lê camadas autorizadas da cena |
@@ -109,7 +110,7 @@ revisões esperadas dos serviços nativos. Os payloads públicos usam estes nome
 | `blueprints.templates` / `readTemplate` | `{}` / `{templateId}` |
 | `blueprints.saveTemplate` / `deleteTemplate` | `{templateId, expectedVersion, name, description, definition}` / `{templateId, expectedVersion}` |
 | `blueprints.test` | `{sceneId, elementId, expectedVersion, event, tokenId?, blueprint?}` |
-| `blueprints.testDraft` | `{document, elementId, event, actorId?, projectId?}`; um projeto vinculado autorizado fornece o escopo da cena original para os vínculos de relógio no ensaio temporário |
+| `blueprints.testDraft` | `{document, elementId, event, actorId?, projectId?}`; um projeto vinculado autorizado fornece o escopo da cena original para vínculos de relógios, pistas e mapas mentais no ensaio temporário |
 | `blueprints.control` | `{sceneId, elementId, expectedVersion, action, value?}` |
 | `maps.exportUniversalVtt` | `{sceneId}`; JSON nativo de intercâmbio |
 | `maps.navigate` | `{mapId}`; `mapId: null` explícito volta a seguir a transmissão em contexto sem cena fixa |
@@ -140,7 +141,7 @@ de campanha. `state({sceneId})` retorna os relógios da campanha e daquela cena
 autorizada, filtrados pela participação atual. O adaptador nativo da página usa
 a rota GET de estado dos recursos para espectadores visualizarem relógios públicos.
 
-Criar aceita `{name, segments?, value?, color?, visibility?, playersCanEdit?,
+Criar aceita `{name, description?, segments?, value?, color?, visibility?, playersCanEdit?,
 pinned?, scopeSceneId?}`. Os padrões são 4 segmentos, valor 0, `#c9a44c`, `gm`,
 false, false e escopo da campanha. Segmentos são inteiros de 2 a 24; o progresso
 vai de 0 ao total de segmentos; cada campanha comporta até 128 relógios. Atualizar
@@ -151,6 +152,11 @@ Somente mestres configuram, reiniciam ou excluem; jogadores avançam apenas
 relógios públicos com `playersCanEdit: true`. Espectadores continuam somente
 com leitura. Os relógios retornados expõem `canEdit`, `canConfigure` e o escopo
 salvo em `sceneId`.
+
+`description` é texto autoral opcional com padrão `""` e exige string de até
+4.000 caracteres. Somente configurações do mestre o alteram. Atualizações que
+omitem o campo o preservam; leitores só o recebem quando podem ver o relógio.
+O campo é adicional, sem novo método de navegador ou versão do SDK.
 
 `scopeSceneId: null` salva o escopo da campanha; um UUID de cena salva o escopo
 da cena. O `sceneId`/`mapId` da requisição é o contexto de visualização e nunca
@@ -191,6 +197,128 @@ espectadores. Assinaturas de `clues.changed` releem o estado projetado no envelo
 de recursos abaixo. O nó `clueControl` do MapBuilder delega somente o efeito
 configurado e não concede alterações diretas aos jogadores. Ensaios desfazem
 suas alterações e notificações. Veja [pistas](clues.md) para uso e ações do nó.
+
+### Mapas mentais colaborativos e vínculos tipados
+
+O domínio `mindmaps` lê grafos compartilhados pelas permissões atuais de cada
+pessoa. Não usa a cena atual implicitamente: `state({})` lista todos os mapas
+acessíveis; `state({sceneId})` seleciona mapas de campanha e daquela cena.
+Módulos vinculados explicitamente a uma cena mantêm esse contexto autoritativo.
+
+| Método | Payload e resultado |
+| --- | --- |
+| `state` / `read` | `{sceneId?}` / `{id, sceneId?}`; envelope da coleção / um mapa projetado |
+| `resources` | `{query?, kinds?, limit?, sceneId?}`; `{kinds:[{id,label}], resources:[...], truncated}` |
+| `resolve` | `{reference}`; exibição autorizada atual de um recurso ou `null` para destinos ausentes/negados |
+| `create` | `{name, visibility?, editorIds?, scopeSceneId?, document?}`; exclusivo do mestre, padrão privado e escopo de campanha |
+| `update` | `{id, version, name?, document?, visibility?, editorIds?, scopeSceneId?}` |
+| `node` | `{id, version, nodeId, patch}`; altera os campos informados de um tópico |
+| `delete` | `{id, version}`; exclusivo do mestre |
+
+`visibility` é `gm` ou `players`. `editorIds` contém UUIDs de jogadores atuais da
+campanha; selecionados leem/editam mesmo mapas privados. Todos os mestres editam,
+e a visibilidade pública concede somente leitura aos demais. Jogadores alteram
+`name`, `document` e campos dos tópicos; escopo/acesso continuam exclusivos dos
+mestres. Streamers não escrevem. Escritas retornam `{id, version, mindmap}`
+(excluir retorna `{id}`), usam recibo separado e exigem a versão salva para mapas
+existentes. Conflitos exigem revisão do estado atual sem trocar silenciosamente
+a versão esperada do rascunho. `mindmaps.changed` usa o envelope de recursos.
+
+O documento é `{nodes, edges}`. Tópicos têm UUID `id`, `parentId` opcional,
+`label`, `notes`, `color` hexadecimal, `x`, `y`, `collapsed`, `completed` e `links`.
+Vínculos de pais formam uma floresta sem ciclos. Arestas adicionais são
+`{id, from, to, label?}` entre tópicos existentes. Patches aceitam esses campos
+dos tópicos, exceto `id`. Os limites são 64 mapas por campanha, 500 tópicos/1.000
+arestas por mapa, 16 vínculos por tópico/2.048 no total e 1 MiB por documento.
+Títulos têm 240 caracteres, notas 8.000 e coordenadas ficam entre ±100.000.
+
+Referências canônicas são exatamente `{kind, id, pageId?}`. O
+[registro de recursos](../../gravewright/table/resource_links.py) define 37 tipos,
+incluindo IDs numéricos nativos, entradas de compêndios instalados
+(`packId/entryId`), páginas (`id: journalId` com `pageId`) e desenhos
+(`sceneId/drawingId`). Descubra os tipos por `resources`, sem inferi-los pelos
+rótulos. A busca aceita até 120 caracteres; `limit` tem padrão 80 e intervalo
+1–200. Rótulos vêm das projeções nativas atuais. Nomes autorais ficam literais;
+`labelKey`/`descriptionKey` opcionais identificam textos gerados para o Translator.
+
+Vínculos ausentes e negados são projetados igualmente como `{unavailable:true,
+key}`, sem tipo/ID/nome/URL ocultos. Devolva o marcador opaco intacto ao editar
+outros conteúdos ou omita-o para remover o vínculo. Ele não autoriza criar uma
+referência oculta. Abrir novamente revalida as permissões; nomear o destino ou
+compartilhar um mapa não concede acesso ao recurso. Veja [Mapas mentais](mindmaps.md)
+para tipos, colaboração, nós do MapBuilder e remapeamento tipado dos arquivos.
+
+### Vínculos de recursos nos diários
+
+`api.journals.resources({query?, kinds?, limit?, sceneId?}, options)` busca no
+mesmo catálogo tipado de campanha dos mapas mentais.
+`api.journals.resolve({reference}, options)` devolve `{resource: row | null}` após
+verificar o acesso atual ao destino. Ambos são métodos de leitura disponíveis
+a jogadores e streamers autorizados. Leituras sem cena vinculada não herdam a
+cena transmitida; uma cena explicitamente vinculada continua sendo a autoridade.
+
+O texto mantém `gw-journal-doc-v1`, versão 1. A referência é um átomo inline:
+
+```json
+{"type":"gwResourceLink","attrs":{"reference":{"kind":"journal-page","id":"<journalUUID>","pageId":"page_main"}}}
+```
+
+O vínculo salvo contém apenas `kind`, `id` e `pageId` opcional. A projeção de
+cada destinatário acrescenta metadados atuais e uma `key` opaca; destinos sem
+acesso tornam-se `{unavailable:true,key}`, sem identidade ou título. Devolva o
+marcador intacto para preservá-lo numa edição autorizada. Ele está vinculado ao
+diário de origem e não cria uma conexão privada nova. Cada diário aceita até
+512 referências; os limites normais de tamanho e profundidade também se aplicam.
+O salvamento usa a versão e o UUID de operação existentes do diário.
+
+As leituras nativas usam `GET /api/containers/{campaign}/journals/resources` com
+parâmetros `query`, `kinds` (array JSON), `limit` e `sceneId` opcional, e
+`GET /api/containers/{campaign}/journals/resolve?reference=<JSON>`. As respostas
+são privadas e não ficam em cache. Pacotes Python usam
+`api.journals.resources(campaign_id, user_id, *, query='', kinds=None, limit=80,
+scene_id=None)` e `api.journals.resolve(campaign_id, user_id, reference)`.
+A busca não muda a presença ou navegação na mesa. Veja
+[Diários e referências](journals.md) para edição, acesso e cópias portáteis.
+
+### Capítulos e páginas dos diários
+
+Atualizações usam o comando existente do diário, a versão esperada e o UUID de
+operação. O payload `data` pode incluir capítulos independentes, inclusive vazios:
+
+```json
+{
+  "chapters": [
+    {"id":"chapter_main", "name":"Chapter one", "parentId":null, "sortOrder":10},
+    {"id":"chapter_child", "name":"A subchapter", "parentId":"chapter_main", "sortOrder":10}
+  ],
+  "sections": [
+    {"id":"page_main", "title":"A page", "kind":"text", "chapterId":"chapter_child"},
+    {"id":"page_loose", "title":"An ungrouped page", "kind":"text", "chapterId":null}
+  ]
+}
+```
+
+Cada página pertence a nenhum ou a um capítulo. Cada capítulo tem nenhum ou um
+pai e pode conter de zero a várias páginas e subcapítulos. Os IDs são locais ao
+diário; copiar uma campanha os preserva sem tratá-los como UUIDs de recursos.
+IDs de capítulos são únicos, com 1–40 letras ASCII, números, sublinhados ou
+hífens; nomes têm 1–80 caracteres. O servidor permite até 128 capítulos, oito
+níveis e as 64 páginas existentes. Pais ausentes, ciclos e vínculos de página
+para capítulos inexistentes são rejeitados antes de salvar. `sortOrder` ordena
+capítulos dentro de cada pai.
+
+A projeção autorizada expõe `chapters` junto com `sections`. Páginas privadas
+continuam filtradas, assim como os ramos compostos apenas de páginas sem acesso.
+Ancestrais de páginas legíveis e ramos realmente vazios permanecem visíveis.
+Apresentações de uma página incluem apenas seu caminho de capítulos. Atualizações
+preservam as páginas ocultas protegidas pelo servidor e a estrutura necessária
+para esses vínculos.
+
+Nomes legados de `sections[].category` recebem IDs estáveis na normalização;
+`category` permanece como espelho do nome para compatibilidade. Um
+`chapterId: null` explícito remove o vínculo da página. Atualizações antigas que
+omitem `chapters` mantêm os capítulos existentes, inclusive vazios. O histórico
+e os arquivos portáteis da campanha preservam a árvore.
 
 ### Operações dos sistemas e PDF System
 
@@ -339,9 +467,10 @@ maps.layersChanged   journals.changed     items.changed
 combat.changed       cards.changed        audio.changed
 compendiums.changed  chat.changed         chat.message
 table.presence       table.lobbyChanged   clocks.changed   clues.changed
+mindmaps.changed
 ```
 
-Assinaturas de mudanças em coleções fazem leitura HTTP autorizada inicialmente, após invalidações correspondentes do socket e na reconexão. Invalidações concorrentes são agrupadas; não representam todas as mutações intermediárias. Callbacks de ator/token/mapa/documento recebem o estado projetado e a identidade da mesa/cena; callbacks de item/combate/cartas/áudio/compêndio/relógio recebem `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presença e sala de espera encaminham payloads do socket sem ler automaticamente o estado inicial. Consulte esse estado separadamente quando necessário.
+Assinaturas de mudanças em coleções fazem leitura HTTP autorizada inicialmente, após invalidações correspondentes do socket e na reconexão. Invalidações concorrentes são agrupadas; não representam todas as mutações intermediárias. Callbacks de ator/token/mapa/documento recebem o estado projetado e a identidade da mesa/cena; callbacks de item/combate/cartas/áudio/compêndio/relógio/pista/mapa mental recebem `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presença e sala de espera encaminham payloads do socket sem ler automaticamente o estado inicial. Consulte esse estado separadamente quando necessário.
 
 Assinaturas usam o socket da página atual. Uma API criada com `forTable` em `/inside`, ou apontando para outra mesa, faz requisições HTTP, mas não cria socket para essa mesa. Não presuma atualizações contínuas. Callbacks devem ser síncronos; inicie tarefas assíncronas explicitamente com tratamento de erro. O `events` antigo do bloco usa outros nomes e possui ressalvas descritas no [guia de módulos](modules.md#arquivos-persistência-e-eventos).
 
@@ -432,9 +561,10 @@ Imports e assinaturas públicas; `campaign_id`/`user_id` representam identificad
 | `api.systems` | `capabilities(campaign_id, user_id)`, `call(campaign_id, user_id, operation, payload, request_id=None, *, scene_id=None)`, `register_api(system_id, operations)`; [contrato de provedores](../../gravewright/campaigns/system_api.py) |
 | `api.library` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, payload, request_id)`; [serviço nativo da biblioteca](../../gravewright/maps/library_services.py) |
 | `api.ownership` | `state(campaign_id, user_id, kind, resource_id)`, `command(campaign_id, user_id, kind, resource_id, payload, request_id)`; [serviço do mestre para documentos, pastas e páginas](../../gravewright/table/permission_services.py) |
-| `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)` |
+| `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `resources(campaign_id, user_id, **search)`, `resolve(campaign_id, user_id, reference)` |
 | `api.clocks` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)`; ações `create`, `update`, `advance`, `reset`, `delete` |
 | `api.clues` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)`; ações `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
+| `api.mindmaps` | `state(campaign_id, user_id, scene_id=None)`, `read(campaign_id, user_id, mindmap_id, scene_id=None)`, `resources(campaign_id, user_id, *, query='', kinds=None, limit=80, scene_id=None)`, `resolve(campaign_id, user_id, reference)`, `command(campaign_id, user_id, action, data, request_id)`; ações `create`, `update`, `node`, `delete` |
 | `api.items`, `api.combat`, `api.cards`, `api.audio`, `api.compendiums` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.combat.register_provider` | Registro de callbacks pelo sistema em `AppConfig.ready()`; veja [provedores de combate](modules.md#provedores-de-combate-do-sistema) |
 | `api.resources` | `state(campaign_id, user_id, name, scene_id=None, preview_token_id=None)`, `command(campaign_id, user_id, name, action, data, request_id)` |
@@ -444,7 +574,7 @@ Imports e assinaturas públicas; `campaign_id`/`user_id` representam identificad
 | `api.events` | `Change`, `resource_changed` |
 | `api.errors` | `AuthError`, `JournalError`, `MapError`, `RollError` |
 
-Use argumentos posicionais como no exemplo quando nomes de parâmetros diferirem. `resources` seleciona `items`, `combat`, `cards`, `audio`, `compendiums`, `clocks` ou `clues` pelo nome. `dice.evaluate` calcula localmente; `dice.roll` salva/publica uma rolagem. Exceções Python preservam tipos/códigos dos serviços originais, sem a normalização de sete códigos do navegador.
+Use argumentos posicionais como no exemplo quando nomes de parâmetros diferirem. `resources` seleciona `items`, `combat`, `cards`, `audio`, `compendiums`, `clocks`, `clues` ou `mindmaps` pelo nome. `dice.evaluate` calcula localmente; `dice.roll` salva/publica uma rolagem. Exceções Python preservam tipos/códigos dos serviços originais, sem a normalização de sete códigos do navegador.
 
 ### Transações e hooks do servidor
 

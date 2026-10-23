@@ -69,7 +69,7 @@ O instalador prepara ferramentas e dependências. [create_runner.py](../../scrip
 
 ## Atualização e rollback
 
-A release **0.3.2** preparada usa **`Gravewright-0.3.2-django.zip`** e seu checksum correspondente. Acrescenta migrações de banco para relógios, pistas, preparação de campanha e histórico de diários. Siga o [guia de atualização](upgrading.md) antes de instalá-la. Uma atualização manual exige o pacote completo e outra execução de **`Install Windows.bat`**, preservando `.env`, `data/` e caminhos de armazenamento explicitamente configurados. Reedições da mesma versão exigem instalação manual porque a descoberta compara números de versão.
+A release **0.3.2** usa **`Gravewright-0.3.2-django.zip`** e seu checksum correspondente. Acrescenta migrações de banco para relógios, pistas, preparação de campanha e histórico de diários. Siga o [guia de atualização](upgrading.md) antes de instalá-la. Uma atualização manual exige o pacote completo e outra execução de **`Install Windows.bat`**, preservando `.env`, `data/` e caminhos de armazenamento explicitamente configurados. Reedições da mesma versão exigem instalação manual porque a descoberta compara números de versão.
 
 A atualização substitui os arquivos na própria pasta do projeto, incluindo o instalador, e regenera o runner com o novo ambiente Python. Em Administração → Atualizações, **Manter cópia .old para rollback** controla se o código anterior e o snapshot correspondente dos dados serão preservados após o sucesso. A recuperação temporária durante a instalação é sempre mantida. Veja [implantação](deployment.md) para restaurar uma cópia.
 

@@ -48,7 +48,7 @@ Como mestre da campanha, abra **Nova cena**. Escolha o fluxo conforme sua origem
 
 Importar uma imagem não detecta paredes nem reconstrói suas camadas originais.
 O importador do diretório de cenas cria somente a cena nativa. O importador do
-Builder também cria o projeto vinculado. Use **Editar mapa com map builder** na
+Builder também cria o projeto vinculado. Use **Editar Cena** na
 barra superior da mesa para abrir ou adotar a cena existente selecionada;
 geometria nativa compatível permanece editável sobre o fundo. O
 [guia do importador/exportador](universal-vtt.md) explica os campos aceitos e avisos.
@@ -92,13 +92,18 @@ camadas, Objetos Inteligentes, atalhos, limites e solução de problemas.
 
 ## Durante a partida
 
+Abra **Mapas mentais**, **Pistas** e **Relógios** pelos ícones no dock inferior.
+Passe o mouse ou foque um ícone para ver sua dica. O gestor de campanha mantém
+essas ferramentas na barra lateral.
+
 | Área | Finalidade |
 | --- | --- |
 | Atores e tokens | Dados de personagem, mapeamento PDF, posicionamento, movimento e estado visual |
 | [PDF System](pdf-system.md) | Campos manuais em PDFs não editáveis, ações, fórmulas, modelos de mapeamento e exportação preenchida |
 | [Relógios](clocks.md) e [pistas](clues.md) | Progresso e descobertas de campanha/cena, compartilhados com o gestor e mecanismos do MapBuilder |
+| [Mapas mentais](mindmaps.md) | Grafos de tópicos móveis, notas, conclusão e vínculos tipados; jogadores editores colaboram na mesa enquanto o mestre controla o acesso |
 | Chat e dados | Mensagens, projeções privadas/do mestre suportadas, rolagens e presets |
-| Diários | Diários, missões, quadros de missões, tabelas ponderadas e anexos de imagem/PDF |
+| [Diários](journals.md) | Diários, missões, quadros de missões, tabelas ponderadas, anexos de imagem/PDF e referências a recursos da campanha |
 | Áudio | Faixas, playlists, reprodução sincronizada e controles de som posicional |
 | Cartas | Recursos de baralho, compra, mãos e estado das cartas na mesa |
 | Combate | Turnos de encontro, iniciativa e efeitos |
@@ -107,11 +112,21 @@ camadas, Objetos Inteligentes, atalhos, limites e solução de problemas.
 
 Consulte a [referência de notação de dados](../../gravewright/dice/grammar/notation/GRAMMAR.pt-BR.md) para expressões aceitas. O texto rico dos diários é armazenado como documento estruturado; o servidor filtra acesso a seções do mestre e materiais compartilhados. Exportações e capturas podem ter público diferente da mesa ao vivo, então selecione o conteúdo que compartilha.
 
+Diários permitem capítulos vazios e subcapítulos. Cada página pode pertencer a
+um capítulo ou a nenhum; remover um capítulo mantém suas páginas e subcapítulos.
+Use o índice de páginas para organizar a árvore na mesa ou no gestor de campanha.
+
+No texto editável do diário, digite **/** para inserir blocos ou **@** para abrir
+o seletor de referências da campanha. A abertura verifica as permissões atuais
+do destino; compartilhar o diário não compartilha um destino privado. Veja o [guia de
+diários](journals.md) para destinos de páginas, referências indisponíveis e edição
+pelos jogadores.
+
 Áudio no navegador pode exigir uma interação antes de tocar. Se a mesa parar de atualizar, confira a conexão e reconecte; atualizar a página recarrega o estado autorizado. Mudanças nos módulos ativos podem exigir que clientes carreguem o novo conjunto antes de chamar extensões.
 
 ## Preservar conteúdo
 
-Exportação/importação, clonagem e snapshots dependem das opções da instância e das permissões. Arquivos completos de campanha incluem preparação, relógios, pistas, modelos de mapeamento PDF e histórico/lixeira dos diários com seus arquivos retidos. Exportações portáteis removem permissões de usuários e omitem chat; snapshots também preservam acesso/chat para restauração. Exportações de recursos para compêndios omitem preparação e histórico. Esses arquivos não são backups completos da instância. Antes de restaurar snapshot ou substituir conteúdo, siga os procedimentos de [implantação](deployment.md).
+Exportação/importação, clonagem e snapshots dependem das opções da instância e das permissões. Arquivos completos de campanha incluem preparação, relógios, pistas, mapas mentais, modelos de mapeamento PDF e histórico/lixeira dos diários com seus arquivos retidos. Exportações portáteis removem permissões de usuários e omitem chat; snapshots também preservam acesso/chat para restauração. Exportações de recursos para compêndios omitem preparação e histórico. Esses arquivos não são backups completos da instância. Antes de restaurar snapshot ou substituir conteúdo, siga os procedimentos de [implantação](deployment.md).
 
 Mapas, músicas, PDFs e outros uploads mantêm suas próprias licenças e titularidade. A licença do projeto não autoriza redistribuir livros ou mídias que não sejam seus. Módulos podem usar licenças diferentes; veja [licenciamento](../../LICENSING.pt-BR.md).
 

@@ -12,7 +12,7 @@ For local play, use the installer for [Windows](windows-runner.md), [Linux](linu
 
 Extract the whole project into a writable folder first. Installation can download tools and packages; startup uses the prepared environment. Keep the Runner terminal open and press Ctrl+C to stop. The default address is `http://127.0.0.1:3000`. Linux private downloads require glibc; see its guide for recognized distribution families and Alpine/musl limits.
 
-The prepared **0.3.2** release uses **`Gravewright-0.3.2-django.zip`** and its matching checksum, with installers for all three platforms. For an existing installation, follow [upgrading](upgrading.md) before replacing files: this release adds database migrations for clocks, clues, campaign preparation and journal history. The [release notes](../releases/0.3.2.md) describe the resulting behavior and compatibility.
+The **0.3.2** release uses **`Gravewright-0.3.2-django.zip`** and its matching checksum, with installers for all three platforms. For an existing installation, follow [upgrading](upgrading.md) before replacing files: this release adds database migrations for clocks, clues, campaign preparation and journal history. The [release notes](../releases/0.3.2.md) describe the resulting behavior and compatibility.
 
 ## Prerequisites
 

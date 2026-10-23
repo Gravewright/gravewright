@@ -6,7 +6,7 @@ import { defaultBlueprint, eventGraph, blueprintStatesFor, blueprintAllStates, b
     blueprintContract, connectNodes, validateBlueprint, simulateGraph, blueprintAppearance, upgradeBlueprint, elementInstanceNode,
     variableTypes, variableScopes, variableOperators, typedDefault, isBlueprintSignalEvent, controlNodeTypes, timerActions,
     executionOutputs, switchCaseIds, randomBranchIds, groupMemberTypes, eventContextProperties, eventContextTypes,
-    acceptsDataType, questStatuses, clockControls, clueControls } from './blueprint-model.js';
+    acceptsDataType, questStatuses, clockControls, clueControls, mindMapControls } from './blueprint-model.js';
 
 // Saved node coordinates start at ORIGIN so cards can be placed around the event.
 const ORIGIN = { x: 320, y: 160 }, PLANE = 5400, MAX_POSITION = 4700, PAD = 1200;
@@ -53,6 +53,8 @@ const catalog = [
     { type: 'setVisibility', group: 'Actions', description: 'Show or hide live artwork while preserving its collision barriers.', aliases: 'setVisibility visibility' },
     { type: 'setAppearance', group: 'Actions', description: 'Change a dynamic surface material or native object image.', missing: 'Add an image to this project first.', aliases: 'setAppearance material' },
     { type: 'showMessage', group: 'Actions', description: 'Show a plain text message to an authorized audience.', aliases: 'showMessage' },
+    { type: 'openMindMap', group: 'Actions', description: 'Open a mind map for authorized readers without changing its permissions.', missing: 'Create a mind map in this campaign first.', aliases: 'mind map mindmap openMindMap' },
+    { type: 'mindMapNode', group: 'Actions', description: 'Complete, reset or toggle a topic in a campaign mind map.', missing: 'Create a topic in a campaign mind map first.', aliases: 'mind map mindmap mindMapNode topic complete' },
     { type: 'showHandout', group: 'Actions', description: 'Open a campaign journal, quest or quest board for authorized readers.', missing: 'Create a journal in this campaign first.', aliases: 'showHandout journal diary quest mission' },
     { type: 'requestRoll', group: 'Actions', description: 'Ask one player or all players to roll dice in a modal.', aliases: 'requestRoll dice roll' },
     { type: 'setQuestStatus', group: 'Actions', description: 'Update a campaign quest when this behavior runs.', missing: 'Create a quest in this campaign first.', aliases: 'setQuestStatus mission quest' },
@@ -81,7 +83,7 @@ const typeNames = { state: 'State', boolean: 'True or False', number: 'Number', 
     elementset: 'Element group', light: 'Light', lightset: 'Light group', sound: 'Sound', soundset: 'Sound group' };
 
 /** Edit an isolated graph; persist valid authored edits without running its events. */
-export function openBlueprintEditor({ element, elements, door, doors = [], assets = [], materials = assets, lights = [], sounds = [], clocks = [], clues = [], users = [], handouts = [], campaignId, initialEvent, nested = false, autosave = true, linkedScene = false, t, pick, onSave, onDiscard, onClose }) {
+export function openBlueprintEditor({ element, elements, door, doors = [], assets = [], materials = assets, lights = [], sounds = [], clocks = [], clues = [], mindmaps = [], users = [], handouts = [], campaignId, initialEvent, nested = false, autosave = true, linkedScene = false, t, pick, onSave, onDiscard, onClose }) {
     if (!document.querySelector('link[href*="builder/blueprint-editor.css"]')) {
         const link = document.createElement('link'); link.rel = 'stylesheet';
         link.href = new URL('./blueprint-editor.css', import.meta.url).href; document.head.append(link);
@@ -115,7 +117,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         'verb-destroy': 'On destroy', 'presence-enter': 'On area enter', 'presence-exit': 'On area exit' }[value] || value);
     const typeName = value => t({ event: 'Event', light: 'Set light', sound: 'Play sound', state: 'Change state', interact: 'Interact with object', condition: 'Check state',
         sprite: 'Change sprite', sequence: 'Sequence', property: 'Get property', compare: 'Compare state',
-        reference: 'Element reference', reveal: 'Reveal', barrier: 'Set barrier', soundControl: 'Control sound', clockControl: 'Control clock', clueControl: 'Control clue', flame: 'Set flame',
+        reference: 'Element reference', reveal: 'Reveal', barrier: 'Set barrier', soundControl: 'Control sound', clockControl: 'Control clock', clueControl: 'Control clue', openMindMap: 'Open mind map', mindMapNode: 'Control mind-map topic', flame: 'Set flame',
         all: 'All conditions', any: 'Any condition', getVariable: 'Get variable', setVariable: 'Set variable',
         compareValue: 'Compare value', emitEvent: 'Emit event', counter: 'Counter', once: 'Once', cooldown: 'Cooldown', delay: 'Delay', timer: 'Timer',
         switch: 'Switch', random: 'Random', elementGroup: 'Element group', lightReference: 'Light reference', soundReference: 'Sound reference',
@@ -125,6 +127,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     const timerActionName = value => t({ start: 'Start timer', stop: 'Stop timer', restart: 'Restart timer' }[value]);
     const clockActionName = value => t({ advance: 'Advance clock', reduce: 'Reduce clock', set: 'Set clock value', reset: 'Reset clock' }[value]);
     const clueActionName = value => t({ advance: 'Advance clue', reduce: 'Reduce clue', set: 'Set clue progress', reset: 'Reset clue', reveal: 'Reveal clue', hide: 'Hide clue' }[value]);
+    const mindMapActionName = value => t({ complete: 'Complete topic', reset: 'Reset topic', toggle: 'Toggle topic completion' }[value]);
     const choiceName = (type, output) => output === 'default' ? t('Default')
         : t(type === 'switch' ? 'Case {0}' : 'Branch {0}', { 0: output.replace(/\D/g, '') });
     const scopeName = value => t(value === 'scene' ? 'Scene' : 'This element');
@@ -154,6 +157,8 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     const available = type => type === 'setAppearance' ? materials.length > 0
         : type === 'clockControl' ? clocks.length > 0
         : type === 'clueControl' ? clues.length > 0
+        : type === 'openMindMap' ? mindmaps.length > 0
+        : type === 'mindMapNode' ? mindmaps.some(map => map.nodes?.length)
         : type === 'showHandout' ? handouts.length > 0
         : type === 'setQuestStatus' ? quests.length > 0
         : type === 'teleport' ? [object, ...otherElements].some(row => row.kind === 'region')
@@ -217,7 +222,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             try { await openInteractiveObjectCatalog({ element: { ...object, blueprint: draft },
                 doors: otherElements.filter(row => row.kind === 'door'), handouts, users: players, sounds, assets, materials: assets, t, signal, preserveState: true,
                 onApply: result => {
-                    validateBlueprint(result.blueprint, { assets, materials, lights, sounds, clocks, clues, element: object });
+                    validateBlueprint(result.blueprint, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
                     remember(); draft = structuredClone(result.blueprint); pending = null; selection.clear();
                     trigger = 'verb-interact'; renderSettings(); renderGraph(); fitView();
                 } }); } catch (cause) { error(cause); }
@@ -231,9 +236,9 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             if (focused?.matches('[data-blueprint-param]') && authoredControl(focused)) focused.dispatchEvent(new Event('change'));
             clearConnection();
             try { await openTemplateLibrary({ campaignId, blueprint: draft, ownerId: object.id,
-                catalog: { assets, materials, elements: [object, ...otherElements], lights, sounds, clocks, clues, users, handouts }, t,
+                catalog: { assets, materials, elements: [object, ...otherElements], lights, sounds, clocks, clues, mindmaps, users, handouts }, t,
                 onApply: blueprint => {
-                    validateBlueprint(blueprint, { assets, materials, lights, sounds, clocks, clues, element: object });
+                    validateBlueprint(blueprint, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
                     remember(); draft = structuredClone(blueprint); pending = null; selection.clear();
                     renderSettings(); renderGraph(); fitView();
                 } }); } catch (cause) { error(cause); }
@@ -360,7 +365,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         initialKey: JSON.stringify(normalizedBlueprint()),
         read: () => {
             const blueprint = normalizedBlueprint();
-            validateBlueprint(blueprint, { assets, materials, lights, sounds, clocks, clues, element: object });
+            validateBlueprint(blueprint, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
             return { key: JSON.stringify(blueprint), payload: blueprint };
         },
         canSave: () => !disposed && inputTimer === undefined && !pending && !wireDrag && !wireChoice
@@ -466,7 +471,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             if (create.disabled) return;
             const key = `signal:${name.value}`, candidate = structuredClone(draft);
             candidate.graphs[key] = eventGraph(key);
-            try { validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, element: object }); }
+            try { validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object }); }
             catch (cause) { error(cause); return; }
             remember(); draft = candidate; selectEvent(key);
         };
@@ -681,14 +686,16 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 reference: { targetId: otherElements[0]?.id }, reveal: {}, barrier: { channel: 'movement', mode: 'pass' },
                 soundControl: { trackId: sounds[0]?.id, action: 'stop', volume: .5 },
                 clockControl: { clockId: clocks[0]?.id, action: 'advance', amount: 1 },
-                clueControl: { clueId: clues[0]?.id, action: 'reveal', amount: 1 } }[type]) };
+                clueControl: { clueId: clues[0]?.id, action: 'reveal', amount: 1 },
+                openMindMap: { mindMapId: mindmaps[0]?.id, nodeId: null, audience: { scope: 'trigger' } },
+                mindMapNode: { mindMapId: mindmaps.find(map => map.nodes?.length)?.id, nodeId: mindmaps.find(map => map.nodes?.length)?.nodes[0]?.id, action: 'complete' } }[type]) };
     }
     function commitConnection(source, targetId, action, input) {
         // Validate a complete candidate before adding either a node or an edge to the draft.
         const candidate = structuredClone(draft), value = candidate.graphs[source.event] ||= eventGraph(source.event);
         if (action) value.nodes.push(action);
         if (source.id) connectNodes(value, source.id, source.output, targetId, { version: candidate.version, ...(input === undefined ? {} : { input }) });
-        validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, element: object });
+        validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
         remember(); draft.graphs = candidate.graphs;
     }
     function nextPosition(value) {
@@ -732,7 +739,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             && first.offsetTop < second.offsetTop + second.offsetHeight + 16
             && second.offsetTop < first.offsetTop + first.offsetHeight + 16;
         for (const item of graph().nodes.filter(row => ['switch', 'random', 'elementGroup', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
-            'setVisibility', 'setAppearance', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'clockControl', 'clueControl'].includes(row.type))) {
+            'setVisibility', 'setAppearance', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'clockControl', 'clueControl', 'openMindMap', 'mindMapNode'].includes(row.type))) {
             const card = sourceElement(item.id);
             // Choice fields and translated hints can grow after their neighbors
             // were placed. Keep the edited card still and make room below it.
@@ -1107,7 +1114,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         for (const item of data.nodes) value.nodes.push({ ...structuredClone(item), id: ids.get(item.id),
             x: clamp(Math.round(origin.x + item.x), 0, MAX_POSITION), y: clamp(Math.round(origin.y + item.y), 0, MAX_POSITION) });
         for (const edge of data.edges) value.edges.push({ ...structuredClone(edge), from: ids.get(edge.from), to: ids.get(edge.to) });
-        try { validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, element: object }); } catch (cause) { error(cause); return; }
+        try { validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object }); } catch (cause) { error(cause); return; }
         remember(); draft.graphs = candidate.graphs;
         selection.clear(); for (const id of ids.values()) selection.add(id);
         renderGraph(); canvas.focus({ preventScroll: true });
@@ -1400,7 +1407,9 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             }
             update(); content.append(list);
         }
-        content.append(node('p', { class: 'smart-object__hint' }, t('Recipients must have access. Camera requests also respect each person’s preference.')));
+        content.append(node('p', { class: 'smart-object__hint' }, t(item.type === 'openMindMap'
+            ? 'Recipients must already have permission to read the mind map.'
+            : 'Recipients must have access. Camera requests also respect each person’s preference.')));
     }
     function paintSelection() {
         for (const card of nodes.children) card.classList.toggle('is-selected', selection.has(card.dataset.blueprintNode));
@@ -1669,6 +1678,33 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 });
                 content.append(field('Volume', volume));
             }
+        }
+        if (['openMindMap', 'mindMapNode'].includes(item.type)) {
+            const choices = mindmaps.map(map => [map.id, map.name]);
+            const selectedMap = mindmaps.find(map => map.id.toLowerCase() === item.mindMapId.toLowerCase());
+            if (!selectedMap) choices.unshift([item.mindMapId, t('Missing mind map')]);
+            const map = parameter(item, 'Mind map', 'mindMapId', choices);
+            map.querySelector('select').setAttribute('translate', 'no');
+            map.querySelector('select').disabled = !mindmaps.length;
+            map.querySelector('select').addEventListener('change', () => {
+                const target = mindmaps.find(row => row.id === item.mindMapId);
+                item.nodeId = item.type === 'openMindMap' ? null : target?.nodes[0]?.id || item.nodeId;
+                renderGraph();
+            }, { signal });
+            const topicChoices = (selectedMap?.nodes || []).map(topic => [topic.id, topic.name]);
+            if (item.type === 'openMindMap') topicChoices.unshift(['', t('Whole mind map')]);
+            if (item.nodeId && !selectedMap?.nodes?.some(topic => topic.id === item.nodeId)) topicChoices.unshift([item.nodeId, t('Missing topic')]);
+            const select = node('select', { 'data-blueprint-param': 'nodeId', translate: 'no' });
+            for (const [value, label] of topicChoices) select.append(node('option', { value }, label));
+            select.value = item.nodeId || ''; select.disabled = !selectedMap || !topicChoices.length;
+            listen(select, 'change', () => {
+                const value = select.value || null;
+                if (value === item.nodeId) return;
+                remember(); item.nodeId = value; clearSimulation();
+            });
+            content.append(map, field('Topic', select));
+            if (item.type === 'mindMapNode') content.append(parameter(item, 'Action', 'action', mindMapControls.map(value => [value, mindMapActionName(value)])));
+            if (!mindmaps.length) content.append(node('p', { class: 'smart-object__hint' }, t('Create a mind map in this campaign first.')));
         }
         if (item.type === 'clockControl') {
             const choices = clocks.map(clock => [clock.id, clock.name]);
@@ -1941,7 +1977,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 remember(); item[key] = Number(control.value); clearSimulation();
             }); content.append(field(label, control));
         }
-        if (['showMessage', 'showHandout', 'requestRoll', 'cameraFocus'].includes(item.type)) audienceFields(item, content);
+        if (['showMessage', 'showHandout', 'requestRoll', 'cameraFocus', 'openMindMap'].includes(item.type)) audienceFields(item, content);
         if (item.type === 'teleport') {
             const regions = [object, ...otherElements].filter(element => element.kind === 'region');
             const choices = regions.map(region => [region.id, region.name]);
@@ -2050,7 +2086,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     });
     listen(simulate, 'click', () => {
         try {
-            validateBlueprint(draft, { assets, materials, lights, sounds, clocks, clues, element: object }); clearSimulation();
+            validateBlueprint(draft, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object }); clearSimulation();
             const previous = state;
             const states = Object.fromEntries(otherElements.map(row => [row.id, row.state]));
             const now = Date.now(), current = graph(), result = simulateGraph({ ...draft, graphs: { ...draft.graphs, [event()]: current } }, event(), state, previous, states,
@@ -2080,6 +2116,8 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                         : action.type === 'reveal' ? (action.target ? targetName(action.target) : t('This element'))
                         : action.type === 'barrier' ? `${channelName(action.channel)}: ${modeName(action.mode)}` + (action.target ? ` · ${targetName(action.target)}` : '')
                         : action.type === 'soundControl' ? `${targetName(action.target ?? action.trackId)} · ${action.action === 'stop' ? t('Stop') : `${Math.round(action.volume * 100)}%`}`
+                        : action.type === 'openMindMap' ? mindmaps.find(map => map.id === action.mindMapId)?.name || t('Missing mind map')
+                        : action.type === 'mindMapNode' ? `${mindmaps.find(map => map.id === action.mindMapId)?.name || t('Missing mind map')} · ${mindMapActionName(action.action)}`
                         : action.type === 'clockControl' ? `${clocks.find(clock => clock.id.toLowerCase() === action.clockId.toLowerCase())?.name || t('Missing clock')} · ${clockActionName(action.action)}${action.action === 'reset' ? '' : ` · ${action.amount}`}`
                         : action.type === 'clueControl' ? `${clues.find(clue => clue.id.toLowerCase() === action.clueId.toLowerCase())?.name || t('Missing clue')} · ${clueActionName(action.action)}${['advance', 'reduce', 'set'].includes(action.action) ? ` · ${action.amount}` : ''}`
                         : action.type === 'move' ? `${action.dx}, ${action.dy} · ${t('Cells')} · ${action.target ? targetName(action.target) : t('This element')}`
@@ -2134,9 +2172,10 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 t('Signals are queued in the game; this preview runs only the selected event.')));
             if (result.actions.some(action => action.type === 'interact')) trace.append(node('li', { class: 'smart-object__hint' },
                 t('Target interactions are listed here. Use Test behavior to rehearse their full graphs without changing the game.')));
-            if (result.actions.some(action => ['showMessage', 'showHandout', 'requestRoll', 'cameraFocus', 'teleport'].includes(action.type)))
+            if (result.actions.some(action => ['showMessage', 'showHandout', 'requestRoll', 'cameraFocus', 'teleport', 'openMindMap'].includes(action.type)))
                 trace.append(node('li', { class: 'smart-object__hint' }, t('Presentation and teleport actions are previewed only. No player window, camera or token changes.')));
             if (result.actions.some(action => action.type === 'setQuestStatus')) trace.append(node('li', { class: 'smart-object__hint' }, t('Quest changes are previewed only. No journal changes in this simulation.')));
+            if (result.actions.some(action => action.type === 'mindMapNode')) trace.append(node('li', { class: 'smart-object__hint' }, t('Mind-map changes are previewed only. No mind map changes in this simulation.')));
             if (result.actions.some(action => action.type === 'clockControl')) trace.append(node('li', { class: 'smart-object__hint' }, t('Clock changes are previewed only. No clock changes in this simulation.')));
             if (result.actions.some(action => action.type === 'clueControl')) trace.append(node('li', { class: 'smart-object__hint' }, t('Clue changes are previewed only. No clue changes in this simulation.')));
         } catch (cause) { error(cause); }
@@ -2161,7 +2200,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             for (const [key, value] of Object.entries(draft.graphs)) {
                 if (!isBlueprintSignalEvent(key) && !Object.hasOwn(originalGraphs, key) && JSON.stringify(value) === JSON.stringify(eventGraph(key))) delete draft.graphs[key];
             }
-            validateBlueprint(draft, { assets, materials, lights, sounds, clocks, clues, element: object });
+            validateBlueprint(draft, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
             saving = true; body.inert = true; save.disabled = cancel.disabled = close.disabled = true;
             modal.setAttribute('aria-busy', 'true');
             if (JSON.stringify(draft) !== original) await onSave(structuredClone(draft));

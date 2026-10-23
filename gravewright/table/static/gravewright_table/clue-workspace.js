@@ -3,6 +3,7 @@ import { createTranslator } from '/static/gravewright_modules/i18n.js';
 import { afterContentReady } from './content-state.js';
 import { mountModal } from './modal.js';
 import { mountClues } from './clues.js';
+import { mountProgressHudLayout } from './progress-hud-layout.js';
 
 const workspace = document.querySelector('#table-workspace');
 const toggle = workspace?.querySelector('[data-clues-open]');
@@ -26,7 +27,10 @@ if (toggle && workspace.dataset.management !== 'true') {
     hud.hidden = !state.clues.some(clue => clue.pinned);
     pinned.update(state); editor?.update(state);
   }
-  const pinned = mountClues(hud, { api, sceneId, scenes, pinnedOnly: true, t, signal, onChange: receive });
+  const layout = mountProgressHudLayout(hud, { profileId: workspace.dataset.profileId,
+    campaignId: workspace.dataset.tableId, kind: 'clue', t, signal });
+  const pinned = mountClues(hud, { api, sceneId, scenes, pinnedOnly: true, t, signal,
+    onChange: receive, onRender: () => layout.refresh() });
   function clear() {
     feedEpoch += 1;
     latest = undefined; hud.hidden = true;
@@ -87,7 +91,7 @@ if (toggle && workspace.dataset.management !== 'true') {
   window.addEventListener('gravewright:connected', () => { subscribe(); void refresh(); }, { signal });
   function dispose() {
     if (signal.aborted) return;
-    scope.abort(); editor?.destroy(); panel?.close(true); pinned.destroy(); offLocale(); hud.remove(); latest = undefined;
+    scope.abort(); editor?.destroy(); panel?.close(true); pinned.destroy(); layout.destroy(); offLocale(); hud.remove(); latest = undefined;
     toggle.hidden = true;
   }
   const offLocale = translator.onChange(() => {

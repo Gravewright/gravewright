@@ -4,17 +4,19 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.3.2**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, progress clocks and clues, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **0.3.2**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, progress clocks and clues, collaborative mind maps, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
 
 ## Campaign preparation and play
 
 | Tool | What you can do |
 | --- | --- |
+| [Journals and references](docs/en/journals.md) | Organize pages in independent chapters and subchapters, and link sheets, journals, quests and other resources in rich text using each target's permissions |
 | [Campaign manager](docs/en/campaign-management.md) | Open **Manage campaign** before entering the table. Use the campaign's native documents, file library, sheets and scene tools, with a personal dashboard, session planner, timeline/calendar, quest columns, connections, player preview and journal history/trash |
 | [Progress clocks](docs/en/clocks.md) | Track segmented goals in the table and campaign manager, with campaign/scene scope, audience controls, optional player progress changes and pinned displays |
 | [Clues](docs/en/clues.md) | Prepare findings and private GM notes; reveal the finding to players when its discovery progress is complete |
+| [Mind maps](docs/en/mindmaps.md) | Organize linked topics in the table and campaign manager, grant selected players editing access and link 37 native resource types using current permissions |
 | [PDF System](docs/en/pdf-system.md) | Map text, numeric and checkbox fields onto a non-editable PDF; bind fields to token bars, add saved dice rolls and calculations, and reuse mappings |
-| [Map Builder](docs/en/map-builder.md) | Create editable maps, adopt compatible existing scenes, synchronize supported game edits and connect Smart Object mechanisms to native tools, clocks and clues |
+| [Map Builder](docs/en/map-builder.md) | Create editable maps, adopt compatible existing scenes, synchronize supported game edits and connect Smart Object mechanisms to native tools, clocks, clues and mind maps |
 | [Universal VTT](docs/en/universal-vtt.md) | Import `.uvtt`, `.dd2vtt` and `.df2vtt` maps as native scenes or editable Builder projects, with warnings for approximations and format limits |
 
 The manager and table share campaign records. GM-only preparation, undiscovered
@@ -29,9 +31,8 @@ map project or add interactive elements over a finished map image. The
 [Universal VTT guide](docs/en/universal-vtt.md) explains importing `.uvtt`,
 `.dd2vtt` and `.df2vtt` files as native scenes, exporting scenes and reviewing
 format limitations. The [0.3.2 release notes](docs/releases/0.3.2.md) describe
-campaign preparation, clocks and clues, PDF improvements, Pillow 13 and the
-required database migrations. These notes prepare the release; they do not
-indicate that a tag or download has been published.
+campaign preparation, clocks and clues, collaborative mind maps, PDF improvements, Pillow 13 and the
+required database migrations.
 
 Extract the complete project into a writable folder, run the installer for your operating system, then use its generated Runner. The installer prepares tools, dependencies, the frontend and saved settings; the Runner starts the prepared application.
 
@@ -41,7 +42,7 @@ Extract the complete project into a writable folder, run the installer for your 
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/en/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/en/macos-runner.md) |
 
-The source distribution includes all three platform installers. The prepared release identifiers are **`v0.3.2`** and **`Gravewright-0.3.2-django.zip`**. Once a matching release is published in the configured repository, managed installations can use **Administration → Updates → Check for updates**. Back up `.env`, configured data and local extensions first. For a manual upgrade, stop the Runner, replace application files while preserving configuration, data and extensions, then rerun the platform installer. See [upgrade and recovery](docs/en/upgrading.md) and the [release instructions](docs/releases/0.3.2.md#download-and-upgrade). This version adds campaign preparation, journal history, clock and clue migrations relative to 0.3.1; run the normal migration workflow before starting the updated server.
+The source distribution includes all three platform installers. The release identifiers are **`v0.3.2`** and **`Gravewright-0.3.2-django.zip`**, with a matching SHA-256 file. Managed installations can check the configured repository through **Administration → Updates → Check for updates**. Back up `.env`, configured data and local extensions first. For a manual upgrade, stop the Runner, replace application files while preserving configuration, data and extensions, then rerun the platform installer. See [upgrade and recovery](docs/en/upgrading.md) and the [release instructions](docs/releases/0.3.2.md#download-and-upgrade). This version adds six migrations for campaign preparation, journal history, clocks, clock descriptions, clues and mind maps relative to 0.3.1; run the normal migration workflow before starting the updated server.
 
 Linux downloads use glibc-based distributions; Alpine/musl needs a compatible Node.js installation already available. The macOS installer targets macOS 13.5 or newer. Installation needs internet for missing tools/packages. Python 3.14, uv and Node.js are prepared privately when compatible tools are unavailable; no permanent PATH changes are made. All launchers use a local profile on `127.0.0.1`, with no Redis service required. See the platform guides for exact requirements and storage paths.
 

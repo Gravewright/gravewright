@@ -7,8 +7,7 @@ from materials or import a finished image, add native walls, doors, objects,
 lights and effects, then generate or update a scene. The project remains editable
 separately from the scene used at the table.
 
-This guide describes the source prepared for **0.3.2**; it does not announce
-publication. See the [release notes](../releases/0.3.2.md). The
+This guide describes **0.3.2**. See the [release notes](../releases/0.3.2.md). The
 [Smart Objects design direction](smart-objects-direction.md) distinguishes
 implemented capabilities from proposals.
 
@@ -46,7 +45,7 @@ base raster becomes a project background; representable walls, doors and lights
 become editable objects. Opening creates no duplicate scene and changes neither
 the broadcast nor the GM's scene selection. Subsequent openings reuse the same
 project. Use **Update scene** to apply edits to that scene.
-With a scene open, GMs can also choose **Edit map with Map Builder** in the top
+With a scene open, GMs can also choose **Edit Scene** in the top
 bar beside Game, GM and Effects. It edits the scene currently viewed by that GM,
 including a private selection. The button is hidden when no scene is open.
 
@@ -914,6 +913,8 @@ It offers these actions and conditions:
 | **Control sound** | Stop a campaign sound already playing in the scene, or change its volume |
 | **Control clock** | Advance, reduce, set or reset a campaign progress clock; a connected numeric **Amount** overrides its configured amount |
 | **Control clue** | Advance, reduce, set, reset, reveal or hide a prepared clue; numeric **Amount** applies to advance, reduce and set |
+| **Open mind map** | Open an authorized campaign graph, optionally focused on a topic, for the triggering user, players or selected users |
+| **Control mind-map topic** | Complete, reset or toggle the completion of a configured topic |
 
 **Change state**, **Change sprite**, **Interact with object**, **Reveal** and **Get property** have a **Target** input of type
 **Element** (orange). Without a connection the target is the edited element; with an
@@ -1757,6 +1758,28 @@ the real server engine and rolls back clue records, receipts and notifications.
 Normal committed interactions update the shared clue panel and permitted pinned
 display. Reducing progress below completion, resetting or hiding a clue removes
 it from current player views.
+
+### Open and control mind maps
+
+Prepare a [mind map](mindmaps.md) on the table or in campaign management, then
+choose **Open mind map** or **Control mind-map topic** under **Add node → Actions**.
+Connect the event to **Input** and **Next** to the following action. Select the
+map and, for a completion action, its topic. Opening can optionally focus a topic.
+
+The version-2 `openMindMap` node stores `mindMapId`, `nodeId` (or `null`) and
+`audience`. Audience uses `{scope:"trigger"}`, `{scope:"players"}`, or
+`{scope:"users", userIds:[...]}`. Each recipient must retain read access to the
+map and its scene. The `mindMapNode` node stores `mindMapId`, `nodeId` and
+`action: "complete" | "reset" | "toggle"`; it changes that topic's Boolean
+completion through the native service.
+
+Bindings use campaign maps or maps scoped to the executing scene. A GM-authored
+completion binding delegates only that operation, requires an active campaign GM
+and grants no general graph editing rights. Deleted targets remain in the graph
+for repair and fail safely if executed. Delayed work rechecks its bindings.
+**Simulate** describes the action; **Test behavior** runs the server engine and
+rolls back graph changes, receipts and notifications. Generated/updated scenes
+retain these bindings, and campaign copies remap their typed targets.
 
 ### Dynamic surfaces
 

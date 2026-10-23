@@ -1,4 +1,5 @@
 from io import BytesIO
+import json
 from pathlib import Path
 import uuid
 from PIL import Image, UnidentifiedImageError
@@ -66,8 +67,57 @@ def asset(request,asset_id):
 @require_GET
 def state(request,campaign_id):
     if not request.user.is_authenticated:return JsonResponse({'error':'Authentication required.'},status=403)
-    try:return JsonResponse(services.state(campaign_id,request.user.pk))
+    try:
+        response = JsonResponse(services.state(campaign_id,request.user.pk))
+        response['Cache-Control'] = 'private, no-store'
+        return response
     except services.JournalError:raise Http404 from None
+
+
+def _resource_read(request, campaign_id, *, resolve=False):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required.'}, status=403)
+    from . import resources
+    from gravewright.maps.services import MapError
+    try:
+        allowed = {'reference', 'sceneId'} if resolve else {'query', 'kinds', 'limit', 'sceneId'}
+        if set(request.GET) - allowed or any(len(request.GET.getlist(name)) != 1
+                                            for name in allowed - {'kinds'} if name in request.GET):
+            raise ValueError
+        if resolve:
+            if 'sceneId' in request.GET:
+                from gravewright.maps.services import scene
+                scene(request.GET['sceneId'], services.member(campaign_id, request.user.pk))
+            raw = request.GET.get('reference', '')
+            if len(raw) > 2048:
+                raise ValueError
+            result = resources.resolve(campaign_id, request.user.pk, json.loads(raw))
+        else:
+            kinds = request.GET.getlist('kinds') if 'kinds' in request.GET else None
+            if kinds is not None and len(kinds) == 1:
+                value = kinds[0]
+                kinds = json.loads(value) if value.lstrip().startswith('[') else value.split(',')
+            result = resources.resources(campaign_id, request.user.pk,
+                query=request.GET.get('query', ''), kinds=kinds,
+                limit=int(request.GET.get('limit', '80')), scene_id=request.GET.get('sceneId'))
+        response = JsonResponse(result)
+        response['Cache-Control'] = 'private, no-store'
+        return response
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return JsonResponse({'error': 'Invalid resource search.'}, status=400)
+    except (services.JournalError, MapError) as error:
+        status = 403 if error.code == 'not_a_member' else 400
+        return JsonResponse({'error': str(error), 'code': error.code}, status=status)
+
+
+@require_GET
+def resource_catalog(request, campaign_id):
+    return _resource_read(request, campaign_id)
+
+
+@require_GET
+def resource_resolve(request, campaign_id):
+    return _resource_read(request, campaign_id, resolve=True)
 
 
 @require_GET

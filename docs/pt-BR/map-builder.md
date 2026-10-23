@@ -7,8 +7,7 @@ Desenhe com materiais ou importe uma imagem pronta, acrescente paredes, portas,
 objetos, luzes e efeitos nativos e depois gere ou atualize uma cena. O projeto
 continua editável separadamente da cena usada na mesa.
 
-Este guia descreve o código preparado para a **0.3.2**; não anuncia sua
-publicação. Veja as [notas da release](../releases/0.3.2.md). A
+Este guia descreve a **0.3.2**. Veja as [notas da release](../releases/0.3.2.md). A
 [direção dos Objetos Inteligentes](smart-objects-direction.md) distingue as
 capacidades implementadas das propostas.
 
@@ -46,7 +45,7 @@ MapBuilder**. A imagem base vira o fundo do projeto; paredes, portas e luzes
 compatíveis viram objetos editáveis. Abrir não duplica a cena, não muda a
 transmissão e não altera a seleção de cena do mestre. As aberturas seguintes
 reutilizam o mesmo projeto. Use **Atualizar cena** para aplicar as edições à cena.
-Com uma cena aberta, o mestre também pode usar **Editar mapa com map builder**
+Com uma cena aberta, o mestre também pode usar **Editar Cena**
 na barra superior, ao lado de Jogo, GM e Efeitos. O botão edita a cena que o mestre
 está vendo, incluindo uma seleção privada, e fica oculto quando não há cena aberta.
 
@@ -952,6 +951,8 @@ oferece estas ações e condições:
 | **Controlar som** | Parar um som da campanha que já toca na cena ou mudar seu volume |
 | **Controlar relógio** | Avançar, reduzir, definir ou reiniciar um relógio de progresso; uma entrada numérica **Quantidade** substitui a quantidade configurada |
 | **Controlar pista** | Avançar, recuar, definir, reiniciar, revelar ou ocultar uma pista preparada; **Quantidade** numérica vale para avançar, recuar e definir |
+| **Abrir mapa mental** | Abrir um grafo autorizado, opcionalmente focado em um tópico, para quem acionou, jogadores ou usuários selecionados |
+| **Controlar tópico do mapa mental** | Concluir, reiniciar ou alternar a conclusão do tópico configurado |
 
 **Mudar estado**, **Trocar imagem**, **Interagir com objeto**, **Revelar** e **Ler propriedade** têm uma entrada **Alvo** do tipo
 **Elemento** (laranja). Sem conexão, o alvo é o elemento editado; com uma Referência de
@@ -1845,6 +1846,28 @@ alterações pelo motor real do servidor e reverte registros, recibos e
 notificações de pistas. Interações confirmadas durante o jogo atualizam o painel
 compartilhado e a exibição fixada permitida. Recuar para menos que o progresso
 completo, reiniciar ou ocultar remove a pista da visualização atual dos jogadores.
+
+### Abrir e controlar mapas mentais
+
+Prepare um [mapa mental](mindmaps.md) na mesa ou no gestor e escolha **Abrir mapa
+mental** ou **Controlar tópico do mapa mental** em **Adicionar nó → Ações**.
+Conecte o evento à **Entrada** e **Próximo** à ação seguinte. Selecione o mapa e,
+para uma ação de conclusão, seu tópico. A abertura pode focar um tópico opcional.
+
+O nó de versão 2 `openMindMap` armazena `mindMapId`, `nodeId` (ou `null`) e
+`audience`. O público usa `{scope:"trigger"}`, `{scope:"players"}` ou
+`{scope:"users", userIds:[...]}`. Cada destinatário precisa manter acesso de
+leitura ao mapa e à cena. O nó `mindMapNode` armazena `mindMapId`, `nodeId` e
+`action: "complete" | "reset" | "toggle"`; ele altera a conclusão booleana
+daquele tópico pelo serviço nativo.
+
+Vínculos usam mapas da campanha ou da cena em execução. Um controle criado pelo
+mestre delega apenas aquela operação, exige um mestre ativo e não concede edição
+geral do grafo. Destinos excluídos permanecem para reparo e falham com segurança
+ao executar. Operações adiadas verificam novamente os vínculos. **Simular**
+descreve a ação; **Testar comportamento** usa o motor do servidor e reverte
+alterações do grafo, recibos e notificações. Cenas geradas/atualizadas preservam
+os vínculos e cópias de campanha remapeiam seus destinos tipados.
 
 ### Superfícies dinâmicas
 

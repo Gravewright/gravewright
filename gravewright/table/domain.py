@@ -7,7 +7,7 @@ from gravewright.journals.services import identifier, member
 from gravewright.maps.models import Receipt
 from gravewright.maps.services import MapError, title, color, manage
 from gravewright.maps.objects import number, boolean, choice
-from .models import ClockReceipt, ClueReceipt
+from .models import ClockReceipt, ClueReceipt, MindMapReceipt
 
 
 def version(row, payload):
@@ -38,6 +38,9 @@ def module(name):
     if name == 'clues':
         from . import clues
         return clues
+    if name == 'mindmaps':
+        from . import mindmaps
+        return mindmaps
     if name not in ('items','combat','cards','audio','compendiums'):
         raise MapError('Unknown table module.')
     return __import__('gravewright.'+name+'.services', fromlist=['services'])
@@ -71,11 +74,13 @@ def command(campaign_id, user_id, name, action, data, request_id):
     rid = identifier(request_id)
     # These projections include GM-only data. Each private domain has its own
     # cache, outside legacy cross-resource map/actor/native command receipts.
-    receipt_model = {'clocks': ClockReceipt, 'clues': ClueReceipt}.get(name, Receipt)
+    receipt_model = {'clocks': ClockReceipt, 'clues': ClueReceipt, 'mindmaps': MindMapReceipt}.get(name, Receipt)
     previous = receipt_model.objects.filter(campaign_id=campaign_id,user_id=user_id,request_id=rid).first()
     if previous:
-        if name in ('clocks', 'clues'):
+        if name in ('clocks', 'clues', 'mindmaps'):
             module(name).validate_replay(who, action, data, previous.result)
+        if name == 'mindmaps':
+            return module(name).replay_result(who, previous.result)
         return previous.result
     result = module(name).command(who, action, data) or {}
     receipt_model.objects.create(campaign_id=campaign_id,user_id=user_id,request_id=rid,result=result)

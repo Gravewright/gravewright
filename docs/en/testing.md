@@ -160,6 +160,72 @@ English, Portuguese and Spanish are checked with long authored content at 320px
 and desktop widths. Run with a fresh installation-local output directory:
 `uv run --locked python tests/e2e/clues.py --output data/clues-check --browser-executable "<existingChromium>"`.
 
+[`tests/e2e/progress_hud.py`](../../tests/e2e/progress_hud.py) checks transparent
+clock/clue cards and empty segments, minimal pinned displays, direct left/right
+progress controls, permissions and independent local positioning with multiple
+real clients. Double-clicking a name opens the native editor for GMs and a
+read-only description for players/streamers. Long and empty descriptions and
+revoked access during pending reads exercise modal lifetime and privacy. It
+compares requests, socket frames and persisted campaign state to verify moving
+an indicator does not publish a campaign change, then checks saved positions
+after reload and English/Portuguese/Spanish layouts at 320px. Use a fresh output:
+`uv run --locked python tests/e2e/progress_hud.py --output data/progress-hud-check --browser-executable "<existingChromium>"`.
+This describes the scenario's coverage, not the outcome of a particular run.
+
+Journal reference validation and portable identity remapping use the owning
+domain suites and the shared resource registry:
+
+```bash
+uv run --locked python manage.py test gravewright.journals gravewright.table.tests.test_journal_resource_api gravewright.administration.test_journal_resource_archives --noinput
+node --test tests/modules/journal-resource-links.test.mjs tests/modules/mindmaps-ui.test.mjs
+uv run --locked python tests/e2e/journal_resource_links.py --output data/journal-links-check --browser-executable "<existingChromium>"
+```
+
+The browser scenario inserts typed references with **@** in the native journal editor,
+reopens saved links, exercises table and management access, checks hidden-target
+preservation and permission changes during pending reads, and reviews translated
+desktop/320px layouts with synthetic resources. Use fresh local output and
+independent fixture databases. These commands describe coverage, not a completed
+release validation. It also checks cancellation, email boundaries, slash blocks,
+replacement of the captured trigger range and translated empty-editor hints.
+
+The [journal chapter scenario](../../tests/e2e/journal_chapters.py) exercises
+empty chapters, nested hierarchies, moving pages, renaming and reparenting,
+deletion without page loss, older category groups and retained resource links.
+It checks native campaign management and table clients, player filtering and
+owner saves that preserve omitted private structure, then inspects English,
+Portuguese and Spanish at desktop and 320px, including eight nested levels. Use a fresh isolated output:
+`uv run --locked python tests/e2e/journal_chapters.py --output data/journal-chapters-check --browser-executable "<existingChromium>"`.
+This describes scenario coverage, not the result of a particular run.
+
+Mind-map graph, access, redacted-link, resource projection, archive and Blueprint
+checks use the owning suites:
+
+```bash
+uv run --locked python manage.py test gravewright.table.tests.test_mindmaps gravewright.table.tests.test_resource_links gravewright.table.tests.test_mindmap_review gravewright.administration.test_mindmap_archives gravewright.maps.tests.test_blueprint_mindmaps --noinput
+node --test tests/modules/mindmap-model.test.mjs tests/modules/mindmaps-ui.test.mjs
+uv run --locked python tests/e2e/map_builder_mindmaps.py --output data/mindmaps-builder-check --browser-executable "<existingChromium>"
+```
+
+The isolated Builder scenario authors both mind-map nodes, saves/reopens their
+bindings, checks rehearsal rollback and committed completion, and verifies that
+open requests reach only authorized recipients. Responsive translated editors
+use synthetic topics. These commands describe coverage rather than a release
+validation result; keep each run's fixtures and output separate.
+
+[`tests/e2e/mindmaps.py`](../../tests/e2e/mindmaps.py) exercises the native manager
+and tabletop with a GM, selected player editor, ordinary reader and streamer.
+It covers graph authoring, real pointer/keyboard input, local undo/redo, saving,
+concurrent revisions and preserved drafts. Live link revocation must redact
+identities without losing unrelated edits, including newly linked unsaved
+resources. Native close/confirmation modals retain focus and drafts on cancel.
+English, Portuguese and Spanish layouts are checked at 320px with authored text
+preserved. Run in a new installation-local output directory:
+`uv run --locked python tests/e2e/mindmaps.py --output data/mindmaps-check --browser-executable "<existingChromium>"`.
+The independent `test_mindmap_review` suite checks that sheet text cannot expose
+another actor's private asset metadata and that denied scene access does not
+prevent discovery of other authorized campaign resources.
+
 ```bash
 uv run --locked playwright install chromium
 uv run --locked python tests/e2e/authentication.py

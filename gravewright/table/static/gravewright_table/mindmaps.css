@@ -1,0 +1,60 @@
+.mindmaps { color: var(--text); font-size: var(--text-md, 14px); }
+.mindmaps [hidden], .mindmap-editor [hidden], .mindmap-form [hidden], .mindmap-resource-picker [hidden] { display: none !important; }
+.mindmaps__toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-bottom: var(--space-4); }
+.mindmaps__list { display: grid; gap: var(--space-3); }
+.mindmaps__entry { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-3); border: var(--border-hairline); border-radius: var(--radius-md); background: var(--surface); }
+.mindmaps button, .mindmap-editor button, .mindmap-form button, .mindmap-resource button, .mindmap-resource-picker button { min-height: 36px; padding: var(--space-2) var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.mindmaps button:disabled, .mindmap-editor button:disabled { opacity: .5; cursor: default; }
+.mindmaps button:focus-visible, .mindmap-editor :is(button,input,textarea,select,[tabindex]):focus-visible, .mindmap-form :is(button,input,select):focus-visible, .mindmap-resource-picker :is(button,input,select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mindmaps__open { display: grid; flex: 1; gap: var(--space-1); min-width: 140px; text-align: left; overflow-wrap: anywhere; }
+.mindmaps__open small, .mindmaps__hint { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.mindmaps__error { margin: var(--space-0); padding: var(--space-3); color: var(--danger-text, #efaaaa); font-size: 14px; overflow-wrap: anywhere; }
+.mindmap-directory { display: flex; flex-direction: column; width: min(760px, calc(100vw - 2 * var(--space-3))); max-height: calc(100dvh - 2 * var(--space-3)); background: var(--surface); color: var(--text); }
+.mindmap-directory > header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3); border-bottom: var(--border-hairline); }
+.mindmap-directory__body { min-height: 0; overflow: auto; padding: var(--space-4); }
+.mindmap-directory > header button, .mindmap-editor__header > button { width: 36px; min-width: 36px; min-height: 36px; padding: var(--space-0); font-size: 18px; }
+.mindmap-editor { display: flex; flex-direction: column; width: min(1280px, calc(100vw - 2 * var(--space-3))); height: min(820px, calc(100dvh - 2 * var(--space-3))); max-width: 100%; max-height: calc(100dvh - 2 * var(--space-3)); background: var(--surface); color: var(--text); font: var(--text-md, 14px) var(--font-ui); }
+.ownership-modal-overlay > .table-modal-window.mindmap-editor { width: min(1280px, calc(100vw - 2 * var(--space-4))); height: min(820px, calc(100dvh - 2 * var(--space-4))); max-width: calc(100vw - 2 * var(--space-4)); max-height: calc(100dvh - 2 * var(--space-4)); overflow: hidden; resize: none; }
+.mindmap-editor__header { display: flex; align-items: center; flex-wrap: wrap; flex-shrink: 0; gap: var(--space-3); padding: var(--space-3); border-bottom: var(--border-hairline); }
+.mindmap-editor__heading { margin: var(--space-0); font-size: 16px; }
+.mindmap-editor__name { flex: 1; min-width: 120px; max-width: 560px; }
+.mindmap-editor__status { color: var(--text-muted); font-size: 12px; }
+.mindmap-editor__header > button { margin-left: auto; }
+.mindmap-editor__toolbar { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-bottom: var(--border-hairline); }
+.mindmap-editor__toolbar button { font-size: 12px; }
+.mindmap-editor__layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; flex: 1; min-height: 0; }
+.mindmap-editor__canvas { position: relative; min-width: 0; min-height: 0; overflow: hidden; touch-action: none; background: var(--surface-field); cursor: grab; }
+.mindmap-editor__world { position: absolute; top: 0; left: 0; width: 1px; height: 1px; transform-origin: 0 0; }
+.mindmap-editor__edges { position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.mindmap-editor__edges path { fill: none; stroke: var(--border-strong); stroke-width: 2px; }
+.mindmap-editor__edges .mindmap-editor__cross-edge { stroke: var(--accent); stroke-dasharray: 6 4; }
+.mindmap-editor__edges text { fill: var(--text); font-family: var(--font-ui); font-size: 12px; text-anchor: middle; }
+.mindmap-editor button.mindmap-editor__topic { position: absolute; display: grid; align-content: center; gap: var(--space-2); width: 210px; min-height: 76px; padding: var(--space-3); border: 2px solid var(--topic-color); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--text-bright); text-align: left; overflow-wrap: anywhere; cursor: grab; user-select: none; }
+.mindmap-editor__topic strong { font-size: 14px; }
+.mindmap-editor__topic small { color: var(--text-muted); font-size: 12px; }
+.mindmap-editor button.mindmap-editor__topic--selected { outline: 2px solid var(--accent); outline-offset: 4px; }
+.mindmap-editor__topic--completed strong { text-decoration: line-through; }
+.mindmap-editor__inspector { display: grid; align-content: start; gap: var(--space-3); min-width: 0; overflow: auto; padding: var(--space-3); border-left: var(--border-hairline); }
+.mindmap-editor__inspector label, .mindmap-form__fields > label { display: grid; gap: var(--space-2); min-width: 0; color: var(--text-muted); font-size: 12px; }
+.mindmap-editor :is(input,textarea,select), .mindmap-form :is(input,select), .mindmap-resource-picker :is(input,select) { min-width: 0; min-height: 36px; padding: var(--space-2); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; font-size: 14px; box-sizing: border-box; }
+.mindmap-editor textarea { width: 100%; resize: vertical; }
+.mindmap-editor input[type=checkbox], .mindmap-form input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; accent-color: var(--accent); }
+.mindmap-editor__links { min-width: 0; padding-top: var(--space-3); border-top: var(--border-hairline); }
+.mindmap-editor__links h3 { margin: var(--space-0) var(--space-0) var(--space-2); font-size: 14px; }
+.mindmap-editor__link { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-2); align-items: center; margin-bottom: var(--space-2); }
+.mindmap-editor__link :is(span,button) { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+.mindmap-form, .mindmap-resource, .mindmap-resource-picker { width: min(560px, calc(100vw - 2 * var(--space-3))); max-width: 100%; max-height: calc(100dvh - 2 * var(--space-3)); color: var(--text); font-size: 14px; }
+.mindmap-form form, .mindmap-resource-picker form { display: flex; flex-direction: column; min-height: 0; max-height: inherit; }
+.mindmap-form header, .mindmap-form footer, .mindmap-resource header, .mindmap-resource-picker header, .mindmap-resource-picker footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.mindmap-form .table-form-modal__body, .mindmap-resource-picker .table-form-modal__body { min-height: 0; overflow-y: auto; }
+.mindmap-form__fields, .mindmap-resource-picker .table-form-modal__body { display: grid; gap: var(--space-3); }
+.mindmap-form__fields fieldset { display: grid; gap: var(--space-2); margin: var(--space-0); padding: var(--space-3); border: var(--border-hairline); }
+.mindmap-form__checkbox { display: flex; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; }
+.mindmap-resource-picker select[size] { width: 100%; min-height: 180px; }
+@media (max-width: 700px) {
+  .mindmap-editor, .ownership-modal-overlay > .table-modal-window.mindmap-editor { height: calc(100dvh - 2 * var(--space-4)); width: calc(100vw - 2 * var(--space-4)); }
+  .mindmap-editor__layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(160px, 1fr) minmax(0, 40%); }
+  .mindmap-editor__inspector { border-left: none; border-top: var(--border-hairline); }
+  .mindmap-editor__header { gap: var(--space-2); }
+  .mindmap-editor__toolbar { max-height: 112px; overflow-y: auto; }
+}

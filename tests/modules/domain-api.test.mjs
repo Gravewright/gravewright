@@ -56,6 +56,57 @@ test('clock collections and mutations preserve scope, revisions and retry identi
   assert.equal(clock.version, 3);
 });
 
+test('mind maps expose graph reads, typed links and revisioned commands without implicit grants', async () => {
+  const calls = [], row = { id: 'map', version: 4, canEdit: false };
+  const api = createDomainApi(async (...args) => { calls.push(args); return { mindmaps: [row] }; });
+  const options = { requestId: 'one-graph-change' };
+  assert.deepEqual(await api.mindmaps.list(), [row]);
+  await assert.rejects(api.mindmaps.get('hidden'), { code: 'not_found' });
+  for (const [method, payload] of [
+    ['read', { id: row.id }], ['resources', { kinds: ['scene-object'], limit: 20 }],
+    ['resolve', { reference: { kind: 'clock', id: 'clock' } }],
+    ['update', { id: row.id, version: row.version, name: 'A graph' }],
+    ['node', { id: row.id, version: row.version, nodeId: 'topic', patch: { completed: true } }],
+  ]) {
+    await api.mindmaps[method](payload, options);
+    assert.deepEqual(calls.at(-1), ['mindmaps', method, payload, options]);
+  }
+  assert.equal(row.version, 4);
+  assert.equal(row.canEdit, false);
+  assert.deepEqual(api.capabilities().reads.mindmaps, ['read', 'resources', 'resolve']);
+});
+
+test('journal resource reads preserve typed identities and cancellation without granting target access', async () => {
+  const calls = [], options = { signal: new AbortController().signal };
+  const api = createDomainApi(async (...args) => { calls.push(args); return { resource: null }; });
+  const catalog = { kinds: ['journal-page', 'scene-tile'], query: 'A location', limit: 20 };
+  await api.journals.resources(catalog, options);
+  assert.deepEqual(calls.at(-1), ['journals', 'resources', catalog, options]);
+  const reference = { kind: 'scene-tile', id: '123' };
+  assert.deepEqual(await api.journals.resolve({ reference }, options), { resource: null });
+  assert.deepEqual(calls.at(-1), ['journals', 'resolve', { reference }, options]);
+  assert.deepEqual(api.capabilities().reads.journals, ['resources', 'resolve']);
+  assert.deepEqual(reference, { kind: 'scene-tile', id: '123' });
+});
+
+test('mind-map invalidations obtain a fresh projection and dispose their reads', async () => {
+  const target = new EventTarget(), life = new Lifetime(), values = [], reads = [];
+  const state = { mindmaps: [{ id: 'shared', canEdit: false }] };
+  createEvents(target, life, { tableId: 'campaign' }, async domain => { reads.push(domain); return state; })
+    .on('mindmaps.changed', value => values.push(value));
+  await new Promise(resolve => setImmediate(resolve));
+  const emit = payload => target.dispatchEvent(new CustomEvent('gravewright:api-event', { detail: { type: 'api.changed', payload } }));
+  emit({ tableId: 'foreign', domain: 'mindmaps' });
+  emit({ tableId: 'campaign', domain: 'clues' });
+  emit({ tableId: 'campaign', domain: 'mindmaps', state: { secret: 'UNTRUSTED_STATE' } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(reads, ['mindmaps', 'mindmaps']);
+  assert.deepEqual(values.at(-1), { module: 'mindmaps', state, tableId: 'campaign' });
+  assert.equal(JSON.stringify(values).includes('UNTRUSTED_STATE'), false);
+  await life.close(); emit({ tableId: 'campaign', domain: 'mindmaps' });
+  assert.equal(reads.length, 2);
+});
+
 test('clock events filter other scenes and campaigns and release their listener', async () => {
   const target = new EventTarget(), life = new Lifetime(), values = [];
   const events = createEvents(target, life, { tableId: 'table', sceneId: 'scene' });

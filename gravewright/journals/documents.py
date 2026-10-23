@@ -15,6 +15,8 @@ Block GM-visibility is enforced server-side: ``filter_doc_for_role`` strips
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 DOC_FORMAT = "gw-journal-doc-v1"
 DOC_VERSION = 1
 
@@ -119,7 +121,7 @@ def _clean_marks(raw: object) -> list:
 
 
 def _clean_inline(raw: object) -> list:
-    """Clean an array of inline nodes (text / hardBreak)."""
+    """Clean inline prose and campaign-reference atoms."""
     if not isinstance(raw, list):
         return []
     out: list = []
@@ -138,6 +140,12 @@ def _clean_inline(raw: object) -> list:
             out.append(cleaned)
         elif node_type == "hardBreak":
             out.append({"type": "hardBreak"})
+        elif node_type == "gwResourceLink":
+            attrs = node.get("attrs")
+            # Contextual identity/access validation belongs to the service. Keep
+            # invalid input distinguishable until that boundary can reject it.
+            reference = attrs.get("reference") if isinstance(attrs, dict) else None
+            out.append({"type": "gwResourceLink", "attrs": {"reference": deepcopy(reference)}})
     return out
 
 
@@ -292,7 +300,7 @@ def has_renderable_content(document: object) -> bool:
         if not isinstance(node, dict):
             return False
         node_type = node.get("type")
-        if node_type in {"gwImage", "horizontalRule"}:
+        if node_type in {"gwImage", "horizontalRule", "gwResourceLink"}:
             return True
         text = node.get("text")
         if isinstance(text, str) and text.strip():

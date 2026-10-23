@@ -2,10 +2,9 @@
 
 [Documentação](../README.pt-BR.md) · [English](../en/upgrading.md)
 
-Este guia cobre a release preparada **Gravewright 0.3.2 — Alpha**. Seu artefato de
+Este guia cobre a release **Gravewright 0.3.2 — Alpha**. Seu artefato de
 código-fonte é `Gravewright-0.3.2-django.zip`, com o arquivo correspondente
-`Gravewright-0.3.2-django.zip.sha256`. Preparar esses arquivos ou documentar a
-versão não significa publicá-los. Consulte as [notas da release](../releases/0.3.2.md)
+`Gravewright-0.3.2-django.zip.sha256`. Consulte as [notas da release](../releases/0.3.2.md)
 para os recursos e [implantação](deployment.md) para servidores públicos.
 
 ## Antes de atualizar
@@ -34,7 +33,7 @@ suportados e também precisam de backup.
 ## Formas de atualização
 
 Após concluir o backup com a instância parada, reinicie o Runner **atual** da
-instalação gerenciada compatível. Depois da publicação da release, use
+instalação gerenciada compatível e use
 **Administração → Atualizações → Instalar atualização**. Mantenha **Manter cópia
 .old para rollback** ativo quando desejar recuperação. Deixe esse Runner aberto
 enquanto o supervisor baixa, verifica, prepara dependências, copia dados, migra,
@@ -79,7 +78,7 @@ também se aplicam a servidores públicos.
 
 O identificador da release é **0.3.2**, depois da **0.3.1**. O atualizador compara
 números de versão, então uma instalação compatível na 0.3.1 pode descobrir a
-0.3.2 após a publicação. O projeto permanece em Alpha e o contrato do SDK do host
+0.3.2 pelo repositório de releases configurado. O projeto permanece em Alpha e o contrato do SDK do host
 continua igual; APIs opcionais continuam exigindo verificação de capacidade.
 Notas históricas preservam seus identificadores.
 
@@ -98,12 +97,14 @@ recuperação exige código, banco e mídias correspondentes.
 
 ## Migrações de banco da 0.3.2
 
-Em comparação com a 0.3.1, esta release acrescenta:
+Em comparação com a 0.3.1, esta release acrescenta seis migrações:
 
 | Migração | Capacidade armazenada |
 | --- | --- |
 | [table/0003_progress_clock.py](../../gravewright/table/migrations/0003_progress_clock.py) | Relógios de progresso e recibos de repetição |
 | [table/0004_progress_clue.py](../../gravewright/table/migrations/0004_progress_clue.py) | Pistas por etapas e seus recibos separados |
+| [table/0005_mind_maps.py](../../gravewright/table/migrations/0005_mind_maps.py) | Grafos de mapas mentais, visibilidade, editores selecionados e recibos separados |
+| [table/0006_clock_description.py](../../gravewright/table/migrations/0006_clock_description.py) | Descrições autorais de relógios, vazias nos relógios existentes |
 | [campaigns/0005_preparation.py](../../gravewright/campaigns/migrations/0005_preparation.py) | Painéis pessoais de mestre, planos de sessão, eventos e recibos de preparação |
 | [journals/0004_revision.py](../../gravewright/journals/migrations/0004_revision.py) | Revisões de diários, lixeira e metadados de anexos retidos |
 
@@ -117,7 +118,7 @@ segurança.
 
 | Material de recuperação | O que preserva |
 | --- | --- |
-| Exportação completa ou cópia de campanha | Conteúdo selecionado, relógios/pistas, preparação, cronologia, metadados portáveis do painel e histórico/lixeira; referências são remapeadas |
+| Exportação completa ou cópia de campanha | Conteúdo selecionado, relógios/pistas, mapas mentais, preparação, cronologia, metadados portáveis do painel e histórico/lixeira; referências tipadas são remapeadas |
 | Snapshot de campanha | Dados de recuperação da campanha, incluindo preparação/histórico; restauração de painéis se aplica aos vínculos atuais de mestre |
 | Backup completo e coordenado da instância | Banco, arquivos privados, contas, permissões, estado do host/módulos e automações pendentes, junto da configuração e do código correspondente |
 
@@ -148,8 +149,10 @@ e jogador em uma campanha sintética ou copiada. Verifique gestor e mesa, PDF
 mapeado, upload de mapa/importação Universal VTT, relógio e pista cujo conteúdo
 continua oculto até completar. Confira visibilidade de diários privados,
 gravação/reabertura de sessão, restauração de histórico/lixeira e um ciclo
-representativo de backup/restauração. O [guia de testes](testing.md) descreve
-cenários automatizados isolados.
+representativo de backup/restauração. Confira um [mapa mental](mindmaps.md) com
+um jogador editor: vínculos sem acesso ficam indisponíveis, edições comuns
+preservam esses vínculos e grafos copiados apontam aos recursos copiados da
+campanha. O [guia de testes](testing.md) descreve cenários automatizados isolados.
 
 Se a instalação gerenciada falhar, preserve transações, backups e logs; o
 supervisor tenta recuperar e trata transações interrompidas na próxima

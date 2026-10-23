@@ -24,16 +24,21 @@ export function tableApi(tableId, sceneId, life = page) {
     if (!tableId) throw new ModuleError('stale_context', 'Choose a table with gravewright.forTable(tableId).');
     const currentScene = tableId === document.querySelector('#table-workspace')?.dataset.tableId
       ? window.gravewrightMaps?.current?.id : undefined;
-    if (!sceneId && !Object.hasOwn(payload, 'sceneId') && !Object.hasOwn(payload, 'mapId') && currentScene)
+    const campaignRead = domain === 'mindmaps' || domain === 'journals' && ['resources', 'resolve'].includes(method);
+    if (!sceneId && !campaignRead && !Object.hasOwn(payload, 'sceneId') && !Object.hasOwn(payload, 'mapId') && currentScene)
       payload = { ...payload, sceneId: currentScene, mapId: currentScene };
     if (sceneId) {
-      if (['clocks', 'clues'].includes(domain) && payload.scopeSceneId != null && payload.scopeSceneId !== sceneId) throw new ModuleError('stale_context');
+      if (['clocks', 'clues', 'mindmaps'].includes(domain) && payload.scopeSceneId != null && payload.scopeSceneId !== sceneId) throw new ModuleError('stale_context');
       if (domain === 'maps' && method === 'navigate' && ['sceneId', 'mapId'].some(key => Object.hasOwn(payload, key) && payload[key] == null))
         throw new ModuleError('stale_context');
       if (['sceneId', 'mapId'].some(key => payload[key] && payload[key] !== sceneId)) throw new ModuleError('stale_context');
       payload = { ...payload, sceneId, mapId: sceneId };
     }
-    if (['clocks', 'clues'].includes(domain) && method === 'state') {
+    if (domain === 'journals' && method === 'state') {
+      return http.get(`/api/containers/${segment(tableId)}/journals`,
+        { signal, cache: 'no-store', ...domainTiming(domain, method, options) });
+    }
+    if (['clocks', 'clues', 'mindmaps'].includes(domain) && method === 'state') {
       if (payload.sceneId != null && payload.mapId != null && payload.sceneId !== payload.mapId)
         throw new ModuleError('invalid_data');
       const query = new URLSearchParams();
@@ -41,6 +46,28 @@ export function tableApi(tableId, sceneId, life = page) {
       if (selectedScene != null) query.set('sceneId', selectedScene);
       // Guest stream sessions retain their HTTP write ban; state uses the native read route.
       return http.get(`/api/containers/${segment(tableId)}/modules-native/${domain}${query.size ? `?${query}` : ''}`,
+        { signal, cache: 'no-store', ...domainTiming(domain, method, options) });
+    }
+    if (domain === 'mindmaps' && ['read', 'resources', 'resolve'].includes(method)) {
+      const query = new URLSearchParams({ payload: JSON.stringify(payload) });
+      return http.get(`/api/containers/${segment(tableId)}/mindmaps-read/${segment(method)}?${query}`,
+        { signal, cache: 'no-store', ...domainTiming(domain, method, options) });
+    }
+    if (domain === 'journals' && ['resources', 'resolve'].includes(method)) {
+      const allowed = new Set(['sceneId', 'mapId', ...(method === 'resolve' ? ['reference'] : ['query', 'kinds', 'limit'])]);
+      if (Object.keys(payload).some(key => !allowed.has(key))) throw new ModuleError('invalid_data');
+      const query = new URLSearchParams();
+      if (method === 'resolve') query.set('reference', JSON.stringify(payload.reference));
+      else {
+        if (payload.query !== undefined) query.set('query', payload.query);
+        if (payload.kinds !== undefined) query.set('kinds', JSON.stringify(payload.kinds));
+        if (payload.limit !== undefined) query.set('limit', payload.limit);
+      }
+      if (Object.hasOwn(payload, 'sceneId') && Object.hasOwn(payload, 'mapId') && payload.sceneId !== payload.mapId)
+        throw new ModuleError('invalid_data');
+      const selectedScene = payload.sceneId ?? payload.mapId;
+      if (selectedScene != null) query.set('sceneId', selectedScene);
+      return http.get(`/api/containers/${segment(tableId)}/journals/${segment(method)}?${query}`,
         { signal, cache: 'no-store', ...domainTiming(domain, method, options) });
     }
     const result = await http.post(`/api/tables/${segment(tableId)}/api`, {

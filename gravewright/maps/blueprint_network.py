@@ -71,6 +71,7 @@ def state(campaign_id, user_id, scene_id):
     from .blueprint_world import presentation_catalog
     from .blueprint_clocks import catalog as clock_catalog
     from .blueprint_clues import catalog as clue_catalog
+    from .blueprint_mindmaps import catalog as mindmap_catalog
     from gravewright.tokens.models import Token
     return {"campaignId": str(who.campaign_id), "sceneId": str(scene.pk), "sceneName": scene.name, "sceneVersion": scene.version,
             "elements": elements, "lights": lights,
@@ -83,6 +84,7 @@ def state(campaign_id, user_id, scene_id):
             "sounds": [{"id": str(row.pk), "name": row.name} for row in Track.objects.filter(campaign_id=campaign_id).order_by("name", "id")],
             "clocks": clock_catalog(who, scene.pk),
             "clues": clue_catalog(who, scene.pk),
+            "mindmaps": mindmap_catalog(who, scene.pk),
             "assets": [{"id": str(row.pk), "name": row.name, "url": f"/game/map-assets/{row.pk}",
                         "width": row.width, "height": row.height}
                        for row in MapAsset.objects.filter(campaign_id=campaign_id, generated_for__isnull=True).order_by("name", "id")],
@@ -167,7 +169,7 @@ def save(campaign_id, user_id, scene_id, element_id, payload):
             if item is None:
                 raise services.MapError("The map project changed. Refresh the scene network before editing.", "conflict")
             item["blueprint"] = remap(row.data["blueprint"], project.generation["objects"])
-            project.document = clean_document(document, who)
+            project.document = clean_document(document, who, scene_id=project.scene_id)
             project.version += 1
             # Only this authored field is adopted. Pre-existing manual geometry
             # or other edits retain their generated-snapshot conflict protection.
