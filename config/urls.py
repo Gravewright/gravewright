@@ -13,6 +13,7 @@ urlpatterns = [
     path('', include('gravewright.modules.urls')),
     path('', include('gravewright.administration.urls')),
     path('', include('gravewright.actors.urls')),
+    path('', include('gravewright.pdf_system.urls')),
     path('', include('gravewright.tokens.urls')),
     path('', include('gravewright.journals.urls')),
     path('', include('gravewright.maps.urls')),

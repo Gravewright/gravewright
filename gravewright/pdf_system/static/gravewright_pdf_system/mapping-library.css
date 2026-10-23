@@ -1,0 +1,17 @@
+.pdf-mapping-library { width: min(640px, calc(100vw - 32px)); font-size: 12px; }
+.pdf-mapping-library :is(label, p, input, select, button, summary) { font-size: 12px; }
+:is(body:has(#table-workspace), body.game-detached) .pdf-mapping-library header [data-pdf-library-close] {
+  width: auto; min-height: 32px; padding-inline: var(--space-2);
+}
+.pdf-mapping-library__hint { margin: var(--space-0); color: var(--text-muted, #b7b5ad); line-height: 1.5; }
+.pdf-mapping-library__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.pdf-mapping-library__actions button, .pdf-mapping-library__several button {
+  min-height: 34px; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm);
+  border: 1px solid var(--border, #40464e); background: var(--surface-raised, #20262d);
+  color: var(--text, #e8e4d8); cursor: pointer;
+}
+.pdf-mapping-library__targets { display: grid; gap: var(--space-1); max-height: 180px; overflow: auto; margin-block: var(--space-2); }
+.pdf-mapping-library .pdf-mapping-library__targets label { display: flex; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; }
+.pdf-mapping-library [data-pdf-library-list] { min-height: 100px; }
+.pdf-mapping-library [data-pdf-library-error] { color: var(--danger, #ffaaaa); }
+.pdf-mapping-library footer { display: flex; justify-content: flex-end; padding: var(--space-3); }

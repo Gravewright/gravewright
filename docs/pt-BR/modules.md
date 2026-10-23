@@ -68,7 +68,9 @@ example.actor-counter/
 }
 ```
 
-Escolha sua licença real e inclua seu texto em `LICENSE.txt`. A licença da extensão não precisa corresponder ao valor ilustrativo acima; consulte a política de licenciamento. O schema rejeita campos desconhecidos e exige todos os campos mostrados. IDs precisam de pelo menos um ponto ou hífen, começar com letra minúscula e usar letras minúsculas/dígitos em seus componentes. Versões possuem três números, sem sufixos de pré-lançamento/build. Intervalos do SDK aceitam comparações separadas por espaços, como `>=1.0.0 <2.0.0`; não aceitam `^`, `~`, curingas ou `||`. O carregador verifica o SDK **1.0.0**; a API de domínio separada informa **1.1.0**.
+Escolha sua licença real e inclua seu texto em `LICENSE.txt`. A licença da extensão não precisa corresponder ao valor ilustrativo acima; consulte a política de licenciamento. O schema rejeita campos desconhecidos e exige todos os campos mostrados. IDs precisam de pelo menos um ponto ou hífen, começar com letra minúscula e usar letras minúsculas/dígitos em seus componentes. Versões possuem três números, sem sufixos de pré-lançamento/build. Intervalos do SDK aceitam comparações separadas por espaços, como `>=1.0.0 <2.0.0`; não aceitam `^`, `~`, curingas ou `||`. O carregador verifica o SDK **1.0.0**; a API de domínio separada informa **1.2.0**.
+
+O contrato de domínio oferece `api.capabilities()` para descrever métodos explícitos sem conceder permissões. Pacotes de sistema confiáveis registram suas próprias operações com `api.systems.register_api(system_id, operations)` em `AppConfig.ready()`; módulos de navegador descobrem o provedor da campanha atual por `api.system.state()` e o chamam por `api.system.call(operation, data, options)`. Uploads binários recebem `File`/`Blob`; downloads retornam `{blob, name, contentType, size}`. Esses métodos preservam CSRF, autorização nativa, leases de ativação e o ciclo de vida do contexto; o descarte cancela operações pendentes. Veja a [referência da API](api.md) para payloads, revisões e opções de tempo limite.
 
 `main.js`:
 

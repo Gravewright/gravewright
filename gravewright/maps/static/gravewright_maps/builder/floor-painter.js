@@ -1,10 +1,15 @@
 /** Event-free floor gestures. The workspace owns input, rendering and history. */
 import { clone, floorBrushCells, floorRectangleCells, floorCircleCells, floorPolygonCells, floodFloorCells,
     paintFloorCells, eraseFloorCells, floorFreeContours, applyFloorContours, fillFloorShape, documentEditingMode } from './model.js';
+import { documentBounds } from './document-bounds.js';
 
 const samePoint = (a, b) => a && b && Math.hypot(a.x - b.x, a.y - b.y) < 1e-7;
 const keyFor = cell => `${cell.x}:${cell.y}`;
 const validPoint = point => point && Number.isFinite(point.x) && Number.isFinite(point.y);
+const boundedPoint = (point, document) => {
+    const bounds = documentBounds(document);
+    return { x: Math.max(0, Math.min(bounds.width, point.x)), y: Math.max(0, Math.min(bounds.height, point.y)) };
+};
 
 export function createFloorPainter({ getDocument, getOptions, onPreview, onCommit, onCancel, onError }) {
     let gesture;
@@ -83,6 +88,7 @@ export function createFloorPainter({ getDocument, getOptions, onPreview, onCommi
         get polygon() { return gesture?.options.mode === 'polygon'; },
         start(point) {
             if (!validPoint(point)) return false;
+            point = boundedPoint(point, gesture?.before || getDocument());
             if (gesture) {
                 if (gesture.options.mode !== 'polygon') return false;
                 if (!samePoint(gesture.vertices.at(-1), point)) gesture.vertices.push({ ...point });
@@ -107,11 +113,11 @@ export function createFloorPainter({ getDocument, getOptions, onPreview, onCommi
         },
         move(point) {
             if (!gesture || !validPoint(point)) return;
-            gesture.point = { ...point }; preview();
+            gesture.point = boundedPoint(point, gesture.before); preview();
         },
         end(point) {
             if (!gesture || gesture.options.mode === 'polygon') return false;
-            if (validPoint(point)) { gesture.point = { ...point }; preview(); }
+            if (validPoint(point)) { gesture.point = boundedPoint(point, gesture.before); preview(); }
             return commit();
         },
         finish() {

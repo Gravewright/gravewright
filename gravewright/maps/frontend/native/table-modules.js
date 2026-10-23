@@ -11,14 +11,15 @@ import {executeNative} from '/static/gravewright_modules/domain-api.js';
 import {mountModal} from '/static/gravewright_table/modal.js';
 import {text as gwText,onTextChange} from '../shared/config/i18n/text.js';
 const root=document.querySelector('#table-workspace'), campaign=root?.dataset.tableId;
+const mediaScope=new AbortController();
 const states={},widgets={},nodes={},media=new Map();let scene=null,revision=0,muted=false,master=.7,unlocked=false,placement,clockOffset=0,handModal,handDragFrame;
 let channels={music:1,ambience:1,sfx:1,cinematic:1};
 const map=()=>window.gravewrightMaps?.current;
 const rt=()=>window.gravewrightRealtime;
 const who=()=>root?.dataset.role==='gm';
 const previewToken=()=>who()&&window.gravewrightTokenSelection?.length===1?window.gravewrightTokenSelection[0]:null;
-async function fresh(module){const requestedScene=scene;const v=await gravewright[module].state({sceneId:scene,previewTokenId:module==='audio'?previewToken():null});if(['cards','audio'].includes(module)&&requestedScene!==scene)return v;states[module]=v;if(module==='audio'&&v.serverTime)clockOffset=v.serverTime-Date.now()/1000;return v;}
-async function command(module,action,data={}){return executeNative(gravewright,module,action,{sceneId:scene,...data});}
+async function fresh(module){mediaScope.signal.throwIfAborted();const requestedScene=scene;const v=await gravewright[module].state({sceneId:scene,previewTokenId:module==='audio'?previewToken():null},{signal:mediaScope.signal});mediaScope.signal.throwIfAborted();if(['cards','audio'].includes(module)&&requestedScene!==scene)return v;states[module]=v;if(module==='audio'&&v.serverTime)clockOffset=v.serverTime-Date.now()/1000;return v;}
+async function command(module,action,data={}){mediaScope.signal.throwIfAborted();return executeNative(gravewright,module,action,{sceneId:scene,...data},{signal:mediaScope.signal});}
 function cardById(id){return [...(states.cards?.hand||[]),...(states.cards?.cards||[])].find(c=>c.id===id);}
 async function cardCommand(action,data){
  const row=cardById(data.id||data.card_id||data.placement_id);const deck=states.cards?.decks?.find(d=>d.id===data.deck_instance_id);
@@ -130,6 +131,7 @@ function showAudio(){if(!scene)return;if(widgets.audio){close('audio');return;}w
  if(event==='unlock'){unlocked=true;syncAudio();}else if(event==='tool'&&value==='select')close('audio');else if(event==='refresh')void fresh('audio').then(refresh);
 }));}
 function syncAudio(){
+ if(mediaScope.signal.aborted||root?.dataset.management==='true'&&!unlocked)return;
  const state=states.audio;if(!state)return;const now=Date.now()/1000+clockOffset,desired=new Map(),tracks=new Map((state.tracks||[]).map(t=>[t.id,t]));
  for(const p of state.playback?.ambient||[])if(p.status!=='stopped')desired.set('ambient-'+p.trackId+'-'+(p.playId||'initial'),{trackId:p.trackId,playing:p.status==='playing',offset:p.position+(p.status==='playing'?now-p.startedAt:0),gain:p.volume,loop:p.loop});
  for(const s of state.spatialSounds||[])if(s.enabled)desired.set('spatial-'+s.id,{trackId:s.trackId,playing:true,offset:0,gain:s.effectiveGain,loop:s.loop,spatial:true});
@@ -142,15 +144,22 @@ function syncAudio(){
 }
 window.addEventListener('gravewright:resources',({detail})=>{if((detail.module==='cards'||detail.module==='audio')&&(detail.sceneId??null)===scene){states[detail.module]=detail.state;if(detail.module==='audio'&&detail.state.serverTime)clockOffset=detail.state.serverTime-Date.now()/1000;revision++;refresh();}});
 window.addEventListener('gravewright:connected',()=>{for(const module of ['cards','audio'])rt().subscribeModule(module,scene,module==='audio'?previewToken():null);});
-window.addEventListener('gravewright:module-scene',()=>{scene=map()?.id||null;delete states.cards;delete states.audio;for(const row of media.values()){row.audio.pause();row.audio.removeAttribute('src');row.audio.load();}media.clear();for(const module of ['cards','audio'])rt()?.subscribeModule(module,scene);close('cards');close('placement');close('audio');if(scene){widgets.cards=SceneCards(host('cards'),options({...base(),cards:[],active:true},(event,value)=>{if(event==='refresh')void fresh('cards').then(refresh);if(event==='preview')window.gravewrightMaps?.board?.previewCard(value);}));}refresh();});
+window.addEventListener('gravewright:module-scene',()=>{if(mediaScope.signal.aborted)return;scene=map()?.id||null;delete states.cards;delete states.audio;for(const row of media.values()){row.audio.pause();row.audio.removeAttribute('src');row.audio.load();}media.clear();for(const module of ['cards','audio'])rt()?.subscribeModule(module,scene);close('cards');close('placement');close('audio');if(scene&&root?.dataset.management!=='true'){widgets.cards=SceneCards(host('cards'),options({...base(),cards:[],active:true},(event,value)=>{if(event==='refresh')void fresh('cards').then(refresh);if(event==='preview')window.gravewrightMaps?.board?.previewCard(value);}));}refresh();});
 window.addEventListener('gravewright:selection-edit',({detail:{object}})=>{if(object.kind==='sound'){if(!widgets.audio)showAudio();widgets.audio?.call('edit',object.id);}});
 window.addEventListener('gravewright:map-viewport',refresh);
 window.addEventListener('gravewright:selection-preview',({detail})=>{widgets.audio?.update({selectionPreview:detail});});
 window.addEventListener('gravewright:cards-drop',({detail})=>{void cardCommand('play',{card_id:detail.cardId,...detail}).catch(console.error);});
 document.addEventListener('click',e=>{const button=e.target.closest('button');if(!button)return;if(button.dataset.dockTool==='cards'){e.stopImmediatePropagation();showHand();}if(['sound','sounds'].includes(button.dataset.dockTool)){e.stopImmediatePropagation();showAudio();}},true);
 window.gravewrightTableMedia={areaCommand,showHand,showAudio,mountCompendiums:mount=>ContentDirectory(mount,options(base(),()=>{})),mountDecks:mount=>DeckUpload(mount,options(base(),()=>{void fresh('cards').then(refresh);})),upload:async(file)=>{const body=new FormData();body.append('file',file);body.append('name',file.name);await new Client().upload('/audio',body);await fresh('audio');refresh();},setMuted(value){muted=value;syncAudio();},setVolume(value){master=value;syncAudio();},unlock(){unlocked=true;syncAudio();}};
-setInterval(()=>{if(scene&&unlocked)void fresh('audio').then(syncAudio).catch(()=>{});},2000);
-window.addEventListener('pagehide',()=>{for(const row of media.values()){row.audio.pause();row.audio.removeAttribute('src');}for(const name of Object.keys(widgets))close(name);});
+const playbackTimer=setInterval(()=>{if(scene&&unlocked)void fresh('audio').then(syncAudio).catch(()=>{});},2000);
+function disposeMedia(){
+ if(mediaScope.signal.aborted)return;
+ mediaScope.abort();unlocked=false;clearInterval(playbackTimer);clearInterval(fadeTimer);cancelAnimationFrame(handDragFrame);
+ for(const row of media.values()){row.audio.pause();row.audio.removeAttribute('src');row.audio.load();}media.clear();
+ for(const name of Object.keys(widgets))close(name);
+}
+window.addEventListener('pagehide',disposeMedia,{once:true});
+window.addEventListener('gravewright:access-revoked',disposeMedia,{once:true});
 
 const muteButton=document.querySelector('[data-audio-control="mute"]');
 const volume=document.querySelector('[data-audio-control="volume"]');

@@ -18,6 +18,21 @@ const addRegion = (document, extra = {}) => {
     document.regions.push(region); return region;
 };
 
+test('regions use exact imported canvas edges and remain valid on sub-cell canvases', () => {
+    const document = fixture(); Object.assign(document, { columns: 4, rows: 3, cellSize: 50,
+        sceneGeometry: { width: 197, height: 145, gridSize: 50.5, gridOffsetX: 0, gridOffsetY: 0 } });
+    const edge = createRegion(document, { x: 4, y: 3 }, { x: 4, y: 3 }, { layerId: id(1) });
+    assert.ok(Math.abs(edge.x + edge.width - 3.94) < 1e-8);
+    assert.ok(Math.abs(edge.y + edge.height - 2.9) < 1e-8);
+    assert.equal(validateRegionGeometry(document, { ...edge, x: edge.x + .01 }), false);
+    Object.assign(document, { columns: 1, rows: 1,
+        sceneGeometry: { ...document.sceneGeometry, width: 25, height: 20 } });
+    const small = createRegion(document, { x: 1, y: 1 }, { x: 1, y: 1 }, { layerId: id(1) });
+    assert.deepEqual(regionBounds(small), { x: 0, y: 0, width: .5, height: .4 });
+    document.sceneGeometry.width = 1;
+    assert.equal(createRegion(document, { x: 0, y: 0 }, { x: 1, y: 1 }, { layerId: id(1) }), null);
+});
+
 test('optional region filters normalize only an edited draft and preserve omitted legacy source settings', () => {
     const partial = { actorIds: [id(2).toUpperCase()], visibility: 'hidden' }, before = clone(partial);
     assert.deepEqual(normalizeRegionFilters(partial), { tokenIds: [], actorIds: [id(2)], dispositions: [], visibility: 'hidden' });

@@ -67,7 +67,9 @@ example.actor-counter/
 }
 ```
 
-Choose your actual license and include its text in `LICENSE.txt`. An extension's license need not match this illustrative value; see the licensing policy. The manifest schema rejects unknown keys and requires every field shown. IDs must contain at least one dot or hyphen, begin with a lowercase letter, and use lowercase letters/digits in their components. Versions use three numeric components, without prerelease/build suffixes. SDK ranges support whitespace-separated comparisons such as `>=1.0.0 <2.0.0`; `^`, `~`, wildcards, and `||` are not supported. The package loader currently checks SDK **1.0.0**; the separate domain API reports **1.1.0**.
+Choose your actual license and include its text in `LICENSE.txt`. An extension's license need not match this illustrative value; see the licensing policy. The manifest schema rejects unknown keys and requires every field shown. IDs must contain at least one dot or hyphen, begin with a lowercase letter, and use lowercase letters/digits in their components. Versions use three numeric components, without prerelease/build suffixes. SDK ranges support whitespace-separated comparisons such as `>=1.0.0 <2.0.0`; `^`, `~`, wildcards, and `||` are not supported. The package loader currently checks SDK **1.0.0**; the separate domain API reports **1.2.0**.
+
+The domain contract's `api.capabilities()` describes explicit methods without granting permissions. Trusted system packages register their own operations with `api.systems.register_api(system_id, operations)` from `AppConfig.ready()`; browser modules discover the current campaign provider through `api.system.state()` and call it through `api.system.call(operation, data, options)`. Binary uploads accept `File`/`Blob`; downloads return `{blob, name, contentType, size}`. These methods retain CSRF, native authorization, activation leases and the owning context's lifetime; disposal cancels pending work. See the [API reference](api.md) for payloads, revisions and timeout options.
 
 `main.js`:
 

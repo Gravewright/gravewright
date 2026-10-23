@@ -1,4 +1,4 @@
-"""Bounded Universal VTT 0.2 interchange of native scenes, never editable sources.
+"""Bounded Universal VTT 0.2/0.3 interchange and normalized scene geometry.
 
 The producer's format is documented at https://arkenforge.com/universal-vtt-files/.
 Coordinates are grid units; the embedded raster is PNG or WebP. Unsupported game
@@ -33,11 +33,13 @@ MAX_PIXELS = 16_777_216
 MAX_POINTS = 20_000
 MAX_OBJECTS = 5000
 MAX_WORK_PIXELS = 134_217_728
+SUPPORTED_FORMATS = (.2, .3)
+PORTAL_TOLERANCE = .05  # Pixels, allowing rounded grid-coordinate exports.
 _processing = threading.RLock()
 
 
 def _invalid():
-    raise services.MapError("Choose a valid Universal VTT 0.2 file.")
+    raise services.MapError("Choose a valid Universal VTT 0.2 or 0.3 file.")
 
 
 def _number(value, low=-1_000_000, high=1_000_000):
@@ -94,7 +96,8 @@ def _read(raw):
         result = json.loads(raw, object_pairs_hook=_pairs, parse_constant=lambda _: _invalid())
     except (ValueError, UnicodeError, RecursionError):
         _invalid()
-    if not isinstance(result, dict) or type(result.get("format")) not in (int, float) or result["format"] != .2:
+    if (not isinstance(result, dict) or type(result.get("format")) not in (int, float)
+            or result["format"] not in SUPPORTED_FORMATS):
         _invalid()
     return result
 
@@ -122,16 +125,81 @@ def _image(encoded, expected):
         _invalid()
 
 
+def _portal_walls(solids, doors):
+    """Cut portal openings without depending on editable Builder geometry.
+
+    Exporters round each point independently. A small distance tolerance in
+    pixels accepts that rounding without cutting nearby parallel barriers.
+    Door bounds remain authoritative; no rotation or position is applied twice.
+    """
+    if len(solids) * len(doors) > 2_000_000:
+        raise services.MapError("The UVTT portal geometry exceeds the interchange complexity limit.")
+    result = []
+
+    def append(data):
+        if len(result) >= MAX_OBJECTS:
+            raise services.MapError("The UVTT portal geometry exceeds the interchange complexity limit.")
+        result.append(("walls", data))
+
+    for wall in solids:
+        dx, dy = wall["x2"] - wall["x1"], wall["y2"] - wall["y1"]
+        length = math.hypot(dx, dy)
+        ux, uy = dx / length, dy / length
+        intervals = []
+        for door in doors:
+            offsets = []
+            for endpoint in ("1", "2"):
+                x, y = door["x" + endpoint] - wall["x1"], door["y" + endpoint] - wall["y1"]
+                if abs(x * uy - y * ux) > PORTAL_TOLERANCE:
+                    break
+                offsets.append(x * ux + y * uy)
+            if len(offsets) == 2:
+                start, end = max(0, min(offsets)), min(length, max(offsets))
+                if end - start > .01:
+                    intervals.append((start, end))
+
+        def span(start, end):
+            append({**wall, "x1": wall["x1"] + ux * start, "y1": wall["y1"] + uy * start,
+                    "x2": wall["x1"] + ux * end, "y2": wall["y1"] + uy * end})
+
+        cursor = 0
+        for start, end in sorted(intervals):
+            if start - cursor >= .01:
+                span(cursor, start)
+            cursor = max(cursor, end)
+        if length - cursor >= .01:
+            span(cursor, length)
+    for door in doors:
+        append(door)
+    return result
+
+
+def _source(document):
+    """Keep only bounded producer labels, never arbitrary extension payloads."""
+    result = {"format": document["format"], "coordinateSystem": "pixels"}
+    for key in ("software", "creator"):
+        value = document.get(key)
+        if isinstance(value, str) and len(value) <= 200 and not any(ord(char) < 32 for char in value):
+            result[key] = value.strip()
+    return result
+
+
 def parse(raw):
-    """Validate metadata and complexity before decoding the embedded image."""
+    """Normalize interchange to pixels before decoding the embedded image.
+
+    The original grid origin determines both local object positions and the
+    grid phase. Raster artwork stays flattened, while rows contain editable
+    native barriers and lights for either scene or Builder integration.
+    """
     document = _read(raw)
     resolution = document.get("resolution")
     if not isinstance(resolution, dict):
         _invalid()
     origin, dimensions = _point(resolution.get("map_origin")), _point(resolution.get("map_size"))
-    cell = resolution.get("pixels_per_grid")
-    if type(cell) is not int or not 1 <= cell <= 10000 or min(dimensions.values()) <= 0:
+    cell = _number(resolution.get("pixels_per_grid"), 1, 10000)
+    if cell != int(cell) or min(dimensions.values()) <= 0:
         _invalid()
+    cell = int(cell)
     width, height = (round(dimensions[key] * cell) for key in ("x", "y"))
     _size(width, height)
     notes, rows, points = [], [], 0
@@ -178,11 +246,7 @@ def parse(raw):
         notes.append("UVTT portals are imported as doors; window behavior may need adjustment.")
         solids = [data for _, data in rows if data["kind"] == "wall"]
         doors = [data for _, data in rows if data["kind"] == "door"]
-        if len(solids) * len(doors) > 2_000_000:
-            raise services.MapError("The UVTT portal geometry exceeds the interchange complexity limit.")
-        from .builder_services import segments
-        rows = [("walls", {**span["wall"], **{key: span[key] for key in ("x1", "y1", "x2", "y2")}})
-                for span in segments({"cellSize": 1, "walls": solids, "doors": doors})]
+        rows = _portal_walls(solids, doors)
     environment = document.get("environment", {})
     if not isinstance(environment, dict):
         _invalid()
@@ -220,23 +284,26 @@ def parse(raw):
         _invalid()
     if any(kind == "lights" for kind, _ in rows) and not settings.DYNAMIC_LIGHTING_ENABLED:
         raise services.MapError("Dynamic lighting is disabled.", "forbidden")
+    grid = {"size": cell, **{"offset" + key.upper(): (-origin[key] * cell) % cell for key in ("x", "y")}}
     return {"width": width, "height": height, "cell": cell, "origin": origin, "rows": rows,
+            "grid": grid, "source": _source(document),
             "baked": baked, "darkness": darkness, "warnings": notes,
             "image": _image(document.get("image"), (width, height))}
 
 
-def import_map(campaign_id, user_id, raw, *, name, request_id, folder_id=None, activate=False):
+def import_map(campaign_id, user_id, raw, *, name, request_id, folder_id=None, activate=False, builder_editable=False):
     """Create a native scene once, cleaning every newly stored tile on failure."""
     from .builder_services import authority, fingerprint, record, replay
     who = authority(campaign_id, user_id)
     name, rid = services.title(name), identifier(request_id)
-    if type(activate) is not bool or not isinstance(raw, bytes):
+    if type(activate) is not bool or type(builder_editable) is not bool or not isinstance(raw, bytes):
         _invalid()
     if not raw or len(raw) > min(MAX_JSON_BYTES, settings.MAP_UPLOAD_MAX_BYTES):
         raise services.MapError("The Universal VTT file exceeds the interchange size limit.")
     target = services.folder(folder_id, who)
     digest = fingerprint("uvtt-import", campaign_id, {"content": hashlib.sha256(raw).hexdigest(), "name": name,
-                                                       "folder": str(target.pk) if target else None, "activate": activate})
+                                                       "folder": str(target.pk) if target else None, "activate": activate,
+                                                       **({"builderEditable": True} if builder_editable else {})})
     cached = replay(campaign_id, user_id, rid, digest)
     if cached is not None:
         return cached
@@ -282,6 +349,15 @@ def import_map(campaign_id, user_id, raw, *, name, request_id, folder_id=None, a
                 Broadcast.objects.update_or_create(campaign=who.campaign, defaults={"scene": scene})
             SceneNavigation.objects.update_or_create(membership=who, defaults={"scene": None if activate else scene})
             response = {"scene": services.view(scene), "warnings": parsed["warnings"], "builderEditable": False}
+            if builder_editable:
+                from .builder_import import create_project
+                from .builder_services import view
+                source, notes = create_project(scene, who, stored)
+                if parsed["warnings"] or notes:
+                    source.generation["importWarnings"] = [*parsed["warnings"], *notes]
+                    source.save(update_fields=["generation"])
+                response.update(project=view(source, who), builderEditable=True,
+                                warnings=[*parsed["warnings"], *notes])
             record(campaign_id, user_id, rid, digest, response)
             from gravewright.realtime.dispatch import changed
             changed(campaign_id, user_id, "maps", "uvtt-import", rid, {"map": response["scene"]})

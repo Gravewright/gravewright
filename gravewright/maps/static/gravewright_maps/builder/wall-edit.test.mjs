@@ -15,6 +15,28 @@ const noAllocation = () => { throw new Error('A no-op must not allocate identifi
 const ids = prefix => { let next = 0; return () => `${prefix}-${++next}`; };
 const coordinates = walls => walls.map(({ x1, y1, x2, y2 }) => [x1, y1, x2, y2]);
 
+test('wall edits respect exact imported raster edges instead of the padded workspace cells', () => {
+    const document = fixture(); Object.assign(document, { columns: 4, rows: 3, cellSize: 50,
+        sceneGeometry: { width: 197, height: 145, gridSize: 50.5, gridOffsetX: 0, gridOffsetY: 0 } });
+    assert.equal(addWall(document, wall('edge', 1, 1, 3.94, 1)).ok, true);
+    const before = clone(document);
+    assert.equal(addWall(document, wall('outside', 1, 2, 3.95, 2)).ok, false);
+    assert.equal(extendWall(document, 'edge', 2, { x: 4, y: 1 }, { id: 'extension' }).ok, false);
+    assert.deepEqual(document, before);
+});
+
+test('collision-only wall networks keep their presentation when extended and allow distinct artwork strokes', () => {
+    const document = fixture(); document.walls = [wall('existing', 2, 2, 6, 2, { artwork: false })];
+    assert.equal(extendWall(document, 'existing', 2, { x: 6, y: 5 }, { id: 'extension' }).ok, true);
+    assert.equal(document.walls[1].artwork, false, 'extending collision geometry must not paint over the background');
+    assert.equal(splitWall(document, 'existing', { x: 4, y: 2 }, { makeId: ids('split') }).ok, true);
+    assert.equal(document.walls.filter(item => item.artwork === false).length, 3);
+    const painted = wall('painted', 2, 2, 6, 2);
+    assert.equal(addWall(document, painted).changed, true, 'collision geometry cannot suppress authored artwork');
+    assert.equal(document.walls.at(-1).id, 'painted');
+    assert.equal(addWall(document, { ...painted, id: 'same', artwork: true }, { makeId: noAllocation }).changed, false);
+});
+
 test('overlap suppression distinguishes native barrier settings and treats omitted defaults as equivalent', () => {
     const document = fixture(); document.walls = [wall('existing', 2, 2, 8, 2)];
     const defaults = { presentation: 'normal', discovered: false, vertical: { top: null, bottom: null },

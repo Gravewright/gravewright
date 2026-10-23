@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 from uuid import UUID
 
-from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -34,12 +33,43 @@ def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene
     p = dict(payload)
     # A mounted scene is authoritative; a payload cannot silently retarget it.
     if scene_id is not None:
+        if domain == 'maps' and method == 'navigate' and any(key in p and p[key] is None for key in ('sceneId', 'mapId')):
+            raise ModuleFailure('stale_context')
         for key in ('sceneId', 'mapId'):
             if p.get(key) is not None and str(p[key]) != str(scene_id):
                 raise ModuleFailure('stale_context')
         p['sceneId'] = p['mapId'] = str(scene_id)
     scene = p.get('sceneId') or p.get('mapId')
     try:
+        if domain in ('mapBuilder', 'blueprints') or domain == 'maps' and method == 'exportUniversalVtt':
+            if method != 'state' and method not in CONTRACT['domains'].get(domain, {}):
+                raise ModuleFailure('unavailable')
+            from gravewright.maps.public import invoke as maps_invoke
+            return maps_invoke(campaign_id, user_id, domain, method, p, request_id, scene_id=scene_id)
+        if domain == 'system':
+            from api import systems
+            if method == 'state':
+                return systems.capabilities(campaign_id, user_id)
+            if method == 'call':
+                return systems.call(campaign_id, user_id, p.get('operation'), p.get('data', {}),
+                                    UUID(str(request_id)), scene_id=scene_id)
+            raise ModuleFailure('unavailable')
+        if domain == 'library':
+            from api import library
+            if method == 'state':
+                return library.state(campaign_id, user_id)
+            action = CONTRACT['domains']['library'].get(method)
+            if action is None:
+                raise ModuleFailure('unavailable')
+            return library.command(campaign_id, user_id, action, p, UUID(str(request_id)))
+        if domain == 'ownership':
+            from api import ownership
+            if method in ('state', 'read'):
+                return ownership.state(campaign_id, user_id, p.get('kind'), p.get('id'))
+            if method == 'update':
+                return ownership.command(campaign_id, user_id, p.get('kind'), p.get('id'),
+                                         p, UUID(str(request_id)))
+            raise ModuleFailure('unavailable')
         if domain in CONTRACT['domains']:
             if method == 'state':
                 if domain in RESOURCE_DOMAINS:
@@ -97,9 +127,12 @@ def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene
 
 @require_POST
 @authenticated
-@transaction.atomic
 def call(request, table_id, module_id=None):
-    """Share domain dispatch between host pages and lease-bound browser modules."""
+    """Share leased dispatch while native services own their transaction scopes.
+
+    In particular, map rendering prepares files outside its write transaction
+    and rechecks authority and revisions when committing the prepared result.
+    """
     data = read_json(request)
     allowed = {'domain', 'method', 'payload', 'requestId'}
     if module_id is not None:

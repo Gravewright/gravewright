@@ -5,7 +5,9 @@ import { nativeWallProperties } from './wall-properties.js';
 import { torchComponentState } from './torch-model.js';
 
 export function nativeEffectState(document) {
-    const cell = document.cellSize, width = document.columns * cell, height = document.rows * cell;
+    const cell = document.cellSize, width = document.sceneGeometry?.width || document.columns * cell,
+        height = document.sceneGeometry?.height || document.rows * cell;
+    const rangeScale = (document.sceneGeometry?.gridSize || cell) * (document.sceneGeometry?.imageScale ?? 1) / cell;
     const shown = item => document.layers?.find(layer => layer.id === item.layerId)?.visible !== false;
     const point = item => ({ ...item, x: item.x * cell, y: item.y * cell });
     const doors = (document.doors || []).filter(shown), geometry = { ...document, doors };
@@ -15,13 +17,15 @@ export function nativeEffectState(document) {
         ...nativeWallProperties(door), kind: 'door', door_state: door.state })));
     const lights = (document.lights || []).filter(shown).map(item => torchComponentState(document, 'lights', item))
         .filter(light => light.enabled && light.intensity > 0).map(light => ({
-        ...point(light), bright_radius: light.brightRadius, dim_radius: light.dimRadius,
+        ...point(light), bright_radius: light.brightRadius * rangeScale, dim_radius: light.dimRadius * rangeScale,
     }));
     const particles = [], shaders = [], invisible = { lights: [], particles: [], shaders: [] };
     for (const [kind, rows] of [['particles', particles], ['shaders', shaders]]) {
         for (const original of (document[kind] || []).filter(shown).map(item => torchComponentState(document, kind, item))) {
             if (!original.enabled) continue;
             const record = point(original);
+            if (kind === 'particles') record.scale *= rangeScale;
+            else record.radius *= rangeScale;
             // The native wrapper always applies opacity; custom shader code
             // decides whether to use intensity, so zero intensity is drawable.
             const visible = kind === 'particles' ? record.density > 0 : record.opacity > 0;

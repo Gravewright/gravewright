@@ -105,7 +105,8 @@ export function createCanvasRenderer({ root, getDocument, getView, assetById, on
             item = torchComponentState(doc, kind, item);
             const group = svg('g', attrs);
             if (!view.preview) {
-                const radius = kind === 'lights' ? Math.max(item.brightRadius, item.dimRadius) : kind === 'shaders' ? item.radius : 0;
+                const radius = (kind === 'lights' ? Math.max(item.brightRadius, item.dimRadius) : kind === 'shaders' ? item.radius : 0)
+                    * (doc.sceneGeometry?.gridSize || doc.cellSize) * (doc.sceneGeometry?.imageScale ?? 1) / doc.cellSize;
                 if (radius > 0) group.append(svg('circle', { cx: item.x, cy: item.y, r: radius, fill: 'none',
                     stroke: item.color, opacity: .3, 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none' }));
                 group.append(svg('circle', { cx: item.x, cy: item.y, r: .16, fill: item.enabled ? item.color : '#899098', stroke: '#fff', 'stroke-width': .025 }));
@@ -113,6 +114,13 @@ export function createCanvasRenderer({ root, getDocument, getView, assetById, on
                     fill: '#10171c', 'font-size': .18, 'pointer-events': 'none' });
                 mark.textContent = kind === 'lights' ? '☀' : kind === 'particles' ? '✦' : '◈'; group.append(mark);
             }
+            return group;
+        }
+        if (item.artwork === false) {
+            const group = svg('g', { ...attrs, 'data-builder-geometry-guide': kind });
+            if (!view.preview) group.append(svg('line', { x1: item.x1, y1: item.y1, x2: item.x2, y2: item.y2,
+                stroke: kind === 'walls' ? '#79d9c0' : '#c09a5a', 'stroke-width': 2, 'stroke-dasharray': '6 4',
+                'vector-effect': 'non-scaling-stroke' }));
             return group;
         }
         if (kind === 'walls') {
@@ -227,7 +235,9 @@ export function createCanvasRenderer({ root, getDocument, getView, assetById, on
     function render({ wallDraft } = {}) {
         const doc = getDocument(), view = getView();
         try {
-            wallMeshes = wallJoinGeometry(doc, doc.walls.flatMap(wall => wallSegments(doc, wall).map(span => ({ ...span, wall }))));
+            const artwork = { ...doc, walls: doc.walls.filter(wall => wall.artwork !== false) };
+            wallMeshes = wallJoinGeometry(artwork, artwork.walls
+                .flatMap(wall => wallSegments(doc, wall).map(span => ({ ...span, wall }))));
             wallMeshError = undefined;
         } catch (cause) {
             if (!(cause instanceof RangeError) || cause.message !== 'The map produces too many wall segments.') throw cause;
@@ -249,8 +259,20 @@ export function createCanvasRenderer({ root, getDocument, getView, assetById, on
         }
         $('[data-builder-paper]').setAttribute('fill', doc.background);
         const backgroundAsset = assetById(doc.backgroundImage?.assetId);
+        const width = doc.sceneGeometry ? doc.sceneGeometry.width / doc.cellSize : doc.columns;
+        const height = doc.sceneGeometry ? doc.sceneGeometry.height / doc.cellSize : doc.rows;
         $('[data-builder-background-image]').replaceChildren(...(backgroundAsset ? [svg('image', { href: backgroundAsset.url,
-            x: 0, y: 0, width: doc.columns, height: doc.rows, preserveAspectRatio: 'none' })] : []));
+            x: 0, y: 0, width, height, preserveAspectRatio: 'none' })] : []));
+        $('[data-builder-outline]').setAttribute('width', width); $('[data-builder-outline]').setAttribute('height', height);
+        const grid = $('[data-builder-defs]').querySelector('#builder-grid');
+        if (grid) {
+            const scale = doc.sceneGeometry?.imageScale ?? 1;
+            const size = (doc.sceneGeometry?.gridSize || doc.cellSize) * scale / doc.cellSize;
+            grid.setAttribute('width', size); grid.setAttribute('height', size);
+            grid.setAttribute('x', (doc.sceneGeometry?.gridOffsetX || 0) * scale / doc.cellSize);
+            grid.setAttribute('y', (doc.sceneGeometry?.gridOffsetY || 0) * scale / doc.cellSize);
+            grid.querySelector('path').setAttribute('d', `M ${size} 0 L 0 0 0 ${size}`);
+        }
         $('[data-builder-background-name]').textContent = backgroundAsset ? backgroundAsset.name : '';
         $('[data-builder-background-remove]').hidden = !doc.backgroundImage;
         $('[data-builder-grid]').style.display = view.grid && !view.preview ? '' : 'none';

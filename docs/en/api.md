@@ -7,7 +7,7 @@ Gravewright has three related interfaces. They use the same native permission ch
 | Interface | Entry point | Current marker | Intended caller |
 | --- | --- | --- | --- |
 | Python | `from api import actors, ...` | `api.API_VERSION == "1.0"` | Trusted server integrations with initialized Django |
-| Browser domain API | `window.gravewright`, or a module context's `api` | `api.version == "1.1.0"` | Native frontend code and browser extensions |
+| Browser domain API | `window.gravewright`, or a module context's `api` | `api.version == "1.2.0"` | Native frontend code and browser extensions |
 | Original module operations | Mount block's `host.call(name, payload, options)` | SDK `1.0.0` | Installed, active browser modules |
 
 The Python facade re-exports selected service functions; it does not discover plugins or register Django applications. The browser APIs send authenticated requests to those services. The SDK registry is narrower and has explicit JSON input/output schemas. Do not interchange `api.actors.update(...)` and `host.call("actor.update", ...)` payloads without checking their respective contracts. The project does not currently ship an npm SDK, OpenAPI specification, or automatic compatibility release checker. Treat the version markers as descriptions of this checkout, not a promise covering undocumented internals. See [licensing](../../LICENSING.md) for extension licensing.
@@ -36,13 +36,18 @@ Every domain below has `state(payload = {}, options)` and the listed command met
 | --- | --- |
 | `actors` | `create`, `update`, `delete`, `setPermissions`, `saveSheet`, `createFolder`, `updateFolder`, `deleteFolder`, `deleteAsset` |
 | `tokens` | `place`, `move`, `remove`, `duplicate`, `setHidden`, `setVision`, `configure`, `addCondition`, `removeCondition` |
-| `maps` | `update`, `move`, `delete`, `activate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder` |
+| `maps` | `update`, `move`, `delete`, `activate`, `navigate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder`, `exportUniversalVtt` |
 | `journals` | `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset` |
 | `items` | `create`, `update`, `delete`, `duplicate`, `setPermissions`, `createFolder`, `updateFolder`, `deleteFolder` |
 | `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
 | `cards` | `define`, `instantiate`, `create`, `draw`, `shuffle`, `reset`, `deleteDeck`, `discard`, `return`, `give`, `place`, `take`, `flip`, `move` |
 | `audio` | `updateTrack`, `deleteTrack`, `createPlaylist`, `updatePlaylist`, `deletePlaylist`, `createSpatialSound`, `updateSpatialSound`, `deleteSpatialSound`, `play`, `pause`, `stop`, `seek`, `setVolume`, `startScore`, `pauseScore`, `resumeScore`, `stopScore`, `nextScore`, `previousScore` |
 | `compendiums` | `create`, `configure`, `read`, `delete`, `add`, `remove`, `import`, `setPermissions` |
+| `mapBuilder` | `read`, `save`, `generate`, `update`, `sync`, `adopt` |
+| `blueprints` | `save`, `templates`, `readTemplate`, `saveTemplate`, `deleteTemplate`, `test`, `testDraft`, `control` |
+| `library` | `createFolder`, `updateFolder`, `deleteFolder`, `move`, `delete` |
+| `ownership` | `read`, `update`; `state`/`read` require `{kind, id}` |
+| `system` | `call(operation, data, options)`; `state` describes the campaign system's operations |
 
 Additional forms:
 
@@ -77,16 +82,143 @@ Mutation methods send a generated UUID `requestId` unless supplied. Commands usi
 
 `options.signal` cancels pending work. A disposed context produces `stale_context`; explicit cancellation produces `cancelled` in scoped module operations. Error handling should inspect `error.code`, not translated text. Global HTTP adapters can additionally expose transport/authentication errors from the underlying endpoint.
 
+### Capability discovery and extended domains
+
+`api.capabilities()` returns an independent copy of the local browser contract,
+including domain methods, reads, binary transports and long-running operations.
+Its `global` section lists page-only account/campaign/owner adapters; those are
+not granted to a leased module handle. It performs no request and grants no permissions. Python `api.capabilities()`
+returns `{pythonVersion, browser}` without database access. Runtime system
+operations are discovered separately through `await api.system.state()`.
+
+The new domains retain the native campaign boundary, GM checks, operation UUIDs
+and expected revisions. Their payloads use these public names:
+
+| Operation | Payload |
+| --- | --- |
+| `mapBuilder.state` / `read` | `{}` / `{projectId}` |
+| `mapBuilder.save` | `{projectId, expectedVersion, document, folderId?}`; use a new project UUID and `expectedVersion: 0` when creating |
+| `mapBuilder.generate` | `{projectId, expectedVersion}`; creates a private scene |
+| `mapBuilder.update` / `sync` | `{projectId, expectedVersion, expectedSceneVersion}` |
+| `mapBuilder.adopt` | `{sceneId, expectedSceneVersion}` |
+| `blueprints.state` | `{sceneId}`; authorized automation network |
+| `blueprints.save` | `{sceneId, elementId, expectedVersion, expectedProjectVersion, blueprint}` |
+| `blueprints.templates` / `readTemplate` | `{}` / `{templateId}` |
+| `blueprints.saveTemplate` / `deleteTemplate` | `{templateId, expectedVersion, name, description, definition}` / `{templateId, expectedVersion}` |
+| `blueprints.test` | `{sceneId, elementId, expectedVersion, event, tokenId?, blueprint?}` |
+| `blueprints.testDraft` | `{document, elementId, event, actorId?}` |
+| `blueprints.control` | `{sceneId, elementId, expectedVersion, action, value?}` |
+| `maps.exportUniversalVtt` | `{sceneId}`; native interchange JSON |
+| `maps.navigate` | `{mapId}`; explicit `mapId: null` resumes following the broadcast in an unbound context |
+| `library.createFolder` | `{name}`; returns `{ok, id}` |
+| `library.updateFolder` / `deleteFolder` | `{folderId, name}` / `{folderId}` |
+| `library.move` / `delete` | `{assetId, folderId}` / `{assetId}`; native snake_case aliases remain accepted |
+| `ownership.read` / `state` | `{kind, id}`; GM-only revision, levels, grants and current members |
+| `ownership.update` | `{kind, id, version, permissions, reset?}`; preserves the native bulk-folder/page rules |
+
+Ownership kinds are `actors`, `items`, `journals`, `scenes`, `cards`,
+`compendiums`, `tokens`, `pages`, and the four `actor-folders`, `item-folders`,
+`journal-folders`, `scene-folders` groups. A page ID is `journalUUID:sectionId`;
+bulk folder revisions are opaque strings. No new-domain method silently replaces
+a supplied revision. Builder updates also verify their generated scene against
+an authoritative mounted scene. Rehearsals retain native rollback semantics.
+
+Rendering and tiling run outside an enclosing transport transaction; each owning
+service retains its own commit and cleanup boundary. Generation, scene updates,
+UVTT export and rehearsals default to no client deadline. `options.timeoutMs`
+can set an explicit deadline; `null` disables it. New collection domains have no
+additional socket event names: reread after writes or use the relevant existing
+map/actor invalidations.
+
+### System-owned operations and the PDF System
+
+The host routes `api.system.call(name, data, options)` only to the current
+campaign system's registered provider. Changing an operation name or a payload
+cannot select another system. Trusted server packages register callbacks from
+`AppConfig.ready()` with `api.systems.register_api(system_id, operations)`, where
+each entry declares `{effect: "read" | "write", handler, description?}`. Registration
+does not query the database. Handlers receive
+`(campaign_id, user_id, payload, request_id, scene_id)` and own resource validation,
+transactions, revisions, retry receipts and notifications. The host rechecks
+membership, bounds JSON, prevents mounted-scene retargeting and makes every
+streamer write fail before invoking the handler.
+
+The bundled PDF provider exposes the following names through that generic API:
+
+| Operation | Data and behavior |
+| --- | --- |
+| `pdf.read` | `{actorId, tokenId?}`; authorized native sheet plus active `source` |
+| `pdf.configure` | `{actorId, tokenId?, source, version, sheetVersion, changes}`; GM-only partial layout configuration |
+| `pdf.exportMapping` | `{actorId, tokenId?, source?}`; GM-only portable bundle without PDFs or character values |
+| `pdf.applyMapping` | `{actorId, tokenId?, source, version, sheetVersion, bundle}`; GM-only application to an actor or independent token |
+| `pdf.diagnostics` | `{actorId, tokenId?, source?, document?}`; saved metadata/calculation diagnostics without writes |
+| `pdf.roll` | `{actorId, tokenId?, field, source?, visibility?, sceneId?}`; authorized saved action through native dice/chat receipts |
+| `pdf.templates.list` / `read` / `export` | `{}` / `{id}` / `{id}`; GM-only campaign library |
+| `pdf.templates.create` / `update` | `{name, bundle}` / `{id, revision, name, bundle}` |
+| `pdf.templates.delete` / `import` | `{id, revision}` / `{name, bundle}`; import accepts original JSON text or an existing object |
+| `pdf.templates.apply` | `{id, revision, targets:[{actorId, version, sheetVersion, source}]}`; atomic batch, up to 100 actors |
+
+`changes` accepts source-free `manualFields`, `fieldActions`, `fieldBindings`,
+`calculatedFields`, token `bindings` and expected `document` metadata. Omitted
+sections and current values are preserved. Native calculated-field validation
+and cycle protection still apply. Snapshot operations retain the snapshot's
+name, permissions and values. JSON imports retain their 1 MB file limit and
+reject duplicate keys/nonfinite numbers when supplied as original text.
+
+```javascript
+const capabilities = await api.system.state();
+const sheet = await api.system.call('pdf.read', { actorId });
+const bundle = await api.system.call('pdf.exportMapping', { actorId, source: sheet.source });
+const template = await api.system.call('pdf.templates.create', {
+  name: 'Reusable mapping', bundle,
+}, { requestId: crypto.randomUUID() });
+```
+
+PDF.js document inspection, flattened PDF rendering, selection and undo history
+remain browser work. Server diagnostics inspect saved bindings/calculations and
+an optional caller-observed page descriptor; they do not claim to parse PDF bytes.
+
+### Binary domain methods
+
+Binary methods accept a real `File`/`Blob` as `payload.file`, use CSRF-protected
+multipart transport and retain module activation/lease identity. Downloads return
+`{blob, name, contentType, size}`. No file is encoded into the JSON command body.
+
+| Method | Additional payload |
+| --- | --- |
+| `maps.upload` | `{name, settings?, activate?}` |
+| `maps.importUniversalVtt` | `{name, folderId?, builderEditable?}`; use `options.requestId` for native import retries |
+| `library.upload` | `{purpose?, folderId?}`; native image/audio/PDF library uploader |
+| `library.download` | `{id, kind?: "image" | "audio" | "pdf"}` |
+| `actors.uploadAsset` / `downloadAsset` | `{folderId?}` / `{id}`; current system's native asset provider and authorized download |
+| `actors.uploadImage` | `{id, kind: "portrait" | "token"}` |
+| `audio.upload` | `{name?, purpose?, folderId?}` |
+| `cards.uploadAsset` | `{purpose: "card_front" | "card_back"}` |
+| `journals.uploadAsset` / `downloadAsset` | `{journalId}` / `{id}` |
+
+Native format, size and complexity limits still apply. Uploads create new files
+and have no retry receipt except UVTT import. Persist returned IDs before starting
+another import. `onProgress` reports completed bytes, and `signal` cancels work;
+disposing a context prevents later progress callbacks. File operations default
+to no deadline, with optional `timeoutMs`. Cross-campaign asset IDs are rejected
+even when the user belongs to both campaigns. Server file handlers recheck native
+ownership and page visibility; a route or client handle grants no access itself.
+
 ### Account, campaign, owner and module adapters
 
 These are available on the global `gravewright` object, not on the module's domain-only `api`:
 
 | Adapter | Methods |
 | --- | --- |
-| `accounts` | `status`, `session`, `login`, `register`, `setup`, `logout`, `update` |
-| `campaigns` | `list`, `create`, `update(id, payload)`, `join(code)`, `remove(id, code)`, `invite(id, payload)`, `rulesets` |
-| `administration` | `status`, `diagnostics`, `settings`, `updateSettings(section, payload)` |
-| `modules` | `list`, `catalog`, `status`, `install(payload)`, `state(tableId)`, `configure(tableId, payload)` |
+| `accounts` | `status`, `session`, `login(payload)`, `register(payload)`, `setup(payload)`, `logout`, `update(payload)`, `home(kind)`, `privacy` |
+| `campaigns` | `list`, `management(id)`, `create(payload)`, `update(id, payload)`, `join(code)`, `remove(id, code)`, `invite(id, payload)`, `removalCode(id, payload)`, `invitationStatus(id)`, `revokeInvitation(id)`, `banMember(id, payload)`, `onboarding(id)`, `configureOnboarding(id, payload)`, `claimCharacter(id)`, `streamerLink(id)`, `revokeStreamer(id)`, `rulesets` |
+| `administration` | `status`, `diagnostics`, `settings`, `updateSettings(section, payload)`, `snapshots(id)`, `createSnapshot(id, payload)`, `snapshotAction(id, snapshotId, action, payload)`, `previewSnapshot(id, snapshotId)`, `restoreSnapshot(id, snapshotId, payload)`, `deleteSnapshot(id, snapshotId, payload)`, `clonePreview(id, payload)`, `clone(id, payload)`, `exportCampaign(id)`, `importCampaign(file, payload)` |
+| `administration.updates` | `check`, `notification`, `channel(payload)`, `apply(payload)` |
+| `modules` | `list`, `catalog`, `catalogLatest`, `status`, `install(payload)`, `state(tableId)`, `configure(tableId, payload)`, `activation(payload)`, `update(payload)`, `removalPreview(payload)`, `remove(payload)`, `defaultMarketplace`, `configureDefaultMarketplace`, `acknowledge(tableId, payload)`, `localInstallationInfo`, `installLocal(file, payload)` |
+
+Every method accepts an optional final `options` argument with `signal` and `timeoutMs`; file transfers also accept `onProgress`. Signatures and native payload field names are documented in [`global-api.js`](../../gravewright/modules/static/gravewright_modules/global-api.js). Snapshot actions preserve caller-supplied `{confirm}` values, and package removal preserves `confirmedTables`; the adapters do not synthesize approvals. Export returns `{blob, name, contentType, size}`. Campaign import takes a ZIP `File`/`Blob` and optional `{title}`; local package installation takes a ZIP and `{kind: "module" | "system"}`. There is no native snapshot-download endpoint. Creating the API handle performs no administrative action.
+
+`campaigns.management(id, options)` reads the GM-only campaign overview without loading the tabletop or joining its presence. The [management workspace](campaign-management.md) uses the same native document services and current campaign-local GM checks.
 
 Owner-only operations and campaign management remain checked on the server. These methods use session cookies and acquire a CSRF token before writes. They do not provide an API-key authentication scheme. Account/admin payloads are defined by the corresponding app views and tests; never place credentials in module source.
 
@@ -187,9 +319,18 @@ Public imports and signatures, with `campaign_id`/`user_id` denoting identifiers
 
 | Import | Callable signatures |
 | --- | --- |
+| `api` | `API_VERSION == "1.0"`, `capabilities()`; the Python marker is independent of browser API `1.2.0` and SDK `1.0.0`. [Catalog implementation](../../api/__init__.py) |
+| `api.campaigns` | `management(campaign_id, user_id)`; [GM-only campaign overview](../../gravewright/campaigns/management.py) and [management guide](campaign-management.md) |
 | `api.actors` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `sheet(campaign_id, user_id, actor_id, token_id=None)` |
 | `api.tokens` | `state(campaign_id, user_id, map_id)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.maps` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `layer_state(campaign_id, user_id, scene_id)` |
+| `api.map_builder` | Editable project catalog, revisions, generation, scene updates and adoption; [public exports](../../api/map_builder.py), [project signatures](../../gravewright/maps/builder_services.py), [adoption signature](../../gravewright/maps/builder_import.py) |
+| `api.map_blueprints` | Campaign templates, scene networks, controls and rehearsals; [public exports and owning signature references](../../api/map_blueprints.py) |
+| `api.universal_vtt` | Native map import/export; [public exports](../../api/universal_vtt.py) and [call signatures](../../gravewright/maps/universal_vtt.py) |
+| `api.pdf_system` | Sheets, mapping configuration, diagnostics, saved rolls and mapping templates; [public exports](../../api/pdf_system.py) and [call signatures](../../gravewright/pdf_system/public.py) |
+| `api.systems` | `capabilities(campaign_id, user_id)`, `call(campaign_id, user_id, operation, payload, request_id=None, *, scene_id=None)`, `register_api(system_id, operations)`; [provider contract](../../gravewright/campaigns/system_api.py) |
+| `api.library` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, payload, request_id)`; [native library service](../../gravewright/maps/library_services.py) |
+| `api.ownership` | `state(campaign_id, user_id, kind, resource_id)`, `command(campaign_id, user_id, kind, resource_id, payload, request_id)`; [GM document, folder and page service](../../gravewright/table/permission_services.py) |
 | `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.items`, `api.combat`, `api.cards`, `api.audio`, `api.compendiums` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.combat.register_provider` | Trusted system callback registration from `AppConfig.ready()`; see [system combat providers](modules.md#system-combat-providers) |
@@ -226,7 +367,7 @@ Register receivers once in your explicitly installed app's `AppConfig.ready()`. 
 
 ## Transport and maintenance
 
-The host browser domain endpoint is `POST /api/tables/<table_id>/api`; installed modules use `POST /api/tables/<table_id>/modules/<module_id>/api`. Both receive `{domain, method, payload, requestId?}` and return `{value}`. Module calls also carry `mountId`, `moduleSetRevision`, and optional `sceneId`; the bridge acquires a lease before calling. The older schema API uses the same module prefix with `/call` and a `{name, payload, ...context}` envelope. These URLs describe the implementation for maintainers; module code should use its provided APIs.
+The host browser domain endpoint is `POST /api/tables/<table_id>/api`; installed modules use `POST /api/tables/<table_id>/modules/<module_id>/api`. Both receive `{domain, method, payload, requestId?}` and return `{value}`. Module calls also carry `mountId`, `moduleSetRevision`, and optional `sceneId`; the bridge acquires a lease before calling. Binary domain methods use the respective `/files` suffix, with JSON metadata in multipart `metadata` and the file in `file`; download calls return bytes. The older schema API uses the same module prefix with `/call` and a `{name, payload, ...context}` envelope. These URLs describe the implementation for maintainers; module code should use its provided APIs.
 
 After changing the domain method registry, run:
 

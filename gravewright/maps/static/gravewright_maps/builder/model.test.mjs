@@ -7,7 +7,7 @@ import { clone, newDocument, normalizeDocument, defaultLayers, nearestWall, door
     removeObject, fitsBounds, history, familyAssetIds, sampleAssetId, floorBrushCells, floorRectangleCells,
     floorCircleCells, floorPolygonCells, paintFloorCells, eraseFloorCells, sampleFloor, floodFloorCells, snapWallSegment,
     documentEditingMode, setEditingMode, normalizeFloorPaint, applyFloorContours, fillFloorShape, floorContainsPoint, applyTerrainStroke,
-    readyMapGeometry, setBackgroundImage, createEmptyObject, doorDisplaySegment, doorRotationPoint } from './model.js';
+    readyMapGeometry, setBackgroundImage, createEmptyObject, doorDisplaySegment, doorRotationPoint, documentBounds } from './model.js';
 import { terrainBrushAlpha } from './terrain-brush.js';
 
 function documentWithLayer(name) {
@@ -51,6 +51,116 @@ test('door pivots keep the chosen point fixed for editing and open artwork witho
     }
 });
 const mapImage = '00000000-0000-4000-8000-000000000021';
+
+function partialScene(pixels = 257) {
+    const document = documentWithLayer('Partial imported cells');
+    return { ...document, columns: 2, rows: 2, cellSize: 256,
+        sceneGeometry: { width: pixels, height: pixels, gridSize: 256, gridOffsetX: 0, gridOffsetY: 0 } };
+}
+
+test('every authored object and transform stays inside the imported raster rather than padded cells', () => {
+    const source = partialScene(), edge = 257 / 256, layerId = source.layers[0].id;
+    assert.deepEqual(documentBounds(source), { width: edge, height: edge });
+    assert.deepEqual(documentBounds({ ...source, sceneGeometry: undefined }), { width: 2, height: 2 });
+    assert.deepEqual(documentBounds({ ...source, sceneGeometry: { width: 0, height: 257 } }), { width: 2, height: 2 });
+    const records = { walls: { x1: .75, y1: .5, x2: 1.1, y2: .5, thickness: .15 },
+        doors: { x1: .75, y1: .5, x2: 1.1, y2: .5, thickness: .15, state: 'closed' },
+        floors: { x: .9, y: .2, width: .2, height: .2 }, decorations: { x: .9, y: .2, width: .2, height: .2, rotation: 0 },
+        lights: { x: 1.1, y: .5 }, particles: { x: 1.1, y: .5 }, shaders: { x: 1.1, y: .5 },
+        regions: { x: .9, y: .2, width: .2, height: .2 } };
+    for (const [kind, geometry] of Object.entries(records)) {
+        const document = clone(source); document[kind] = [{ id: kind, layerId, ...geometry }];
+        assert.equal(fitsBounds(document), false, `${kind} cannot extend into invisible cell padding`);
+    }
+    const document = clone(source); document.walls = [{ id: 'wall', layerId, x1: 0, y1: 0, x2: .5, y2: .5, thickness: .15 }];
+    assert.equal(translateSelection(document, [{ kind: 'walls', id: 'wall' }], 50, 50), true);
+    assert.deepEqual([document.walls[0].x2, document.walls[0].y2], [edge, edge]);
+    assert.equal(fitsBounds(document), true);
+    assert.equal(duplicateSelection(document, [{ kind: 'walls', id: 'wall' }], 1, 1).length, 1);
+    assert.equal(fitsBounds(document), true, 'copies clamp to the same physical extent');
+    assert.deepEqual(snapWallSegment(source, { x: 0, y: 0 }, { x: 2, y: 0 }), { x1: 0, y1: 0, x2: edge, y2: 0 });
+    assert.equal(doorFits(source, { x1: .75, y1: .5, x2: edge, y2: .5, thickness: .15 }), true);
+    assert.equal(doorFits(source, records.doors), false);
+});
+
+test('tile painting clips partial cells including one-pixel edges and repeat/fill operations see their visible area', () => {
+    for (const pixels of [257, 288]) {
+        const document = partialScene(pixels), layerId = document.layers[0].id, edge = pixels / 256;
+        const cells = floorRectangleCells(document, { x: 0, y: 0 }, { x: edge, y: edge });
+        assert.equal(cells.length, 4);
+        assert.equal(paintFloorCells(document, cells, { layerId }), true);
+        assert.equal(document.floors.length, 4); assert.equal(fitsBounds(document), true);
+        const corner = document.floors.find(item => item.x === 1 && item.y === 1);
+        assert.deepEqual([corner.width, corner.height], [edge - 1, edge - 1]);
+        assert.equal(Boolean(corner.shape), pixels === 257, 'tiny edge tiles use valid source shapes');
+        const snapshot = clone(document), point = { x: 1 + (edge - 1) / 2, y: 1 + (edge - 1) / 2 };
+        assert.equal(sampleFloor(document, point, { layerId }).id, corner.id);
+        assert.equal(sampleFloor(document, { x: edge + .001, y: 1 }, { layerId }), null);
+        assert.equal(floodFloorCells(document, point, { layerId }).length, 4);
+        assert.deepEqual(floodFloorCells(document, { x: edge + .001, y: 1 }, { layerId }), []);
+        assert.equal(paintFloorCells(document, cells, { layerId, makeId: unexpectedChoice, random: unexpectedChoice }), true);
+        assert.deepEqual(document, snapshot, 'repainting a clipped edge is a true no-op');
+        assert.equal(eraseFloorCells(document, [{ x: 1, y: 1 }], { layerId }).ok, true);
+        assert.equal(sampleFloor(document, point, { layerId }), null);
+        assert.equal(document.floors.length, 3);
+    }
+});
+
+test('free floor contours and terrain painting clip their source geometry to exact imported dimensions', () => {
+    const source = partialScene(), edge = 257 / 256, layerId = source.layers[0].id;
+    const free = clone(source), contour = [[[0, 0], [2, 0], [2, 2], [0, 2]]];
+    assert.equal(applyFloorContours(free, contour, { layerId }).ok, true);
+    assert.deepEqual([free.floors[0].width, free.floors[0].height], [edge, edge]);
+    assert.equal(fitsBounds(free), true);
+    const terrain = clone(source);
+    assert.equal(applyTerrainStroke(terrain, [{ x: 2, y: 2 }], { layerId, size: 1 }).ok, true);
+    assert.equal(terrain.floors[0].x + terrain.floors[0].width, edge);
+    assert.equal(terrain.floors[0].y + terrain.floors[0].height, edge);
+    assert.equal(fitsBounds(terrain), true);
+});
+
+test('imported collision geometry retains artwork flags through normalization, movement and duplication', () => {
+    const document = documentWithLayer('Imported scene'), layerId = document.layers[0].id;
+    document.columns = 15; document.rows = 12;
+    document.sceneGeometry = { width: 1001, height: 801, gridSize: 70.5, gridOffsetX: 10, gridOffsetY: -5 };
+    document.walls.push({ ...wall(), layerId, artwork: false });
+    document.doors.push({ ...door(), layerId, artwork: false });
+    assert.deepEqual(normalizeDocument(document), document);
+    assert.equal(translateSelection(document, [{ kind: 'walls', id: 'wall' }, { kind: 'doors', id: 'door' }], 0, 1), true);
+    const copies = duplicateSelection(document, [{ kind: 'walls', id: 'wall' }, { kind: 'doors', id: 'door' }], 0, 1);
+    assert.equal(copies.length, 2);
+    for (const ref of copies) assert.equal(document[ref.kind].find(item => item.id === ref.id).artwork, false);
+    assert.equal(document.sceneGeometry.width, 1001);
+    for (const kind of ['walls', 'doors']) for (const value of [null, 0, 'false', {}, []]) {
+        const invalid = clone(document); invalid[kind][0].artwork = value;
+        assert.throws(() => normalizeDocument(invalid), /artwork setting/);
+    }
+});
+
+test('imported raster bounds validate separately from grid scale and deliberate resizing clears their metadata', () => {
+    const document = documentWithLayer('Imported raster'); document.columns = 15; document.rows = 12;
+    document.sceneGeometry = { width: 1001, height: 801, gridSize: 35.5, gridOffsetX: -10.25, gridOffsetY: 5 };
+    assert.deepEqual(normalizeDocument(document), document);
+    assert.deepEqual(normalizeDocument({ ...document, sceneGeometry: { ...document.sceneGeometry, imageScale: 2 } }).sceneGeometry,
+        { ...document.sceneGeometry, imageScale: 2 });
+    for (const imageScale of [0, -1, .001, 101, NaN, Infinity, '2', null, true])
+        assert.throws(() => normalizeDocument({ ...document, sceneGeometry: { ...document.sceneGeometry, imageScale } }), /imported scene geometry/);
+    for (const geometry of [null, {}, [], { ...document.sceneGeometry, width: 1051 }, { ...document.sceneGeometry, height: 0 },
+        { ...document.sceneGeometry, gridSize: '70' }, { ...document.sceneGeometry, gridSize: Infinity },
+        { ...document.sceneGeometry, gridOffsetX: 1000001 }, { ...document.sceneGeometry, extra: 1 }]) {
+        assert.throws(() => normalizeDocument({ ...document, sceneGeometry: geometry }), /imported scene geometry/);
+    }
+    const imported = clone(document.sceneGeometry);
+    assert.equal(setBackgroundImage(document, mapImage), true);
+    assert.deepEqual(document.sceneGeometry, imported, 'replacing artwork retains the original canvas and grid');
+    assert.equal(setBackgroundImage(document, null), true);
+    assert.deepEqual(document.sceneGeometry, imported, 'removing artwork does not resize the map');
+    assert.equal(setBackgroundImage(document, mapImage, { columns: 16 }), true);
+    assert.equal(Object.hasOwn(document, 'sceneGeometry'), false, 'deliberate resizing restores standard Builder dimensions');
+    const large = { ...newDocument(), columns: 59, rows: 59, cellSize: 70,
+        sceneGeometry: { width: 4096, height: 4096, gridSize: 70, gridOffsetX: 0, gridOffsetY: 0 } };
+    assert.equal(setBackgroundImage(large, mapImage), true, 'the exact 16-megapixel raster fits even when containing cells have padding');
+});
 
 test('element names survive document loading and legacy door geometry promotion without changing identity', () => {
     const document = newDocument(), name = '雪🗺'.repeat(60);

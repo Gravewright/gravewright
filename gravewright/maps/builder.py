@@ -96,6 +96,13 @@ def sync(request, campaign_id, project_id):
         campaign_id, request.user.pk, project_id, body(request)))
 
 
+@require_POST
+def adopt(request, campaign_id, scene_id):
+    from .builder_import import adopt as adopt_scene
+    return response(request, campaign_id, lambda: adopt_scene(
+        campaign_id, request.user.pk, scene_id, body(request)))
+
+
 @require_GET
 def templates(request, campaign_id):
     return response(request, campaign_id, lambda: blueprint_templates.catalog(campaign_id, request.user.pk))

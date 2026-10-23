@@ -16,6 +16,19 @@ function fixture(extra = {}) {
     return { document, options, events, painter, timers, tick() { for (const callback of [...timers.values()]) callback(); } };
 }
 
+test('terrain gestures clamp their centers and coverage to exact imported raster edges', () => {
+    const { painter, document, events, timers } = fixture({ size: .5, intensity: 1, assetIds: ['stone'] });
+    Object.assign(document, { columns: 4, rows: 3, cellSize: 50,
+        sceneGeometry: { width: 197, height: 145, gridSize: 50.5, gridOffsetX: 0, gridOffsetY: 0 } });
+    painter.start({ x: 3.8, y: 2.8 }); painter.move({ x: 7, y: 6 });
+    assert.deepEqual(events.previews.at(-1).meta.cursor, { x: 3.94, y: 2.9 });
+    assert.equal(painter.end({ x: 7, y: 6 }), true);
+    const floor = events.commits[0].candidate.floors[0];
+    assert.ok(floor.x + floor.width <= 3.94 + 1e-8);
+    assert.ok(floor.y + floor.height <= 2.9 + 1e-8);
+    assert.equal(timers.size, 0); assert.deepEqual(events.errors, []);
+});
+
 test('a free round gesture freezes material, strength, size and ID while filling pointer-event gaps', () => {
     const oldRandom = Math.random; let samples = 0; Math.random = () => { samples++; return .99; };
     try {

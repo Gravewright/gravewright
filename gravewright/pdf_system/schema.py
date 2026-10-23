@@ -6,6 +6,11 @@ from copy import deepcopy
 from gravewright.maps.objects import boolean, number
 from gravewright.maps.services import MapError, color
 
+from .manual_fields import normalize_manual_fields
+from .field_actions import normalize_field_actions
+from .calculated_fields import normalize_field_bindings, normalize_calculated_fields
+from .document_metadata import normalize_source_metadata
+
 SLOTS = ("bar1Value", "bar1Max", "bar2Value", "bar2Max", "initiative", "defense")
 
 
@@ -37,7 +42,11 @@ def defaults():
 
 def normalize(raw, previous=None, gm=True):
     """Validate PDF sheet fields, token mappings and GM-controlled effect data."""
-    if not isinstance(raw, dict) or len(json.dumps(raw, allow_nan=False)) > 500_000:
+    try:
+        valid = isinstance(raw, dict) and len(json.dumps(raw, allow_nan=False)) <= 500_000
+    except (TypeError, ValueError, RecursionError):
+        valid = False
+    if not valid:
         raise MapError("Invalid character sheet.")
 
     def merge(base, value):
@@ -65,7 +74,7 @@ def normalize(raw, previous=None, gm=True):
     if not gm and effects != (previous or {}).get("effects",[]):
         raise MapError("Only the GM can edit active effects.")
     for key, allowed in [
-        ("pdf", {"template", "page", "zoom", "spread", "asset", "textColor"}),
+        ("pdf", {"template", "page", "zoom", "spread", "asset", "textColor", "manualFields", "fieldActions", "fieldBindings", "calculatedFields", "sourceMetadata"}),
         ("token", {"name", "size", "bars", "display"}),
         ("bars", {"bar_1", "bar_2"}),
     ]:
@@ -96,6 +105,10 @@ def normalize(raw, previous=None, gm=True):
     for key in ("asset", "template"):
         if not isinstance(pdf[key], str) or len(pdf[key]) > 120:
             raise MapError("Invalid PDF source.")
+    normalize_manual_fields(pdf, data["fields"], previous, gm=gm)
+    normalize_field_bindings(pdf, previous, gm=gm)
+    normalize_source_metadata(pdf, previous, gm=gm)
+    normalize_field_actions(pdf, previous, gm=gm)
     number(data["init"])
     number(data["ac"])
     token = data["token"]
@@ -121,4 +134,7 @@ def normalize(raw, previous=None, gm=True):
             from gravewright.journals.documents import validate_document
 
             data[k] = validate_document({"doc": data[k]})["doc"]
+    normalize_calculated_fields(data, previous, gm=gm)
+    if len(json.dumps(data, allow_nan=False)) > 500_000:
+        raise MapError("Invalid character sheet.")
     return data

@@ -21,13 +21,23 @@ from gravewright.accounts.models import UserPreference
 from gravewright.accounts.views import MESSAGES as AUTH_TEXT, api_error, is_datastar, read_json
 from gravewright.campaigns import services as campaigns
 from gravewright.campaigns.catalog import list_rulesets
-from gravewright.campaigns.models import Campaign
+from gravewright.campaigns.models import Campaign, Membership
 from gravewright.campaigns.forms import CampaignForm
 from gravewright.campaigns.views import authenticated, validate_campaign_form
 from .responses import navigate
 
 TEXT = json.loads(Path(__file__).with_name('inside_messages.json').read_text(encoding='utf-8'))
 SECTIONS = {'campaigns', 'settings', 'privacy', 'systems', 'addons', 'marketplace', 'administration'}
+
+
+def _campaign_row(campaign, user):
+    """Add current campaign-local GM access only to the Inside presentation."""
+    row = campaigns.public_campaign(campaign)
+    row['can_manage'] = user.is_active and any(
+        member.user_id == user.pk and member.role == Membership.Role.GM and member.user.is_active
+        for member in campaign.memberships.all()
+    )
+    return row
 
 
 def inside_response(request, *, section='campaigns', dialog='', campaign=None, form=None,
@@ -38,12 +48,12 @@ def inside_response(request, *, section='campaigns', dialog='', campaign=None, f
         section = 'addons'
     if section not in SECTIONS or (request.user.role != 'owner' and section in ('privacy', 'systems', 'addons', 'marketplace', 'administration')):
         section = 'campaigns'
-    rows = [campaigns.public_campaign(c) for c in Campaign.objects.visible_to(request.user).with_members()]
+    rows = [_campaign_row(c, request.user) for c in Campaign.objects.visible_to(request.user).with_members()]
     query = request.GET.get('search', request.POST.get('_insideSearch', ''))
     system = request.GET.get('system', request.POST.get('_insideSystem', ''))
     visible = [row for row in rows if (not system or row['system'] == system) and
                query.strip().lower() in f"{row['name']} {row['description']}".lower()]
-    selected = campaigns.public_campaign(campaign) if campaign else None
+    selected = _campaign_row(campaign, request.user) if campaign else None
     rulesets = list_rulesets()
     dialog_rulesets = list(rulesets)
     if campaign and campaign.system and campaign.system not in {row['systemId'] for row in rulesets}:

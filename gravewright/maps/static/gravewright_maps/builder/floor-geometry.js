@@ -1,5 +1,6 @@
 /** Bounded continuous floor geometry in map cells; saved rings are bbox-local. */
 import { terrainBrushAlpha, terrainBrushError } from './terrain-brush.js';
+import { documentBounds } from './document-bounds.js';
 export const floorShapeLimits = Object.freeze({ rings: 128, vertices: 256, points: 4096, documentPoints: 16384,
     minSize: .001, paintPixels: 67108864, edgePixels: 8388608 });
 const epsilon = 1e-9;
@@ -368,7 +369,7 @@ export function floorFreeContours(document, { mode = 'brush', start, end = start
         rings = path.length < 2 ? [sweptRing(start, start, size, shape, anchor)]
             : path.slice(1).map((point, index) => sweptRing(path[index], point, size, shape, anchor));
     } else return [];
-    const bounds = { x: 0, y: 0, width: document.columns, height: document.rows }, unique = new Map();
+    const bounds = { x: 0, y: 0, ...documentBounds(document) }, unique = new Map();
     let count = 0;
     for (const ring of rings) {
         const clipped = clipFloorRing(ring, bounds);

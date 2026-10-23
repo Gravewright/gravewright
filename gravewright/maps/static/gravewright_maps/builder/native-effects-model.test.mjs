@@ -4,6 +4,26 @@ import { newDocument, defaultLayers } from './model.js';
 import { nativeEffectState, hasNativeEffects } from './native-effects-model.js';
 import { effectLights } from '../../../frontend/widgets/game-board/model/effect-lighting.js';
 
+test('adopted scenes retain their exact raster extent and native grid ranges in preview', () => {
+    const doc = newDocument(); doc.cellSize = 70; doc.columns = 15; doc.rows = 12;
+    doc.sceneGeometry = { width: 1001, height: 801, gridSize: 35.5, gridOffsetX: 7.25, gridOffsetY: -2.5 };
+    doc.lights.push({ id: 'native', x: 2, y: 3, brightRadius: 2, dimRadius: 5, enabled: true, intensity: 1 });
+    doc.walls.push({ id: 'collision', artwork: false, x1: 0, y1: 0, x2: 10, y2: 0 });
+    const before = structuredClone(doc), projected = nativeEffectState(doc);
+    assert.deepEqual([projected.cell, projected.width, projected.height], [70, 1001, 801]);
+    assert.deepEqual([projected.state.lights[0].x, projected.state.lights[0].y], [140, 210]);
+    assert.equal(projected.state.lights[0].bright_radius * projected.cell, 71);
+    assert.equal(projected.state.lights[0].dim_radius * projected.cell, 177.5);
+    assert.equal(projected.state.walls.length, 1, 'geometry without artwork still occludes native lights');
+    assert.deepEqual(doc, before);
+    doc.sceneGeometry.imageScale = 2;
+    const scaled = nativeEffectState(doc);
+    assert.deepEqual([scaled.width, scaled.height], [1001, 801]);
+    assert.deepEqual([scaled.state.lights[0].x, scaled.state.lights[0].y], [140, 210], 'image scale changes native grid ranges, not pixel anchors');
+    assert.equal(scaled.state.lights[0].bright_radius * scaled.cell, 142);
+    assert.equal(scaled.state.lights[0].dim_radius * scaled.cell, 355);
+});
+
 test('native projection scales only positions and geometry while retaining cell-based native ranges', () => {
     const doc = newDocument(); doc.layers = defaultLayers();
     const layerId = doc.layers[0].id;

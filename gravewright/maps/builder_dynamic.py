@@ -9,6 +9,7 @@ from PIL import Image
 
 from .models import MapAsset
 from .services import MapError
+from .builder_geometry import canvas_size
 
 
 MAX_SURFACES = 64
@@ -34,21 +35,24 @@ def _box(doc, rows, frames=None):
         return None
     left = max(0, math.floor(min(x for x, _ in points)))
     top = max(0, math.floor(min(y for _, y in points)))
-    right = min(doc["columns"] * cell, math.ceil(max(x for x, _ in points)))
-    bottom = min(doc["rows"] * cell, math.ceil(max(y for _, y in points)))
+    width, height = canvas_size(doc)
+    right = min(width, math.ceil(max(x for x, _ in points)))
+    bottom = min(height, math.ceil(max(y for _, y in points)))
     return (left, top, right, bottom) if right > left and bottom > top else None
 
 
 def plan(doc):
     """Split static runs around promoted sources, retaining their exact order."""
-    promoted = [row for kind in ("floors", "walls") for row in doc[kind] if row.get("dynamic") is True]
+    promoted = [row for kind in ("floors", "walls") for row in doc[kind]
+                if row.get("dynamic") is True and row.get("artwork") is not False]
     if not promoted:
         return []
     if len(promoted) > MAX_SURFACES:
         raise MapError("The map has too many dynamic surfaces.")
     from .builder_services import segments
     from .wall_joins import wall_join_geometry
-    frames = wall_join_geometry(doc, [span for span in segments(doc) if not span["door"]])
+    frames = wall_join_geometry(doc, [span for span in segments(doc)
+                                     if not span["door"] and span["wall"].get("artwork") is not False])
     floors_live = any(row.get("dynamic") is True for row in doc["floors"])
     planes, pixels, erase_work = [], 0, 0
     layers = doc.get("layers") or [{"id": None}]
@@ -57,7 +61,8 @@ def plan(doc):
         if kind == "floors" and not floors_live:
             continue
         for layer in layers:
-            rows = [row for row in doc[kind] if row.get("layerId", first) == layer["id"]]
+            rows = [row for row in doc[kind] if row.get("layerId", first) == layer["id"]
+                    and row.get("artwork") is not False]
             pending = []
             if kind == "floors" and (group_bounds := _box(doc, rows)):
                 pixels += (group_bounds[2] - group_bounds[0]) * (group_bounds[3] - group_bounds[1])

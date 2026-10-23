@@ -85,6 +85,20 @@ user's membership and checks streamer expiration. `api.Context` holds normalized
 campaign/user UUIDs only: constructing one does not grant authority or cache roles.
 Public service entry points receive identifiers and resolve membership again.
 
+The browser domain registry is generated from `modules/contracts/frontend.json`.
+Its authenticated dispatch delegates transactions to owning services, so map
+rendering is not held inside a transport transaction. Binary domain calls use a
+separate multipart/byte route with the same campaign and module lease checks.
+`maps/library_services.py` and `table/permission_services.py` share native library
+and ownership rules with the public Python facades and browser methods.
+
+`campaigns/system_api.py` provides an explicit callback registry for the active
+campaign system. Trusted packages register descriptions and read/write handlers
+at startup; membership, JSON bounds and streamer write restrictions remain host
+checks. Resource access, revisions and receipts remain provider responsibilities.
+The PDF package registers its own mapping, template and saved-roll operations;
+the host dispatcher contains no PDF-system conditionals.
+
 WebSocket authorization also rereads the live database session, its configured auth
 backend and the user's session authentication hash. It checks membership when
 receiving commands, in delivery handlers and during heartbeats. Removing a member,
@@ -158,6 +172,24 @@ and revocation checks. The Inside interface composes these workflows in
 An `Actor` is the reusable character source. `pdf_system/schema.py` normalizes its
 sheet document, including PDF asset references, field values, bars, token settings
 and active effects. Actor metadata and sheet data have separate revision counters.
+The PDF system also owns optional `pdf.manualFields`: GM-authored, source-bound
+overlay definitions for PDFs without form fields. Normalized page rectangles
+survive zoom and page navigation; values use stable keys in `fields`. Only the
+GM may alter the layout, while authorized players can fill its controls. Actor
+and independent-token saves use the same schema and revision boundary.
+Optional `pdf.fieldActions` binds GM-authored roll formulas to native or manual
+fields by PDF source. The dice parser validates configuration without rolling;
+execution resolves `@value` and uses the normal dice submission and chat flow.
+The field-action modal saves an isolated candidate through the existing sheet
+revision boundary, including token-bar value transfers.
+`pdf.fieldBindings` records validated addresses for `@{field-key}` references;
+`pdf.calculatedFields` uses deterministic formulas that the server recomputes
+after validating dependencies and rejecting cycles. Layout history restores
+definitions while preserving current character values. Campaign-scoped
+`pdf_system.MappingTemplate` records hold portable mappings without PDFs or
+character values, with GM-only revisioned operations and atomic batch application.
+Campaign archives include these templates. Browser diagnostics compare mappings
+with the active document, and filled-PDF export creates a separate flattened copy.
 
 A `Token` places an actor in a scene. Linked tokens use `Actor.data`; unlinked tokens
 use their own `snapshot` and `sheet_version`. The first placement is linked. Placing

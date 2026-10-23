@@ -347,7 +347,7 @@ class JournalWindow {
         show(this.$('[data-action=edit]'), d.can_edit);
         const edit = this.$('[data-action=edit]');
         edit.querySelector('svg').replaceWith(icon(this.editing ? 'Eye' : 'PencilSimple'));
-        edit.querySelector('span').textContent = this.editing ? 'Read' : 'Edit';
+        edit.querySelector('span').textContent = this.editing ? modalText('Read', 'Ler') : modalText('Edit', 'Editar');
         show(this.$('[data-action=present]'), this.isGM && !d.presentation_ticket);
         show(this.$('[data-action=gm]'), this.isGM && this.editing);
         show(this.$('[data-filter=gm]'), this.isGM);
@@ -433,7 +433,7 @@ class JournalWindow {
         if (!count) {
             const p = document.createElement('p');
             p.className = 'diary-workspace__empty';
-            p.textContent = search || this.filter !== 'all' ? 'No pages match the search.' : 'This journal has no pages yet.';
+            p.textContent = search || this.filter !== 'all' ? modalText('No pages match the search.', 'Nenhuma página corresponde à pesquisa.') : modalText('This journal has no pages yet.', 'Este diário ainda não tem páginas.');
             nav.append(p);
         }
         for (const b of this.el.querySelectorAll('[data-add]'))
@@ -444,7 +444,7 @@ class JournalWindow {
         const host = this.$('.diary-workspace__page');
         host.replaceChildren();
         const p = this.current;
-        this.$('.diary-workspace__identity small').textContent = p?.category || 'Journal';
+        this.$('.diary-workspace__identity small').textContent = p?.category || modalText('Journal', 'Diário');
         this.$('.diary-workspace__identity strong').textContent = this.selected === 'gm' ? 'GM area' : p?.title || this.draft.title;
         this.$('[data-page-count]').textContent = p ? `${this.pages.indexOf(p) + 1} / ${this.pages.length}` : '';
         const editor = (value, label, save) => { const el = document.createElement('div'); host.append(el); const instance = richText(el, value, !this.editing || p?.can_edit === false, file => upload(this.draft.id, file), label, next => { save(next); this.touch(); }); this.cleanups.push(() => instance.destroy()); };

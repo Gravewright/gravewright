@@ -96,6 +96,24 @@ paredes e configurações salvas em inglês, português e espanhol, em larguras 
 desktop e celular. Usa uma campanha isolada e aceita `--output` e
 `--browser-executable`.
 
+O [cenário de gerenciamento de campanha](../../tests/e2e/campaign_management.py)
+usa dados descartáveis para exercitar fichas PDF nativas, editores de diários e
+missões, acesso de comestres, requisições negadas e revogação do acesso de mestre.
+Confere que o gerenciamento não abre WebSocket do jogo nem presença na mesa,
+comparando snapshots anteriores e posteriores da transmissão, da navegação
+privada de cenas e da presença. Também confere inglês, português e espanhol em
+larguras de celular e depois abre a mesa real para verificar documentos
+compartilhados, filtragem para jogadores e reprodução de áudio em dois clientes.
+Essa descrição informa a cobertura do cenário, não o resultado de uma execução.
+
+```bash
+uv run --locked python tests/e2e/campaign_management.py --output data/cm-check --browser-executable "<existingChromium>"
+```
+
+Substitua `<existingChromium>` por um executável Chromium existente. Escolha uma
+pasta de saída nova ou vazia a cada execução; fixtures, logs, comparações de
+estado e capturas ficam nessa pasta dentro da instalação.
+
 ```bash
 uv run --locked playwright install chromium
 uv run --locked python tests/e2e/authentication.py

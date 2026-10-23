@@ -35,9 +35,35 @@ não podem editá-los. Abrir o editor não muda a transmissão dos jogadores.
 
 Para retomar, use **Painéis → Projetos** ou clique com o botão direito em uma
 cena vinculada a um projeto e escolha **Editar com MapBuilder**. Ela tem o ícone
-de mapa vermelho no diretório do mestre. Uma cena importada como imagem comum
-ou por Universal VTT não tem projeto editável do Builder, a menos que tenha sido
-criada a partir de um projeto do Builder.
+de mapa vermelho no diretório do mestre. **Editar com MapBuilder** também funciona
+em cenas comuns de imagem e Universal VTT: a primeira abertura cria um projeto
+editável vinculado.
+
+### Editar uma cena existente
+
+Como mestre, clique com o botão direito em qualquer cena e escolha **Editar com
+MapBuilder**. A imagem base vira o fundo do projeto; paredes, portas e luzes
+compatíveis viram objetos editáveis. Abrir não duplica a cena, não muda a
+transmissão e não altera a seleção de cena do mestre. As aberturas seguintes
+reutilizam o mesmo projeto. Use **Atualizar cena** para aplicar as edições à cena.
+Com uma cena aberta, o mestre também pode usar **Editar mapa com map builder**
+na barra superior, ao lado de Jogo, GM e Efeitos. O botão edita a cena que o mestre
+está vendo, incluindo uma seleção privada, e fica oculto quando não há cena aberta.
+
+Dimensões exatas da imagem, tamanhos fracionários da grade e deslocamentos são
+mantidos. Paredes de colisão importadas começam com **Mostrar a imagem da parede**
+desativado, para não pintar linhas novas sobre o mapa pronto. Elas aparecem como
+guias tracejadas na edição e ficam ocultas na Prévia. Portas têm a opção
+equivalente. A arte incorporada na imagem de origem não pode ser removida ao
+mover uma parede ou abrir uma porta.
+
+Tokens, névoa, desenhos, imagens sobrepostas, áudio e objetos nativos complexos
+continuam na cena. Objetos fora dos limites do Builder ou com propriedades
+incompatíveis continuam nativos; os avisos de importação ficam em **Revisão**.
+As atualizações os preservam, mas eles não aparecem na prévia do Builder.
+Imagem base ausente ou ilegível impede a conversão sem deixar projeto parcial.
+Para grades nativas fracionárias, desative o encaixe ao posicionar entre as
+células da área de trabalho do Builder.
 
 ### Projeto, prévia e cena do jogo
 
@@ -257,7 +283,7 @@ editor. **Voltar à edição** restaura a visibilidade anterior e retoma a ediç
 | **Tiles** | Salas em grade, materiais repetidos, formas precisas ou contornos definidos sem encaixe | Imagens/formas concretas do chão, paredes e demais objetos do projeto |
 | **Pintura** | Transições suaves de terreno e mistura gradual de materiais | Traços e suas máscaras, com os mesmos objetos e camadas do projeto |
 | **Importar mapa pronto** | PNG/JPEG/WebP/TIFF finalizado para traçar ou decorar | Uma imagem de fundo e os objetos colocados sobre ela |
-| **Importar Universal VTT** | `.uvtt`, `.dd2vtt` ou `.df2vtt` com grade/paredes/portas/luzes | Objetos nativos de cena; cria uma cena separada, não um projeto do Builder |
+| **Importar Universal VTT** | `.uvtt`, `.dd2vtt` ou `.df2vtt` com grade/paredes/portas/luzes | Uma cena nova vinculada a um projeto do Builder, com imagem de fundo e objetos compatíveis editáveis |
 
 Tiles e Pintura são modos do mesmo projeto; alterná-los preserva o trabalho
 existente. Um fundo de mapa pronto pode acompanhar qualquer um deles. Para
@@ -1889,6 +1915,26 @@ Paredes e portas também podem guardar os campos nativos `presentation`,
 do jogo; `bottom/top: null` significa ausência de limite de elevação. A geração
 converte comportamento e elevação nos campos nativos de parede. Objetos antigos
 que omitem esses ajustes conservam seus padrões sem reescrever a origem.
+`artwork` booleano opcional em paredes e portas tem padrão verdadeiro. Falso
+mantém a barreira sem pintar sua arte; a geometria de colisão importada usa essa
+opção. Uma parede de colisão independente conserva seu ID nativo ao ser movida.
+Documentos da versão três podem guardar `sceneGeometry: {width, height, gridSize,
+gridOffsetX, gridOffsetY, imageScale}`. Largura/altura são inteiros positivos exatos em pixels;
+a grade mantém tamanho, deslocamentos e escala da imagem (opcional, padrão 1).
+Colunas/linhas inteiras
+descrevem a área de trabalho que contém o mapa; a imagem base e a saída usam as
+dimensões exatas. Mudar dimensões ou tamanho da célula remove essa geometria.
+`POST /api/containers/{campaign}/map-builder/scenes/{scene}/adopt` recebe
+`{request_id, expected_scene_version}` e retorna `{project, scene, warnings}`.
+Confere permissão de mestre e campanha da cena, serializa a criação sob o bloqueio
+da campanha, reutiliza vínculos existentes e registra recibo para repetição.
+Arquivos criados por uma conversão que falha são removidos. O manifesto registra
+exatamente quais objetos nativos originais pertencem ao projeto; as atualizações
+preservam conteúdo externo e as verificações normais de revisão/conflito.
+A sincronização também importa a calibração nativa da grade sem mover objetos.
+Alterações simultâneas no mesmo campo de calibração geram conflito; mudanças nas
+dimensões do raster nativo também, pois exigem um fundo novo em vez de esticar
+silenciosamente a imagem salva no projeto.
 Portas e decorações podem guardar `interactionEnabled` booleano estrito;
 ausência mantém o padrão habilitado sem reescrever documentos antigos.
 `editingMode: "tiles" | "paint"` opcional escolhe a área de trabalho; a ausência

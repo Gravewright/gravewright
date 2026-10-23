@@ -1,8 +1,8 @@
 import { mountModal } from '/static/gravewright_table/modal.js';
 import { HttpClient } from '/static/gravewright_modules/http-client.js';
 
-/** Interchange the visible map and native geometry; never imply a flattened image is an editable project. */
-export function openUniversalVtt({ campaignId, sceneId, folderId, t, onImported }) {
+/** Interchange native geometry, optionally opening it as an editable Builder project. */
+export function openUniversalVtt({ campaignId, sceneId, folderId, builderEditable = false, t, onImported }) {
     if (!document.querySelector('link[data-uvtt-css]')) {
         const link = document.createElement('link'); link.rel = 'stylesheet'; link.dataset.uvttCss = '';
         link.href = new URL('./universal-vtt.css', import.meta.url).href; document.head.append(link);
@@ -28,11 +28,13 @@ export function openUniversalVtt({ campaignId, sceneId, folderId, t, onImported 
     if (!exporting) {
         const fileLabel = make('label'), nameLabel = make('label');
         fileLabel.append(make('span', {}, t('Universal VTT file')), file); nameLabel.append(make('span', {}, t('Scene name')), name);
-        body.append(fileLabel, nameLabel, make('p', { class: 'universal-vtt__hint' }, t('Import creates a new GM-only scene. The background image cannot be split back into Builder tiles or layers.')));
+        body.append(fileLabel, nameLabel, make('p', { class: 'universal-vtt__hint' }, t(builderEditable
+            ? 'Import opens an editable Builder project linked to a new GM-only scene. Compatible walls, portals and lights are editable; the background remains one image.'
+            : 'Import creates a new GM-only scene. The background image cannot be split back into Builder tiles or layers.')));
     }
     const download = make('a', { class: 'universal-vtt__download', 'data-uvtt-download': '', hidden: '' }, t('Download Universal VTT'));
     footer.append(action, download); body.append(status, notes); modal.append(header, body, footer);
-    let busy = false, disposed = false, requestId = crypto.randomUUID(), url;
+    let busy = false, disposed = false, requestId = crypto.randomUUID(), url, imported;
     const changed = () => { requestId = crypto.randomUUID(); status.textContent = ''; notes.replaceChildren(); };
     file.addEventListener('change', () => { changed(); if (!name.value && file.files[0]) name.value = file.files[0].name.replace(/\.[^.]+$/, '').slice(0, 120); }, { signal });
     name.addEventListener('input', changed, { signal });
@@ -44,10 +46,13 @@ export function openUniversalVtt({ campaignId, sceneId, folderId, t, onImported 
         try {
             let result;
             if (exporting) result = await http.get(`/api/maps/${encodeURIComponent(sceneId)}/universal-vtt`, { signal, timeoutMs: null });
+            else if (imported) result = imported;
             else {
                 const form = new FormData(); form.append('file', file.files[0]); form.append('name', name.value.trim()); form.append('request_id', requestId);
                 if (folderId) form.append('folderId', folderId);
+                if (builderEditable) form.append('builderEditable', 'true');
                 result = await http.upload(`/api/containers/${encodeURIComponent(campaignId)}/universal-vtt/import`, form);
+                imported = result;
             }
             if (disposed) return;
             for (const warning of result.warnings || []) notes.append(make('li', {}, t(warning)));
@@ -57,13 +62,17 @@ export function openUniversalVtt({ campaignId, sceneId, folderId, t, onImported 
                 download.href = url; download.download = result.filename; download.hidden = false; action.hidden = true;
                 status.textContent = t('Export ready. Review the format limitations before downloading.');
             } else {
-                status.textContent = t('Scene imported. It is available in Scenes and has not been activated for players.');
-                action.hidden = true; file.disabled = true; name.disabled = true; onImported?.(result);
+                await onImported?.(result);
+                if (disposed) return;
+                status.textContent = t(builderEditable
+                    ? 'Map imported into Builder. Review the editable geometry before updating the scene.'
+                    : 'Scene imported. It is available in Scenes and has not been activated for players.');
+                action.hidden = true; file.disabled = true; name.disabled = true;
             }
         } catch (error) {
             if (!disposed && error.name !== 'AbortError') status.textContent = t(error.message || 'Universal VTT interchange failed.');
         } finally {
-            if (!disposed) { busy = false; action.disabled = false; close.disabled = false; modal.setAttribute('aria-busy', 'false'); if (!action.hidden) { file.disabled = false; name.disabled = false; } }
+            if (!disposed) { busy = false; action.disabled = false; close.disabled = false; modal.setAttribute('aria-busy', 'false'); if (!action.hidden && !imported) { file.disabled = false; name.disabled = false; } }
         }
     }
     action.addEventListener('click', () => void perform(), { signal });

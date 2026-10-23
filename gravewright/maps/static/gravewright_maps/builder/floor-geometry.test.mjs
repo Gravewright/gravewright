@@ -19,6 +19,19 @@ function vector(contours, extra = {}) {
     return { id: 'free', layerId: documentWithLayer().layers[0].id, assetId: 'stone', rotation: 0, ...floorShapeFromRings(contours), ...extra };
 }
 
+test('continuous floor geometry clips to exact imported raster dimensions', () => {
+    const document = { ...documentWithLayer(), columns: 4, rows: 3, cellSize: 50,
+        sceneGeometry: { width: 197, height: 145, gridSize: 50.5, gridOffsetX: 0, gridOffsetY: 0 } };
+    const contours = floorFreeContours(document, { mode: 'rectangle', start: { x: 3, y: 2 }, end: { x: 5, y: 4 } });
+    const floor = floorShapeFromRings(contours);
+    assert.equal(floorContainsPoint(floor, { x: 3.9, y: 2.85 }), true);
+    assert.equal(floorContainsPoint(floor, { x: 3.95, y: 2.85 }), false);
+    assert.ok(Math.abs(floor.x + floor.width - 3.94) < 1e-8);
+    assert.ok(Math.abs(floor.y + floor.height - 2.9) < 1e-8);
+    const outside = floorFreeContours(document, { mode: 'rectangle', start: { x: 3.95, y: 2 }, end: { x: 4, y: 2.5 } });
+    assert.deepEqual(outside, []);
+});
+
 test('free rectangles retain fractional edges and circles use a smooth contour rather than cell stamps', () => {
     const document = documentWithLayer();
     const rectangle = floorFreeContours(document, { mode: 'rectangle', start: { x: 1.125, y: 2.375 }, end: { x: 3.275, y: 4.625 } });

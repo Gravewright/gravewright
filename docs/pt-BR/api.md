@@ -7,7 +7,7 @@ O Gravewright possui três interfaces relacionadas. Elas usam as mesmas verifica
 | Interface | Entrada | Marcador atual | Uso previsto |
 | --- | --- | --- | --- |
 | Python | `from api import actors, ...` | `api.API_VERSION == "1.0"` | Integrações confiáveis no servidor com Django inicializado |
-| API de domínio no navegador | `window.gravewright` ou `api` do contexto do módulo | `api.version == "1.1.0"` | Frontend nativo e extensões de navegador |
+| API de domínio no navegador | `window.gravewright` ou `api` do contexto do módulo | `api.version == "1.2.0"` | Frontend nativo e extensões de navegador |
 | Operações originais de módulos | `host.call(name, payload, options)` do bloco montado | SDK `1.0.0` | Módulos de navegador instalados e ativos |
 
 A fachada Python reexporta funções selecionadas dos serviços; não descobre plugins nem registra apps Django. As APIs do navegador fazem requisições autenticadas a esses serviços. O registro original do SDK é menor e possui schemas JSON explícitos. Não reutilize payloads entre `api.actors.update(...)` e `host.call("actor.update", ...)` sem conferir seus contratos. O projeto não distribui atualmente SDK npm, especificação OpenAPI nem verificador automático de compatibilidade entre versões. Os marcadores descrevem este checkout, sem garantir estabilidade de detalhes internos não documentados. Consulte o [licenciamento](../../LICENSING.pt-BR.md).
@@ -36,13 +36,18 @@ Todo domínio abaixo possui `state(payload = {}, options)` e os métodos listado
 | --- | --- |
 | `actors` | `create`, `update`, `delete`, `setPermissions`, `saveSheet`, `createFolder`, `updateFolder`, `deleteFolder`, `deleteAsset` |
 | `tokens` | `place`, `move`, `remove`, `duplicate`, `setHidden`, `setVision`, `configure`, `addCondition`, `removeCondition` |
-| `maps` | `update`, `move`, `delete`, `activate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder` |
+| `maps` | `update`, `move`, `delete`, `activate`, `navigate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder`, `exportUniversalVtt` |
 | `journals` | `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset` |
 | `items` | `create`, `update`, `delete`, `duplicate`, `setPermissions`, `createFolder`, `updateFolder`, `deleteFolder` |
 | `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
 | `cards` | `define`, `instantiate`, `create`, `draw`, `shuffle`, `reset`, `deleteDeck`, `discard`, `return`, `give`, `place`, `take`, `flip`, `move` |
 | `audio` | `updateTrack`, `deleteTrack`, `createPlaylist`, `updatePlaylist`, `deletePlaylist`, `createSpatialSound`, `updateSpatialSound`, `deleteSpatialSound`, `play`, `pause`, `stop`, `seek`, `setVolume`, `startScore`, `pauseScore`, `resumeScore`, `stopScore`, `nextScore`, `previousScore` |
 | `compendiums` | `create`, `configure`, `read`, `delete`, `add`, `remove`, `import`, `setPermissions` |
+| `mapBuilder` | `read`, `save`, `generate`, `update`, `sync`, `adopt` |
+| `blueprints` | `save`, `templates`, `readTemplate`, `saveTemplate`, `deleteTemplate`, `test`, `testDraft`, `control` |
+| `library` | `createFolder`, `updateFolder`, `deleteFolder`, `move`, `delete` |
+| `ownership` | `read`, `update`; `state`/`read` exigem `{kind, id}` |
+| `system` | `call(operation, data, options)`; `state` descreve as operações do sistema da campanha |
 
 Formas adicionais:
 
@@ -77,16 +82,144 @@ Mutações geram um UUID `requestId` quando ele não é fornecido. Comandos que 
 
 `options.signal` cancela operações pendentes. Um contexto descartado resulta em `stale_context`; cancelamento explícito resulta em `cancelled` nas operações com escopo do módulo. Trate `error.code`, não textos traduzidos. Adaptadores HTTP globais também podem expor erros de transporte/autenticação dos endpoints.
 
+### Descoberta de capacidades e domínios adicionais
+
+`api.capabilities()` retorna uma cópia independente do contrato local do
+navegador, incluindo métodos, leituras, transportes binários e operações
+demoradas. A seção `global` lista os adaptadores exclusivos da página para
+contas, campanhas e administração; não os concede a uma montagem de módulo.
+Não faz requisições nem concede permissões. Em Python,
+`api.capabilities()` retorna `{pythonVersion, browser}` sem acessar o banco.
+As operações do sistema atual são descobertas por `await api.system.state()`.
+
+Os novos domínios mantêm campanha, verificações de mestre, UUIDs de operações e
+revisões esperadas dos serviços nativos. Os payloads públicos usam estes nomes:
+
+| Operação | Payload |
+| --- | --- |
+| `mapBuilder.state` / `read` | `{}` / `{projectId}` |
+| `mapBuilder.save` | `{projectId, expectedVersion, document, folderId?}`; na criação, use UUID novo e `expectedVersion: 0` |
+| `mapBuilder.generate` | `{projectId, expectedVersion}`; cria uma cena privada |
+| `mapBuilder.update` / `sync` | `{projectId, expectedVersion, expectedSceneVersion}` |
+| `mapBuilder.adopt` | `{sceneId, expectedSceneVersion}` |
+| `blueprints.state` | `{sceneId}`; rede de automações autorizada |
+| `blueprints.save` | `{sceneId, elementId, expectedVersion, expectedProjectVersion, blueprint}` |
+| `blueprints.templates` / `readTemplate` | `{}` / `{templateId}` |
+| `blueprints.saveTemplate` / `deleteTemplate` | `{templateId, expectedVersion, name, description, definition}` / `{templateId, expectedVersion}` |
+| `blueprints.test` | `{sceneId, elementId, expectedVersion, event, tokenId?, blueprint?}` |
+| `blueprints.testDraft` | `{document, elementId, event, actorId?}` |
+| `blueprints.control` | `{sceneId, elementId, expectedVersion, action, value?}` |
+| `maps.exportUniversalVtt` | `{sceneId}`; JSON nativo de intercâmbio |
+| `maps.navigate` | `{mapId}`; `mapId: null` explícito volta a seguir a transmissão em contexto sem cena fixa |
+| `library.createFolder` | `{name}`; retorna `{ok, id}` |
+| `library.updateFolder` / `deleteFolder` | `{folderId, name}` / `{folderId}` |
+| `library.move` / `delete` | `{assetId, folderId}` / `{assetId}`; aliases nativos snake_case continuam aceitos |
+| `ownership.read` / `state` | `{kind, id}`; revisão, níveis, permissões e membros para o mestre |
+| `ownership.update` | `{kind, id, version, permissions, reset?}`; mantém as regras nativas de lote/páginas |
+
+Os tipos de ownership são `actors`, `items`, `journals`, `scenes`, `cards`,
+`compendiums`, `tokens`, `pages` e os grupos `actor-folders`, `item-folders`,
+`journal-folders`, `scene-folders`. A página usa ID `journalUUID:sectionId`;
+revisões de pastas em lote são strings opacas. Nenhum método novo substitui
+silenciosamente uma revisão fornecida. Atualizações do Builder também conferem
+a cena gerada com a cena autoritativa da montagem. Ensaios mantêm o rollback nativo.
+
+Renderização e criação de tiles ocorrem fora de uma transação global do
+transporte; cada serviço mantém seus próprios limites de commit e limpeza.
+Geração, atualização de cenas, exportação UVTT e ensaios começam sem prazo
+artificial no cliente. `options.timeoutMs` define um prazo; `null` o desativa.
+Os novos domínios de coleção não acrescentam eventos de socket: releia após
+gravar ou use as invalidações existentes de mapas/atores.
+
+### Operações dos sistemas e PDF System
+
+O host encaminha `api.system.call(name, data, options)` somente ao provedor do
+sistema atual da campanha. Nome ou payload não selecionam outro sistema.
+Pacotes confiáveis de servidor registram callbacks no `AppConfig.ready()` com
+`api.systems.register_api(system_id, operations)`. Cada entrada declara
+`{effect: "read" | "write", handler, description?}`, sem consultar o banco no
+registro. O handler recebe `(campaign_id, user_id, payload, request_id, scene_id)`
+e controla validação dos recursos, transações, revisões, recibos e notificações.
+O host verifica participação atual, limita o JSON, impede trocar a cena montada
+e rejeita escritas de streamers antes de chamar o handler.
+
+O provedor PDF integrado expõe estes nomes pela API genérica:
+
+| Operação | Dados e comportamento |
+| --- | --- |
+| `pdf.read` | `{actorId, tokenId?}`; ficha nativa autorizada com `source` atual |
+| `pdf.configure` | `{actorId, tokenId?, source, version, sheetVersion, changes}`; configuração parcial exclusiva do mestre |
+| `pdf.exportMapping` | `{actorId, tokenId?, source?}`; pacote portátil sem PDF ou valores, exclusivo do mestre |
+| `pdf.applyMapping` | `{actorId, tokenId?, source, version, sheetVersion, bundle}`; aplicação em ator ou token independente pelo mestre |
+| `pdf.diagnostics` | `{actorId, tokenId?, source?, document?}`; diagnóstico de metadados/cálculos sem gravação |
+| `pdf.roll` | `{actorId, tokenId?, field, source?, visibility?, sceneId?}`; ação salva autorizada com dados/chat e recibos nativos |
+| `pdf.templates.list` / `read` / `export` | `{}` / `{id}` / `{id}`; biblioteca da campanha para o mestre |
+| `pdf.templates.create` / `update` | `{name, bundle}` / `{id, revision, name, bundle}` |
+| `pdf.templates.delete` / `import` | `{id, revision}` / `{name, bundle}`; importação aceita JSON original ou objeto existente |
+| `pdf.templates.apply` | `{id, revision, targets:[{actorId, version, sheetVersion, source}]}`; lote atômico de até 100 atores |
+
+`changes` aceita `manualFields`, `fieldActions`, `fieldBindings`,
+`calculatedFields` sem origem, `bindings` das barras e metadados esperados em
+`document`. Seções omitidas e valores atuais são preservados. A validação de
+cálculos e ciclos continua nativa. Snapshots mantêm nome, permissões e valores
+da própria cópia. Importações conservam o limite de 1 MB por arquivo e rejeitam
+chaves duplicadas/números não finitos quando recebem o texto original.
+
+```javascript
+const capabilities = await api.system.state();
+const sheet = await api.system.call('pdf.read', { actorId });
+const bundle = await api.system.call('pdf.exportMapping', { actorId, source: sheet.source });
+const template = await api.system.call('pdf.templates.create', {
+  name: 'Mapeamento reutilizável', bundle,
+}, { requestId: crypto.randomUUID() });
+```
+
+Inspeção com PDF.js, renderização achatada, seleção e histórico permanecem no
+navegador. O diagnóstico do servidor usa vínculos/cálculos salvos e um descritor
+opcional observado pelo cliente; não afirma interpretar bytes do PDF.
+
+### Métodos binários dos domínios
+
+Métodos binários recebem `File`/`Blob` real em `payload.file`, usam multipart com
+CSRF e conservam a identidade da ativação/montagem do módulo. Downloads retornam
+`{blob, name, contentType, size}`. Arquivos não são codificados no corpo JSON.
+
+| Método | Payload adicional |
+| --- | --- |
+| `maps.upload` | `{name, settings?, activate?}` |
+| `maps.importUniversalVtt` | `{name, folderId?, builderEditable?}`; use `options.requestId` ao repetir a importação |
+| `library.upload` | `{purpose?, folderId?}`; uploader nativo de imagens/áudio/PDF |
+| `library.download` | `{id, kind?: "image" | "audio" | "pdf"}` |
+| `actors.uploadAsset` / `downloadAsset` | `{folderId?}` / `{id}`; provedor de arquivos do sistema e download autorizado |
+| `actors.uploadImage` | `{id, kind: "portrait" | "token"}` |
+| `audio.upload` | `{name?, purpose?, folderId?}` |
+| `cards.uploadAsset` | `{purpose: "card_front" | "card_back"}` |
+| `journals.uploadAsset` / `downloadAsset` | `{journalId}` / `{id}` |
+
+Valem os limites nativos de formato, tamanho e complexidade. Uploads criam
+arquivos e não têm recibos de repetição, exceto UVTT. Guarde os IDs retornados
+antes de iniciar outra importação. `onProgress` informa bytes concluídos e
+`signal` cancela trabalho; descartar o contexto impede callbacks posteriores.
+Transferências começam sem prazo artificial, com `timeoutMs` opcional. IDs de
+outra campanha são rejeitados mesmo quando o usuário participa das duas.
+Os handlers continuam verificando propriedade e visibilidade das páginas;
+a URL ou o adaptador não concedem acesso por si mesmos.
+
 ### Adaptadores de conta, campanha, proprietário e módulos
 
 Disponíveis no objeto global `gravewright`, não na API restrita a domínios do módulo:
 
 | Adaptador | Métodos |
 | --- | --- |
-| `accounts` | `status`, `session`, `login`, `register`, `setup`, `logout`, `update` |
-| `campaigns` | `list`, `create`, `update(id, payload)`, `join(code)`, `remove(id, code)`, `invite(id, payload)`, `rulesets` |
-| `administration` | `status`, `diagnostics`, `settings`, `updateSettings(section, payload)` |
-| `modules` | `list`, `catalog`, `status`, `install(payload)`, `state(tableId)`, `configure(tableId, payload)` |
+| `accounts` | `status`, `session`, `login(payload)`, `register(payload)`, `setup(payload)`, `logout`, `update(payload)`, `home(kind)`, `privacy` |
+| `campaigns` | `list`, `management(id)`, `create(payload)`, `update(id, payload)`, `join(code)`, `remove(id, code)`, `invite(id, payload)`, `removalCode(id, payload)`, `invitationStatus(id)`, `revokeInvitation(id)`, `banMember(id, payload)`, `onboarding(id)`, `configureOnboarding(id, payload)`, `claimCharacter(id)`, `streamerLink(id)`, `revokeStreamer(id)`, `rulesets` |
+| `administration` | `status`, `diagnostics`, `settings`, `updateSettings(section, payload)`, `snapshots(id)`, `createSnapshot(id, payload)`, `snapshotAction(id, snapshotId, action, payload)`, `previewSnapshot(id, snapshotId)`, `restoreSnapshot(id, snapshotId, payload)`, `deleteSnapshot(id, snapshotId, payload)`, `clonePreview(id, payload)`, `clone(id, payload)`, `exportCampaign(id)`, `importCampaign(file, payload)` |
+| `administration.updates` | `check`, `notification`, `channel(payload)`, `apply(payload)` |
+| `modules` | `list`, `catalog`, `catalogLatest`, `status`, `install(payload)`, `state(tableId)`, `configure(tableId, payload)`, `activation(payload)`, `update(payload)`, `removalPreview(payload)`, `remove(payload)`, `defaultMarketplace`, `configureDefaultMarketplace`, `acknowledge(tableId, payload)`, `localInstallationInfo`, `installLocal(file, payload)` |
+
+Todo método aceita um argumento final `options` opcional com `signal` e `timeoutMs`; transferências de arquivos também aceitam `onProgress`. As assinaturas e os nomes nativos dos campos estão documentados em [`global-api.js`](../../gravewright/modules/static/gravewright_modules/global-api.js). Ações de snapshots preservam `{confirm}` fornecido pelo chamador, e a remoção de pacotes preserva `confirmedTables`; os adaptadores não preenchem aprovações automaticamente. A exportação retorna `{blob, name, contentType, size}`. A importação de campanha recebe um ZIP como `File`/`Blob` e `{title}` opcional; a instalação local de pacote recebe um ZIP e `{kind: "module" | "system"}`. Não existe endpoint nativo de download de snapshot. Criar a referência da API não executa ações administrativas.
+
+`campaigns.management(id, options)` lê o resumo da campanha exclusivo do mestre sem carregar a mesa nem entrar em sua presença. A [área de gerenciamento](campaign-management.md) usa os mesmos serviços nativos de documentos e verifica o vínculo atual de mestre daquela campanha.
 
 Permissões de proprietário e gerenciamento da campanha continuam verificadas no servidor. Os métodos usam cookies de sessão e obtêm token CSRF antes de escrever. Não há autenticação por chave de API nessa interface. Views e testes dos apps definem os payloads; não coloque credenciais no código de módulos.
 
@@ -187,9 +320,18 @@ Imports e assinaturas públicas; `campaign_id`/`user_id` representam identificad
 
 | Import | Assinaturas |
 | --- | --- |
+| `api` | `API_VERSION == "1.0"`, `capabilities()`; o marcador Python é independente da API de navegador `1.2.0` e do SDK `1.0.0`. [Implementação do catálogo](../../api/__init__.py) |
+| `api.campaigns` | `management(campaign_id, user_id)`; [resumo da campanha exclusivo do mestre](../../gravewright/campaigns/management.py) e [guia de gerenciamento](campaign-management.md) |
 | `api.actors` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `sheet(campaign_id, user_id, actor_id, token_id=None)` |
 | `api.tokens` | `state(campaign_id, user_id, map_id)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.maps` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `layer_state(campaign_id, user_id, scene_id)` |
+| `api.map_builder` | Catálogo de projetos editáveis, revisões, geração, atualização de cenas e adoção; [exports públicos](../../api/map_builder.py), [assinaturas dos projetos](../../gravewright/maps/builder_services.py), [assinatura de adoção](../../gravewright/maps/builder_import.py) |
+| `api.map_blueprints` | Templates de campanha, redes de cenas, controles e ensaios; [exports públicos e referências às assinaturas dos serviços](../../api/map_blueprints.py) |
+| `api.universal_vtt` | Importação/exportação nativa de mapas; [exports públicos](../../api/universal_vtt.py) e [assinaturas](../../gravewright/maps/universal_vtt.py) |
+| `api.pdf_system` | Fichas, configuração de mapeamento, diagnósticos, rolagens salvas e templates; [exports públicos](../../api/pdf_system.py) e [assinaturas](../../gravewright/pdf_system/public.py) |
+| `api.systems` | `capabilities(campaign_id, user_id)`, `call(campaign_id, user_id, operation, payload, request_id=None, *, scene_id=None)`, `register_api(system_id, operations)`; [contrato de provedores](../../gravewright/campaigns/system_api.py) |
+| `api.library` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, payload, request_id)`; [serviço nativo da biblioteca](../../gravewright/maps/library_services.py) |
+| `api.ownership` | `state(campaign_id, user_id, kind, resource_id)`, `command(campaign_id, user_id, kind, resource_id, payload, request_id)`; [serviço do mestre para documentos, pastas e páginas](../../gravewright/table/permission_services.py) |
 | `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.items`, `api.combat`, `api.cards`, `api.audio`, `api.compendiums` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.combat.register_provider` | Registro de callbacks pelo sistema em `AppConfig.ready()`; veja [provedores de combate](modules.md#provedores-de-combate-do-sistema) |
@@ -226,7 +368,7 @@ Registre receivers uma vez em `AppConfig.ready()` de seu app explicitamente inst
 
 ## Transporte e manutenção
 
-O endpoint de domínio do host é `POST /api/tables/<table_id>/api`; módulos instalados usam `POST /api/tables/<table_id>/modules/<module_id>/api`. Recebem `{domain, method, payload, requestId?}` e retornam `{value}`. Módulos também enviam `mountId`, `moduleSetRevision` e `sceneId` opcional; a ponte abre o lease antes. O SDK antigo usa o mesmo prefixo do módulo com `/call` e envelope `{name, payload, ...context}`. As URLs descrevem a implementação para mantenedores; módulos devem usar as APIs fornecidas.
+O endpoint de domínio do host é `POST /api/tables/<table_id>/api`; módulos instalados usam `POST /api/tables/<table_id>/modules/<module_id>/api`. Recebem `{domain, method, payload, requestId?}` e retornam `{value}`. Módulos também enviam `mountId`, `moduleSetRevision` e `sceneId` opcional; a ponte abre o lease antes. Métodos binários usam o sufixo `/files` correspondente, com metadados JSON no campo multipart `metadata` e o arquivo em `file`; downloads retornam bytes. O SDK antigo usa o mesmo prefixo do módulo com `/call` e envelope `{name, payload, ...context}`. As URLs descrevem a implementação para mantenedores; módulos devem usar as APIs fornecidas.
 
 Depois de alterar o registro de métodos:
 

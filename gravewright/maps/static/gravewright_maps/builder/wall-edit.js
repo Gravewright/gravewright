@@ -2,6 +2,7 @@
 import { collinearOverlap, length, objectKinds } from './model.js';
 import { floorGeometryError } from './floor-geometry.js';
 import { copyWallProperties, wallPropertiesKey } from './wall-properties.js';
+import { documentBounds } from './document-bounds.js';
 
 const epsilon = 1e-7;
 const minimumLength = .1;
@@ -39,7 +40,8 @@ function inspect(document) {
     return { layers, identifiers, count };
 }
 function inside(document, point) {
-    return finitePoint(point) && point.x >= 0 && point.y >= 0 && point.x <= document.columns && point.y <= document.rows;
+    const bounds = documentBounds(document);
+    return finitePoint(point) && point.x >= 0 && point.y >= 0 && point.x <= bounds.width && point.y <= bounds.height;
 }
 function validWall(document, wall) {
     return inside(document, endpointPoint(wall, 1)) && inside(document, endpointPoint(wall, 2))
@@ -91,7 +93,7 @@ function idAllocator(context, fragmentIds, makeId) {
     };
 }
 const fragmentKey = (wall, part, purpose) => JSON.stringify([purpose, wall.id ?? null, wall.layerId,
-    wall.assetId ?? null, wall.thickness, wallPropertiesKey(wall), part.x1, part.y1, part.x2, part.y2]);
+    wall.assetId ?? null, wall.thickness, wall.artwork !== false, wallPropertiesKey(wall), part.x1, part.y1, part.x2, part.y2]);
 function commitWalls(document, walls, refs, allocator) {
     const error = floorGeometryError({ ...document, walls });
     if (error) return failure(error);
@@ -182,7 +184,7 @@ export function addWall(document, wall, { maxObjects = 2000, makeId = () => cryp
     if (!validWall(document, wall)) return failure(shortError);
     const size = length(wall), overlaps = [], propertiesKey = wallPropertiesKey(wall);
     for (const other of document.walls) if (other.layerId === wall.layerId && (other.assetId ?? null) === (wall.assetId ?? null)
-        && other.thickness === wall.thickness && wallPropertiesKey(other) === propertiesKey) {
+        && other.thickness === wall.thickness && (other.artwork !== false) === (wall.artwork !== false) && wallPropertiesKey(other) === propertiesKey) {
         const overlap = collinearOverlap(wall, other);
         if (overlap) overlaps.push(overlap);
     }
@@ -254,6 +256,7 @@ export function extendWall(document, wallId, endpoint, point, options = {}) {
     const start = endpointPoint(wall, endpoint);
     if (samePoint(start, point)) return unchanged();
     const addition = { id: options.id, layerId: wall.layerId, assetId: wall.assetId ?? null, thickness: wall.thickness,
-        x1: start.x, y1: start.y, x2: point.x, y2: point.y, ...copyWallProperties(wall) };
+        x1: start.x, y1: start.y, x2: point.x, y2: point.y, ...copyWallProperties(wall),
+        ...(Object.hasOwn(wall, 'artwork') ? { artwork: wall.artwork } : {}) };
     return addWall(document, addition, options);
 }

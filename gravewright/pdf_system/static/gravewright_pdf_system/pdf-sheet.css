@@ -65,7 +65,7 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
 }
 .pdf-sheet__field:focus { border-color: var(--accent, #c09a5a); outline: none; }
 .pdf-sheet__field[readonly] { background: none; }
-.pdf-sheet__field--checkbox { width: auto !important; }
+.pdf-sheet__field--checkbox:not([data-manual-field]) { width: auto !important; }
 
 /* Mapped controls use the PDF's authored bounds, including small text rows. */
 .pdf-sheet__stage:not([data-viewer-missing="true"]) .pdf-sheet__field {
@@ -191,3 +191,114 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
 .pdf-sheet__image-picker { border: var(--size-1) solid var(--border, #303842); padding: var(--space-2); border-radius: var(--radius-sm); align-content: start; }
 .pdf-sheet__image-action { display: flex; gap: var(--space-1); align-items: center; color: var(--accent, #c09a5a); cursor: pointer; }
 .pdf-sheet__image-action svg { width: var(--size-21); height: var(--size-21); }
+
+/* Manual mapping reuses the page display coordinates of the fillable fields. */
+.pdf-sheet__map-toggle { width: auto; gap: var(--space-1); padding-inline: var(--space-2); white-space: nowrap; }
+.pdf-sheet__mapping-hint { padding: var(--space-2); }
+.pdf-sheet__roll-actions {
+  display: flex; flex-wrap: wrap; flex-shrink: 0; gap: var(--space-2);
+  max-height: 116px; overflow: auto; padding: var(--space-2);
+  border-bottom: 1px solid var(--border, #303842);
+}
+.pdf-sheet__roll-actions button {
+  min-height: 32px; max-width: 100%; padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--accent, #c09a5a); border-radius: var(--radius-sm);
+  background: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
+  font-size: 12px; overflow-wrap: anywhere; cursor: pointer;
+}
+.pdf-sheet__roll-actions button:disabled { opacity: 0.6; cursor: default; }
+.pdf-diagnostics { width: min(600px, calc(100vw - 32px)); font-size: 12px; }
+.pdf-diagnostics p { margin: var(--space-0); overflow-wrap: anywhere; }
+.pdf-diagnostics .table-form-modal__body > div { display: grid; gap: var(--space-2); }
+.pdf-diagnostics button { font-size: 12px; }
+:is(body:has(#table-workspace), body.game-detached) .pdf-diagnostics header [data-pdf-diagnostics-close] {
+  width: auto; min-height: 32px; padding-inline: var(--space-2);
+}
+.pdf-sheet__bar { flex-wrap: wrap; }
+.pdf-sheet__mapping-tools {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2);
+  padding: var(--space-2); border-bottom: 1px solid var(--border, #303842);
+  font-size: 12px;
+}
+.pdf-sheet__mapping-tools > label {
+  display: flex; align-items: center; gap: var(--space-1); min-width: 0;
+}
+.pdf-sheet__mapping-tools button, .pdf-sheet__mapping-tools input, .pdf-sheet__mapping-tools select,
+.pdf-sheet__mapping-tools p, .pdf-sheet__mapping-tools label {
+  font-size: 12px;
+}
+.pdf-sheet__mapping-tools button {
+  min-height: 32px; padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border, #303842); border-radius: var(--radius-sm);
+  background: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
+  cursor: pointer;
+}
+.pdf-sheet__mapping-tools button:focus-visible, .pdf-sheet__map-box:focus-visible {
+  outline: 2px solid var(--accent, #c09a5a); outline-offset: 2px;
+}
+.pdf-sheet__mapping-tools p { flex-basis: 100%; margin: var(--space-0); }
+.pdf-sheet__map-properties {
+  display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-2);
+  flex-basis: 100%; min-width: 0;
+}
+.pdf-sheet__map-properties > label {
+  display: grid; gap: var(--space-half); min-width: 0;
+}
+.pdf-sheet__map-properties input {
+  width: 100%; min-width: 0; max-width: 100%; min-height: 32px;
+  padding: var(--space-1); box-sizing: border-box;
+  border: 1px solid var(--border, #303842); border-radius: var(--radius-sm);
+  background: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
+}
+.pdf-sheet__map-properties input[type=number] { width: 80px; }
+.pdf-sheet__map-properties label:has([data-pdf-map-name]) { flex: 1 1 180px; }
+[data-pdf-map-error] { color: var(--danger, #ffaaaa); }
+[data-pdf-map-delete] { color: var(--danger, #ffaaaa) !important; }
+.pdf-sheet__mapping {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+}
+.pdf-sheet__mapping[data-editing=true] {
+  pointer-events: auto; touch-action: none; user-select: none;
+}
+.pdf-sheet__mapping[data-editing=true][data-tool=select] { touch-action: pan-x pan-y; }
+.pdf-sheet__map-box { touch-action: none; }
+.pdf-sheet__field[aria-invalid=true] { outline: 2px solid var(--danger, #ffaaaa); }
+.pdf-sheet__mapping[data-editing=true]:not([data-tool=select]) { cursor: crosshair; }
+.pdf-sheet__stage[data-mapping-editing=true] .pdf-sheet__fields { pointer-events: none; }
+.pdf-sheet__stage[data-mapping-editing=true] .pdf-sheet__fields > .pdf-sheet__field { pointer-events: none; }
+.pdf-sheet__map-box, .pdf-sheet__map-preview {
+  position: absolute; min-width: 0; min-height: 0; max-width: none;
+  box-sizing: border-box; margin: var(--space-0); padding: var(--space-0);
+  border: 1px solid var(--accent, #c09a5a); border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent, #c09a5a) 16%, transparent);
+  color: #111111; font-family: inherit; font-size: 12px; line-height: 1;
+  text-align: left; cursor: move;
+}
+.pdf-sheet__map-box--selected { border-width: 2px; z-index: 1; }
+.pdf-sheet__map-box:focus { outline-offset: 1px; }
+.pdf-sheet__map-label {
+  position: absolute; bottom: 100%; left: 0; max-width: 220px;
+  padding: var(--space-half); border-radius: var(--radius-sm);
+  background: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 12px; line-height: 1.2; pointer-events: none;
+}
+.pdf-sheet__map-box:not(.pdf-sheet__map-box--selected):not(:hover):not(:focus-visible) .pdf-sheet__map-label { display: none; }
+.pdf-sheet__map-resize {
+  position: absolute; right: -4px; bottom: -4px; width: 12px; height: 12px;
+  border: 1px solid var(--surface-raised, #20262d); border-radius: var(--radius-sm);
+  background: var(--accent, #c09a5a); cursor: nwse-resize;
+}
+.pdf-sheet__map-box:not(.pdf-sheet__map-box--selected) .pdf-sheet__map-resize { display: none; }
+.pdf-sheet__map-preview { border-style: dashed; pointer-events: none; }
+.pdf-sheet__field--checkbox[data-manual-field] { min-width: 0; }
+textarea.pdf-sheet__field[data-manual-field] { resize: none; font-size: 12px; }
+@media (max-width: 520px) {
+  .pdf-sheet__bar { gap: var(--space-1); }
+  .pdf-sheet__bar-group--end { flex-wrap: wrap; }
+  .pdf-sheet__status { max-width: 100%; overflow-wrap: anywhere; }
+  .pdf-sheet__mapping-tools { align-items: stretch; }
+  .pdf-sheet__map-properties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pdf-sheet__map-properties label:has([data-pdf-map-name]) { grid-column: 1 / -1; }
+  .pdf-sheet__map-properties input[type=number] { width: 100%; }
+}

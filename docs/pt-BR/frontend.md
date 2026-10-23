@@ -26,6 +26,153 @@ A aplicação renderiza HTML Jinja2 no servidor, usa Datastar para sinais reativ
 
 IDs e atributos `data-*` dos templates conectam controladores nativos e superfícies de extensão. Alterá-los pode afetar o controlador, sinais Datastar e montagem de módulos. Confira os três ao renomear seletores ou substituir painéis inteiros.
 
+`modules/static/gravewright_modules/domain-api.js` expõe o contrato gerado às
+páginas e aos módulos com montagem autorizada. `file-api.js` mantém bytes em
+requisições multipart e retorna blobs autenticados; `global-api.js` reúne os
+adaptadores de conta, campanha, administração e pacotes no ciclo de vida da página.
+Cancelamento e permissões nativas são preservados. A [API pública ampliada](api.md)
+documenta MapBuilder, blueprints, permissões, biblioteca e operações dos sistemas.
+
+### Campos manuais no PDF
+
+Na ficha do Gravewright PDF System, o mestre pode abrir um PDF e escolher
+**Mapear campos**. Selecione texto, número, checkbox ou texto de várias linhas e
+arraste um retângulo sobre a área da página. **Adicionar campo** cria um retângulo
+pelo teclado. Selecione um retângulo para renomeá-lo, alterar seus limites em
+porcentagens, arrastá-lo ou redimensionar seu canto inferior direito. As setas
+movem a seleção um pixel de exibição (Shift: dez); Delete remove o campo e Esc
+cancela um gesto. **Concluir mapeamento** retorna ao preenchimento. As alterações
+são salvas automaticamente.
+
+O mapeamento pertence ao personagem ou à cópia independente do token, à origem
+do PDF e à página. Os campos acompanham o zoom e a exibição de páginas duplas e
+convivem com os formulários nativos do PDF. Jogadores autorizados podem preencher
+os campos; somente o mestre pode alterar suas definições. A sobreposição mantém
+o arquivo PDF original intacto, inclusive ao baixá-lo. Excluir um retângulo
+preserva seu valor armazenado. Campos de número e texto de uma linha também
+podem ser escolhidos para as barras do token.
+
+`pdf_system/frontend/manual-fields.js` contém identidades estáveis e geometria
+normalizada da página exibida; `frontend/controller.js` combina as definições
+manuais com os campos nativos. `static/gravewright_pdf_system/manual-editor.js`
+cuida dos gestos, seleção e descarte. `pdf_system/manual_fields.py` valida até
+256 definições entre as origens, limites, nomes, tipos e valores e restringe a
+edição do mapeamento ao mestre pelo serviço normal de salvamento da ficha.
+Mapeamentos omitidos são preservados para clientes anteriores. O controlador
+gerado segue o pipeline existente de build dos assets de mapas.
+
+O mestre pode dar dois cliques em um campo nativo ou mapeado manualmente, ou
+focá-lo e pressionar F2, para abrir **Ações do campo** na modal existente da
+aplicação. Escolha um valor do token, informe a fórmula e o nome da rolagem ou
+use um dos seis modelos: d20, maior ou menor de dois d20, 2d6, d6 explosivo e
+4dF. `@value` referencia o valor numérico atual do campo; um valor vazio vale
+zero e caixas de seleção usam zero ou um. Fórmulas sem `@value` também funcionam
+em campos de texto. Limpe a fórmula para remover a ação de rolagem. Vincular ou
+desvincular uma barra do token preserva o valor atual do campo. Salvar valida o
+candidato completo antes de atualizar a ficha exibida; Cancelar e Esc descartam
+o rascunho.
+
+As ações salvas aparecem como botões acima do PDF para editores autorizados.
+Jogadores também podem dar dois cliques em um campo configurado; Alt+Enter
+rola o campo focado. Para o mestre, o duplo clique continua abrindo a configuração,
+onde **Rolar ação salva** executa a fórmula salva sem aplicar o rascunho. As
+rolagens usam a [notação de dados](../../gravewright/dice/grammar/notation/GRAMMAR.pt-BR.md)
+nativa, publicam no chat no contexto da cena atual e mantêm os recibos e as
+tentativas de reconexão normais. Configurar uma ação não consome aleatoriedade.
+
+`pdf.fieldActions` é opcional e contém até 256 definições de rolagem vinculadas à
+origem e ao campo, com fórmula de 512 caracteres e nome de 48 caracteres. O
+servidor compila as fórmulas pelo parser e compilador de dados, preserva ações
+omitidas e rejeita alterações de quem não é mestre. `frontend/field-actions.js`
+monta candidatos isolados para salvamento, preserva valores canônicos das barras
+e expande a referência numérica limitada `@value`.
+`static/gravewright_pdf_system/field-actions-editor.js` cuida do rascunho e do
+descarte da modal.
+
+**Campo de referência** insere `@{chave-do-campo}` em uma fórmula de rolagem ou
+cálculo. O seletor mostra nomes legíveis; chaves manuais permanecem estáveis ao
+renomear campos, e referências nativas mantêm o nome exato do formulário PDF.
+O seletor escapa chaves e barras invertidas nesses nomes. Os valores das
+referências são numéricos e seguem o limite existente de ±1.000.000.
+**Fórmula do valor calculado** aceita aritmética determinística, comparações e
+funções numéricas nativas com referências a outros campos. Limpe-a para voltar
+à edição normal. Campos calculados são somente leitura e atualizam na ordem de
+dependência. O servidor recalcula resultados a cada salvamento, rejeita ciclos,
+inclusive por aliases das barras, e mantém o resultado canônico anterior quando
+uma entrada fica temporariamente não numérica ou o cálculo falha.
+
+`pdf.fieldBindings` registra endereços originais validados para as referências;
+as substituições por barras usam o mapeamento atual do token. Somente o mestre
+altera os vínculos ou `pdf.calculatedFields`. `formulas.py` e
+`calculated_fields.py` validam e calculam no servidor; `frontend/formulas.js`
+espelha o subconjunto determinístico para resposta imediata. Valores e vínculos
+arquivados continuam disponíveis após remover um retângulo; o diagnóstico
+identifica referências cujo campo visível desapareceu.
+
+Durante o mapeamento, Shift/Ctrl+clique ou arraste um retângulo de seleção para
+selecionar vários campos na página. A barra de ferramentas permite copiar,
+colar, duplicar, usar seis alinhamentos, distribuir horizontal/verticalmente e
+ativar encaixe em grade de cinco pontos. Ctrl+C/V/D e Ctrl+Z/Shift+Z oferecem as
+mesmas operações. A barra fica em **Ferramentas de disposição**, inicialmente
+recolhida em fichas estreitas e expansível por teclado ou toque.
+Cada gesto é uma etapa do histórico, limitado a 50 etapas no
+PDF atual. Desfazer restaura definições e mantém os valores atuais do personagem;
+trocar de documento limpa o histórico. Cópias recebem novos UUIDs e remapeiam
+fórmulas internas da seleção. `frontend/layout-editor.js` contém a geometria;
+`layout-history.js` contém os estados das definições e identidades das cópias.
+
+**Biblioteca de mapeamentos** abre os modelos da campanha para mestres. Salve ou
+substitua o mapeamento atual, aplique um modelo à ficha aberta ou a atores
+selecionados e importe ou exporte JSON versionado. Modelos contêm retângulos,
+ações, cálculos, vínculos e geometria opcional do documento, sem PDFs, valores,
+nomes de personagens ou mídia. Valores existentes são mantidos pela identidade
+do campo e pelas barras canônicas; modelos não mesclam campos distintos pelo
+nome visível. Snapshots independentes de tokens mantêm o próprio mapeamento,
+exceto ao aplicar explicitamente um modelo àquela ficha aberta. A aplicação em
+lote valida as revisões de todos os atores antes de gravar qualquer alteração.
+IDs manuais já usados por outro PDF da mesma ficha geram erro de validação,
+preservando os campos daquele PDF.
+
+`MappingTemplate` e sua migração inicial pertencem ao `pdf_system`. As rotas
+`/api/containers/<id>/pdf-mappings` verificam mestre, campanha, revisões e recibos
+de operações. Os limites são 128 modelos por campanha, 100 atores por lote e
+1 MB por importação JSON, além dos limites da ficha. Arquivos de campanha
+incluem os modelos e validam seus pacotes portáteis na restauração. Alterar um
+modelo exige nova aplicação para atualizar o personagem.
+
+**PDF preenchido** baixa uma cópia separada e achatada de todas as páginas com
+os valores atuais, incluindo campos nativos repetidos entre páginas. Usa o
+PDF.js distribuído para renderizar a 144 dpi e grava
+imagens JPEG em um contêiner PDF mínimo, preservando texto Unicode conforme
+exibido pelo navegador. O original continua disponível separadamente. A cópia
+não contém widgets editáveis nem conteúdo executável do PDF. A exportação
+rejeita texto que não cabe no retângulo, complexidade excessiva ou resultado
+acima de 100 MB e baixa somente após concluir todas as páginas. Aceita até
+100 páginas, 16 milhões de pixels por página e 128 milhões por operação.
+Fechar ou trocar o documento cancela o trabalho. O contêiner segue a estrutura
+de imagens XObject e endereços em bytes do [ISO 32000-1](https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf).
+
+O botão **Diagnóstico do mapeamento PDF** verifica campos ou referências
+ausentes, erros de cálculo, páginas inexistentes e diferenças de tamanho,
+rotação ou identificação do documento. `pdf.sourceMetadata` mantém o descritor
+esperado ao aplicar um modelo; abrir o PDF não o substitui silenciosamente.
+O diagnóstico exibe rótulos autorais como texto e permite navegar até campos
+ainda presentes. Exportar e diagnosticar não modificam o PDF original.
+
+`node --test gravewright/pdf_system/frontend/*.test.js` cobre o modelo dos
+campos; `manage.py test gravewright.pdf_system.test_manual_fields` cobre
+persistência e autorização. O cenário isolado
+`tests/e2e/pdf_manual_fields.py` exercita desenho, preenchimento, navegação,
+campos nativos, cópias de tokens, papéis e Translator em inglês, português e
+espanhol.
+`manage.py test gravewright.pdf_system.test_field_actions` e
+`tests/e2e/pdf_field_actions.py` cobrem configuração de rolagens, preservação de
+valores das barras, entrega ao chat, rascunhos cancelados ou inválidos, permissões
+e modais responsivas e traduzidas.
+`manage.py test gravewright.pdf_system` também cobre modelos, cálculos,
+metadados e restauração de arquivos de campanha. `tests/e2e/pdf_workbench.py`
+exercita o fluxo combinado e abre/renderiza o PDF gerado pelo próprio PDF.js.
+
 ### Área do Map Builder
 
 `GET /game/<campaign_id>/map-builder` renderiza

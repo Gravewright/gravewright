@@ -19,6 +19,7 @@ from . import objects, services, tiling
 from .models import MapAsset, MapBuilderProject, Receipt, Scene, SceneNavigation, SceneObject, SceneState, Tile
 from .terrain_brush import clean_floor_brush, terrain_brush_cost
 from .element_names import clean_name, copy_name
+from .builder_geometry import canvas_size, scene_options
 
 
 LIMITS = {
@@ -74,6 +75,8 @@ def summary(row, who):
         "sceneId": str(row.scene_id) if row.scene_id else None,
         "sceneVersion": row.scene.version if row.scene_id else None,
         "canUpdate": can_update,
+        **({"importWarnings": row.generation["importWarnings"]}
+           if isinstance(row.generation, dict) and row.generation.get("importWarnings") else {}),
         "updatedAt": int(row.updated_at.timestamp() * 1000),
     }
 
@@ -114,7 +117,7 @@ def detail(campaign_id, user_id, project_id):
 
 def sync(campaign_id, user_id, project_id, payload):
     """Import authored VTT changes using the normal revision and retry contract."""
-    fields(payload, ("request_id", "expected_version", "expected_scene_version"), "map synchronization command")
+    fields(payload, ("request_id", "expected_version", "expected_scene_version", "expected_scene_id"), "map synchronization command")
     project_id, request_id = identifier(project_id), identifier(payload.get("request_id"))
     digest = fingerprint("sync", project_id, payload)
     with transaction.atomic():
@@ -126,6 +129,7 @@ def sync(campaign_id, user_id, project_id, payload):
             return cached
         source = project(project_id, who)
         expected(payload.get("expected_version"), source)
+        expected_scene(source, payload)
         if not source.scene_id:
             raise services.MapError("Generate a scene before updating it.", "conflict")
         scene = services.scene(source.scene_id, who, write=True)
@@ -434,7 +438,7 @@ def validate_imported_projects(campaign):
 
 def clean_document(raw, who):
     """Normalize a finite, bounded, campaign-scoped document in grid cells."""
-    fields(raw, ("schemaVersion", "name", "columns", "rows", "cellSize", "background", "backgroundImage", "floors", "walls", "doors", "assets", "layers", "decorations", "lights", "particles", "shaders", "regions", "editingMode"), "map project")
+    fields(raw, ("schemaVersion", "name", "columns", "rows", "cellSize", "background", "backgroundImage", "floors", "walls", "doors", "assets", "layers", "decorations", "lights", "particles", "shaders", "regions", "editingMode", "sceneGeometry"), "map project")
     try:
         if len(json.dumps(raw, allow_nan=False)) > MAX_DOCUMENT_BYTES:
             raise services.MapError("The map project is too large.")
@@ -457,6 +461,22 @@ def clean_document(raw, who):
         if not expanded or raw["editingMode"] not in ("tiles", "paint"):
             raise services.MapError("Invalid map editing mode.")
         doc["editingMode"] = raw["editingMode"]
+    if "sceneGeometry" in raw:
+        geometry = raw["sceneGeometry"]
+        fields(geometry, ("width", "height", "gridSize", "gridOffsetX", "gridOffsetY", "imageScale"), "imported scene geometry")
+        if not expanded:
+            raise services.MapError("Use map project version 3 for imported scene geometry.")
+        geometry = {
+            "width": number(geometry.get("width"), 1, doc["columns"] * doc["cellSize"], "canvas width", integer=True),
+            "height": number(geometry.get("height"), 1, doc["rows"] * doc["cellSize"], "canvas height", integer=True),
+            **{key: number(geometry.get(key), low, high, key) for key, low, high in
+               (("gridSize", 1, 10000), ("gridOffsetX", -1000000, 1000000), ("gridOffsetY", -1000000, 1000000))},
+            **({"imageScale": number(geometry["imageScale"], .01, 100, "imageScale")} if "imageScale" in geometry else {}),
+        }
+        if (math.ceil(geometry["width"] / doc["cellSize"]) != doc["columns"]
+                or math.ceil(geometry["height"] / doc["cellSize"]) != doc["rows"]):
+            raise services.MapError("Invalid imported scene geometry.")
+        doc["sceneGeometry"] = geometry
     if "backgroundImage" in raw:
         background = raw["backgroundImage"]
         fields(background, ("assetId",), "map background image")
@@ -465,10 +485,12 @@ def clean_document(raw, who):
             raise services.MapError("Choose a background image from this campaign.")
         # A ready-made map is a single base image, independent of brush roles.
         doc["backgroundImage"] = {"assetId": str(asset_id)}
-    pixels = doc["columns"] * doc["rows"] * doc["cellSize"] ** 2
+    canvas_width, canvas_height = canvas_size(doc)
+    bound_columns, bound_rows = canvas_width / doc["cellSize"], canvas_height / doc["cellSize"]
+    pixels = canvas_width * canvas_height
     if pixels > min(LIMITS["maxPixels"], settings.GRAVEWRIGHT_MAP_MAX_PIXELS):
         raise services.MapError("The map exceeds the builder image pixel limit.")
-    tiling._validate_size(doc["columns"] * doc["cellSize"], doc["rows"] * doc["cellSize"])
+    tiling._validate_size(canvas_width, canvas_height)
     # Existing version-three documents retain their shape until effects are
     # authored. Explicit empty effect arrays round-trip as explicit arrays.
     kinds = (("floors", "walls", "doors", "decorations", "lights")
@@ -551,10 +573,10 @@ def clean_document(raw, who):
             row["rotation"] = number(item.get("rotation", 0), 0, 270, "floor rotation")
             if row["rotation"] not in (0, 90, 180, 270):
                 raise services.MapError("Floor rotation must use quarter turns.")
-        for key, limit in (("x", doc["columns"]), ("y", doc["rows"]), ("width", doc["columns"]), ("height", doc["rows"])):
+        for key, limit in (("x", bound_columns), ("y", bound_rows), ("width", bound_columns), ("height", bound_rows)):
             minimum = 0 if key in ("x", "y") else .001 if expanded and ("shape" in item or "brush" in item) else .05
             row[key] = number(item.get(key), minimum, limit, f"floor {key}")
-        if row["x"] + row["width"] > doc["columns"] + 1e-8 or row["y"] + row["height"] > doc["rows"] + 1e-8:
+        if row["x"] + row["width"] > bound_columns + 1e-8 or row["y"] + row["height"] > bound_rows + 1e-8:
             raise services.MapError("A floor lies outside the map.")
         paint_area += row["width"] * row["height"]
         if "paint" in item:
@@ -585,16 +607,19 @@ def clean_document(raw, who):
     walls = {}
     for item in raw.get("walls", []):
         row = base(item, "wall", ("id", "assetId", "x1", "y1", "x2", "y2", "thickness",
-                                  *((*WALL_PROPERTY_FIELDS, "dynamic") if expanded else ())))
+                                  *((*WALL_PROPERTY_FIELDS, "dynamic", "artwork") if expanded else ())))
+        if "artwork" in item:
+            row["artwork"] = objects.boolean(item["artwork"])
         if "dynamic" in item:
             row["dynamic"] = objects.boolean(item["dynamic"])
         for key in ("x1", "x2", "y1", "y2"):
-            row[key] = number(item.get(key), 0, doc["columns"] if key[0] == "x" else doc["rows"], f"wall {key}")
+            row[key] = number(item.get(key), 0, bound_columns if key[0] == "x" else bound_rows, f"wall {key}")
         row["thickness"] = number(item.get("thickness"), LIMITS["minWallThickness"], LIMITS["maxWallThickness"], "wall thickness")
         if math.hypot(row["x2"] - row["x1"], row["y2"] - row["y1"]) < 0.1:
             raise services.MapError("Wall endpoints must differ.")
         clean_wall_properties(item, row)
-        paint_area += (abs(row["x2"] - row["x1"]) + row["thickness"]) * (abs(row["y2"] - row["y1"]) + row["thickness"])
+        if row.get("artwork") is not False:
+            paint_area += (abs(row["x2"] - row["x1"]) + row["thickness"]) * (abs(row["y2"] - row["y1"]) + row["thickness"])
         walls[row["id"]] = row
         doc["walls"].append(row)
     if paint_area * doc["cellSize"] ** 2 + shape_pixels > LIMITS["maxPaintPixels"]:
@@ -620,9 +645,11 @@ def clean_document(raw, who):
                 row[key] = max(0, min(doc["columns"] if key[0] == "x" else doc["rows"], row[key]))
         else:
             row = base(item, "door", ("id", "assetId", "x1", "y1", "x2", "y2", "thickness", "state",
-                                      *(("blueprint", "interactionEnabled", "rotationAnchor", *WALL_PROPERTY_FIELDS) if expanded else ())))
+                                      *(("blueprint", "interactionEnabled", "rotationAnchor", "artwork", *WALL_PROPERTY_FIELDS) if expanded else ())))
+            if "artwork" in item:
+                row["artwork"] = objects.boolean(item["artwork"])
             for key in ("x1", "x2", "y1", "y2"):
-                row[key] = number(item.get(key), 0, doc["columns"] if key[0] == "x" else doc["rows"], f"door {key}")
+                row[key] = number(item.get(key), 0, bound_columns if key[0] == "x" else bound_rows, f"door {key}")
             row["thickness"] = number(item.get("thickness"), LIMITS["minWallThickness"], LIMITS["maxWallThickness"], "door thickness")
             length = math.hypot(row["x2"] - row["x1"], row["y2"] - row["y1"])
             number(length, LIMITS["minDoorWidth"] - 1e-7, LIMITS["maxDoorWidth"] + 1e-7, "door width")
@@ -654,9 +681,9 @@ def clean_document(raw, who):
             if "filters" in item:
                 from .regions import clean_filters
                 row["filters"] = clean_filters(item["filters"], campaign_id=who.campaign_id)
-            for key, bound in (("x", doc["columns"]), ("y", doc["rows"]), ("width", doc["columns"]), ("height", doc["rows"])):
+            for key, bound in (("x", bound_columns), ("y", bound_rows), ("width", bound_columns), ("height", bound_rows)):
                 row[key] = number(item.get(key), 0 if key in ("x", "y") else .05, bound, f"region {key}")
-            if row["x"] + row["width"] > doc["columns"] + 1e-8 or row["y"] + row["height"] > doc["rows"] + 1e-8:
+            if row["x"] + row["width"] > bound_columns + 1e-8 or row["y"] + row["height"] > bound_rows + 1e-8:
                 raise services.MapError("A region lies outside the map.")
             if "vertical" in item:
                 vertical = item["vertical"]
@@ -690,21 +717,21 @@ def clean_document(raw, who):
                 row["lever"] = {"state": item["lever"]["state"]}
             elif "blueprint" in item and "torch" not in item:
                 raise services.MapError("Only levers can have a blueprint.")
-            for key, bound in (("x", doc["columns"]), ("y", doc["rows"]), ("width", doc["columns"]), ("height", doc["rows"])):
+            for key, bound in (("x", bound_columns), ("y", bound_rows), ("width", bound_columns), ("height", bound_rows)):
                 row[key] = number(item.get(key), 0 if key in ("x", "y") else .05, bound, f"decoration {key}")
             row["rotation"] = number(item.get("rotation", 0), -36000, 36000, "decoration rotation") % 360
             angle = math.radians(row["rotation"])
             half_x = (abs(math.cos(angle)) * row["width"] + abs(math.sin(angle)) * row["height"]) / 2
             half_y = (abs(math.sin(angle)) * row["width"] + abs(math.cos(angle)) * row["height"]) / 2
             cx, cy = row["x"] + row["width"] / 2, row["y"] + row["height"] / 2
-            if min(cx - half_x, cy - half_y) < -1e-7 or cx + half_x > doc["columns"] + 1e-7 or cy + half_y > doc["rows"] + 1e-7:
+            if min(cx - half_x, cy - half_y) < -1e-7 or cx + half_x > bound_columns + 1e-7 or cy + half_y > bound_rows + 1e-7:
                 raise services.MapError("A decoration lies outside the map.")
             doc["decorations"].append(row)
         for item in raw.get("lights", []):
             row = base(item, "light", ("id", "x", "y", "brightRadius", "dimRadius", "color", "intensity", "enabled", "rotation", "angle", "animation", "elevation"))
             row.pop("assetId")
-            row["x"] = number(item.get("x"), 0, doc["columns"], "light x")
-            row["y"] = number(item.get("y"), 0, doc["rows"], "light y")
+            row["x"] = number(item.get("x"), 0, bound_columns, "light x")
+            row["y"] = number(item.get("y"), 0, bound_rows, "light y")
             native = objects.light({"x": row["x"], "y": row["y"],
                                     "bright_radius": item.get("brightRadius"), "dim_radius": item.get("dimRadius"),
                                     **{key: item.get(key) for key in ("color", "intensity", "enabled")},
@@ -719,8 +746,8 @@ def clean_document(raw, who):
             for item in raw.get(kind, []):
                 row = base(item, kind, ("id", "x", "y", *allowed))
                 row.pop("assetId")
-                row["x"] = number(item.get("x"), 0, doc["columns"], "effect x")
-                row["y"] = number(item.get("y"), 0, doc["rows"], "effect y")
+                row["x"] = number(item.get("x"), 0, bound_columns, "effect x")
+                row["y"] = number(item.get("y"), 0, bound_rows, "effect y")
                 native = effect(kind, {"x": row["x"], "y": row["y"],
                                        **{key: item[key] for key in allowed if key in item}})
                 row.update({key: native[key] for key in allowed})
@@ -790,6 +817,12 @@ def source_presence_count(doc):
 def expected(value, row):
     if type(value) is not int or value != (row.version if row else 0):
         raise services.MapError("The map project changed. Reload it before saving.", "conflict")
+
+
+def expected_scene(source, payload):
+    """A linked scene can change without changing the editable source revision."""
+    if "expected_scene_id" in payload and identifier(payload["expected_scene_id"]) != source.scene_id:
+        raise services.MapError("The generated scene changed. Reload the project before updating it.", "conflict")
 
 
 def fingerprint(action, project_id, payload):
@@ -914,21 +947,30 @@ def native_objects(doc, scene, *, dynamic_planes=(), stored=None):
         row.builder_source_id = source_id
         result.append(row)
 
-    for span in segments(doc):
+    spans = list(segments(doc))
+    span_counts = {}
+    for span in spans:
+        key = span["wall"]["id"]
+        span_counts[key] = span_counts.get(key, 0) + 1
+    for span in spans:
         door = span["door"]
         raw = {**{key: span[key] * cell for key in ("x1", "y1", "x2", "y2")},
                "kind": "door" if door else "wall",
                "door_state": door["state"] if door else "closed",
                **{key: span["wall"][key] for key in WALL_PROPERTY_FIELDS if key in span["wall"]}}
-        if door and door["assetId"]:
+        if door and door["assetId"] and door.get("artwork") is not False:
             raw.update(asset_id=door["assetId"], thickness=span["wall"]["thickness"] * cell)
         if door and "rotationAnchor" in door:
             raw["rotationAnchor"] = door["rotationAnchor"]
         data = objects.wall(raw, campaign_id=scene.campaign_id)
         if door and "interactionEnabled" in door:
             data["interactionEnabled"] = door["interactionEnabled"]
-        source_id = door["id"] if door else f'{span["wall"]["id"]}:' + ':'.join(
-            format(span[key], '.12g') for key in ("x1", "y1", "x2", "y2"))
+        # Independent collision walls keep their source identity when moved.
+        # Split artwork walls retain coordinate identities for their spans.
+        source_id = (door["id"] if door else span["wall"]["id"]
+                     if span["wall"].get("artwork") is False and span_counts[span["wall"]["id"]] == 1
+                     else f'{span["wall"]["id"]}:' + ':'.join(
+                         format(span[key], '.12g') for key in ("x1", "y1", "x2", "y2")))
         append(source_id, "walls", data, span["wall"])
     from .extra_objects import image
     layers = {layer["id"]: index for index, layer in enumerate(doc.get("layers", []))}
@@ -1208,6 +1250,7 @@ def legacy_generation(source, who):
 
 
 def update_target(source, who, payload, doc):
+    expected_scene(source, payload)
     if not source.scene_id:
         raise services.MapError("Generate a scene before updating it.", "conflict")
     scene = services.scene(source.scene_id, who, write=True)
@@ -1247,9 +1290,9 @@ def update_target(source, who, payload, doc):
     external_regions = sum(str(row.pk) not in owned for row in presence_rows(scene))
     if external_regions + source_presence_count(doc) > MAX_REGIONS:
         raise services.MapError("The scene has too many presence regions.")
-    changing_geometry = (scene.width != doc["columns"] * doc["cellSize"]
-                         or scene.height != doc["rows"] * doc["cellSize"]
-                         or manifest.get("cellSize") != doc["cellSize"])
+    changing_geometry = ((scene.width, scene.height) != canvas_size(doc)
+                         or manifest.get("cellSize") != doc["cellSize"]
+                         or scene_options(manifest.get("sourceDocument") or doc) != scene_options(doc))
     if changing_geometry:
         env = SceneState.objects.filter(scene=scene).first()
         if (scene.tokens.exists() or scene.elements.exclude(pk__in=owned).exists()
@@ -1320,7 +1363,7 @@ def generate(campaign_id, user_id, project_id, payload):
             scene = Scene.objects.create(campaign=who.campaign, folder=target,
                                          name=doc["name"], visibility="gm", width=width, height=height,
                                          tile_size=tiling.TILE_SIZE, max_lod=max_lod,
-                                         settings=services.settings({"gridSize": doc["cellSize"]}))
+                                         settings=services.settings(scene_options(doc)))
             for tile in tiles:
                 tile.scene = scene
             Tile.objects.bulk_create(tiles)
@@ -1347,7 +1390,7 @@ def generate(campaign_id, user_id, project_id, payload):
 
 def update(campaign_id, user_id, project_id, payload):
     """Replace only previously generated resources in the same native scene."""
-    fields(payload, ("request_id", "expected_version", "expected_scene_version"), "scene update command")
+    fields(payload, ("request_id", "expected_version", "expected_scene_version", "expected_scene_id"), "scene update command")
     project_id, request_id = identifier(project_id), identifier(payload.get("request_id"))
     digest = fingerprint("update", project_id, payload)
     who = authority(campaign_id, user_id)
@@ -1380,6 +1423,20 @@ def update(campaign_id, user_id, project_id, payload):
             scene, owned = update_target(source, who, payload, doc)
             generated = native_objects(doc, scene, dynamic_planes=dynamic_planes, stored=stored)
             previous_sources = {row["sourceId"]: owned[row["id"]] for row in source.generation["objects"]}
+            # Imported independent walls keep their original identity even when
+            # artwork is enabled. Never infer ownership for ambiguous splits.
+            independent = {entry["sourceId"] for entry in source.generation["objects"]
+                           if entry["kind"] == "walls" and entry["data"].get("kind") == "wall"
+                           and ":" not in entry["sourceId"]}
+            counts = {}
+            for row in generated:
+                if row.kind == "walls" and row.data.get("kind") == "wall":
+                    key = row.builder_source_id.split(":", 1)[0]
+                    counts[key] = counts.get(key, 0) + 1
+            for row in generated:
+                key = row.builder_source_id.split(":", 1)[0]
+                if row.kind == "walls" and key in independent and counts.get(key) == 1:
+                    row.builder_source_id = key
             previous_overrides = {row["sourceId"]: row.get("nativeOverrides", {}) for row in source.generation["objects"]}
             previous_enabled_defaults = {row["sourceId"]: row.get("sourceEnabled", row["data"].get("enabled"))
                                          for row in source.generation["objects"] if row.get("kind") in LIVE_ENABLED_KINDS}
@@ -1496,8 +1553,13 @@ def update(campaign_id, user_id, project_id, payload):
             scene.tile_size = tiling.TILE_SIZE
             # All scene choices (name, folder, visibility, environment and sound)
             # belong to the VTT once generated. Only source grid geometry changes.
-            if initial_manifest.get("cellSize") != doc["cellSize"]:
-                scene.settings = services.settings({"gridSize": doc["cellSize"]}, scene.settings)
+            if (initial_manifest.get("cellSize") != doc["cellSize"]
+                    or scene_options(initial_manifest.get("sourceDocument") or doc) != scene_options(doc)):
+                options = scene_options(doc)
+                if (initial_manifest.get("sourceDocument", {}).get("sceneGeometry")
+                        and not doc.get("sceneGeometry")):
+                    options.update(imageScale=1, gridOffsetX=0, gridOffsetY=0)
+                scene.settings = services.settings(options, scene.settings)
             scene.version += 1
             scene.save()
             from .regions import baseline
@@ -1508,6 +1570,8 @@ def update(campaign_id, user_id, project_id, payload):
                     current.version += 1
                     current.save(update_fields=["data", "version"])
             source.generation = generation_manifest(scene, doc, generated)
+            if initial_manifest.get("importWarnings"):
+                source.generation["importWarnings"] = initial_manifest["importWarnings"]
             source.save(update_fields=["generation"])
             from .blueprint_delays import cancel_invalid_delays
             cancel_invalid_delays(scene)

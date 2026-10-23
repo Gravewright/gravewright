@@ -13,7 +13,8 @@ O Builder oferece duas ações de importação diferentes:
 
 | O que você tem | Ação | Resultado |
 | --- | --- | --- |
-| Um arquivo `.uvtt`, `.dd2vtt` ou `.df2vtt` com imagem e dados do mapa | **Importar Universal VTT** | Uma cena nativa nova em **Cenas**, com paredes, portas e luzes separadas; sem projeto do Builder |
+| Um arquivo `.uvtt`, `.dd2vtt` ou `.df2vtt` com imagem e dados do mapa | **Importar Universal VTT** no Builder | Uma cena nativa nova vinculada a um projeto editável, com paredes, portas e luzes compatíveis |
+| O mesmo arquivo, quando você precisa apenas de uma cena de jogo | **Nova cena → Importar Universal VTT** | Uma cena nativa; use **Editar com MapBuilder** depois para criar seu projeto |
 | Uma imagem PNG, JPEG, WebP ou TIFF | **Importar mapa pronto** | Um fundo no projeto atual do Builder; adicione paredes, objetos, luzes e comportamentos sobre ele |
 
 Para uma imagem, escolha **Biblioteca → Importar → Importar mapa pronto**, ou a
@@ -26,8 +27,10 @@ automaticamente; **Gerar cena** ou **Atualizar cena** as aplica ao jogo. Consult
 remoção e Desfazer/Refazer.
 
 Uma importação Universal VTT não reconstrói as pinceladas, os assets individuais
-ou as camadas do Builder a partir do fundo achatado. Abrir esse importador pelo
-Builder continua criando uma cena nativa separada.
+ou as camadas do Builder a partir do fundo achatado. Importar pelo Builder salva
+primeiro o rascunho atual, cria outro projeto vinculado e o abre no editor.
+Geometria de colisão e luzes compatíveis continuam editáveis; o fundo achatado
+continua sendo uma imagem. Nos dois caminhos, a nova cena é reservada ao mestre.
 
 ## Importe uma cena Universal VTT
 
@@ -49,8 +52,10 @@ Builder continua criando uma cena nativa separada.
 A pasta de destino vem da ação que abriu o importador; não há seletor de pasta
 na janela. A pasta deve pertencer a esta campanha. O fundo é armazenado como
 tiles da cena, enquanto paredes, portas e luzes continuam sendo objetos nativos
-editáveis. A importação não cria um projeto do Map Builder nem sobrescreve uma
-cena existente ou um rascunho do Builder.
+editáveis. A importação pelo diretório de cenas não cria projeto do Builder;
+pelo Builder, cria e abre um projeto. Nenhum caminho sobrescreve uma cena ou
+rascunho existente. **Atualizar cena** aplica as edições à mesma cena vinculada.
+Os avisos informam quais objetos precisam continuar nativos.
 
 ### Entenda os avisos da importação
 
@@ -131,9 +136,9 @@ completa; a janela não oferece um download parcial.
 
 ## Contrato de formato e coordenadas
 
-O contêiner aceito é JSON com `format: 0.2` numérico; as três extensões de arquivo
-aceitas usam esse mesmo contrato. `0.2` é a versão do formato de intercâmbio,
-independente da versão do aplicativo Gravewright. A importação exige uma imagem
+O contêiner aceito é JSON com `format: 0.2` ou `format: 0.3` numérico; as três
+extensões usam esse contrato. A exportação usa `0.2`. São versões de intercâmbio,
+independentes da versão do aplicativo Gravewright. A importação exige uma imagem
 PNG ou WebP de um único quadro, incorporada em base64 puro, não uma data URL,
 caminho de arquivo ou URL remota. Os metadados da imagem são removidos; a
 orientação EXIF não é aplicada às coordenadas do mapa.
@@ -141,7 +146,7 @@ orientação EXIF não é aplicada às coordenadas do mapa.
 | Campo de entrada | Interpretação |
 | --- | --- |
 | `resolution.map_size` | Largura (`x`) e altura (`y`) positivas, em células |
-| `resolution.pixels_per_grid` | Pixels inteiros por célula |
+| `resolution.pixels_per_grid` | Número integral de pixels por célula (`70` e `70.0` são equivalentes) |
 | `resolution.map_origin` | Deslocamento da origem em células; valores fracionários mantêm o alinhamento da grade |
 | `line_of_sight`, `objects_line_of_sight` | Polilinhas divididas em segmentos consecutivos de parede nativa |
 | `portals[].bounds` | Dois extremos que definem a porta nativa; paredes colineares são recortadas ao redor da abertura |
@@ -155,6 +160,11 @@ célula precisa de uma imagem de 1400 × 1050 pixels. As posições dos objetos 
 `(ponto - map_origin) × pixels_per_grid`. Os extremos dos portais determinam a
 geometria das portas; `position`, `rotation` e `freestanding` dos portais não
 acrescentam posicionamento ou comportamento nativo separado.
+O recorte dos portais usa um adaptador de geometria separado e limitado, com
+tolerância de até 0,05 pixel para arredondamentos ao encontrar uma parede
+colinear. Mantém as coordenadas originais da porta; paredes além dessa tolerância
+não são afetadas. Identificações opcionais do programa e do criador são metadados
+limitados; nunca viram caminhos ou dados executáveis.
 
 As cores aceitam seis dígitos `RRGGBB` ou oito dígitos `AARRGGBB`, com `#`
 opcional. O alfa da luz multiplica a intensidade já limitada. Por exemplo, a cor
@@ -196,8 +206,10 @@ pública nunca ativa a cena nova para os jogadores.
 ## Contrato HTTP e verificações da implementação
 
 - `POST /api/containers/{campanha}/universal-vtt/import`: multipart `file`,
-  `name`, `request_id` e `folderId` opcional; retorna
-  `{scene, warnings, builderEditable: false}`.
+  `name`, `request_id`, `folderId` opcional e a string opcional
+  `builderEditable: "true" | "false"` (padrão falso); retorna
+  `{scene, warnings, builderEditable}` e `project` no modo editável. O modo
+  participa da identificação do recibo; cena, projeto e arquivos são revertidos juntos.
 - `GET /api/maps/{cena}/universal-vtt`: retorna
   `{filename, document, warnings}`. `document` é o JSON UVTT para download.
 
@@ -210,3 +222,8 @@ e limites. O [cenário de navegador](../../tests/e2e/map_builder_universal_vtt.p
 cobre as janelas públicas, repetição após perda de resposta, downloads, ida e
 volta e limites de acesso por papel. Use os ambientes isolados descritos em
 [Testes](testing.md).
+O [adaptador de cenas](../../gravewright/maps/builder_import.py) compartilhado
+também atende **Editar com MapBuilder**. Os [testes de integração](../../gravewright/maps/tests/test_builder_import.py)
+cobrem identidade da cena, edições nativas, clonagem e rollback; os [testes de validação](../../gravewright/maps/tests/test_builder_import_validation.py)
+cobrem limites exatos, escala da imagem, propriedades exclusivas da cena e
+quantidade limitada de consultas.

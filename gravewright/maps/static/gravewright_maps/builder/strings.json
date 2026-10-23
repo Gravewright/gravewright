@@ -518,5 +518,19 @@
   "Remove",
   "Add",
   "Turning the mechanism and lighting the flame are independent. Double-click the torch to edit its behavior.",
-  "Done"
+  "Done",
+  "Show wall artwork",
+  "Show door artwork",
+  "Disable artwork to edit collision geometry over an existing map image. Guides appear only while editing.",
+  "Invalid wall artwork setting.",
+  "Import opens an editable Builder project linked to a new GM-only scene. Compatible walls, portals and lights are editable; the background remains one image.",
+  "Map imported into Builder. Review the editable geometry before updating the scene.",
+  "Only walls, doors and lights are imported as editable objects. Other scene content remains in the scene.",
+  "Scene objects that cannot be represented in Map Builder remain unchanged in the scene.",
+  "The scene has too many objects to import into Map Builder.",
+  "The original image dimensions and grid are preserved. Disable snapping for precise adjustments to imported geometry.",
+  "Choose a valid Universal VTT 0.2 or 0.3 file.",
+  "Invalid Universal VTT import mode.",
+  "Invalid imported scene geometry.",
+  "The scene dimensions changed. Reload the project before updating it."
 ]

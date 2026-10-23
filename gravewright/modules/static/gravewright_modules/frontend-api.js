@@ -5,6 +5,8 @@ import { SurfaceRegistry } from './surface-registry.js';
 import { createTranslator } from './i18n.js';
 import { mountModal } from '/static/gravewright_table/modal.js';
 import { createUiApi, setModalHost } from './modal-api.js';
+import { createFileCaller, domainTiming } from './file-api.js';
+import { createGlobalApi } from './global-api.js';
 
 setModalHost(mountModal, document);
 
@@ -22,58 +24,30 @@ export function tableApi(tableId, sceneId, life = page) {
     if (!tableId) throw new ModuleError('stale_context', 'Choose a table with gravewright.forTable(tableId).');
     const currentScene = tableId === document.querySelector('#table-workspace')?.dataset.tableId
       ? window.gravewrightMaps?.current?.id : undefined;
-    if (!sceneId && !payload.sceneId && !payload.mapId && currentScene) payload = { ...payload, sceneId: currentScene, mapId: currentScene };
+    if (!sceneId && !Object.hasOwn(payload, 'sceneId') && !Object.hasOwn(payload, 'mapId') && currentScene)
+      payload = { ...payload, sceneId: currentScene, mapId: currentScene };
     if (sceneId) {
+      if (domain === 'maps' && method === 'navigate' && ['sceneId', 'mapId'].some(key => Object.hasOwn(payload, key) && payload[key] == null))
+        throw new ModuleError('stale_context');
       if (['sceneId', 'mapId'].some(key => payload[key] && payload[key] !== sceneId)) throw new ModuleError('stale_context');
-      payload = { ...payload, sceneId };
+      payload = { ...payload, sceneId, mapId: sceneId };
     }
     const result = await http.post(`/api/tables/${segment(tableId)}/api`, {
       domain, method, payload, requestId: options.requestId ?? crypto.randomUUID(),
-    }, { signal });
+    }, { signal, ...domainTiming(domain, method, options) });
     return result.value;
   }, options.signal);
-  return createDomainApi(call, { context, i18n: createTranslator('gravewright', life), events: createEvents(window, life, context,
+  const files = createFileCaller({ http, life, identity: context, path: `/api/tables/${segment(tableId)}/files`,
+    ensure: () => { if (!tableId) throw new ModuleError('stale_context'); } });
+  return createDomainApi(call, { context, files, i18n: createTranslator('gravewright', life), events: createEvents(window, life, context,
     domain => call(domain === 'maps.layers' ? 'maps' : domain, domain === 'maps.layers' ? 'layers' : 'state', {}, {})), ui: createUiApi(life, registry.public) });
 }
 
-// These adapters reuse the site's authenticated endpoints, including server-side owner checks.
-const accounts = {
-  status: () => http.get('/api/auth/status'),
-  session: () => http.get('/api/auth/session'),
-  login: payload => http.post('/api/auth/login', payload),
-  register: payload => http.post('/api/auth/register', payload),
-  setup: payload => http.post('/api/auth/setup', payload),
-  logout: () => http.post('/api/auth/logout', {}),
-  update: payload => http.post('/api/auth/account', payload),
-};
-const campaigns = {
-  list: () => http.get('/api/containers'),
-  create: payload => http.post('/api/containers', payload),
-  update: (id, payload) => http.post(`/api/containers/${segment(id)}`, payload),
-  join: code => http.post('/api/containers/join', { code }),
-  remove: (id, code) => http.post(`/api/containers/${segment(id)}/remove`, { code }),
-  invite: (id, payload = {}) => http.post(`/api/containers/${segment(id)}/invitation`, payload),
-  rulesets: () => http.get('/api/rulesets'),
-};
-const administration = {
-  status: () => http.get('/api/admin/status'),
-  diagnostics: () => http.get('/api/admin/diagnostics'),
-  settings: () => http.get('/api/admin/settings'),
-  updateSettings: (section, payload) => http.post(`/api/admin/settings/${segment(section)}`, payload),
-};
-const modules = {
-  list: () => http.get('/api/module-packages'),
-  catalog: () => http.get('/api/marketplace'),
-  status: () => http.get('/api/marketplace/status'),
-  install: payload => http.post('/api/marketplace/install', payload),
-  state: id => http.get(`/api/tables/${segment(id)}/modules`),
-  configure: (id, payload) => http.post(`/api/tables/${segment(id)}/modules`, payload),
-};
+const globalApi = createGlobalApi(http, page);
 const tableId = document.querySelector('#table-workspace')?.dataset.tableId;
 export const gravewright = Object.freeze({
   ...tableApi(tableId), forTable: (id, { sceneId } = {}) => tableApi(id, sceneId),
-  accounts: Object.freeze(accounts), campaigns: Object.freeze(campaigns),
-  administration: Object.freeze(administration), modules: Object.freeze(modules),
+  ...globalApi,
 });
 Object.defineProperty(window, 'gravewright', { value: gravewright, configurable: true });
 export function attachSurface(element, domain, context = {}) { return registry.attach(element, domain, context); }

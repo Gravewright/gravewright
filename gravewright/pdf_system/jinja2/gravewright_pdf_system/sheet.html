@@ -52,7 +52,12 @@
                 >{% endfor %}
               </div>
               <div class="pdf-sheet__bar-group pdf-sheet__bar-group--end">
-                <span class="pdf-sheet__status"></span>
+                <span class="pdf-sheet__status" role="status" aria-live="polite"></span>
+                <button class="pdf-sheet__btn pdf-sheet__map-toggle" type="button" data-pdf-library-open hidden>Mapping library</button>
+                <button class="pdf-sheet__btn" type="button" data-pdf-diagnostics-open title="PDF mapping diagnostics" hidden>{{ icon('MagnifyingGlass') }}</button>
+                <button class="pdf-sheet__btn pdf-sheet__map-toggle" type="button" data-pdf="toggleMapping" aria-pressed="false" hidden>
+                  {{ icon('Rectangle') }}<span data-pdf-map-toggle-label>Map fields</span>
+                </button>
                 <div class="pdf-sheet__picker-wrap">
                   <button
                     class="pdf-sheet__btn"
@@ -82,8 +87,31 @@
                 >
                   {{ icon('DownloadSimple') }}
                 </button>
+                <button class="pdf-sheet__btn pdf-sheet__map-toggle" type="button" data-pdf="downloadFilled" title="Download a flattened PDF copy with the current field values">Filled PDF</button>
               </div>
             </header>
+            <p class="pdf-sheet__hint pdf-sheet__mapping-hint" data-pdf-unmapped hidden>This PDF has no form fields. Use Map fields to add editable areas.</p>
+            <p class="pdf-sheet__hint pdf-sheet__mapping-hint" data-pdf-actions-hint hidden>Double-click a field to link a token value or configure a roll. You can also focus a field and press F2.</p>
+            <div class="pdf-sheet__roll-actions" data-pdf-rolls role="group" aria-label="Field rolls" hidden></div>
+            <div class="pdf-sheet__mapping-tools" data-pdf-mapping-tools hidden>
+              <label><span>Field type</span><select class="pdf-sheet__select" data-pdf-map-tool>
+                <option value="select">Select fields</option>
+                <option value="text">Text field</option>
+                <option value="number">Number field</option>
+                <option value="checkbox">Checkbox</option>
+                <option value="multiline">Multiline text</option>
+              </select></label>
+              <button type="button" data-pdf-map-add>Add field</button>
+              <p data-pdf-map-help>Choose a field type and drag a rectangle on the page. Select a field to move, resize or rename it.</p>
+              <div class="pdf-sheet__map-properties" data-pdf-map-properties hidden>
+                <label><span>Field name</span><input type="text" maxlength="120" required data-pdf-map-name translate="no"></label>
+                {% for key,label in [('x','Left (%)'),('y','Top (%)'),('width','Width (%)'),('height','Height (%)')] %}
+                <label><span>{{ label }}</span><input type="number" min="{{ '0' if key in ['x','y'] else '0.1' }}" max="100" step="0.1" required data-pdf-map-property="{{ key }}"></label>
+                {% endfor %}
+                <button type="button" data-pdf-map-delete>Delete field</button>
+              </div>
+              <p data-pdf-map-error role="alert" hidden></p>
+            </div>
             <section class="pdf-sheet__stage">
               <div class="pdf-sheet__empty" hidden>
                 <p>No PDF selected yet.</p>
@@ -96,6 +124,7 @@
               <div class="pdf-sheet__doc">
                 <div class="pdf-sheet__page-host"></div>
                 <div class="pdf-sheet__fields"></div>
+                <div class="pdf-sheet__mapping" hidden></div>
               </div>
             </section>
           </section>

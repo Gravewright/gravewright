@@ -39,6 +39,7 @@ GROUPS = {
         "gravewright_actors.folder",
         "gravewright_actors.actor",
         "gravewright_actors.asset",
+        "gravewright_pdf_system.mappingtemplate",
     ],
     "journals": [
         "gravewright_journals.folder",
@@ -632,6 +633,15 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             from gravewright.maps.services import MapError
                             try:
                                 kwargs[field_name] = clean_definition(value)
+                            except MapError:
+                                raise AuthError("invalid_archive") from None
+                        elif record["model"] == "gravewright_pdf_system.mappingtemplate" and field_name == "bundle":
+                            from gravewright.pdf_system.templates import normalize_bundle
+                            from gravewright.maps.services import MapError
+                            try:
+                                # Portable mappings have no host resource references.
+                                # UUIDs and field labels belong to their own layout.
+                                kwargs[field_name] = normalize_bundle(value)
                             except MapError:
                                 raise AuthError("invalid_archive") from None
                         else:

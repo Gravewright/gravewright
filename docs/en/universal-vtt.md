@@ -13,7 +13,8 @@ The Builder offers two different import actions:
 
 | What you have | Action | Result |
 | --- | --- | --- |
-| A `.uvtt`, `.dd2vtt` or `.df2vtt` file containing an image and map data | **Import Universal VTT** | A new native scene in **Scenes**, with separate walls, doors and lights; no Builder project |
+| A `.uvtt`, `.dd2vtt` or `.df2vtt` file containing an image and map data | **Import Universal VTT** in Builder | A new linked native scene and editable Builder project with compatible walls, doors and lights |
+| The same file, when only a game scene is needed | **New scene → Import Universal VTT** | A native scene; use **Edit with MapBuilder** later to create its source |
 | A PNG, JPEG, WebP or TIFF image | **Import ready-made map** | A background in the current Builder project; add walls, objects, lights and behaviors over it |
 
 For an image, choose **Library → Import → Import ready-made map**, or the same
@@ -25,8 +26,10 @@ them to the game. See [Import a finished map](map-builder.md#import-a-finished-m
 for replacement, removal and Undo/Redo.
 
 A Universal VTT import cannot reconstruct the source map's brush strokes,
-individual assets or Builder layers from its flattened background. Opening this
-importer from the Builder still creates a separate native scene.
+individual assets or Builder layers from its flattened background. Importing from
+Builder saves the current draft first, creates a separate linked project and
+loads it in the editor. Compatible collision geometry and lights remain editable;
+the flattened background remains one image. Both paths keep the new scene GM-only.
 
 ## Import a Universal VTT scene
 
@@ -48,8 +51,10 @@ importer from the Builder still creates a separate native scene.
 The destination folder comes from the action that opened the importer; there is
 no folder picker inside the dialog. The folder must belong to this campaign.
 The background is stored as scene tiles, while walls, doors and lights remain
-editable native objects. Import creates no Map Builder project and does not
-overwrite an existing scene or Builder draft.
+editable native objects. Import from the scene directory creates no Builder
+project; import from Builder creates and loads one. Neither path overwrites an
+existing scene or Builder draft. **Update scene** applies Builder edits to the
+same linked scene. Import warnings report objects that must remain native.
 
 ### Read the import warnings
 
@@ -128,9 +133,10 @@ the dialog does not offer a partial download.
 
 ## Format and coordinate contract
 
-The accepted container is JSON with numeric `format: 0.2`; the three supported
-filename extensions use this same contract. `0.2` is the interchange format
-version, independent of the Gravewright application version. Import requires an
+The accepted container is JSON with numeric `format: 0.2` or `format: 0.3`; the
+three supported filename extensions use this contract. Export uses `0.2`.
+These are interchange versions, independent of the Gravewright application version.
+Import requires an
 embedded, single-frame PNG or WebP image encoded as raw base64, not a data URL,
 file path or remote URL. Image metadata is removed; EXIF orientation is not
 applied to map coordinates.
@@ -138,7 +144,7 @@ applied to map coordinates.
 | Input field | Interpretation |
 | --- | --- |
 | `resolution.map_size` | Positive width (`x`) and height (`y`) in cells |
-| `resolution.pixels_per_grid` | Integer pixels per cell |
+| `resolution.pixels_per_grid` | Integral numeric pixels per cell (`70` and `70.0` are equivalent) |
 | `resolution.map_origin` | Origin offset in cells; fractional values retain grid alignment |
 | `line_of_sight`, `objects_line_of_sight` | Polylines split into consecutive native wall segments |
 | `portals[].bounds` | Two endpoints defining the native door; collinear walls are cut around its opening |
@@ -152,6 +158,10 @@ Image dimensions must equal the rounded products of `map_size` and
 `(point - map_origin) × pixels_per_grid`. Portal bounds determine door geometry;
 portal `position`, `rotation` and `freestanding` do not add separate native
 placement or behavior.
+Portal cutting uses a separate bounded geometry adapter and tolerates producer
+rounding up to 0.05 pixels when matching a collinear wall. It retains the original
+door coordinates; walls beyond that tolerance are unaffected. Optional software and
+creator labels are bounded metadata; they never become paths or executable data.
 
 Colors accept six-digit `RRGGBB` or eight-digit `AARRGGBB`, optionally prefixed
 with `#`. Light alpha multiplies the clamped intensity. For example, color
@@ -191,8 +201,10 @@ new scene for players.
 ## HTTP contract and implementation checks
 
 - `POST /api/containers/{campaign}/universal-vtt/import`: multipart `file`,
-  `name`, `request_id` and optional `folderId`; returns
-  `{scene, warnings, builderEditable: false}`.
+  `name`, `request_id`, optional `folderId` and optional string
+  `builderEditable: "true" | "false"` (default false); returns
+  `{scene, warnings, builderEditable}` and `project` when editable. The mode is
+  included in the receipt fingerprint; scene/project/file creation rolls back together.
 - `GET /api/maps/{scene}/universal-vtt`: returns
   `{filename, document, warnings}`. `document` is the downloadable UVTT JSON.
 
@@ -204,3 +216,7 @@ grid/ARGB conversion, current artwork, receipts, rollback, isolation and limits.
 The [browser scenario](../../tests/e2e/map_builder_universal_vtt.py) covers the
 public modals, a lost-response retry, downloads, round trips and role boundaries.
 Use the isolated environments described in [Testing](testing.md).
+The shared [scene adapter](../../gravewright/maps/builder_import.py) is also used
+by **Edit with MapBuilder**. Its [integration tests](../../gravewright/maps/tests/test_builder_import.py)
+cover scene identity, native edits, cloning and rollback; [validation tests](../../gravewright/maps/tests/test_builder_import_validation.py)
+cover exact bounds, image scale, native-only properties and bounded query work.

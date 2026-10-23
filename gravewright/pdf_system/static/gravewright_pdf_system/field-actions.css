@@ -1,0 +1,32 @@
+.pdf-field-actions {
+  width: min(560px, calc(100vw - 32px)); font-size: 12px;
+}
+.pdf-field-actions :is(label, input, select, button, p, legend) { font-size: 12px; }
+.pdf-field-actions header [data-pdf-action-close],
+:is(body:has(#table-workspace), body.game-detached) .pdf-field-actions header [data-pdf-action-close] {
+  width: auto; min-height: 32px; flex-shrink: 0; padding-inline: var(--space-2);
+}
+.pdf-field-actions__field { overflow-wrap: anywhere; }
+.pdf-field-actions__body { gap: var(--space-2); }
+.pdf-field-actions__hint { margin: var(--space-0); color: var(--text-muted, #b7b5ad); line-height: 1.5; }
+.pdf-field-actions__presets {
+  margin: var(--space-0); padding: var(--space-2); min-width: 0;
+  border: 1px solid var(--border, #40464e); border-radius: var(--radius-sm);
+}
+.pdf-field-actions__presets legend { color: var(--text, #e8e4d8); padding: var(--space-0) var(--space-1); }
+.pdf-field-actions__preset-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.pdf-field-actions__preset-buttons button {
+  min-height: 34px; white-space: normal; padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border, #40464e); border-radius: var(--radius-sm);
+  background: var(--surface-raised, #20262d); color: var(--text, #e8e4d8); cursor: pointer;
+}
+.pdf-field-actions__preset-buttons button:focus-visible { outline: 2px solid var(--accent, #c09a5a); outline-offset: 2px; }
+.pdf-field-actions__error { margin: var(--space-0); color: var(--danger, #ffaaaa); overflow-wrap: anywhere; }
+.pdf-field-actions__references { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.pdf-field-actions__references > label { flex: 1 1 100%; }
+.pdf-field-actions__references button { min-height: 32px; padding: var(--space-1) var(--space-2); }
+.pdf-field-actions footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3); }
+@media (max-width: 520px) {
+  .pdf-field-actions__preset-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pdf-field-actions .table-form-modal__body { padding: var(--space-2); }
+}

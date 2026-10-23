@@ -11,6 +11,7 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | [macOS runner](en/macos-runner.md) | Intel/Apple Silicon installation, Finder launcher, private tools and local execution |
 | [Getting started](en/getting-started.md) | Dependencies, configuration, migrations and first login |
 | [User guide](en/user-guide.md) | Campaigns, scenes, sheets, journals and table workflows |
+| [Campaign management](en/campaign-management.md) | Prepare campaign documents and assets in the GM workspace before entering the tabletop |
 | [Map Builder](en/map-builder.md) | First project, Tiles/Painting, finished-map backgrounds, layers, saving, Smart Objects and scene updates |
 | [Universal VTT importer/exporter](en/universal-vtt.md) | Import workflows, native maps/walls/doors/lights, warnings and error recovery |
 | [Smart Objects direction](en/smart-objects-direction.md) | Proposed node editor, element capabilities, references and delivery order |

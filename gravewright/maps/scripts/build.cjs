@@ -71,6 +71,7 @@ async function buildAssets({ root = projectRoot, outputRoot = root, dependencies
   const results = [];
   const noticeOutputs = [];
   results.push(await esbuild.build({...common,entryPoints:[source+"/native/table-modules.js"],outfile:otherOutput("table", "media-workspace.js")}));
+  results.push(await esbuild.build({...common,entryPoints:[source+"/native/campaign-library.js"],outfile:otherOutput("web", "campaign-manager/library.js")}));
   results.push(await esbuild.build({...common, entryPoints:[source+'/shared/rendering/render-profile.js'], outfile:output+'/render-profile.js'}));
   const worker = source + "/widgets/game-board/model/visibility-worker.js";
   results.push(await buildNamedModules({ esbuild, source, output, common,

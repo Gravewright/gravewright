@@ -95,6 +95,23 @@ selection, rotation, Undo, opening/closing artwork, the shared wall editor and
 saved settings in English, Portuguese and Spanish at desktop and mobile widths.
 It uses an isolated campaign and accepts `--output` and `--browser-executable`.
 
+The [campaign management scenario](../../tests/e2e/campaign_management.py) uses
+disposable campaign data to exercise native PDF sheets, diary and quest editors,
+co-GM access, denied requests and GM revocation. It checks that management opens
+no game WebSocket or table presence, comparing before/after snapshots of broadcast,
+private scene navigation and presence. It also checks English, Portuguese and
+Spanish at mobile widths, then opens the real table to verify shared documents,
+player filtering and audio playback in two clients. This describes the scenario's
+coverage, not the result of a particular run.
+
+```bash
+uv run --locked python tests/e2e/campaign_management.py --output data/cm-check --browser-executable "<existingChromium>"
+```
+
+Replace `<existingChromium>` with an existing Chromium executable. Choose a new
+or empty output directory for each run; fixtures, logs, state comparisons and
+screenshots stay in that installation-local directory.
+
 ```bash
 uv run --locked playwright install chromium
 uv run --locked python tests/e2e/authentication.py

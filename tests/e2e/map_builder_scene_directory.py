@@ -193,7 +193,7 @@ def check_browser(base, seed, output, executable):
             expect(primary(scene_id).locator('[data-navigating]')).to_be_visible()
             expect(primary(seed['broadcastScene']).locator('[data-broadcast]')).to_be_visible()
             menu = open_menu(seed['selectedScene'])
-            expect(menu.locator('[data-scene-builder-edit]')).to_have_count(0)
+            expect(menu.locator('[data-scene-builder-edit]')).to_have_count(1)
             close_menu(seed['selectedScene'])
             records.append({'case': 'linked-GM-scene-has-only-a-red-MapTrifold-icon-and-retains-compact-row-geometry'})
 
@@ -374,6 +374,33 @@ def check_browser(base, seed, output, executable):
             expect(page.locator('[data-scene-builder-origin]')).to_have_count(1)
             records.append({'case': 'review-update-reuses-the-linked-scene-without-duplicates',
                             'scene': scene_id, 'sceneCount': len(identifiers), 'pixel': repeated_pixels})
+
+            # An ordinary native scene gains a source without changing the
+            # players' broadcast, the raster, or the GM's current selection.
+            native_id = seed['selectedScene']
+            before_adoption = scenes()
+            native_before = scene(native_id)
+            with page.expect_response(lambda response: response.url.endswith('/adopt')) as adopted:
+                open_menu(native_id).locator('[data-scene-builder-edit]').click()
+            assert adopted.value.ok, adopted.value.text()
+            wait_ready(page)
+            adopted_project = review.project(parse_qs(urlsplit(page.url).query)['project'][0])
+            expect(page.locator('[data-builder-generate]')).to_have_text('Update scene')
+            assert adopted_project['sceneId'] == native_id
+            assert adopted_project['document']['sceneGeometry']['width'] == native_before['width']
+            assert adopted_project['document']['backgroundImage']['assetId']
+            after_adoption = scenes()
+            assert len(after_adoption['maps']) == len(before_adoption['maps'])
+            assert after_adoption['activeMapId'] == before_adoption['activeMapId']
+            assert after_adoption['navigatingMapId'] == before_adoption['navigatingMapId']
+            page.screenshot(path=str(output / 'native-scene-adopted-builder.png'))
+            open_game(); directory()
+            before_reopen = len(page.request.get(review.api).json()['projects'])
+            open_menu(native_id).locator('[data-scene-builder-edit]').click()
+            wait_ready(page)
+            assert parse_qs(urlsplit(page.url).query)['project'] == [adopted_project['id']]
+            assert len(page.request.get(review.api).json()['projects']) == before_reopen
+            records.append({'case': 'ordinary-native-scene-opens-in-builder-and-reuses-one-source-without-changing-broadcast'})
         except Exception:
             page.screenshot(path=str(output / 'failure.png'), full_page=True)
             raise

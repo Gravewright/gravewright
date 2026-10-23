@@ -11,6 +11,7 @@ from .models import MapAsset
 from .services import MapError
 from .wall_joins import wall_join_geometry
 from .terrain_brush import terrain_brush_mask
+from .builder_geometry import canvas_size
 
 _rendering = threading.Lock()
 
@@ -151,7 +152,8 @@ def _render_document(doc, campaign_id, *, selection=None, crop=None, mask=False)
 
     cell = doc["cellSize"]
     mask_only = mask
-    extent = crop or (0, 0, doc["columns"] * cell, doc["rows"] * cell)
+    width, height = canvas_size(doc)
+    extent = crop or (0, 0, width, height)
     canvas = Image.new("RGBA" if selection is not None else "RGB",
                        (extent[2] - extent[0], extent[3] - extent[1]),
                        (0, 0, 0, 0) if selection is not None else doc["background"])
@@ -356,7 +358,7 @@ def _render_document(doc, campaign_id, *, selection=None, crop=None, mask=False)
                         raise MapError("A map asset exceeds the image pixel limit.")
                     # One stretched base spans the document; cropped surface
                     # renders and masks never bake this image a second time.
-                    sx, sy = image.width / (doc["columns"] * cell), image.height / (doc["rows"] * cell)
+                    sx, sy = image.width / width, image.height / height
                     box = (extent[0] * sx, extent[1] * sy, extent[2] * sx, extent[3] * sy)
                     with image.convert("RGBA") as decoded:
                         with decoded.resize(canvas.size, Image.Resampling.LANCZOS, box=box) as resized:
@@ -372,7 +374,7 @@ def _render_document(doc, campaign_id, *, selection=None, crop=None, mask=False)
         for span in segments(doc):
             # Door strips remain native objects so opening one removes its art;
             # the same clipped wall spans define the raster and live geometry.
-            if span["door"]:
+            if span["door"] or span["wall"].get("artwork") is False:
                 continue
             solid_spans.append(span)
         wall_geometry = wall_join_geometry(doc, solid_spans)

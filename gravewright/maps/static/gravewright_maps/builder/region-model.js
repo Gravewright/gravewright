@@ -1,6 +1,7 @@
 /** Named presence rectangles in authored cell coordinates; occupancy belongs to the server. */
 import { defaultBlueprint, eventGraph, connectNodes } from './blueprint-model.js';
 import { normalizeRegionFilters } from '../region-filters.js';
+import { documentBounds } from './document-bounds.js';
 export { normalizeRegionFilters, regionMatchesFilters, regionFilterDispositions, regionFilterVisibility } from '../region-filters.js';
 
 const epsilon = 1e-7;
@@ -16,9 +17,10 @@ export function regionContainsPoint(region, point, elevation = 0) {
         && (region.vertical?.top == null || elevation <= region.vertical.top);
 }
 export function validateRegionGeometry(document, region) {
+    const bounds = documentBounds(document);
     if (!region || !['x', 'y', 'width', 'height'].every(key => Number.isFinite(region[key]))
         || region.width < .05 || region.height < .05 || region.x < 0 || region.y < 0
-        || region.x + region.width > document.columns + epsilon || region.y + region.height > document.rows + epsilon) return false;
+        || region.x + region.width > bounds.width + epsilon || region.y + region.height > bounds.height + epsilon) return false;
     if (region.vertical !== undefined) {
         const value = region.vertical;
         if (!value || Array.isArray(value) || Object.keys(value).length !== 2 || !Object.hasOwn(value, 'bottom') || !Object.hasOwn(value, 'top')
@@ -38,12 +40,14 @@ export function createRegion(document, start, end = start, { id = crypto.randomU
         || (document.regions?.length || 0) >= 128
         || ![start?.x, start?.y, end?.x, end?.y].every(Number.isFinite)) return null;
     const coordinate = (value, maximum) => Math.min(Math.max(snap ? Math.round(value) : Math.round(value * 1000) / 1000, 0), maximum);
-    const left = coordinate(start.x, document.columns), right = coordinate(end.x, document.columns);
-    const top = coordinate(start.y, document.rows), bottom = coordinate(end.y, document.rows);
-    const minimum = snap ? 1 : .05;
-    const x = Math.min(left, right, document.columns - minimum), y = Math.min(top, bottom, document.rows - minimum);
-    const region = { id, layerId, x, y, width: Math.max(minimum, Math.abs(right - left)),
-        height: Math.max(minimum, Math.abs(bottom - top)), name: name.trim(), enabled };
+    const bounds = documentBounds(document);
+    if (bounds.width < .05 || bounds.height < .05) return null;
+    const left = coordinate(start.x, bounds.width), right = coordinate(end.x, bounds.width);
+    const top = coordinate(start.y, bounds.height), bottom = coordinate(end.y, bounds.height);
+    const minimumWidth = Math.min(snap ? 1 : .05, bounds.width), minimumHeight = Math.min(snap ? 1 : .05, bounds.height);
+    const x = Math.min(left, right, bounds.width - minimumWidth), y = Math.min(top, bottom, bounds.height - minimumHeight);
+    const region = { id, layerId, x, y, width: Math.max(minimumWidth, Math.abs(right - left)),
+        height: Math.max(minimumHeight, Math.abs(bottom - top)), name: name.trim(), enabled };
     if (filters !== undefined) {
         try { region.filters = normalizeRegionFilters(filters); } catch { return null; }
     }

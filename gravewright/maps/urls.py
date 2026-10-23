@@ -6,6 +6,7 @@ urlpatterns = [
     path('api/maps/<uuid:map_id>/universal-vtt', universal_vtt_views.export_map),
     path('game/<uuid:campaign_id>/map-builder', builder.page, name='map-builder'),
     path('api/containers/<uuid:campaign_id>/map-builder', builder.state, name='map-builder-state'),
+    path('api/containers/<uuid:campaign_id>/map-builder/scenes/<uuid:scene_id>/adopt', builder.adopt, name='map-builder-adopt'),
     path('api/containers/<uuid:campaign_id>/map-builder/testing-catalog', testing_views.catalog),
     path('api/containers/<uuid:campaign_id>/map-builder/test', testing_views.draft),
     path('api/containers/<uuid:campaign_id>/map-builder/templates', builder.templates, name='blueprint-templates'),

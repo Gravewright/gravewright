@@ -1,8 +1,10 @@
 from django.urls import path
-from . import views, streamer
+from . import views, streamer, management_views
 
 app_name = 'campaigns'
 urlpatterns = [
+    path('campaigns/<uuid:campaign_id>/manage', management_views.page, name='manage'),
+    path('api/containers/<uuid:campaign_id>/management', management_views.overview, name='management'),
     path('stream/<str:token>', streamer.consume),
     path('api/containers/<uuid:campaign_id>/streamer-link', views.streamer_link),
     path('api/containers/<uuid:campaign_id>/streamer-link/revoke', views.revoke_streamer),

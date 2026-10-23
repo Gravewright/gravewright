@@ -9,7 +9,7 @@ const collections = { actors: 'actors', tokens: 'tokens', maps: 'maps', journals
  * frontend-contract.js is generated from contracts/frontend.json, while result
  * projection and command validation stay in each native Python service.
  */
-export function createDomainApi(call, { events, ui, i18n, context = {} } = {}) {
+export function createDomainApi(call, { events, ui, i18n, files, context = {} } = {}) {
   const api = { version: FRONTEND_CONTRACT.version, context: Object.freeze({ ...context }) };
   const request = (domain, method, payload = {}, options = {}) => {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return Promise.reject(new ModuleError('invalid_data'));
@@ -46,6 +46,12 @@ export function createDomainApi(call, { events, ui, i18n, context = {} } = {}) {
   }
   api.actors.sheet = (id, payload = {}, options) => request('actors', 'sheet', { ...payload, id }, options);
   api.maps.layers = (payload = {}, options) => request('maps', 'layers', payload, options);
+  const systemCall = api.system.call;
+  api.system.call = (operation, data = {}, options) => typeof operation === 'string'
+    ? systemCall({ operation, data }, options) : systemCall(operation, data);
+  // This is a method catalog, not a permission grant. The current system's
+  // operation availability is queried separately through system.state().
+  api.capabilities = () => structuredClone(FRONTEND_CONTRACT);
   api.chat = {
     history: (payload = {}, options) => request('chat', 'history', payload, options),
     send: (payload, options) => request('chat', 'send', payload, options),
@@ -58,6 +64,12 @@ export function createDomainApi(call, { events, ui, i18n, context = {} } = {}) {
     lobby: (options) => request('table', 'lobby', {}, options),
     updateLobby: (payload, options) => request('table', 'updateLobby', payload, options),
   };
+  for (const [domain, methods] of Object.entries(FRONTEND_CONTRACT.binary || {})) {
+    for (const method of Object.keys(methods)) api[domain][method] = (payload = {}, options = {}) => {
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return Promise.reject(new ModuleError('invalid_data'));
+      return files ? files(domain, method, payload, options) : Promise.reject(new ModuleError('unavailable'));
+    };
+  }
   if (events) api.events = events;
   if (ui) api.ui = ui;
   if (i18n) api.i18n = i18n;

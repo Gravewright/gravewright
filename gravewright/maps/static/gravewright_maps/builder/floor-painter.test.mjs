@@ -13,6 +13,19 @@ function fixture(mode = 'brush', overrides = {}) {
     return { painter, document, options, events };
 }
 
+test('free floor gestures clamp previews and committed geometry to imported raster edges', () => {
+    const { painter, document, events } = fixture('rectangle', { snap: false });
+    Object.assign(document, { columns: 4, rows: 3, cellSize: 50,
+        sceneGeometry: { width: 197, height: 145, gridSize: 50.5, gridOffsetX: 0, gridOffsetY: 0 } });
+    painter.start({ x: 3, y: 2 }); painter.move({ x: 7, y: 6 });
+    assert.deepEqual(events.previews.at(-1).meta.cursor, { x: 3.94, y: 2.9 });
+    assert.equal(painter.end({ x: 7, y: 6 }), true);
+    const floor = events.commits[0].candidate.floors[0];
+    assert.ok(Math.abs(floor.x + floor.width - 3.94) < 1e-8);
+    assert.ok(Math.abs(floor.y + floor.height - 2.9) < 1e-8);
+    assert.deepEqual(events.errors, []);
+});
+
 test('repainting the same family over large adjoining floors is a no-op gesture with and without snapping', () => {
     const previousRandom = Math.random;
     Math.random = () => { throw new Error('A same-family gesture must not reroll variants.'); };

@@ -26,7 +26,10 @@ class FrontendApiTests(TestCase):
         from gravewright.modules.frontend import CONTRACT
         for domain in CONTRACT['domains']:
             with self.subTest(domain=domain):
-                result = self.call(domain, 'state', {'sceneId': str(self.scene.pk)})
+                payload = {'sceneId': str(self.scene.pk)}
+                if domain == 'ownership':
+                    payload.update(kind='actors', id=str(self.actor.pk))
+                result = self.call(domain, 'state', payload)
                 self.assertEqual(result.status_code, 200, result.content)
         root = Path(__file__).resolve().parents[2] / 'modules'
         generated = (root / 'static/gravewright_modules/frontend-contract.js').read_text(encoding='utf-8')

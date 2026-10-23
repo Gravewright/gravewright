@@ -29,7 +29,7 @@ import { mergeSceneProject } from './scene-sync-model.js';
 import { mountNativeEffects } from './native-effects.js';
 import { isNativeKind, nativeFactory, nativeCatalog, presetName } from './native-controls.js';
 
-import { clone, clamp, round, length, newDocument, normalizeDocument, nearestWall, doorFits, removeObject, fitsBounds, history, objectKinds, translateSelection, rotateSelection, duplicateSelection, objectsInRectangle, familyAssetIds, sampleAssetId, snapWallSegment, floorBrushCells, sampleFloor, floorFreeContours, floorContainsPoint, documentEditingMode, setEditingMode, setBackgroundImage } from './model.js';
+import { clone, clamp, round, length, newDocument, normalizeDocument, nearestWall, doorFits, removeObject, fitsBounds, history, objectKinds, translateSelection, rotateSelection, duplicateSelection, objectsInRectangle, familyAssetIds, sampleAssetId, snapWallSegment, floorBrushCells, sampleFloor, floorFreeContours, floorContainsPoint, documentEditingMode, setEditingMode, setBackgroundImage, documentBounds } from './model.js';
 
 const root = document.querySelector('[data-map-builder]');
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -684,6 +684,7 @@ function mountWorkspace(root) {
     function projectMetadata(project, replace = false) {
         if (replace || state.sceneId !== project.sceneId) state.sceneVersion = project.sceneVersion;
         state.sceneId = project.sceneId; state.canUpdate = Boolean(project.canUpdate);
+        if (replace || Object.hasOwn(project, 'importWarnings')) state.importWarnings = Array.isArray(project.importWarnings) ? project.importWarnings : [];
         const button = $('[data-builder-update]'), review = $('[data-builder-review-update]');
         const primary = $('[data-builder-generate]'), create = $('[data-builder-review-generate]');
         if (button) button.hidden = true;
@@ -705,6 +706,14 @@ function mountWorkspace(root) {
         for (const [label, value] of [['Map name', state.document.name], ['Dimensions in cells', `${state.document.columns} × ${state.document.rows}`],
             ...objectKinds.map(kind => [kindName(kind), (state.document[kind] || []).length])]) {
             const row = node('div'); row.append(node('span', {}, t(label)), node('strong', { translate: 'no' }, String(value))); target.append(row);
+        }
+        if (state.document.sceneGeometry) target.append(node('p', { class: 'map-builder__hint' },
+            t('Only walls, doors and lights are imported as editable objects. Other scene content remains in the scene.')),
+            node('p', { class: 'map-builder__hint' }, t('The original image dimensions and grid are preserved. Disable snapping for precise adjustments to imported geometry.')));
+        if (state.importWarnings?.length) {
+            const warnings = node('ul', { class: 'map-builder__hint', 'data-builder-import-warnings': '' });
+            for (const warning of state.importWarnings) warnings.append(node('li', {}, t(warning)));
+            target.append(warnings);
         }
         projectMetadata({ sceneId: state.sceneId, sceneVersion: state.sceneVersion, canUpdate: state.canUpdate });
     }
@@ -833,9 +842,9 @@ function mountWorkspace(root) {
         commit(); renderCanvas(); renderLayers(); renderProperties();
     }
     function bounded(point, cell = false, snapping = state.snap) {
-        const step = cell ? 1 : state.snapStep;
+        const step = cell ? 1 : state.snapStep, bounds = documentBounds(state.document);
         const snap = value => snapping ? Math.round(value / step) * step : round(value);
-        return { x: clamp(snap(point.x), 0, state.document.columns), y: clamp(snap(point.y), 0, state.document.rows) };
+        return { x: clamp(snap(point.x), 0, bounds.width), y: clamp(snap(point.y), 0, bounds.height) };
     }
     function hit(point, event) {
         const element = event?.target.closest?.('[data-object-id]');
@@ -902,14 +911,15 @@ function mountWorkspace(root) {
     function start(point, event, resumePaint = false) {
         if (busy || !ready || state.preview) return false;
         flushFocusedField();
+        const bounds = documentBounds(state.document);
         if (state.tool === 'floor' && state.paintMode === 'brush' && !state.samplingFloor && event.button === 0 && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
-            if (point.x < 0 || point.y < 0 || point.x > state.document.columns || point.y > state.document.rows) return false;
+            if (point.x < 0 || point.y < 0 || point.x > bounds.width || point.y > bounds.height) return false;
             brushResize = { point: { x: point.x, y: point.y }, clientX: event.clientX, size: state.brush.floorSize };
             resizeBrush(event); return true;
         }
         const wallControl = wallControls?.start(point, event);
         if (wallControl !== undefined && wallControl !== null) return wallControl;
-        if (point.x < 0 || point.y < 0 || point.x > state.document.columns || point.y > state.document.rows) return false;
+        if (point.x < 0 || point.y < 0 || point.x > bounds.width || point.y > bounds.height) return false;
         if (state.tool === 'floor' && (state.samplingFloor || event.altKey)) { pickFloorMaterial(point); return false; }
         const before = clone(state.document), target = hit(point, event);
         if (!resumePaint && (hasNativeEditor(target?.kind) || target?.kind === 'decorations' && isSmartDecoration(itemFor(target)))
@@ -979,11 +989,11 @@ function mountWorkspace(root) {
             animation: state.brush.lightAnimation, elevation: state.brush.lightElevation };
         if (['particle', 'shader'].includes(tool)) return { ...nativeFactory(tool, state.nativeChoices[tool], point.x, point.y), id: base.id, layerId };
         if (tool === 'decoration') {
-            const dragged = Math.hypot(point.x - start.x, point.y - start.y) > .1;
-            const width = Math.min(state.document.columns, dragged ? Math.max(.05, Math.abs(point.x - start.x)) : state.brush.width);
-            const height = Math.min(state.document.rows, dragged ? Math.max(.05, Math.abs(point.y - start.y)) : state.brush.height);
-            const object = { ...base, x: clamp(dragged ? Math.min(start.x, point.x) : start.x, 0, state.document.columns - width),
-                y: clamp(dragged ? Math.min(start.y, point.y) : start.y, 0, state.document.rows - height), width, height, rotation: state.brush.rotation };
+            const dragged = Math.hypot(point.x - start.x, point.y - start.y) > .1, bounds = documentBounds(state.document);
+            const width = Math.min(bounds.width, dragged ? Math.max(.05, Math.abs(point.x - start.x)) : state.brush.width);
+            const height = Math.min(bounds.height, dragged ? Math.max(.05, Math.abs(point.y - start.y)) : state.brush.height);
+            const object = { ...base, x: clamp(dragged ? Math.min(start.x, point.x) : start.x, 0, bounds.width - width),
+                y: clamp(dragged ? Math.min(start.y, point.y) : start.y, 0, bounds.height - height), width, height, rotation: state.brush.rotation };
             return object.assetId ? object : { ...object, empty: true, name: t('Empty Object'), lever: { state: 'off' } };
         }
         return { ...base, x1: start.x, y1: start.y, x2: point.x, y2: point.y, thickness: state.brush.thickness,
@@ -1171,7 +1181,8 @@ function mountWorkspace(root) {
     }, { signal });
     function renderBrushCursor(point, metadata) {
         const guide = $('[data-builder-ghost]'); guide.replaceChildren();
-        if (point.x < 0 || point.y < 0 || point.x >= state.document.columns || point.y >= state.document.rows) return;
+        const bounds = documentBounds(state.document);
+        if (point.x < 0 || point.y < 0 || point.x >= bounds.width || point.y >= bounds.height) return;
         const layer = state.document.layers.find(item => item.id === state.activeLayer);
         if (!brushResize && (!layerVisible(layer) || layer.locked)) return;
         if (state.samplingFloor) {
@@ -1198,7 +1209,7 @@ function mountWorkspace(root) {
         if (!floorSnap()) return;
         const cells = floorBrushCells(state.document, point, point, state.paintMode === 'brush' ? state.brush.floorSize : 1,
             { shape: state.brushShape, anchor: state.brushShape === 'circle' ? 'center' : 'corner' });
-        guide.append(svg('path', { d: cells.map(cell => `M${cell.x} ${cell.y}h1v1h-1Z`).join(' '),
+        guide.append(svg('path', { d: cells.map(cell => `M${cell.x} ${cell.y}h${Math.min(1, bounds.width - cell.x)}v${Math.min(1, bounds.height - cell.y)}h${-Math.min(1, bounds.width - cell.x)}Z`).join(' '),
             fill: erase ? '#e08b8029' : '#e4bf7629', stroke: erase ? '#e08b80' : '#e4bf76',
             'stroke-width': 1, 'vector-effect': 'non-scaling-stroke', 'data-builder-brush-cursor': '', 'data-builder-brush-operation': state.paintOperation }));
     }
@@ -1386,10 +1397,23 @@ function mountWorkspace(root) {
         } catch (error) { if (!disposed) notify(t(error.message || 'Could not run the test.'), [], 'error'); }
         finally { if (!disposed) setBusy(false); }
     }, { signal });
-    $('[data-builder-uvtt-import]').addEventListener('click', () => {
+    $('[data-builder-uvtt-import]').addEventListener('click', async () => {
         if (busy || activeModal) return;
         flushFocusedField(); cancelDrawing();
-        activeModal = openUniversalVtt({ campaignId: root.dataset.campaignId, folderId: state.folderId, t });
+        if (!await run(() => saveCurrent({ retry: true })) || disposed) return;
+        activeModal = openUniversalVtt({ campaignId: root.dataset.campaignId, folderId: state.folderId, builderEditable: true, t,
+            onImported: async result => {
+                if (disposed) return;
+                const accepted = await run(async () => {
+                    await refreshLibrary();
+                    if (disposed) return;
+                    acceptProject(result.project);
+                    notify([t('Map imported into Builder. Review the editable geometry before updating the scene.'),
+                        ...(result.warnings || []).map(warning => t(warning))].join(' '));
+                });
+                if (!accepted && !disposed) throw lastFailure || new Error(t('Universal VTT interchange failed.'));
+            },
+        });
         activeModal.addEventListener('close', () => { activeModal = null; }, { once: true });
     }, { signal });
     $('[data-builder-network]').addEventListener('click', () => {
@@ -1568,11 +1592,13 @@ function mountWorkspace(root) {
     function applySettings() {
         const next = { ...state.document };
         for (const key of ['name', 'columns', 'rows', 'cellSize', 'background']) next[key] = key === 'name' || key === 'background' ? form.elements[key].value : Number(form.elements[key].value);
+        if (['columns', 'rows', 'cellSize'].some(key => next[key] !== state.document[key])) delete next.sceneGeometry;
         if (!next.name.trim() || next.name.length > 120 || !/^#[0-9a-f]{6}$/i.test(next.background)
             || !Number.isInteger(next.columns) || next.columns < 1 || next.columns > 200
             || !Number.isInteger(next.rows) || next.rows < 1 || next.rows > 200
             || !Number.isInteger(next.cellSize) || next.cellSize < 16 || next.cellSize > 256) return false;
-        if (!fitsBounds(next) || next.columns * next.rows * next.cellSize ** 2 > (state.limits.maxPixels || 16777216)) {
+        const pixels = next.sceneGeometry ? next.sceneGeometry.width * next.sceneGeometry.height : next.columns * next.rows * next.cellSize ** 2;
+        if (!fitsBounds(next) || pixels > (state.limits.maxPixels || 16777216)) {
             notify(t('Keep existing objects inside the map and the output image within 16 megapixels.'), [], 'error'); return false;
         }
         state.document = next; commit(); renderCanvas(); camera.resize(next.columns, next.rows, next.cellSize, false); return true;

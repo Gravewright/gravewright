@@ -131,6 +131,30 @@ def merge_field(before, local, remote):
     conflict()
 
 
+def merge_scene_geometry(document, baseline, scene):
+    """Import native calibration without moving source objects or raster pixels."""
+    previous = baseline.get("sceneGeometry")
+    if not isinstance(previous, dict):
+        return False
+    if (scene.width, scene.height) != (previous["width"], previous["height"]):
+        raise services.MapError("The scene dimensions changed. Reload the project before updating it.", "conflict")
+    local = document.get("sceneGeometry")
+    options = services.settings({}, scene.settings)
+    changed = False
+    for key in ("gridSize", "gridOffsetX", "gridOffsetY", "imageScale"):
+        before, remote = previous.get(key, 1), options[key]
+        if equal(before, remote):
+            continue
+        # Removing the imported calibration is an explicit local resize. Do
+        # not replace that pending edit with a native calibration change.
+        if not isinstance(local, dict):
+            conflict()
+        local[key] = merge_field(before, local.get(key, 1), remote)
+        previous[key] = deepcopy(remote)
+        changed = True
+    return changed
+
+
 def _native_overrides(previous, before, after, kind):
     """Retain native-only properties which have no builder control."""
     from .builder_services import strip_live
@@ -258,7 +282,7 @@ def reconcile(source, scene, who):
     from .builder_dynamic import plan
     surface_groups = {item["sourceId"]: item for item in plan(baseline)}
     changed_walls, removed = set(), set()
-    changed = False
+    changed = merge_scene_geometry(doc, baseline, scene)
     for entry in entries:
         key, kind = entry["sourceId"], entry["kind"]
         row = current.get(entry["id"])
@@ -282,7 +306,7 @@ def reconcile(source, scene, who):
             previous_door = {field: before[field] / cell for field in ("x1", "y1", "x2", "y2")}
             changed_walls.update(wall["id"] for wall in baseline.get("walls", [])
                                  if builder.collinear_overlap(wall, previous_door) is not None)
-        if kind == "walls" and before.get("kind") == "wall":
+        if kind == "walls" and before.get("kind") == "wall" and key != source_key:
             changed_walls.add(source_key)
             continue
         if record is None:

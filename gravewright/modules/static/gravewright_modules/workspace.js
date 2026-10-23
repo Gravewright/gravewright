@@ -120,6 +120,8 @@ if (table) {
       surfaces.delete(element);
     }
     for (const [selector, domain] of [["#items-panel .game-directory", "item.directory"], ["#actors-panel .game-directory", "actor.directory"], ["#maps-panel .game-directory", "scene.directory"], ["#chat-panel", "chat.log"], [".house-menu__preferences", "preferences"], ["#table-workspace", "table.interface"]]) {
+      // Campaign preparation mounts document providers, without mounting a live table interface.
+      if (domain === 'table.interface' && table.dataset.management === 'true') continue;
       const el = document.querySelector(selector);
       if (el) attach(el, domain);
     }

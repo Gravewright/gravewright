@@ -32,13 +32,9 @@ export function autoMapFields(fieldNames, canonicalFields, fieldType, barChoices
     const used = new Set();
     for (const name of fieldNames) {
         const barPath = forBar.get(name);
-        if (barPath) {
-            fields[name] = { path: barPath, type: "number" };
-            continue;
-        }
         const known = canonicalFields && Object.hasOwn(canonicalFields, name) ? canonicalFields[name] : undefined;
         if (known) {
-            fields[name] = known;
+            fields[name] = barPath ? { path: barPath, type: 'number' } : known;
             continue;
         }
         let segment = safeSegment(name);
@@ -47,7 +43,10 @@ export function autoMapFields(fieldNames, canonicalFields, fieldType, barChoices
         while (used.has(segment))
             segment = `${base}_${suffix++}`;
         used.add(segment);
-        fields[name] = { path: `sheet.fields.${segment}`, type: fieldType(name) === "Btn" ? "boolean" : "string" };
+        // Reserve every fallback address before applying a bar override, so
+        // unrelated fields retain their values when sanitized names collide.
+        fields[name] = barPath ? { path: barPath, type: 'number' }
+            : { path: `sheet.fields.${segment}`, type: fieldType(name) === "Btn" ? "boolean" : "string" };
     }
     return fields;
 }

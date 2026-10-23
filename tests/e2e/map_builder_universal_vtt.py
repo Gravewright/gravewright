@@ -117,7 +117,7 @@ def check_browser(base, seed, output, executable):
                                       and response.url.endswith('/universal-vtt/import')) as rejected:
                 modal().locator('[data-uvtt-submit]').click()
             assert rejected.value.status == 400, rejected.value.text()
-            expect(modal().locator('[data-uvtt-status]')).to_contain_text('Choose a valid Universal VTT 0.2 file.')
+            expect(modal().locator('[data-uvtt-status]')).to_contain_text('Choose a valid Universal VTT 0.2 or 0.3 file.')
             assert persistent_snapshot(output) == before
             records.append({'case': 'invalid-uvtt-file-reports-application-error-without-writing-rows-or-files'})
 
@@ -144,8 +144,8 @@ def check_browser(base, seed, output, executable):
             result = imported.value.json()
             identifier = result['scene']['id']
             assert identifier == lost_id
-            assert result['builderEditable'] is False
-            expect(modal().locator('[data-uvtt-status]')).to_contain_text('has not been activated for players')
+            assert result['builderEditable'] is True
+            expect(modal().locator('[data-uvtt-status]')).to_contain_text('Map imported into Builder')
             expect(modal().locator('[data-uvtt-warnings]')).to_contain_text('UVTT portals are imported as doors')
             assert persistent_snapshot(output) == retry_before
             projection = scenes()
@@ -153,7 +153,7 @@ def check_browser(base, seed, output, executable):
             assert projection['activeMapId'] == original['activeMapId']
             scene = next(row for row in projection['maps'] if row['id'] == identifier)
             assert scene['name'] == imported_name and scene['visibility'] == 'gm'
-            assert not scene.get('builderProjectId')
+            assert scene['builderProjectId'] == result['project']['id']
             data = native(identifier)
             assert len(data['walls']) == 5 and len(data['lights']) == 1, data
             portal = next(row for row in data['walls'] if row.get('kind') == 'door')
@@ -161,9 +161,15 @@ def check_browser(base, seed, output, executable):
             assert data['lights'][0]['color'] == '#2468aa'
             assert data['lights'][0]['x'] == data['lights'][0]['y'] == 70
             assert data['lights'][0]['dim_radius'] == 2.5
-            assert page.request.get(review.api).json()['projects'] == []
-            records.append({'case': 'import-retries-one-logical-operation-and-creates-one-gm-only-native-scene-with-cropped-portals-origin-and-argb-light'})
+            project = review.project(result['project']['id'])
+            assert project['sceneId'] == identifier
+            assert len(project['document']['doors']) == len(project['document']['lights']) == 1
+            assert all(row['artwork'] is False for row in project['document']['walls'])
+            expect(page.locator('[data-builder-title]')).to_have_value(imported_name)
+            expect(page.locator('[data-builder-generate]')).to_have_text('Update scene')
+            records.append({'case': 'import-retries-one-logical-operation-and-opens-linked-editable-builder-project-with-portals-origin-and-argb-light'})
             modal().locator('[data-uvtt-close]').click()
+            page.screenshot(path=str(output / 'uvtt-editable-builder.png'))
 
             for locale in ('en', 'pt-BR', 'es'):
                 change_locale(page, locale, campaign)
@@ -193,7 +199,7 @@ def check_browser(base, seed, output, executable):
                      'audience': {'scope': 'trigger'}, 'x': 400, 'y': 30}],
                 'edges': [{'kind': 'execution', 'from': 'event', 'to': 'message', 'output': 'next'}]}}}
             saved = post(page, f'/api/maps/{identifier}/automation/network/{owner["id"]}', {
-                'request_id': str(uuid4()), 'expected_version': owner['version'], 'expected_project_version': None,
+                'request_id': str(uuid4()), 'expected_version': owner['version'], 'expected_project_version': owner['projectVersion'],
                 'blueprint': blueprint})
             assert saved['status'] == 200, saved
             before_export = persistent_snapshot(output)

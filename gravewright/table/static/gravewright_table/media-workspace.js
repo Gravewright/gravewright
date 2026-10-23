@@ -1587,6 +1587,7 @@ import { executeNative } from "/static/gravewright_modules/domain-api.js";
 import { mountModal } from "/static/gravewright_table/modal.js";
 var root = document.querySelector("#table-workspace");
 var campaign = root?.dataset.tableId;
+var mediaScope = new AbortController();
 var states = {};
 var widgets = {};
 var nodes = {};
@@ -1606,15 +1607,18 @@ var rt = () => window.gravewrightRealtime;
 var who = () => root?.dataset.role === "gm";
 var previewToken = () => who() && window.gravewrightTokenSelection?.length === 1 ? window.gravewrightTokenSelection[0] : null;
 async function fresh(module) {
+  mediaScope.signal.throwIfAborted();
   const requestedScene = scene;
-  const v = await gravewright[module].state({ sceneId: scene, previewTokenId: module === "audio" ? previewToken() : null });
+  const v = await gravewright[module].state({ sceneId: scene, previewTokenId: module === "audio" ? previewToken() : null }, { signal: mediaScope.signal });
+  mediaScope.signal.throwIfAborted();
   if (["cards", "audio"].includes(module) && requestedScene !== scene) return v;
   states[module] = v;
   if (module === "audio" && v.serverTime) clockOffset = v.serverTime - Date.now() / 1e3;
   return v;
 }
 async function command(module, action, data = {}) {
-  return executeNative(gravewright, module, action, { sceneId: scene, ...data });
+  mediaScope.signal.throwIfAborted();
+  return executeNative(gravewright, module, action, { sceneId: scene, ...data }, { signal: mediaScope.signal });
 }
 function cardById(id) {
   return [...states.cards?.hand || [], ...states.cards?.cards || []].find((c) => c.id === id);
@@ -1851,6 +1855,7 @@ function showAudio() {
   }));
 }
 function syncAudio() {
+  if (mediaScope.signal.aborted || root?.dataset.management === "true" && !unlocked) return;
   const state = states.audio;
   if (!state) return;
   const now = Date.now() / 1e3 + clockOffset, desired = /* @__PURE__ */ new Map(), tracks = new Map((state.tracks || []).map((t) => [t.id, t]));
@@ -1905,6 +1910,7 @@ window.addEventListener("gravewright:connected", () => {
   for (const module of ["cards", "audio"]) rt().subscribeModule(module, scene, module === "audio" ? previewToken() : null);
 });
 window.addEventListener("gravewright:module-scene", () => {
+  if (mediaScope.signal.aborted) return;
   scene = map()?.id || null;
   delete states.cards;
   delete states.audio;
@@ -1918,7 +1924,7 @@ window.addEventListener("gravewright:module-scene", () => {
   close("cards");
   close("placement");
   close("audio");
-  if (scene) {
+  if (scene && root?.dataset.management !== "true") {
     widgets.cards = SceneCardWorkspace_native_default(host("cards"), options({ ...base(), cards: [], active: true }, (event, value) => {
       if (event === "refresh") void fresh("cards").then(refresh);
       if (event === "preview") window.gravewrightMaps?.board?.previewCard(value);
@@ -1971,17 +1977,27 @@ window.gravewrightTableMedia = { areaCommand, showHand, showAudio, mountCompendi
   unlocked = true;
   syncAudio();
 } };
-setInterval(() => {
+var playbackTimer = setInterval(() => {
   if (scene && unlocked) void fresh("audio").then(syncAudio).catch(() => {
   });
 }, 2e3);
-window.addEventListener("pagehide", () => {
+function disposeMedia() {
+  if (mediaScope.signal.aborted) return;
+  mediaScope.abort();
+  unlocked = false;
+  clearInterval(playbackTimer);
+  clearInterval(fadeTimer);
+  cancelAnimationFrame(handDragFrame);
   for (const row of media.values()) {
     row.audio.pause();
     row.audio.removeAttribute("src");
+    row.audio.load();
   }
+  media.clear();
   for (const name of Object.keys(widgets)) close(name);
-});
+}
+window.addEventListener("pagehide", disposeMedia, { once: true });
+window.addEventListener("gravewright:access-revoked", disposeMedia, { once: true });
 var muteButton = document.querySelector('[data-audio-control="mute"]');
 var volume = document.querySelector('[data-audio-control="volume"]');
 var mixer = document.querySelector('[data-audio-control="mixer"]');

@@ -18,3 +18,12 @@ test('PDF names cannot inject object prototypes and sanitized collisions stay di
     writeCanonical(actor, fields.__proto__.path, 'safe');
     assert.equal(readCanonical(actor, fields.__proto__.path), 'safe');
 });
+test('bar overrides retain fallback addresses of other PDF fields with colliding names', () => {
+    const names = ['Skill.Modifier', 'Skill Modifier'];
+    const before = autoMapFields(names, {}, () => 'Tx', {});
+    const actor = { data: { fields: { Skill_Modifier: '3', Skill_Modifier_2: '7' } } };
+    const after = autoMapFields(names, {}, () => 'Tx', { bar1Value: names[0] });
+    assert.equal(after[names[1]].path, before[names[1]].path);
+    assert.equal(readCanonical(actor, after[names[1]].path), '7');
+    assert.equal(after[names[0]].path, 'sheet.bars.bar_1.value');
+});

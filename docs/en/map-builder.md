@@ -36,8 +36,32 @@ broadcast.
 
 To resume, use **Panels → Projects**, or right-click a scene linked to a project
 and choose **Edit with MapBuilder**. The linked scene has the red map icon in
-the GM's directory. A scene imported as an ordinary image or through Universal
-VTT has no editable Builder source unless it was created from a Builder project.
+the GM's directory. **Edit with MapBuilder** also works on ordinary image and
+Universal VTT scenes: the first opening creates a linked editable project.
+
+### Edit an existing scene
+
+Right-click any scene as GM and choose **Edit with MapBuilder**. The existing
+base raster becomes a project background; representable walls, doors and lights
+become editable objects. Opening creates no duplicate scene and changes neither
+the broadcast nor the GM's scene selection. Subsequent openings reuse the same
+project. Use **Update scene** to apply edits to that scene.
+With a scene open, GMs can also choose **Edit map with Map Builder** in the top
+bar beside Game, GM and Effects. It edits the scene currently viewed by that GM,
+including a private selection. The button is hidden when no scene is open.
+
+Exact image dimensions, fractional grid sizes and offsets are retained. Imported
+collision walls have **Show wall artwork** disabled so generation does not paint
+new lines over the finished image. They appear as dashed editing guides and are
+omitted from Preview. The door has the equivalent artwork option. Artwork already
+baked into the source image cannot be removed by moving a wall or opening a door.
+
+Tokens, fog, drawings, image overlays, audio and complex native objects stay in
+the scene. Objects outside Builder limits or with unsupported properties stay
+native; import warnings remain available in **Review**. They are preserved by
+updates but are not included in the Builder preview. A missing or unreadable base
+raster prevents conversion without leaving a partial project. For fractional
+native grids, disable snapping when positioning between Builder workspace cells.
 
 ### Project, preview and game scene
 
@@ -245,7 +269,7 @@ previous visibility and resumes editing.
 | **Tiles** | Grid rooms, repeated materials, precise shapes or unsnapped hard edges | Concrete floor images/shapes, walls and other project objects |
 | **Painting** | Soft terrain transitions and gradual material blending | Brush strokes and their masks, with the same project objects and layers |
 | **Import ready-made map** | A finished PNG/JPEG/WebP/TIFF to trace or decorate | One background image plus the objects you place over it |
-| **Import Universal VTT** | A `.uvtt`, `.dd2vtt` or `.df2vtt` containing grid/wall/door/light data | Native scene objects; this creates a separate scene rather than a Builder project |
+| **Import Universal VTT** | A `.uvtt`, `.dd2vtt` or `.df2vtt` containing grid/wall/door/light data | A new linked scene and Builder project, with an image background and editable compatible objects |
 
 Tiles and Painting are modes of the same project; switching modes preserves
 existing work. A ready-made background can be used with either mode. For file
@@ -1801,6 +1825,26 @@ Walls and doors may additionally store native `presentation`,
 `bottom/top: null` means no elevation limit. Generation flattens behavior and
 elevation into the native wall fields. Older objects that omit these settings
 retain their existing defaults without a source rewrite.
+Optional Boolean `artwork` on walls and doors defaults to true. False retains
+the barrier while omitting its painted artwork; imported collision geometry uses
+this flag. An independent collision wall retains its native ID when moved.
+Version-three documents may store `sceneGeometry: {width, height, gridSize,
+gridOffsetX, gridOffsetY, imageScale}`. Width/height are exact positive pixel integers;
+the grid retains native numeric sizes/offsets and image scale (optional, default 1).
+Integer columns/rows describe a
+containing workspace; raster output and the base image use the exact dimensions.
+Changing workspace dimensions or cell size clears this imported geometry.
+`POST /api/containers/{campaign}/map-builder/scenes/{scene}/adopt` accepts
+`{request_id, expected_scene_version}` and returns `{project, scene, warnings}`.
+It checks GM membership and scene ownership, serializes project creation under
+the campaign lock, reuses existing links and records a retry receipt. Storage
+created by a failed adoption is removed. The source manifest records precisely
+which original native objects the project owns; subsequent updates preserve
+external content and the normal revision/conflict checks.
+Synchronization also imports native grid calibration without moving objects.
+Concurrent changes to the same calibration field conflict; native raster size
+changes conflict because they require a fresh background, rather than silently
+stretching the saved source image.
 Doors and decorations optionally store strict Boolean `interactionEnabled`;
 absence retains the enabled default without rewriting older documents.
 Optional `editingMode: "tiles" | "paint"` selects the workspace; an omitted value

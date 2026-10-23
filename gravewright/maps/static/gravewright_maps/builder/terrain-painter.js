@@ -1,6 +1,7 @@
 /** Continuous terrain gestures; the host owns pointer capture, history and rendering. */
 import { clone, applyTerrainStroke } from './model.js';
 import { terrainBrushLimits } from './terrain-brush.js';
+import { documentBounds } from './document-bounds.js';
 
 const finitePoint = point => point && Number.isFinite(point.x) && Number.isFinite(point.y);
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -10,7 +11,10 @@ export function createTerrainPainter({ getDocument, getOptions, onPreview, onCom
     unschedule = handle => globalThis.clearInterval(handle) }) {
     let gesture, timer, disposed = false;
     const stopTimer = () => { if (timer !== undefined) { unschedule(timer); timer = undefined; } };
-    const bounded = (point, document) => ({ x: Math.max(0, Math.min(document.columns, point.x)), y: Math.max(0, Math.min(document.rows, point.y)) });
+    const bounded = (point, document) => {
+        const bounds = documentBounds(document);
+        return { x: Math.max(0, Math.min(bounds.width, point.x)), y: Math.max(0, Math.min(bounds.height, point.y)) };
+    };
     function preview() {
         const current = gesture;
         if (!current) return;

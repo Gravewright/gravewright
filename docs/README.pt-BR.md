@@ -11,6 +11,7 @@ Inglês é o idioma principal da documentação. Cada guia tem uma versão corre
 | [Executor macOS](pt-BR/macos-runner.md) | Instalação Intel/Apple Silicon, launcher pelo Finder, ferramentas privadas e execução local |
 | [Primeiros passos](pt-BR/getting-started.md) | Dependências, configuração, migrações e primeiro acesso |
 | [Guia de uso](pt-BR/user-guide.md) | Campanhas, cenas, fichas, diários e fluxos da mesa |
+| [Gerenciamento de campanha](pt-BR/campaign-management.md) | Preparar documentos e arquivos da campanha na área do mestre antes de entrar na mesa |
 | [Map Builder](pt-BR/map-builder.md) | Primeiro projeto, Tiles/Pintura, fundo de mapa pronto, camadas, salvamento, Objetos Inteligentes e atualização de cenas |
 | [Importador/exportador Universal VTT](pt-BR/universal-vtt.md) | Fluxos de importação, mapas/paredes/portas/luzes nativos, avisos e recuperação de erros |
 | [Direção dos Objetos Inteligentes](pt-BR/smart-objects-direction.md) | Proposta de editor de nós, capacidades dos elementos, referências e ordem de entrega |

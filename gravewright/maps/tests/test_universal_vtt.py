@@ -9,7 +9,7 @@ from unittest.mock import patch
 import uuid
 import zlib
 
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
@@ -96,7 +96,7 @@ class UniversalVttTests(TestCase):
 
     def test_invalid_json_types_geometry_and_complexity_fail_before_image_decode(self):
         bad = []
-        for version in (True, .3, "0.2"):
+        for version in (True, .4, "0.2"):
             doc = self.document(); doc["format"] = version; bad.append(self.raw(doc))
         doc = self.document(); doc["resolution"]["pixels_per_grid"] = True; bad.append(self.raw(doc))
         doc = self.document(); doc["portals"][0]["closed"] = "false"; bad.append(self.raw(doc))
@@ -334,3 +334,104 @@ class UniversalVttTests(TestCase):
             self.assertIn(response.status_code, (403, 404))
             response = self.client.get(f"/api/maps/{scene.pk}/universal-vtt")
             self.assertIn(response.status_code, (403, 404))
+
+
+class UniversalVttCompatibilityTests(SimpleTestCase):
+    """Synthetic interchange geometry requires no campaign or persisted files."""
+
+    document = UniversalVttTests.document
+    raw = UniversalVttTests.raw
+
+    def parsed(self, document):
+        result = uvtt.parse(self.raw(document))
+        self.addCleanup(result["image"].close)
+        return result
+
+    def test_version_three_and_integral_decimal_grid_keep_origin_phase_and_safe_source(self):
+        document = self.document()
+        document.update(format=.3, software=" Dungeondraft ", creator="Synthetic fixture", private={"secret": "Never copy"})
+        document["resolution"]["pixels_per_grid"] = 32.0
+        parsed = self.parsed(document)
+        self.assertEqual(parsed["cell"], 32)
+        self.assertIs(type(parsed["cell"]), int)
+        self.assertEqual(parsed["grid"], {"size": 32, "offsetX": 16, "offsetY": 8})
+        self.assertEqual(parsed["source"], {"format": .3, "coordinateSystem": "pixels",
+                                            "software": "Dungeondraft", "creator": "Synthetic fixture"})
+        self.assertEqual(parsed["origin"], {"x": 10.5, "y": -2.25})
+        self.assertEqual((parsed["width"], parsed["height"]), (128, 128))
+
+    def test_source_ignores_nested_oversized_and_control_character_extensions(self):
+        for software, creator in (({"name": "Untrusted"}, "x" * 201), ("Producer\nextra", ["Not a label"])):
+            with self.subTest(software=software):
+                document = self.document()
+                document.update(software=software, creator=creator)
+                self.assertEqual(self.parsed(document)["source"], {"format": .2, "coordinateSystem": "pixels"})
+
+    def test_rounded_portal_coordinates_cut_wall_and_preserve_door_bounds(self):
+        document = self.document()
+        document["portals"][0]["bounds"][0]["y"] += .0005
+        document["portals"][0]["bounds"][1]["y"] -= .0005
+        parsed = self.parsed(document)
+        walls = [data for kind, data in parsed["rows"] if kind == "walls" and data["kind"] == "wall"]
+        self.assertEqual([(wall["x1"], wall["x2"]) for wall in walls], [(0, 32), (64, 128)])
+        door = next(data for kind, data in parsed["rows"] if kind == "walls" and data["kind"] == "door")
+        self.assertAlmostEqual(door["y1"], .016)
+        self.assertAlmostEqual(door["y2"], -.016)
+
+    def test_nearby_parallel_portal_does_not_cut_unrelated_wall(self):
+        document = self.document()
+        for point in document["portals"][0]["bounds"]:
+            point["y"] += .01
+        parsed = self.parsed(document)
+        walls = [data for kind, data in parsed["rows"] if kind == "walls" and data["kind"] == "wall"]
+        self.assertEqual([(wall["x1"], wall["x2"]) for wall in walls], [(0, 128)])
+
+    def test_overlapping_reversed_diagonal_portals_cut_both_wall_sources_once(self):
+        document = self.document()
+        origin = document["resolution"]["map_origin"]
+
+        def point(value):
+            return {"x": origin["x"] + value, "y": origin["y"] + value}
+
+        document["line_of_sight"] = [[point(0), point(2), point(4)]]
+        document["objects_line_of_sight"] = [[point(4), point(0)]]
+        document["portals"] = [{"bounds": [point(3), point(1)], "closed": True},
+                               {"bounds": [point(2), point(3.5)], "closed": False}]
+        parsed = self.parsed(document)
+        walls = [data for kind, data in parsed["rows"] if kind == "walls" and data["kind"] == "wall"]
+        self.assertEqual(len(walls), 4)
+        for wall in walls:
+            self.assertAlmostEqual(wall["x1"], wall["y1"])
+            self.assertAlmostEqual(wall["x2"], wall["y2"])
+            self.assertFalse(32 < (wall["x1"] + wall["x2"]) / 2 < 112)
+        doors = [data for kind, data in parsed["rows"] if kind == "walls" and data["kind"] == "door"]
+        self.assertEqual(len(doors), 2)
+        self.assertEqual([door["door_state"] for door in doors], ["closed", "open"])
+
+    def test_expanding_portal_cuts_are_bounded_before_image_decode(self):
+        document = self.document()
+        origin = document["resolution"]["map_origin"]
+
+        def point(x, y=0):
+            return {"x": origin["x"] + x, "y": origin["y"] + y}
+
+        document["line_of_sight"] = [[point(0), point(4)], [point(0, 1), point(4, 1)]]
+        document["lights"] = []
+        document["portals"] = [{"bounds": [point(start), point(start + .5)], "closed": False}
+                               for start in (.5, 1.5, 2.5)]
+        with patch.object(uvtt, "MAX_OBJECTS", 5), patch.object(uvtt, "_image") as decoder:
+            with self.assertRaisesRegex(services.MapError, "complexity limit"):
+                uvtt.parse(self.raw(document))
+            decoder.assert_not_called()
+
+    def test_unknown_versions_and_fractional_grid_fail_before_image_decode(self):
+        for key, value in (("format", .1), ("format", .31), ("format", "0.3"), ("pixels_per_grid", 32.5)):
+            document = self.document()
+            if key == "format":
+                document[key] = value
+            else:
+                document["resolution"][key] = value
+            with self.subTest(key=key, value=value), patch.object(uvtt, "_image") as decoder:
+                with self.assertRaises(services.MapError):
+                    uvtt.parse(self.raw(document))
+                decoder.assert_not_called()

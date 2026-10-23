@@ -46,8 +46,10 @@ def validate_asset(data, campaign_id):
 
 def register():
     from api.combat import register_provider
+    from api.systems import register_api
     from gravewright.campaigns.systems import register as register_system
     from .combat import advance_effects
+    from .public import operations
     register_system(
         DESCRIPTOR['systemId'], descriptor=DESCRIPTOR, sheet=SHEET,
         normalize=normalize, validate=validate_asset,
@@ -58,6 +60,7 @@ def register():
                 'show_roll': False},
     )
     register_provider(DESCRIPTOR['systemId'], advance_effects=advance_effects)
+    register_api(DESCRIPTOR['systemId'], operations())
 
 
 def roll_initiative(formula, data):

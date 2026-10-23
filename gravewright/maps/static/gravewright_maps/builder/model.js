@@ -7,6 +7,8 @@ import { terrainBrushAlpha, terrainBrushLimits } from './terrain-brush.js';
 import { expandTorchSelection, torchChildren, torchOwner, torchComponentState, torchSourcePoint } from './torch-model.js';
 import { validateRegionGeometry } from './region-model.js';
 import { upgradeBlueprint, validateBlueprintImageTargets } from './blueprint-model.js';
+import { documentBounds } from './document-bounds.js';
+export { documentBounds } from './document-bounds.js';
 export { floorContainsPoint, floorShapeRings, floorFreeContours, floorShapeLimits } from './floor-geometry.js';
 
 export const clone = value => structuredClone(value);
@@ -19,12 +21,24 @@ const pointKinds = new Set(['lights', 'particles', 'shaders']);
 const mapLimits = Object.freeze({ maxColumns: 200, maxRows: 200, minCellSize: 16, maxCellSize: 256, maxPixels: 16_777_216 });
 const imageIdentifier = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
     && value.length === 36;
+function validSceneGeometry(document) {
+    const geometry = document.sceneGeometry;
+    return document.schemaVersion === 3 && geometry && !Array.isArray(geometry)
+        && Object.keys(geometry).length === (Object.hasOwn(geometry, 'imageScale') ? 6 : 5)
+        && ['width', 'height'].every(key => Number.isInteger(geometry[key]) && geometry[key] >= 1)
+        && Math.ceil(geometry.width / document.cellSize) === document.columns
+        && Math.ceil(geometry.height / document.cellSize) === document.rows
+        && Number.isFinite(geometry.gridSize) && geometry.gridSize >= 1 && geometry.gridSize <= 10000
+        && (!Object.hasOwn(geometry, 'imageScale') || Number.isFinite(geometry.imageScale) && geometry.imageScale >= .01 && geometry.imageScale <= 100)
+        && ['gridOffsetX', 'gridOffsetY'].every(key => Number.isFinite(geometry[key]) && Math.abs(geometry[key]) <= 1000000);
+}
 function mapGeometry(value, limits = {}) {
     const bounds = { ...mapLimits, ...limits };
+    const pixels = validSceneGeometry(value) ? value.sceneGeometry.width * value.sceneGeometry.height : value.columns * value.rows * value.cellSize ** 2;
     if (!Number.isInteger(value.columns) || value.columns < 1 || value.columns > bounds.maxColumns
         || !Number.isInteger(value.rows) || value.rows < 1 || value.rows > bounds.maxRows
         || !Number.isInteger(value.cellSize) || value.cellSize < bounds.minCellSize || value.cellSize > bounds.maxCellSize
-        || value.columns * value.rows * value.cellSize ** 2 > bounds.maxPixels) throw new TypeError('Invalid map dimensions.');
+        || pixels > bounds.maxPixels) throw new TypeError('Invalid map dimensions.');
     return { columns: value.columns, rows: value.rows, cellSize: value.cellSize };
 }
 /** Suggest a bounded grid while retaining the uploaded map's aspect ratio. */
@@ -46,10 +60,13 @@ export function readyMapGeometry(asset, cellSize = 70, limits = {}) {
 /** Apply one background/geometry edit atomically, preserving every authored object. */
 export function setBackgroundImage(document, assetId, geometry = {}, limits = {}) {
     if (document.schemaVersion !== 3 || assetId !== null && !imageIdentifier(assetId)) throw new TypeError('Choose a map image.');
-    const next = mapGeometry({ ...document, ...geometry }, limits), candidate = { ...document, ...next };
+    const proposed = { ...document, ...geometry };
+    if (['columns', 'rows', 'cellSize'].some(key => proposed[key] !== document[key])) delete proposed.sceneGeometry;
+    const next = mapGeometry(proposed, limits), candidate = { ...proposed, ...next };
     if (!fitsBounds(candidate)) throw new TypeError('Objects would lie outside the map.');
     if (sameDocument(next, { columns: document.columns, rows: document.rows, cellSize: document.cellSize })
         && (assetId === null ? document.backgroundImage === undefined : document.backgroundImage?.assetId === assetId)) return false;
+    if (['columns', 'rows', 'cellSize'].some(key => next[key] !== document[key])) delete document.sceneGeometry;
     Object.assign(document, next);
     if (assetId === null) delete document.backgroundImage; else document.backgroundImage = { assetId };
     return true;
@@ -119,6 +136,11 @@ export function normalizeDocument(document) {
     }
     if (Object.hasOwn(result, 'backgroundImage') && (result.schemaVersion !== 3 || !result.backgroundImage
         || Object.keys(result.backgroundImage).length !== 1 || !imageIdentifier(result.backgroundImage.assetId))) throw new TypeError('Choose a map image.');
+    if (Object.hasOwn(result, 'sceneGeometry') && !validSceneGeometry(result)) throw new TypeError('Invalid imported scene geometry.');
+    for (const kind of ['walls', 'doors']) for (const item of result[kind] || []) {
+        if (Object.hasOwn(item, 'artwork') && (result.schemaVersion !== 3 || typeof item.artwork !== 'boolean'))
+            throw new TypeError('Invalid wall artwork setting.');
+    }
     for (const item of result.decorations || []) if (Object.hasOwn(item, 'empty')) {
         if (result.schemaVersion !== 3 || item.empty !== true || item.assetId !== null || item.torch
             || !item.lever || !['off', 'on'].includes(item.lever.state)) throw new TypeError('Invalid Empty Object.');
@@ -177,9 +199,9 @@ export function sampleAssetId(assetIds, random = Math.random) {
 }
 /** Draw new walls on cell boundaries; disabling snap retains free segment geometry. */
 export function snapWallSegment(document, start, end, { snap = true } = {}) {
-    const coordinate = snap ? Math.round : round;
-    const x1 = clamp(coordinate(start.x), 0, document.columns), y1 = clamp(coordinate(start.y), 0, document.rows);
-    let x2 = clamp(coordinate(end.x), 0, document.columns), y2 = clamp(coordinate(end.y), 0, document.rows);
+    const coordinate = snap ? Math.round : round, { width, height } = documentBounds(document);
+    const x1 = clamp(coordinate(start.x), 0, width), y1 = clamp(coordinate(start.y), 0, height);
+    let x2 = clamp(coordinate(end.x), 0, width), y2 = clamp(coordinate(end.y), 0, height);
     if (snap) {
         if (Math.abs(end.x - x1) >= Math.abs(end.y - y1)) y2 = y1;
         else x2 = x1;
@@ -211,8 +233,9 @@ export function floorBrushCells(document, start, end = start, size = 1, { shape 
             }
         }
     }
-    const sx = clamp(start.x, 0, document.columns - geometryEpsilon), sy = clamp(start.y, 0, document.rows - geometryEpsilon);
-    const ex = clamp(end.x, 0, document.columns - geometryEpsilon), ey = clamp(end.y, 0, document.rows - geometryEpsilon);
+    const bounds = documentBounds(document);
+    const sx = clamp(start.x, 0, bounds.width - geometryEpsilon), sy = clamp(start.y, 0, bounds.height - geometryEpsilon);
+    const ex = clamp(end.x, 0, bounds.width - geometryEpsilon), ey = clamp(end.y, 0, bounds.height - geometryEpsilon);
     const dx = ex - sx, dy = ey - sy, stepX = Math.sign(dx), stepY = Math.sign(dy);
     let x = Math.floor(sx), y = Math.floor(sy);
     const lastX = Math.floor(ex), lastY = Math.floor(ey);
@@ -352,7 +375,7 @@ function floorRemainders(item, rows, strict = false, contours) {
     return pieces;
 }
 function matchingFloorCells(document, active, matches) {
-    const tiles = new Map(), bins = new Map(), binSize = 8;
+    const tiles = new Map(), bins = new Map(), binSize = 8, bounds = documentBounds(document);
     for (const [index, item] of active.entries()) {
         if (item.paint?.opacity === 0) continue;
         const entry = { item, index };
@@ -369,6 +392,7 @@ function matchingFloorCells(document, active, matches) {
         }
     }
     return cell => {
+        const right = Math.min(cell.x + 1, bounds.width), bottom = Math.min(cell.y + 1, bounds.height);
         const tile = tiles.get(cellKey(cell)), candidates = tile ? [tile.item] : [];
         for (const entry of bins.get(`${Math.floor(cell.x / binSize)}:${Math.floor(cell.y / binSize)}`) || []) {
             const item = entry.item;
@@ -377,9 +401,9 @@ function matchingFloorCells(document, active, matches) {
         }
         if (!candidates.length) return false;
         const top = candidates.at(-1);
-        if (!top.shape && !top.brush && top.x <= cell.x && top.y <= cell.y && top.x + top.width >= cell.x + 1 && top.y + top.height >= cell.y + 1)
+        if (!top.shape && !top.brush && top.x <= cell.x && top.y <= cell.y && top.x + top.width >= right && top.y + top.height >= bottom)
             return matches(top);
-        return floorRegionCoveredBy([[[cell.x, cell.y], [cell.x + 1, cell.y], [cell.x + 1, cell.y + 1], [cell.x, cell.y + 1]]], candidates, matches);
+        return floorRegionCoveredBy([[[cell.x, cell.y], [right, cell.y], [right, bottom], [cell.x, bottom]]], candidates, matches);
     };
 }
 function fragmentId(item, piece, index, ids, makeId) {
@@ -394,8 +418,9 @@ function floorLayer(document, layerId) {
 }
 /** Read the topmost floor on the active layer without exposing mutable source data. */
 export function sampleFloor(document, point, { layerId } = {}) {
+    const bounds = documentBounds(document);
     if (!floorGrid(document) || !finitePoint(point) || !floorLayer(document, layerId)
-        || point.x < 0 || point.y < 0 || point.x >= document.columns || point.y >= document.rows) return null;
+        || point.x < 0 || point.y < 0 || point.x >= bounds.width || point.y >= bounds.height) return null;
     let remaining = 1;
     for (let index = (document.floors || []).length - 1; index >= 0; index--) {
         const item = document.floors[index];
@@ -410,8 +435,9 @@ export function sampleFloor(document, point, { layerId } = {}) {
 }
 /** Four-neighbor bucket area, comparing the topmost floor family/material and texture rotation. */
 export function floodFloorCells(document, point, { layerId } = {}) {
+    const bounds = documentBounds(document), partial = bounds.width !== document.columns || bounds.height !== document.rows;
     if (!floorGrid(document) || !finitePoint(point) || !floorLayer(document, layerId)
-        || point.x < 0 || point.y < 0 || point.x >= document.columns || point.y >= document.rows) return [];
+        || point.x < 0 || point.y < 0 || point.x >= bounds.width || point.y >= bounds.height) return [];
     const { columns, rows } = document, grid = new Uint16Array(columns * rows), signatures = new Map();
     const families = new Map((document.assets || []).filter(asset => asset.role === 'floor' && typeof asset.family === 'string' && asset.family)
         .map(asset => [asset.assetId, asset.family]));
@@ -421,6 +447,16 @@ export function floodFloorCells(document, point, { layerId } = {}) {
         const signature = JSON.stringify([families.has(item.assetId) ? ['family', families.get(item.assetId)] : ['asset', item.assetId ?? null],
             item.rotation || 0, paintSignature(item)]);
         if (!signatures.has(signature)) signatures.set(signature, signatures.size + 1);
+        if (partial) {
+            const right = Math.min(columns, Math.ceil(item.x + item.width)), bottom = Math.min(rows, Math.ceil(item.y + item.height));
+            for (let y = Math.max(0, Math.floor(item.y)); y < bottom; y++) for (let x = Math.max(0, Math.floor(item.x)); x < right; x++) {
+                const center = { x: x + Math.min(1, bounds.width - x) / 2, y: y + Math.min(1, bounds.height - y) / 2 };
+                if (!floorContainsPoint(item, center)) continue;
+                if (item.brush?.operation !== 'erase') grid[y * columns + x] = signatures.get(signature);
+                else if (terrainBrushAlpha(item, center) * (item.paint?.opacity ?? 1) === 1) grid[y * columns + x] = 0;
+            }
+            continue;
+        }
         const left = Math.max(0, Math.ceil(item.x - .5)), right = Math.min(columns, Math.ceil(item.x + item.width - .5));
         const top = Math.max(0, Math.ceil(item.y - .5)), bottom = Math.min(rows, Math.ceil(item.y + item.height - .5));
         for (let y = top; y < bottom; y++) {
@@ -513,11 +549,15 @@ export function paintFloorCells(document, cells, { layerId, assetIds = [null], r
         else pieces.forEach((piece, index) => floors.push({ ...piece, id: fragmentId(item, piece, index, ids, makeId) }));
         if (countOther + floors.length + unique.size > maxObjects) return false;
     }
-    const additions = new Map();
+    const additions = new Map(), bounds = documentBounds(document);
     for (const [key, cell] of unique) {
+        const width = Math.min(1, bounds.width - cell.x), height = Math.min(1, bounds.height - cell.y);
+        const geometry = width < .05 || height < .05 ? floorShapeFromRings([[[cell.x, cell.y], [cell.x + width, cell.y],
+            [cell.x + width, cell.y + height], [cell.x, cell.y + height]]]) : { ...cell, width, height };
+        if (!geometry) return false;
         const choice = choices.get(key) || { id: makeId(), assetId: sampleAssetId(assetIds, random) };
         additions.set(key, choice);
-        floors.push({ id: choice.id, layerId, assetId: choice.assetId, ...cell, width: 1, height: 1, rotation });
+        floors.push({ id: choice.id, layerId, assetId: choice.assetId, ...geometry, rotation });
     }
     const geometryError = floors.some(item => item.shape) && floorGeometryError(document, floors);
     if (geometryError) { onError?.(geometryError); return false; }
@@ -543,7 +583,7 @@ export function applyFloorContours(document, contours, { layerId, operation = 'p
     if (contours.length > floorShapeLimits.rings || contours.reduce((sum, ring) => sum + (ring?.length || 0), 0) > floorShapeLimits.points
         || contours.some(ring => !Array.isArray(ring) || ring.length > floorShapeLimits.vertices
             || !ring.every(point => Array.isArray(point) && point.length === 2 && point.every(Number.isFinite)))) return failure('The map floor shapes are too complex.');
-    const bounds = { x: 0, y: 0, width: document.columns, height: document.rows };
+    const bounds = { x: 0, y: 0, ...documentBounds(document) };
     contours = contours.map(ring => clipFloorRing(ring, bounds)).filter(ring => ring.length);
     const geometry = floorShapeFromRings(contours);
     if (!geometry || !floorRegionHasArea(contours)) return { ok: true, changed: false, refs: [] };
@@ -643,13 +683,14 @@ export function applyTerrainStroke(document, points, { layerId, size = 1, hardne
         try { profile = normalizeFloorPaint(paint); } catch (cause) { return failure(cause.message); }
         if (profile.opacity === 0) return { ok: true, changed: false, refs: [] };
     }
-    const radius = size / 2, stamps = points.map(point => ({ x: clamp(point.x, 0, document.columns), y: clamp(point.y, 0, document.rows) }));
-    let left = document.columns, top = document.rows, right = 0, bottom = 0;
+    const bounds = documentBounds(document), radius = size / 2,
+        stamps = points.map(point => ({ x: clamp(point.x, 0, bounds.width), y: clamp(point.y, 0, bounds.height) }));
+    let left = bounds.width, top = bounds.height, right = 0, bottom = 0;
     for (const point of stamps) {
         left = Math.min(left, point.x - radius); top = Math.min(top, point.y - radius);
         right = Math.max(right, point.x + radius); bottom = Math.max(bottom, point.y + radius);
     }
-    left = Math.max(0, left); top = Math.max(0, top); right = Math.min(document.columns, right); bottom = Math.min(document.rows, bottom);
+    left = Math.max(0, left); top = Math.max(0, top); right = Math.min(bounds.width, right); bottom = Math.min(bounds.height, bottom);
     const width = right - left, height = bottom - top;
     if (width < terrainBrushLimits.minSize || height < terrainBrushLimits.minSize) return { ok: true, changed: false, refs: [] };
     if (operation === 'erase' && !(document.floors || []).some(item => item.layerId === layerId
@@ -722,24 +763,26 @@ export function wallSegments(document, wall) {
 }
 export { removeObject } from './object-removal.js';
 function segmentFitsBounds(document, item) {
-    return [item.x1, item.x2].every(x => Number.isFinite(x) && x >= -geometryEpsilon && x <= document.columns + geometryEpsilon)
-        && [item.y1, item.y2].every(y => Number.isFinite(y) && y >= -geometryEpsilon && y <= document.rows + geometryEpsilon);
+    const bounds = documentBounds(document);
+    return [item.x1, item.x2].every(x => Number.isFinite(x) && x >= -geometryEpsilon && x <= bounds.width + geometryEpsilon)
+        && [item.y1, item.y2].every(y => Number.isFinite(y) && y >= -geometryEpsilon && y <= bounds.height + geometryEpsilon);
 }
 export function fitsBounds(document) {
+    const extent = documentBounds(document);
     return objectKinds.every(kind => (document[kind] || []).every(item => {
         if (kind === 'walls' || kind === 'doors') return segmentFitsBounds(document, item);
         if (kind === 'regions') return validateRegionGeometry(document, item);
         // Both authored offsets and the current mechanism projection must fit.
         if (pointKinds.has(kind) && (![item.x, item.y].every(Number.isFinite) || item.x < -geometryEpsilon
-            || item.y < -geometryEpsilon || item.x > document.columns + geometryEpsilon || item.y > document.rows + geometryEpsilon)) return false;
+            || item.y < -geometryEpsilon || item.x > extent.width + geometryEpsilon || item.y > extent.height + geometryEpsilon)) return false;
         if (kind === 'decorations' && item.torch && !decorationCorners({ ...item, torch: undefined }).every(point =>
-            point.x >= -geometryEpsilon && point.x <= document.columns + geometryEpsilon
-            && point.y >= -geometryEpsilon && point.y <= document.rows + geometryEpsilon)) return false;
+            point.x >= -geometryEpsilon && point.x <= extent.width + geometryEpsilon
+            && point.y >= -geometryEpsilon && point.y <= extent.height + geometryEpsilon)) return false;
         const bounds = objectBounds(kind, item, document);
         return bounds && [bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite)
             && bounds.x >= -geometryEpsilon && bounds.y >= -geometryEpsilon
-            && bounds.x + bounds.width <= document.columns + geometryEpsilon
-            && bounds.y + bounds.height <= document.rows + geometryEpsilon;
+            && bounds.x + bounds.width <= extent.width + geometryEpsilon
+            && bounds.y + bounds.height <= extent.height + geometryEpsilon;
     }));
 }
 export function translateObject(document, kind, id, dx, dy) {
@@ -827,22 +870,22 @@ function mutableSelection(document, refs) {
     return items.some(({ item }) => layerFor(document, item)?.locked) ? [] : items;
 }
 export function translateSelection(document, refs, dx, dy, { snapStep = 0 } = {}) {
-    const items = mutableSelection(document, refs), bounds = itemsBounds(items, document);
+    const items = mutableSelection(document, refs), bounds = itemsBounds(items, document), extent = documentBounds(document);
     if (!items.length || !bounds || !Number.isFinite(dx) || !Number.isFinite(dy)
         || !Number.isFinite(snapStep) || snapStep < 0
-        || bounds.width > document.columns || bounds.height > document.rows) return false;
-    let minDx = -bounds.x, maxDx = document.columns - bounds.x - bounds.width;
-    let minDy = -bounds.y, maxDy = document.rows - bounds.y - bounds.height;
+        || bounds.width > extent.width || bounds.height > extent.height) return false;
+    let minDx = -bounds.x, maxDx = extent.width - bounds.x - bounds.width;
+    let minDy = -bounds.y, maxDy = extent.height - bounds.y - bounds.height;
     const owners = new Set(items.filter(({ kind }) => kind === 'decorations').map(({ item }) => item.id));
     for (const { kind, item } of items) {
         const owner = torchOwner(document, kind, item.id);
         if (owner?.torch.state === 'on' && !owners.has(owner.id)) {
-            minDx = Math.max(minDx, item.y - document.rows); maxDx = Math.min(maxDx, item.y);
-            minDy = Math.max(minDy, -item.x); maxDy = Math.min(maxDy, document.columns - item.x);
+            minDx = Math.max(minDx, item.y - extent.height); maxDx = Math.min(maxDx, item.y);
+            minDy = Math.max(minDy, -item.x); maxDy = Math.min(maxDy, extent.width - item.x);
         } else {
             const raw = objectBounds(kind, item.torch ? { ...item, torch: undefined } : item);
-            minDx = Math.max(minDx, -raw.x); maxDx = Math.min(maxDx, document.columns - raw.x - raw.width);
-            minDy = Math.max(minDy, -raw.y); maxDy = Math.min(maxDy, document.rows - raw.y - raw.height);
+            minDx = Math.max(minDx, -raw.x); maxDx = Math.min(maxDx, extent.width - raw.x - raw.width);
+            minDy = Math.max(minDy, -raw.y); maxDy = Math.min(maxDy, extent.height - raw.y - raw.height);
         }
     }
     if (snapStep) {

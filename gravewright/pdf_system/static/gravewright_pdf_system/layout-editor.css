@@ -1,0 +1,30 @@
+.pdf-sheet__layout-disclosure { flex-basis: 100%; min-width: 0; }
+.pdf-sheet__layout-disclosure > summary {
+  min-height: 32px; box-sizing: border-box; padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border, #40464e); border-radius: var(--radius-sm);
+  color: var(--text, #e8e4d8); font-size: 12px; cursor: pointer;
+}
+.pdf-sheet__layout-disclosure > summary:focus-visible {
+  outline: 2px solid var(--accent, #c09a5a); outline-offset: 2px;
+}
+.pdf-sheet__layout-disclosure > summary span { margin-inline-start: var(--space-2); color: var(--text-muted, #b7b5ad); }
+.pdf-sheet__layout-disclosure[open] .pdf-sheet__layout-tools { margin-top: var(--space-2); }
+.pdf-sheet__layout-tools {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2);
+  flex-basis: 100%; min-width: 0;
+}
+.pdf-sheet__layout-tools :is(button, select, label, span) { font-size: 12px; }
+.pdf-sheet__layout-tools > span { color: var(--text-muted, #b7b5ad); }
+.pdf-sheet__layout-tools select {
+  min-width: 0; max-width: 100%; min-height: 32px;
+  padding: var(--space-1) var(--space-5) var(--space-1) var(--space-2);
+  border: 1px solid var(--border, #40464e); border-radius: var(--radius-sm);
+  background-color: var(--surface-raised, #20262d); color: var(--text, #e8e4d8);
+}
+.pdf-sheet__layout-tools label { display: inline-flex; align-items: center; gap: var(--space-1); }
+.pdf-sheet__layout-tools input[type=checkbox] { margin: var(--space-0); }
+.pdf-sheet__mapping[data-multiple=true] .pdf-sheet__map-resize { display: none; }
+.pdf-sheet__layout-tools button:disabled { opacity: .5; cursor: default; }
+@media (max-width: 520px) {
+  .pdf-sheet__layout-tools select { width: 100%; }
+}

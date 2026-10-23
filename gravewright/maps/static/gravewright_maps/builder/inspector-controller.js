@@ -1,5 +1,5 @@
 /** Selection properties, geometry guards and Smart Object configuration controls. */
-import { clone, doorFits, fitsBounds, length, removeObject, setDynamicSurface, updateTorchGeometry } from './model.js';
+import { clone, doorFits, fitsBounds, length, removeObject, setDynamicSurface, updateTorchGeometry, documentBounds } from './model.js';
 import { attachTorch, torchOwner, torchComponentState, torchSourcePoint } from './torch-model.js';
 import { configurePressurePlate, normalizeRegionFilters } from './region-model.js';
 import { createRegionFilterControls } from './region-filter-ui.js';
@@ -159,23 +159,37 @@ export function createInspectorController({ root, state, t, signal: parentSignal
                 commit(); renderCanvas();
             }, { signal });
         };
+        const bounds = documentBounds(state.document);
         if (kind === 'floors' || kind === 'decorations' || kind === 'regions') {
-            addField('X', 'x', 0, state.document.columns); addField('Y', 'y', 0, state.document.rows);
+            addField('X', 'x', 0, bounds.width); addField('Y', 'y', 0, bounds.height);
             const minimum = kind === 'floors' && item.shape ? .001 : .05;
-            addField('Width', 'width', minimum, state.document.columns); addField('Height', 'height', minimum, state.document.rows);
+            addField('Width', 'width', minimum, bounds.width); addField('Height', 'height', minimum, bounds.height);
             if (kind !== 'regions') addField('Rotation', 'rotation', 0, kind === 'floors' ? 270 : 359, kind === 'floors' ? 90 : 1);
         } else if (kind === 'lights') {
-            addField('X', 'x', 0, state.document.columns); addField('Y', 'y', 0, state.document.rows);
+            addField('X', 'x', 0, bounds.width); addField('Y', 'y', 0, bounds.height);
             addField('Bright radius (cells)', 'brightRadius', 0, 200); addField('Dim radius (cells)', 'dimRadius', 0, 200);
             addField('Intensity', 'intensity', 0, 1);
         } else if (isNativeKind(kind)) {
-            addField('X', 'x', 0, state.document.columns); addField('Y', 'y', 0, state.document.rows);
+            addField('X', 'x', 0, bounds.width); addField('Y', 'y', 0, bounds.height);
         } else {
-            addField('Start X', 'x1', 0, state.document.columns); addField('Start Y', 'y1', 0, state.document.rows);
-            addField('End X', 'x2', 0, state.document.columns); addField('End Y', 'y2', 0, state.document.rows);
+            addField('Start X', 'x1', 0, bounds.width); addField('Start Y', 'y1', 0, bounds.height);
+            addField('End X', 'x2', 0, bounds.width); addField('End Y', 'y2', 0, bounds.height);
             addField('Thickness', 'thickness', .05, 2);
         }
         container.append(row);
+        if (kind === 'walls' || kind === 'doors') {
+            const label = node('label', { class: 'map-builder__torch-lit', 'data-builder-property-section': 'appearance' });
+            const input = node('input', { type: 'checkbox', 'data-builder-property': 'artwork' });
+            input.checked = item.artwork !== false;
+            label.append(input, node('span', {}, t(kind === 'walls' ? 'Show wall artwork' : 'Show door artwork')));
+            container.append(label, node('p', { class: 'map-builder__hint', 'data-builder-property-section': 'appearance' },
+                t('Disable artwork to edit collision geometry over an existing map image. Guides appear only while editing.')));
+            input.addEventListener('change', () => {
+                if (isBusy() || state.preview || input.disabled) return;
+                if (input.checked) delete item.artwork; else item.artwork = false;
+                commit(); renderCanvas();
+            }, { signal });
+        }
         if (isNativeKind(kind)) {
             const first = container.childElementCount;
             renderNativeProperties(container, { kind, item, t, signal, change: patch => {

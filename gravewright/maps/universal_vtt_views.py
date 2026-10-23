@@ -15,12 +15,15 @@ def import_map(request, campaign_id):
         upload = request.FILES.get("file")
         limit = min(universal_vtt.MAX_JSON_BYTES, settings.MAP_UPLOAD_MAX_BYTES)
         if upload is None:
-            raise services.MapError("Choose a valid Universal VTT 0.2 file.")
+            raise services.MapError("Choose a valid Universal VTT 0.2 or 0.3 file.")
         if upload.size > limit:
             raise services.MapError("The Universal VTT file exceeds the interchange size limit.")
+        editable = request.POST.get("builderEditable", "false")
+        if editable not in ("true", "false"):
+            raise services.MapError("Invalid Universal VTT import mode.")
         return universal_vtt.import_map(campaign_id, request.user.pk, upload.read(limit + 1),
             name=request.POST.get("name", ""), request_id=request.POST.get("request_id"),
-            folder_id=request.POST.get("folderId") or None)
+            folder_id=request.POST.get("folderId") or None, builder_editable=editable == "true")
     return response(request, campaign_id, operation)
 
 

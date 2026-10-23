@@ -86,6 +86,20 @@ contém somente UUIDs normalizados de campanha e usuário: construí-lo não con
 permissões nem armazena papéis em cache. Os serviços públicos recebem identificadores
 e resolvem novamente o vínculo.
 
+O registro de domínios do navegador é gerado de `modules/contracts/frontend.json`.
+O despacho autenticado delega transações aos serviços, mantendo a renderização de
+mapas fora de uma transação global do transporte. Chamadas binárias usam rota
+separada de multipart/bytes com as mesmas verificações de campanha e montagem.
+`maps/library_services.py` e `table/permission_services.py` compartilham as regras
+nativas da biblioteca e de permissões com as fachadas Python e o navegador.
+
+`campaigns/system_api.py` fornece registro explícito de callbacks do sistema ativo
+na campanha. Pacotes confiáveis registram descrições e handlers de leitura/escrita
+na inicialização; participação, limites JSON e bloqueio de escritas de streamers
+continuam no host. Recursos, revisões e recibos continuam sob responsabilidade
+do provedor. O pacote PDF registra suas próprias operações de mapeamento,
+modelos e ações salvas; o despacho do host não contém condições do PDF System.
+
 A autorização WebSocket também relê a sessão no banco, o backend de autenticação
 configurado e o hash de autenticação de sessão do usuário. Verifica vínculos ao
 receber comandos, nos manipuladores de entrega e durante heartbeats. Remover um
@@ -159,6 +173,26 @@ A interface Inside reúne esses fluxos em `web/inside.py`.
 Um `Actor` é a fonte reutilizável do personagem. `pdf_system/schema.py` normaliza a
 ficha, incluindo referências a PDFs, campos, barras, configurações de token e efeitos
 ativos. Metadados do ator e dados da ficha têm contadores de revisão distintos.
+O PDF System também controla `pdf.manualFields` opcional: definições de áreas
+editáveis criadas pelo mestre e vinculadas ao PDF de origem. Retângulos normalizados
+por página preservam posições no zoom e na navegação; os valores usam chaves
+estáveis em `fields`. Somente o mestre altera o mapeamento, enquanto jogadores
+autorizados preenchem seus controles. Fichas de atores e tokens independentes usam
+o mesmo esquema e as mesmas verificações de revisão.
+O campo opcional `pdf.fieldActions` vincula fórmulas de rolagem criadas pelo mestre
+a campos nativos ou manuais por origem do PDF. O parser de dados valida a
+configuração sem rolar; a execução resolve `@value` e usa o fluxo normal de
+rolagem e chat. A modal salva um candidato isolado pela revisão existente da
+ficha, incluindo transferências dos valores das barras do token.
+`pdf.fieldBindings` registra endereços validados para referências `@{field-key}`;
+`pdf.calculatedFields` usa fórmulas determinísticas que o servidor recalcula
+após validar dependências e rejeitar ciclos. O histórico restaura definições
+preservando os valores atuais do personagem. Registros de
+`pdf_system.MappingTemplate` por campanha guardam mapeamentos portáteis sem PDFs
+ou valores dos personagens, com operações revisionadas exclusivas do mestre e
+aplicação em lote atômica. Arquivos de campanha incluem esses modelos. O
+diagnóstico no navegador compara o mapeamento com o documento atual, e a
+exportação preenchida cria uma cópia achatada separada.
 
 Um `Token` posiciona o ator em uma cena. Tokens vinculados usam `Actor.data`; tokens
 desvinculados usam `snapshot` e `sheet_version` próprios. A primeira colocação é

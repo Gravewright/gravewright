@@ -26,6 +26,147 @@ Useful areas to inspect:
 
 Templates carry IDs and `data-*` attributes that native controllers and extension surfaces depend on. Changing one may affect the corresponding controller, Datastar signals, and module attachment. Check all three before renaming selectors or replacing an entire panel.
 
+`modules/static/gravewright_modules/domain-api.js` exposes the generated domain
+contract to pages and leased modules. `file-api.js` keeps file bytes in multipart
+requests and returns authenticated blobs; `global-api.js` owns account, campaign,
+administration and package adapters on the page lifetime. These adapters preserve
+caller cancellation and native permission checks. See the [extended public API](api.md)
+for MapBuilder, blueprints, ownership, library files and system-owned operations.
+
+### Manual PDF fields
+
+In a Gravewright PDF System character sheet, the GM can open a PDF and choose
+**Map fields**. Select text, number, checkbox or multiline text, then drag a
+rectangle over its area on the page. **Add field** creates a rectangle with the
+keyboard. Select a rectangle to rename it, change its percentage bounds, drag it
+or resize its lower-right corner. Arrow keys move the selected rectangle one
+display pixel (Shift: ten); Delete removes it and Escape cancels a gesture.
+**Finish mapping** returns to filling the sheet. Changes save automatically.
+
+Mappings belong to that actor or independent token copy, PDF source and page.
+They stay aligned through zoom and spread changes and coexist with native PDF
+form widgets. Authorized players can fill the fields; only the GM can change
+their definitions. The overlay leaves the original PDF file unchanged, including
+when downloading it. Deleting a rectangle retains its stored value. Number and
+single-line text fields can also be chosen for token bars.
+
+`pdf_system/frontend/manual-fields.js` owns stable identities and normalized
+display-page geometry; `frontend/controller.js` combines manual definitions with
+native widgets. `static/gravewright_pdf_system/manual-editor.js` owns gestures,
+selection and disposal. `pdf_system/manual_fields.py` validates at most 256
+definitions across sources, page bounds, names, types and values, and enforces
+GM-only layout changes through the normal sheet-save service. Omitted layouts
+are preserved for older clients. The generated controller follows the existing
+map asset build pipeline.
+
+The GM can double-click a native or manually mapped field, or focus it and press
+F2, to open **Field actions** in the existing application modal. Choose a token
+value, enter a roll formula and label, or use one of six presets: d20, highest or
+lowest of two d20s, 2d6, exploding d6 and 4dF. `@value` references that field's
+current numeric value; an empty value is zero and checkboxes use zero or one.
+Formulas without `@value` also work on text fields. Clear the formula to remove
+the roll action. Assigning or removing a token-bar binding preserves the field's
+current value. Saving validates the complete candidate before updating the
+displayed sheet; Cancel and Escape discard the draft.
+
+Saved roll actions appear as buttons above the PDF for authorized editors.
+Players can also double-click a configured field; Alt+Enter rolls a focused
+field. The GM's double-click continues to open configuration, where **Roll saved
+action** executes the saved formula without applying the draft. Rolls use the
+native [dice notation](../../gravewright/dice/grammar/notation/GRAMMAR.md),
+publish to chat in the current scene context and retain normal request receipts
+and reconnect retries. Configuring an action consumes no randomness.
+
+`pdf.fieldActions` is optional and holds up to 256 source/field-bound roll
+definitions with a 512-character formula and a 48-character label. The server
+compiles formulas using the dice parser and compiler, preserving omitted actions
+and rejecting changes by non-GMs. `frontend/field-actions.js` builds isolated save
+candidates, preserves canonical bar values and expands the bounded numeric
+`@value` reference. `static/gravewright_pdf_system/field-actions-editor.js` owns
+the modal's draft and disposal.
+
+**Reference field** inserts `@{field-key}` into a roll or calculated formula.
+The picker shows readable names; manual keys remain stable when fields are
+renamed, and native PDF references retain their exact form-field name. Braces
+and backslashes in native names are escaped by the picker. Reference values are
+numeric and limited to the existing ±1,000,000 range. **Calculated value
+formula** accepts deterministic arithmetic, comparisons and the native numeric
+functions, with references to other fields. Clear it to return to ordinary
+editing. Calculated controls are read-only and update in dependency order.
+The server recomputes results on every sheet save, rejects circular references
+including aliases through token bars, and retains the previous canonical result
+when an input is temporarily nonnumeric or a calculation cannot execute.
+
+`pdf.fieldBindings` records validated original field addresses for references;
+bar overrides resolve against the current token mapping. Only the GM can change
+bindings or `pdf.calculatedFields`. The server's `formulas.py` and
+`calculated_fields.py` own validation and authoritative calculation;
+`frontend/formulas.js` mirrors the deterministic subset for immediate feedback.
+Archived field values and bindings remain available after removing a rectangle;
+diagnostics identify references whose visible field has disappeared.
+
+While mapping, Shift/Ctrl-click or drag a selection rectangle to select multiple
+fields on a page. The layout toolbar supports copying, pasting, duplication,
+six alignments, horizontal/vertical distribution and optional snapping to a
+five-point grid. Ctrl+C/V/D and Ctrl+Z/Shift+Z provide the same operations. The
+toolbar is inside **Layout tools**, initially collapsed in narrow sheet windows
+and expandable by keyboard or touch. Each gesture is one history step, limited
+to 50 steps in the active PDF. Undo restores
+definitions while retaining current character values; switching documents clears
+the history. Copies receive new UUIDs and remap formulas inside the selection.
+`frontend/layout-editor.js` owns geometry and `layout-history.js` owns definition
+snapshots and clipboard identities.
+
+**Mapping library** opens campaign templates for GMs. Save or replace the current
+mapping, apply a template to the current sheet or selected actors, and import or
+export versioned JSON. Templates contain rectangles, actions, calculations,
+bindings and optional document geometry, without PDFs, character values, names
+or media. Existing values are retained by field identity and canonical bars;
+templates do not merge unrelated fields by their visible labels. Independent
+token snapshots retain their own layouts unless explicitly applying a template
+to that open snapshot. Batch application validates all actor revisions before
+committing any changes. Stable manual IDs already used by another PDF in the
+same sheet cause a validation error rather than reassigning that PDF's fields.
+
+`MappingTemplate` and its initial migration belong to `pdf_system`. The
+`/api/containers/<id>/pdf-mappings` routes enforce GM and campaign boundaries,
+revision checks and operation receipts. Limits are 128 templates per campaign,
+100 actors per batch and 1 MB per JSON import, in addition to sheet limits.
+Campaign archives include the templates and validate their portable bundles on
+restore. Template changes require a new application to update a character.
+
+**Filled PDF** downloads a separate flattened copy of every PDF page with the
+current field values, including repeated native widgets across pages. It renders
+through the bundled PDF.js at 144 dpi and writes
+JPEG page images in a minimal PDF container, preserving Unicode text as rendered
+by the browser. The original remains available separately. The copy contains no
+editable widgets or executable PDF content. Export rejects text that cannot fit
+its rectangle, excessive page/image complexity or a result over 100 MB, and
+downloads only after every page succeeds. It supports at most 100 pages,
+16 million pixels per page and 128 million pixels per operation. Closing or
+switching documents cancels the work. The container follows the image-XObject
+and byte-offset structure of [ISO 32000-1](https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf).
+
+The **PDF mapping diagnostics** button checks missing fields or references,
+calculation errors, absent pages and differences from saved document size,
+rotation or fingerprint. `pdf.sourceMetadata` keeps the expected document
+descriptor when applying a template; opening a PDF does not silently replace it.
+Diagnostics use authored labels as text and provide navigation to fields that
+are still present. Export and diagnosis never modify the original PDF.
+
+`node --test gravewright/pdf_system/frontend/*.test.js` covers the field model;
+`manage.py test gravewright.pdf_system.test_manual_fields` covers persistence and
+authorization. The isolated browser scenario
+`tests/e2e/pdf_manual_fields.py` exercises drawing, filling, navigation, native
+widgets, token copies, roles and Translator in English, Portuguese and Spanish.
+`manage.py test gravewright.pdf_system.test_field_actions` and
+`tests/e2e/pdf_field_actions.py` cover roll configuration, bar-value preservation,
+chat delivery, cancelled/invalid drafts, permissions and responsive translated
+modals.
+`manage.py test gravewright.pdf_system` also covers templates, calculations,
+metadata and campaign archive round trips. `tests/e2e/pdf_workbench.py` exercises
+the combined workflow and parses/renders the generated PDF with PDF.js.
+
 ### Map Builder workspace
 
 `GET /game/<campaign_id>/map-builder` renders

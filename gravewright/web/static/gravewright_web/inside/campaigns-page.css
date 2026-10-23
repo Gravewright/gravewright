@@ -128,3 +128,11 @@
 .campaign-dialog__confirmation { display: grid; gap: var(--space-2); color: var(--text-muted); font-size: var(--text-md); }
 .campaign-dialog__confirmation input { width: 100%; min-width: 0; box-sizing: border-box; min-height: var(--control-height-md); padding: var(--space-2) var(--space-3); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-bright); font: inherit; font-family: var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .campaign-dialog__confirmation input:focus-visible { outline: var(--size-2) solid var(--accent); outline-offset: var(--size-2); }
+
+.gw-campaign__actions { display: grid; margin: var(--space-3) var(--space-0); }
+.gw-campaign__actions .gw-button,
+.gw-table-modal__actions--campaign .gw-button { min-width: 0; text-align: center; white-space: normal; text-decoration: none; }
+.gw-table-modal__actions--campaign { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr)); gap: var(--space-2); }
+@media (max-width: 600px) {
+  .gw-table-modal__actions--campaign { grid-template-columns: minmax(0, 1fr); }
+}

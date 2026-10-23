@@ -6,6 +6,8 @@ import '/static/gravewright_table/realtime.js';
 import { initialContent, sceneRestored, afterContentReady } from '/static/gravewright_table/content-state.js';
 import { directoryView } from "./directory.js";
 import { openUniversalVtt } from './universal-vtt.js';
+import { createSceneBuilder } from './scene-builder.js';
+import { HttpClient } from '/static/gravewright_modules/http-client.js';
 import { createTranslator } from '/static/gravewright_modules/i18n.js';
 import {
   mergePatch,
@@ -14,6 +16,14 @@ import {
 const panel = document.getElementById("maps-panel");
 const workspace = document.getElementById("table-workspace");
 const campaign = workspace.dataset.tableId;
+const builderLifetime = new AbortController();
+const builderHttp = new HttpClient(undefined, () => builderLifetime.signal);
+const editWithBuilder = createSceneBuilder({ campaignId: campaign, signal: builderLifetime.signal,
+  post: (...args) => builderHttp.post(...args), navigate: projectId => {
+    const url = new URL(`/game/${campaign}/map-builder`, window.location.origin);
+    url.searchParams.set('project', projectId); window.location.assign(url.href);
+  },
+});
 const interchangeTranslator = createTranslator();
 const interchangeText = key => interchangeTranslator.t(key);
 const labels = JSON.parse(
@@ -24,6 +34,14 @@ const clone = (name) =>
     .getElementById("map-" + name)
     .content.firstElementChild.cloneNode(true);
 const show = (element, on) => element.toggleAttribute("hidden", !on);
+const builderButton = document.querySelector('[data-scene-builder-open]');
+let builderOpening = false;
+function updateBuilderButton() {
+  if (!builderButton) return;
+  show(builderButton, state.is_gm && Boolean(current) && !builderLifetime.signal.aborted);
+  builderButton.disabled = builderOpening;
+  builderButton.setAttribute('aria-busy', String(builderOpening));
+}
 const defaults = {
   name: "",
   gridSize: 70,
@@ -586,10 +604,10 @@ function tree() {
           [sceneText.preload, () => prepare(map)],
           [labels.editScene, () => settings(map)],
           [sceneText.exportUniversal, () => openUniversalVtt({ campaignId: campaign, sceneId: map.id, t: interchangeText })],
-          ...(builderProjectId ? [[sceneText.editBuilder, () => {
-            const url = new URL(`/game/${campaign}/map-builder`, window.location.origin);
-            url.searchParams.set('project', builderProjectId);
-            window.location.assign(url.href);
+          ...(state.is_gm ? [[sceneText.editBuilder, async button => {
+            button.disabled = true; button.setAttribute('aria-busy', 'true');
+            try { return await editWithBuilder(map); }
+            finally { button.disabled = false; button.removeAttribute('aria-busy'); }
           }, 'sceneBuilderEdit']] : []),
           ["Permissions", () => openPermissions('scenes', map.id)],
           [
@@ -632,6 +650,7 @@ async function navigate(map, privateView = true) {
   calibration = undefined;
   if (privateView) following = map?.id === state.activeMapId;
   current = map;
+  updateBuilderButton();
   window.gravewrightRealtime.chatScope(map?.id);
   mergePatch({ _hasMap: !!map });
   tree();
@@ -838,12 +857,27 @@ function receiveState(nextState) {
     );
   } else if (!next && !current || next?.id !== current?.id || next?.version !== current?.version)
     void navigate(next, false);
+  updateBuilderButton();
   tree();
 }
+builderButton?.addEventListener('click', async () => {
+  if (!state.is_gm || !current || builderOpening || builderLifetime.signal.aborted) return;
+  builderOpening = true;
+  updateBuilderButton();
+  try {
+    await editWithBuilder(state.maps.find(map => map.id === current.id) || current);
+  } catch (cause) {
+    if (!builderLifetime.signal.aborted) error(cause.message);
+  } finally {
+    builderOpening = false;
+    updateBuilderButton();
+  }
+}, { signal: builderLifetime.signal });
 window.addEventListener('gravewright:maps', event => receiveState(event.detail));
 const initial = initialContent('maps');
 if(initial)receiveState(initial);
 window.addEventListener("gravewright:access-revoked", () => {
+  builderLifetime.abort();
   clearTimeout(preparedTimer);
   cancelPreparation(); prepared = undefined;
   state = { maps: [], folders: [], activeMapId: null, is_gm: false };
@@ -853,6 +887,7 @@ window.addEventListener("gravewright:access-revoked", () => {
   popup?.close();
 });
 window.addEventListener("pagehide", () => {
+  builderLifetime.abort();
   menu?.close();
   clearTimeout(preparedTimer);
   cancelPreparation();
