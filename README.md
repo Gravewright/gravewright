@@ -4,7 +4,7 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.3.2**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, progress clocks and clues, collaborative mind maps, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **0.3.3**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, progress clocks and clues, collaborative mind maps, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
 
 ## Campaign preparation and play
 
@@ -30,9 +30,10 @@ Start with the [Map Builder guide](docs/en/map-builder.md) to create an editable
 map project or add interactive elements over a finished map image. The
 [Universal VTT guide](docs/en/universal-vtt.md) explains importing `.uvtt`,
 `.dd2vtt` and `.df2vtt` files as native scenes, exporting scenes and reviewing
-format limitations. The [0.3.2 release notes](docs/releases/0.3.2.md) describe
-campaign preparation, clocks and clues, collaborative mind maps, PDF improvements, Pillow 13 and the
-required database migrations.
+format limitations. The [0.3.3 release notes](docs/releases/0.3.3.md) describe
+individual scene audiences, blank maps, shared cursors, token presentation,
+Builder productivity and Smart Object shader controls, plus the three required
+database migrations since 0.3.2.
 
 Extract the complete project into a writable folder, run the installer for your operating system, then use its generated Runner. The installer prepares tools, dependencies, the frontend and saved settings; the Runner starts the prepared application.
 
@@ -42,7 +43,7 @@ Extract the complete project into a writable folder, run the installer for your 
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/en/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/en/macos-runner.md) |
 
-The source distribution includes all three platform installers. The release identifiers are **`v0.3.2`** and **`Gravewright-0.3.2-django.zip`**, with a matching SHA-256 file. Managed installations can check the configured repository through **Administration → Updates → Check for updates**. Back up `.env`, configured data and local extensions first. For a manual upgrade, stop the Runner, replace application files while preserving configuration, data and extensions, then rerun the platform installer. See [upgrade and recovery](docs/en/upgrading.md) and the [release instructions](docs/releases/0.3.2.md#download-and-upgrade). This version adds seven migrations for campaign preparation, journal history, PDF mapping templates, clocks, clock descriptions, clues and mind maps relative to 0.3.1; run the normal migration workflow before starting the updated server.
+The source distribution includes all three platform installers. The release identifiers are **`v0.3.3`** and **`Gravewright-0.3.3-django.zip`**, with a matching SHA-256 file. Managed installations can check the configured repository through **Administration → Updates → Check for updates**. Back up `.env`, configured data and local extensions first. For a manual upgrade, stop the Runner, replace application files while preserving configuration, data and extensions, then rerun the platform installer. See [upgrade and recovery](docs/en/upgrading.md) and the [release instructions](docs/releases/0.3.3.md#download-and-upgrade). This version adds three migrations for individual scene assignments, Builder object presets and token appearance relative to 0.3.2; run the normal migration workflow before starting the updated server.
 
 Linux downloads use glibc-based distributions; Alpine/musl needs a compatible Node.js installation already available. The macOS installer targets macOS 13.5 or newer. Installation needs internet for missing tools/packages. Python 3.14, uv and Node.js are prepared privately when compatible tools are unavailable; no permanent PATH changes are made. All launchers use a local profile on `127.0.0.1`, with no Redis service required. See the platform guides for exact requirements and storage paths.
 

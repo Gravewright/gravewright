@@ -10,7 +10,7 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | [Linux runner](en/linux-runner.md) | Distribution detection, private tools, local execution and unattended checks |
 | [macOS runner](en/macos-runner.md) | Intel/Apple Silicon installation, Finder launcher, private tools and local execution |
 | [Getting started](en/getting-started.md) | Dependencies, configuration, migrations and first login |
-| [Upgrade and recovery](en/upgrading.md) | Preparing for 0.3.2, required migrations, dependency updates and recovery from a backup |
+| [Upgrade and recovery](en/upgrading.md) | Preparing for 0.3.3, required migrations, dependency updates and recovery from a backup |
 | [User guide](en/user-guide.md) | Campaigns, scenes, sheets, journals and table workflows |
 | [Journals and references](en/journals.md) | Insert links to campaign resources in rich text, open native tools and preserve private targets during edits and campaign copies |
 | [Campaign management](en/campaign-management.md) | GM workspace, personal dashboard, session planner, timeline, quest columns, connections, player preview and history/trash |
@@ -36,6 +36,6 @@ Project policies: [contributing](../CONTRIBUTING.md), [security](../SECURITY.md)
 
 For the dice implementation, see the existing [grammar architecture](../gravewright/dice/grammar/ARCHITECTURE.md) and [notation reference](../gravewright/dice/grammar/notation/GRAMMAR.md). Machine-readable module contracts live in [contracts/](../gravewright/modules/contracts/); the [transport note](../gravewright/modules/contracts/transport.md) accompanies them.
 
-Current project version: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). The release notes cover campaign preparation, journal history/trash, clocks and clues, collaborative mind maps, PDF mapping/actions, MapBuilder integration, Pillow 13 and seven new database migrations relative to 0.3.1. See [upgrade and recovery](en/upgrading.md) before updating an existing installation.
+Current project version: [Gravewright 0.3.3 — Alpha](releases/0.3.3.md). The release notes cover individual scene audiences, blank maps, shared cursors and shortcuts, token presentation, Builder productivity and Smart Object shader controls, with three new database migrations relative to 0.3.2. See [upgrade and recovery](en/upgrading.md) before updating an existing installation.
 
-Historical notes remain unchanged: [0.3.1](releases/0.3.1.md) covers forms, object models and scene synchronization; [0.3.0](releases/0.3.0.md) covers the original Map Builder and Universal VTT support; [0.2.3](releases/0.2.3.md) retains the earlier release history. Historical numbering and migration statements describe those releases, not the current version.
+Historical notes remain unchanged: [0.3.2](releases/0.3.2.md) covers campaign preparation, journal history/trash, clocks, clues, mind maps and PDF mapping; [0.3.1](releases/0.3.1.md) covers forms, object models and scene synchronization; [0.3.0](releases/0.3.0.md) covers the original Map Builder and Universal VTT support; [0.2.3](releases/0.2.3.md) retains the earlier release history. Historical numbering and migration statements describe those releases, not the current version.

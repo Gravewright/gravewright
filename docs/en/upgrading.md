@@ -2,9 +2,9 @@
 
 [Documentation](../README.md) · [Português](../pt-BR/upgrading.md)
 
-This guide covers the **Gravewright 0.3.2 — Alpha** release. Its source
-artifact is `Gravewright-0.3.2-django.zip`, with the matching
-`Gravewright-0.3.2-django.zip.sha256`. See the [release notes](../releases/0.3.2.md)
+This guide covers the **Gravewright 0.3.3 — Alpha** release. Its source
+artifact is `Gravewright-0.3.3-django.zip`, with the matching
+`Gravewright-0.3.3-django.zip.sha256`. See the [release notes](../releases/0.3.3.md)
 for features and [deployment](deployment.md) for public-server configuration.
 
 ## Before upgrading
@@ -73,28 +73,37 @@ also apply to public deployments.
 
 ### Numbering and same-version packages
 
-The release identifier is **0.3.2**, following **0.3.1**. The updater compares
-version numbers, so a compatible installation on 0.3.1 can discover 0.3.2 through
+The release identifier is **0.3.3**, following **0.3.2**. The updater compares
+version numbers, so a compatible installation on 0.3.2 can discover 0.3.3 through
 its configured release repository. The project remains in Alpha and the host SDK contract is unchanged;
 optional APIs still need capability checks. Historical release notes retain
 their original identifiers.
 
 An installation reporting the earlier incorrectly numbered **3.0.1** considers
-0.3.2 a lower version and will not receive it through automatic discovery.
+0.3.3 a lower version and will not receive it through automatic discovery.
 Back up its matching source, database and media, then use the manual installation
-procedure with the complete 0.3.2 archive and matching checksum. This corrects
+procedure with the complete 0.3.3 archive and matching checksum. This corrects
 the release numbering; do not try to downgrade the database by swapping older
 code over it. If recovery is needed, restore matching source, database and media
 together.
 
-A host already reporting **0.3.2** will not receive a reissued 0.3.2 through
+A host already reporting **0.3.3** will not receive a reissued 0.3.3 through
 version discovery. Use the manual upgrade procedure with the replacement ZIP
 and its own checksum. Do not downgrade a database by swapping older source over
 it; recovery requires matching source, database and media.
 
-## Database migrations in 0.3.2
+## Database migrations in 0.3.3
 
-Compared with 0.3.1, this release adds seven migrations:
+Compared with 0.3.2, this release adds three migrations:
+
+| Migration | Stored capability |
+| --- | --- |
+| [maps/0014_sceneassignment.py](../../gravewright/maps/migrations/0014_sceneassignment.py) | Individual player scene assignments |
+| [maps/0015_builderobjectpreset.py](../../gravewright/maps/migrations/0015_builderobjectpreset.py) | Campaign-owned reusable Builder object presets |
+| [tokens/0002_token_appearance.py](../../gravewright/tokens/migrations/0002_token_appearance.py) | Token name, turn-indicator and bar presentation settings |
+
+Older installations also need earlier pending migrations. The preceding 0.3.2
+release added these seven migrations relative to 0.3.1:
 
 | Migration | Stored capability |
 | --- | --- |
@@ -142,7 +151,7 @@ selection rules.
 
 ## Verification and recovery
 
-After startup, check that Administration reports **0.3.2**. Sign in as a GM and
+After startup, check that Administration reports **0.3.3**. Sign in as a GM and
 a player using a synthetic or copied campaign. Verify the campaign manager and
 table, a mapped PDF, map upload/Universal VTT import, a clock, and a clue whose
 content remains hidden until completion. Check private journal visibility,
@@ -150,7 +159,9 @@ session save/reopen, history/trash restoration and a representative backup round
 trip. Verify a [mind map](mindmaps.md) with a selected player editor: unreadable
 links stay unavailable, ordinary graph edits preserve those links, and a copied
 graph targets copied campaign resources. Use the [testing guide](testing.md) for
-isolated automated scenarios.
+isolated automated scenarios. Also check individual scene assignments, the saved
+blank-map grid, cursor preferences, token bar audiences and a reusable Builder
+object. Rehearse a Smart Object shader action before applying it to a live scene.
 
 If managed installation fails, retain updater transactions, backups and logs;
 the supervisor attempts recovery and handles interrupted transactions on the

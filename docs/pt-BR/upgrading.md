@@ -2,9 +2,9 @@
 
 [Documentação](../README.pt-BR.md) · [English](../en/upgrading.md)
 
-Este guia cobre a release **Gravewright 0.3.2 — Alpha**. Seu artefato de
-código-fonte é `Gravewright-0.3.2-django.zip`, com o arquivo correspondente
-`Gravewright-0.3.2-django.zip.sha256`. Consulte as [notas da release](../releases/0.3.2.md)
+Este guia cobre a release **Gravewright 0.3.3 — Alpha**. Seu artefato de
+código-fonte é `Gravewright-0.3.3-django.zip`, com o arquivo correspondente
+`Gravewright-0.3.3-django.zip.sha256`. Consulte as [notas da release](../releases/0.3.3.md)
 para os recursos e [implantação](deployment.md) para servidores públicos.
 
 ## Antes de atualizar
@@ -76,28 +76,37 @@ também se aplicam a servidores públicos.
 
 ### Numeração e pacotes da mesma versão
 
-O identificador da release é **0.3.2**, depois da **0.3.1**. O atualizador compara
-números de versão, então uma instalação compatível na 0.3.1 pode descobrir a
-0.3.2 pelo repositório de releases configurado. O projeto permanece em Alpha e o contrato do SDK do host
+O identificador da release é **0.3.3**, depois da **0.3.2**. O atualizador compara
+números de versão, então uma instalação compatível na 0.3.2 pode descobrir a
+0.3.3 pelo repositório de releases configurado. O projeto permanece em Alpha e o contrato do SDK do host
 continua igual; APIs opcionais continuam exigindo verificação de capacidade.
 Notas históricas preservam seus identificadores.
 
 Uma instalação que informa a versão anterior numerada incorretamente como
-**3.0.1** considera a 0.3.2 uma versão inferior e não a recebe pela descoberta
+**3.0.1** considera a 0.3.3 uma versão inferior e não a recebe pela descoberta
 automática. Faça backup do código, banco e mídias correspondentes, depois siga
-a instalação manual com o pacote completo da 0.3.2 e seu checksum. Isso corrige
+a instalação manual com o pacote completo da 0.3.3 e seu checksum. Isso corrige
 a numeração da release; não tente fazer downgrade do banco apenas sobrepondo
 código antigo. Se precisar recuperar a instalação, restaure juntos código,
 banco e mídias correspondentes.
 
-Um host que já informa **0.3.2** não recebe uma reedição da 0.3.2 pela descoberta
+Um host que já informa **0.3.3** não recebe uma reedição da 0.3.3 pela descoberta
 de versões. Siga a atualização manual com o ZIP substituto e seu próprio
 checksum. Não faça downgrade de um banco apenas sobrepondo código antigo;
 recuperação exige código, banco e mídias correspondentes.
 
-## Migrações de banco da 0.3.2
+## Migrações de banco da 0.3.3
 
-Em comparação com a 0.3.1, esta release acrescenta sete migrações:
+Em comparação com a 0.3.2, esta release acrescenta três migrações:
+
+| Migração | Capacidade armazenada |
+| --- | --- |
+| [maps/0014_sceneassignment.py](../../gravewright/maps/migrations/0014_sceneassignment.py) | Cena individual atribuída a cada jogador |
+| [maps/0015_builderobjectpreset.py](../../gravewright/maps/migrations/0015_builderobjectpreset.py) | Modelos reutilizáveis de objetos do Builder por campanha |
+| [tokens/0002_token_appearance.py](../../gravewright/tokens/migrations/0002_token_appearance.py) | Apresentação do nome, indicador de turno e barras dos tokens |
+
+Instalações mais antigas também precisam das migrações anteriores pendentes.
+A release anterior, 0.3.2, acrescentou estas sete migrações em relação à 0.3.1:
 
 | Migração | Capacidade armazenada |
 | --- | --- |
@@ -145,7 +154,7 @@ para as regras detalhadas de seleção.
 
 ## Verificação e recuperação
 
-Depois de iniciar, confira se a Administração informa **0.3.2**. Entre como mestre
+Depois de iniciar, confira se a Administração informa **0.3.3**. Entre como mestre
 e jogador em uma campanha sintética ou copiada. Verifique gestor e mesa, PDF
 mapeado, upload de mapa/importação Universal VTT, relógio e pista cujo conteúdo
 continua oculto até completar. Confira visibilidade de diários privados,
@@ -154,6 +163,10 @@ representativo de backup/restauração. Confira um [mapa mental](mindmaps.md) co
 um jogador editor: vínculos sem acesso ficam indisponíveis, edições comuns
 preservam esses vínculos e grafos copiados apontam aos recursos copiados da
 campanha. O [guia de testes](testing.md) descreve cenários automatizados isolados.
+Confira também as cenas individuais por jogador, o grid salvo do mapa vazio, as
+preferências do cursor, os públicos das barras dos tokens e um objeto reutilizável
+do Builder. Ensaie uma ação de shader de Objeto Inteligente antes de aplicá-la à
+cena em uso.
 
 Se a instalação gerenciada falhar, preserve transações, backups e logs; o
 supervisor tenta recuperar e trata transações interrompidas na próxima

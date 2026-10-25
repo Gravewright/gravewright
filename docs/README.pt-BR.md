@@ -10,7 +10,7 @@ Inglês é o idioma principal da documentação. Cada guia tem uma versão corre
 | [Executor Linux](pt-BR/linux-runner.md) | Detecção da distribuição, ferramentas privadas, execução local e verificações sem perguntas |
 | [Executor macOS](pt-BR/macos-runner.md) | Instalação Intel/Apple Silicon, launcher pelo Finder, ferramentas privadas e execução local |
 | [Primeiros passos](pt-BR/getting-started.md) | Dependências, configuração, migrações e primeiro acesso |
-| [Atualização e recuperação](pt-BR/upgrading.md) | Preparação para a 0.3.2, migrações necessárias, atualização de dependências e recuperação por backup |
+| [Atualização e recuperação](pt-BR/upgrading.md) | Preparação para a 0.3.3, migrações necessárias, atualização de dependências e recuperação por backup |
 | [Guia de uso](pt-BR/user-guide.md) | Campanhas, cenas, fichas, diários e fluxos da mesa |
 | [Diários e referências](pt-BR/journals.md) | Inserir vínculos no texto, abrir ferramentas nativas e preservar destinos privados ao editar ou copiar campanhas |
 | [Gerenciamento de campanha](pt-BR/campaign-management.md) | Área do mestre, painel pessoal, planejador de sessões, cronologia, colunas de missões, conexões, prévia de jogador e histórico/lixeira |
@@ -38,6 +38,6 @@ Para a implementação de dados, consulte os documentos existentes de [arquitetu
 
 Os contratos de módulos processáveis por máquina ficam em [contracts/](../gravewright/modules/contracts/), acompanhados da [nota de transporte](../gravewright/modules/contracts/transport.pt-BR.md).
 
-Versão atual do projeto: [Gravewright 0.3.2 — Alpha](releases/0.3.2.md). As notas da release apresentam preparação de campanha, histórico/lixeira de diários, relógios e pistas, mapas mentais colaborativos, mapeamento/ações de PDF, integração do MapBuilder, Pillow 13 e sete novas migrações de banco em relação à 0.3.1. Veja [atualização e recuperação](pt-BR/upgrading.md) antes de atualizar uma instalação existente.
+Versão atual do projeto: [Gravewright 0.3.3 — Alpha](releases/0.3.3.md). As notas da release apresentam públicos individuais por cena, mapas vazios, cursores compartilhados e atalhos, apresentação dos tokens, produtividade no Builder e controle de shaders por Objetos Inteligentes, com três novas migrações de banco em relação à 0.3.2. Veja [atualização e recuperação](pt-BR/upgrading.md) antes de atualizar uma instalação existente.
 
-As notas históricas permanecem: [0.3.1](releases/0.3.1.md) cobre formulários, modelos de objetos e sincronização de cenas; [0.3.0](releases/0.3.0.md) cobre o Map Builder original e o suporte a Universal VTT; [0.2.3](releases/0.2.3.md) preserva o histórico anterior. A numeração e as informações de migração históricas descrevem aquelas releases, não a versão atual.
+As notas históricas permanecem: [0.3.2](releases/0.3.2.md) cobre preparação de campanha, histórico/lixeira de diários, relógios, pistas, mapas mentais e mapeamento PDF; [0.3.1](releases/0.3.1.md) cobre formulários, modelos de objetos e sincronização de cenas; [0.3.0](releases/0.3.0.md) cobre o Map Builder original e o suporte a Universal VTT; [0.2.3](releases/0.2.3.md) preserva o histórico anterior. A numeração e as informações de migração históricas descrevem aquelas releases, não a versão atual.
