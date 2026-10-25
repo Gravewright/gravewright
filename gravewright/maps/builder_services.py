@@ -782,7 +782,7 @@ def clean_document(raw, who, *, scene_id=None):
             if "blueprint" in original:
                 row["blueprint"] = clean_blueprint(original["blueprint"], asset_ids=door_asset_ids,
                                                    appearance_asset_ids=set(roles),
-                                                   light_ids=light_ids, track_ids=track_ids)
+                                                   light_ids=light_ids, track_ids=track_ids, shader_ids={item["id"] for item in doc.get("shaders", [])})
                 if row["blueprint"]["kind"] != "door":
                     raise services.MapError("Unsupported blueprint version or object kind.")
         decoration_asset_ids = {asset_id for asset_id, role in roles.items() if role == "decoration"}
@@ -790,7 +790,7 @@ def clean_document(raw, who, *, scene_id=None):
             if "blueprint" in original:
                 row["blueprint"] = clean_blueprint(original["blueprint"], asset_ids=decoration_asset_ids,
                                                    appearance_asset_ids=set(roles),
-                                                   light_ids=light_ids, track_ids=track_ids)
+                                                   light_ids=light_ids, track_ids=track_ids, shader_ids={item["id"] for item in doc.get("shaders", [])})
                 if row["blueprint"]["kind"] != ("torch" if "torch" in row else "lever"):
                     raise services.MapError("Unsupported blueprint version or object kind.")
                 if row.get("empty"):
@@ -799,7 +799,7 @@ def clean_document(raw, who, *, scene_id=None):
         for row, original in zip(doc.get("regions", []), raw.get("regions", [])):
             if "blueprint" in original:
                 row["blueprint"] = clean_blueprint(original["blueprint"], asset_ids=set(), appearance_asset_ids=set(roles),
-                                                   light_ids=light_ids, track_ids=track_ids)
+                                                   light_ids=light_ids, track_ids=track_ids, shader_ids={item["id"] for item in doc.get("shaders", [])})
                 if row["blueprint"]["kind"] != "region":
                     raise services.MapError("Unsupported blueprint version or object kind.")
         from .torches import validate_sources
@@ -1146,6 +1146,7 @@ def strip_live(before, after, *, kind=None):
 def remap_native_blueprints(rows, doc):
     """Bind authored targets after native IDs, including archive IDs, are final."""
     lights = {row.builder_source_id: str(row.pk) for row in rows if row.kind == "lights"}
+    shaders = {row.builder_source_id: str(row.pk) for row in rows if row.kind == "shaders"}
     doors = {row["id"]: row for row in doc["doors"]}
     levers = {row["id"]: row for row in doc.get("decorations", []) if "lever" in row or "torch" in row}
     regions = {row["id"]: row for row in doc.get("regions", [])}
@@ -1160,6 +1161,8 @@ def remap_native_blueprints(rows, doc):
             for node in graph["nodes"]:
                 if node["type"] in ("light", "lightReference"):
                     node["targetId"] = lights.get(node["targetId"], node["targetId"])
+                elif node["type"] == "shaderControl":
+                    node["targetId"] = shaders.get(node["targetId"], node["targetId"])
                 elif node["type"] == "reference":
                     node["targetId"] = native_doors.get(node["targetId"], node["targetId"])
                 elif node["type"] == "teleport":
@@ -1462,6 +1465,7 @@ def update(campaign_id, user_id, project_id, payload):
             previous_overrides = {row["sourceId"]: row.get("nativeOverrides", {}) for row in source.generation["objects"]}
             previous_enabled_defaults = {row["sourceId"]: row.get("sourceEnabled", row["data"].get("enabled"))
                                          for row in source.generation["objects"] if row.get("kind") in LIVE_ENABLED_KINDS}
+            previous_shader_defaults = {item["id"]:item for item in source.generation.get("sourceDocument",{}).get("shaders",[])}
             previous_discovered_defaults = {row["sourceId"]: row.get("sourceDiscovered", row["data"].get("discovered", False))
                                             for row in source.generation["objects"]
                                             if row.get("kind") == "walls" and row["data"].get("kind") == "door"}
@@ -1521,6 +1525,12 @@ def update(campaign_id, user_id, project_id, payload):
                 elif (current and row.kind in LIVE_ENABLED_KINDS
                       and row.data["enabled"] == previous_enabled_defaults.get(row.builder_source_id)):
                     row.data["enabled"] = current.data["enabled"]
+                if current and row.kind == "shaders":
+                    from .shader_controls import SHADER_RANGES
+                    defaults = previous_shader_defaults.get(row.builder_source_id,{})
+                    for property_name in ("color",*SHADER_RANGES):
+                        if property_name in defaults and row.data[property_name] == defaults[property_name]:
+                            row.data[property_name] = current.data[property_name]
                 if current and row.kind == "zones" and "region" in row.data:
                     if "arrivalGates" in current.data.get("region", {}):
                         row.data["region"]["arrivalGates"] = deepcopy(current.data["region"]["arrivalGates"])

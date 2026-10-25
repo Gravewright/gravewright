@@ -73,14 +73,16 @@ def state(campaign_id, user_id, scene_id):
     from .blueprint_clues import catalog as clue_catalog
     from .blueprint_mindmaps import catalog as mindmap_catalog
     from gravewright.tokens.models import Token
+    native_effect_rows = SceneObject.objects.filter(scene=scene,kind__in=("particles","shaders"))
     return {"campaignId": str(who.campaign_id), "sceneId": str(scene.pk), "sceneName": scene.name, "sceneVersion": scene.version,
             "elements": elements, "lights": lights,
             "effects": [{"id": str(row.pk), "name": row.data.get("name") or "", "ordinal": index + 1,
                          "point": door_point(row.data), "version": row.version,
                          "nativeKind": row.kind, "nativeData": deepcopy(row.data)}
-                        for index, row in enumerate(SceneObject.objects.filter(scene=scene, kind__in=("particles", "shaders")))],
+                        for index, row in enumerate(native_effect_rows)],
             "tokens": [{"id": str(row.pk), "name": row.actor.name, "actorId": str(row.actor_id)}
                        for row in Token.objects.filter(scene=scene).select_related("actor").order_by("id")],
+            "shaders": [{"id":str(row.pk),"name":row.data.get("name", "Shader"),"x":row.data["x"],"y":row.data["y"],"point":door_point(row.data)} for row in native_effect_rows if row.kind=="shaders"],
             "sounds": [{"id": str(row.pk), "name": row.name} for row in Track.objects.filter(campaign_id=campaign_id).order_by("name", "id")],
             "clocks": clock_catalog(who, scene.pk),
             "clues": clue_catalog(who, scene.pk),
@@ -103,7 +105,7 @@ def remap(blueprint, records):
     result = deepcopy(blueprint)
     for graph in result["graphs"].values():
         for node in graph["nodes"]:
-            if node["type"] in ("reference", "light", "lightReference"):
+            if node["type"] in ("reference", "light", "lightReference", "shaderControl"):
                 node["targetId"] = mapping.get(node["targetId"], node["targetId"])
             elif node["type"] == "elementGroup" and node["memberType"] != "sound":
                 node["targetIds"] = [mapping.get(value, value) for value in node["targetIds"]]

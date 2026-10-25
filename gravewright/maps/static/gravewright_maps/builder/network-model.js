@@ -2,7 +2,7 @@
 export function sceneNetwork(catalog) {
     const nodes = new Map(), edges = new Map();
     const keyFor = (resource, id) => resource === 'element' ? id : `${resource}:${id}`;
-    const kinds = { elements: 'element', lights: 'light', sounds: 'sound', assets: 'asset', handouts: 'handout', users: 'user', clocks: 'clock', clues: 'clue', mindmaps: 'mindmap' };
+    const kinds = { elements: 'element', lights: 'light',shaders:'shader', sounds: 'sound', assets: 'asset', handouts: 'handout', users: 'user', clocks: 'clock', clues: 'clue', mindmaps: 'mindmap' };
     for (const [collection, resource] of Object.entries(kinds)) {
         for (const item of catalog[collection] || []) nodes.set(keyFor(resource, item.id), { ...item, id: keyFor(resource, item.id), resourceId: item.id, resource, missing: false,
             editable: resource === 'element' && (item.editable ?? ['door', 'lever', 'torch', 'region'].includes(item.kind)),
@@ -45,6 +45,7 @@ export function sceneNetwork(catalog) {
                 if (node.type === 'reference') link(owner, node.targetId, 'element', event, 'reference');
                 if (node.type === 'elementGroup') for (const target of node.targetIds) link(owner, target, node.memberType, event, 'group');
                 if (node.type === 'lightReference' || node.type === 'light' && !targetConnected) link(owner, node.targetId, 'light', event, 'light');
+                if(node.type==='shaderControl')link(owner,node.targetId,'shader',event,'shader');
                 if (node.type === 'soundReference' || ['sound', 'soundControl'].includes(node.type) && !targetConnected) link(owner, node.trackId, 'sound', event, 'sound');
                 if (node.type === 'teleport') link(owner, node.destinationId, 'element', event, 'teleport');
                 if (node.assetId) link(owner, node.assetId, 'asset', event, 'appearance');

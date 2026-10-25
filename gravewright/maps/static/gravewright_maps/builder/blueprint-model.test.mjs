@@ -132,7 +132,7 @@ test('door instance ports expose verbs and native state without adding object da
     assert.equal(blueprintContract.portKinds.reference.implemented, false);
     assert.equal(blueprintContract.portKinds.value.implemented, true);
     assert.deepEqual(Object.keys(blueprintContract.nodes),
-        ['door', 'lever', 'torch', 'region', 'event', 'light', 'sound', 'state', 'interact', 'flame', 'sprite', 'condition', 'sequence', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'clockControl', 'clueControl',
+        ['shaderControl','door', 'lever', 'torch', 'region', 'event', 'light', 'sound', 'state', 'interact', 'flame', 'sprite', 'condition', 'sequence', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'clockControl', 'clueControl',
             'getVariable', 'setVariable', 'compareValue', 'emitEvent', 'counter', 'once', 'cooldown', 'delay', 'timer', 'switch', 'random',
             'elementGroup', 'lightReference', 'soundReference', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
             'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'openMindMap', 'mindMapNode', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance']);

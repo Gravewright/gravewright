@@ -38,6 +38,12 @@ class _EventResources:
         self.blueprints = None
         self.appearances = {}
         self.notified = False
+        self.shaders = None
+
+    def shader_ids(self):
+        if self.shaders is None:
+            self.shaders = list(SceneObject.objects.filter(scene=self.scene, kind="shaders").values_list("pk", flat=True))
+        return self.shaders
 
     def references(self):
         from gravewright.audio.models import Track
@@ -149,7 +155,13 @@ def clean_native_blueprint(raw, campaign_id=None, scene_id=None, *, kind=None):
         light_ids = (SceneObject.objects.filter(scene_id=scene_id, kind="lights")
                      .values_list("pk", flat=True)) if scene_id is not None else None
         track_ids = Track.objects.filter(campaign_id=campaign_id).values_list("pk", flat=True) if campaign_id is not None else None
-    result = clean_blueprint(raw, asset_ids=asset_ids, light_ids=light_ids, track_ids=track_ids)
+    uses_shaders = isinstance(raw, dict) and isinstance(raw.get("graphs"), dict) and any(
+        isinstance(graph, dict) and isinstance(graph.get("nodes"), list)
+        and any(isinstance(node, dict) and node.get("type") == "shaderControl" for node in graph["nodes"])
+        for graph in raw["graphs"].values())
+    shader_ids = (resources.shader_ids() if resources is not None else
+                  SceneObject.objects.filter(scene_id=scene_id, kind="shaders").values_list("pk", flat=True)) if uses_shaders and scene_id is not None else None
+    result = clean_blueprint(raw, asset_ids=asset_ids, light_ids=light_ids, track_ids=track_ids, shader_ids=shader_ids)
     if kind is not None and result["kind"] != kind:
         raise MapError("Unsupported blueprint version or object kind.")
     validate_reference_ownership(result, campaign_id=campaign_id, scene_id=scene_id)
@@ -186,6 +198,10 @@ def validate_reference_ownership(blueprint, *, campaign_id=None, scene_id=None):
     if campaign_id is not None and Track.objects.filter(pk__in=ids["sound"]).exclude(campaign_id=campaign_id).exists():
         raise MapError("Choose a sound from this campaign.")
     nodes = [node for graph in blueprint.get("graphs", {}).values() for node in graph["nodes"]]
+    for shader in SceneObject.objects.filter(pk__in=[node["targetId"] for node in nodes if node["type"] == "shaderControl"]).select_related("scene"):
+        if (shader.kind != "shaders" or campaign_id is not None and str(shader.scene.campaign_id) != str(campaign_id)
+                or scene_id is not None and str(shader.scene_id) != str(scene_id)):
+            raise MapError("Choose a shader from this scene.")
     from .blueprint_clocks import validate_clock_references
     validate_clock_references([node['clockId'] for node in nodes if node['type'] == 'clockControl'],
                               campaign_id=campaign_id, scene_id=scene_id)
@@ -345,6 +361,17 @@ def detach_blueprint_light(blueprint, light_id):
     return _detach_action(blueprint, ("light",), "targetId", light_id)
 
 
+def detach_scene_shaders(scene_id, shader_ids):
+    """Remove deleted shader actions while retaining execution continuations."""
+    for row in SceneObject.objects.filter(scene_id=scene_id,data__blueprint__isnull=False):
+        changed=False
+        for shader_id in shader_ids:
+            changed=_detach_action(row.data["blueprint"],("shaderControl",),"targetId",str(shader_id)) or changed
+        if changed:
+            row.version+=1
+            row.save(update_fields=["data","version"])
+
+
 def detach_scene_sound(campaign_id, track_id):
     for obj in SceneObject.objects.filter(scene__campaign_id=campaign_id, kind__in=("walls", "images", "zones"),
                                           data__blueprint__isnull=False):
@@ -401,7 +428,7 @@ def _remember_effects(scene, changes):
             if not isinstance(row, dict):
                 continue
             before_after = changes.get(row.get("id"))
-            if before_after and row.get("kind") == "lights" and row.get("data") == before_after[0]:
+            if before_after and row.get("kind") in ("lights", "shaders") and row.get("data") == before_after[0]:
                 row["data"] = deepcopy(before_after[1])
                 changed = True
         if changed:
@@ -432,6 +459,9 @@ def _steps(graph, result, sound_names):
             step["state"] = node["targetState"]
         elif node["type"] == "sound":
             step.update(sound=sound_names.get(node["trackId"], ""), volume=node["volume"])
+        elif node["type"] == "shaderControl":
+            action=next((action for action in result["actions"] if action["id"]==identifier),node)
+            step.update(targetIds=[node["targetId"]], property=node["property"], value=action["value"])
         elif node["type"] in ("light", "flame"):
             step["enabled"] = node["enabled"]
         elif node["type"] == "sprite":
@@ -879,6 +909,10 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                     torch_lights.setdefault(identifier, candidate)
         return torch_lights.get(name)
 
+    def shader_owner(name):
+        return next((candidate for candidate in doors.values()
+                     if candidate.data.get("torch", {}).get("components", {}).get("shaders", {}).get("id") == name), None)
+
     def blueprint_of(key):
         if key not in blueprints:
             source = doors[key].data.get("blueprint")
@@ -1019,6 +1053,29 @@ def _operate(scene, who, obj, target, *, interact=True, presence_event=None, con
                 counters["actions"] += 1
                 if counters["actions"] > 1024:
                     raise MapError("The object blueprint executed too many actions.")
+                if node["type"] == "shaderControl":
+                    from .extra_objects import effect
+                    from .shader_controls import clean_value
+                    shader = SceneObject.objects.filter(scene=scene, kind="shaders", pk=node["targetId"]).first()
+                    if shader is None:
+                        missing.add(node["id"])
+                        continue
+                    name = str(shader.pk)
+                    light_changes.setdefault(name, [deepcopy(shader.data), None])
+                    value = clean_value(node["property"], node["value"])
+                    shader.data = effect("shaders", {node["property"]: value}, shader.data)
+                    owner = shader_owner(name)
+                    if owner is not None:
+                        touch(str(owner.pk))
+                        link = owner.data["torch"]["components"]["shaders"]
+                        if node["property"] == "enabled":
+                            link["enabled"] = value
+                        shader.data["enabled"] = owner.data["torch"]["lit"] and link["enabled"] and owner.data.get("layer") != "gm-image-layer"
+                    light_changes[name][1] = deepcopy(shader.data)
+                    shader.version += 1
+                    shader.save(update_fields=["data", "version"])
+                    applied.setdefault(node["id"], []).append(name)
+                    continue
                 aim = node.get("target")
                 target_type = target_types.get(node["id"])
                 if aim is not None and target_type not in ("sound", "soundset"):

@@ -27,7 +27,7 @@ MAX_TEMPLATES = 128
 MAX_BINDINGS = 256
 MAX_PARAMETERS = 64
 MAX_DEFINITION_BYTES = 262144
-BINDING_TYPES = ("asset", "element", "light", "sound", "handout", "user", "clock", "clue", "mindmap", "mindmapTopic")
+BINDING_TYPES = ("asset", "element", "light", "shader", "sound", "handout", "user", "clock", "clue", "mindmap", "mindmapTopic")
 _IDENTIFIER = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 
 
@@ -69,7 +69,7 @@ def resource_slots(blueprint):
             if not isinstance(kind, str):
                 raise services.MapError("Invalid blueprint template.")
             slot = {"reference": ("targetId", "element"), "lightReference": ("targetId", "light"),
-                    "soundReference": ("trackId", "sound"), "light": ("targetId", "light"),
+                    "soundReference": ("trackId", "sound"), "light": ("targetId", "light"),"shaderControl":("targetId","shader"),
                     "sound": ("trackId", "sound"), "soundControl": ("trackId", "sound"),
                     "showHandout": ("journalId", "handout"), "setQuestStatus": ("journalId", "handout"),
                     "clockControl": ("clockId", "clock"),
@@ -106,7 +106,7 @@ def parameter_options(blueprint):
         for index, node in enumerate(graph.get("nodes", [])):
             kind = node.get("type")
             fields = {
-                "light": ("enabled",), "sound": ("volume",), "soundControl": ("volume",),
+                "light": ("enabled",), "shaderControl":("value",),"sound": ("volume",), "soundControl": ("volume",),
                 "flame": ("enabled",), "setInteraction": ("enabled",), "setRegion": ("enabled",),
                 "setVisibility": ("visible",),
                 "counter": ("target",), "cooldown": ("seconds",), "delay": ("seconds",),

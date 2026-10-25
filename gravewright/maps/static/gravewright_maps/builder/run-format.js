@@ -1,8 +1,9 @@
 import { blueprintEventLabel } from './blueprint-model.js';
+import {shaderProperties} from './shader-control.js';
 
 /** Readable automation traces and rehearsal changes, shared by the run log and the test panel. */
 export const STATE_NAMES = { closed: 'Closed', open: 'Opened', locked: 'Locked', off: 'Deactivated', on: 'Activated', empty: 'Empty', occupied: 'Occupied' };
-export const STEP_NAMES = { event: 'Event', light: 'Set light', sound: 'Play sound', state: 'Change state', interact: 'Interact with object', condition: 'Check state',
+export const STEP_NAMES = { shaderControl:'Control shader',event: 'Event', light: 'Set light', sound: 'Play sound', state: 'Change state', interact: 'Interact with object', condition: 'Check state',
     sprite: 'Change sprite', sequence: 'Sequence', property: 'Get property', compare: 'Compare state',
     reference: 'Element reference', reveal: 'Reveal', barrier: 'Set barrier', soundControl: 'Control sound', flame: 'Set flame',
     all: 'All conditions', any: 'Any condition', getVariable: 'Get variable', setVariable: 'Set variable', compareValue: 'Compare value', emitEvent: 'Emit event',
@@ -46,6 +47,7 @@ export function createRunFormatter({ t, elements, resolve = id => id, fallbackNa
         const detail = {
             state: () => stateName(step.state, step.doorId),
             sound: () => `${step.sound || t('Sound')} · ${Math.round(step.volume * 100)}%`,
+            shaderControl:()=>`${t(shaderProperties[step.property]?.label||step.property)}: ${scalar(step.value)}`,
             light: () => t(step.enabled ? 'Enabled' : 'Disabled'),
             flame: () => t(step.enabled ? 'Lit' : 'Unlit'),
             sprite: () => t(APPEARANCE_NAMES[step.appearance] || step.appearance),

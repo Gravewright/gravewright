@@ -210,6 +210,7 @@ vizinhos, servidos diretamente, possuem estas responsabilidades:
 | `inspector-controller.js` | Campos compartilhados da seleção, modais por seção e configuração de regiões/tochas |
 | `object-menu.js` | Menu de contexto dos objetos, navegação por teclado e submenu de modelos |
 | `interactive-presets.js` | Blueprints genéricos configuráveis e modal do catálogo de objetos |
+| `shader-control.js` | Propriedades tipadas de shaders para edição, simulação e registros de Blueprints |
 | `layer-controller.js` | Controles, conteúdo e seleção de camadas e listeners de arraste |
 | `productivity.js`, `productivity-model.js` | Agrupamento, alinhamento atômico, modelos da campanha, áreas e pincel de objetos |
 | `player-test.js`, `player-test-model.js` | Ensaio separado como jogador, passagem por áreas e solicitações de teste com rollback |

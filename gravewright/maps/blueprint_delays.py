@@ -169,12 +169,14 @@ def invalid_reason(row, element=None):
     # cancel explicitly rather than failing halfway through a resumed effect.
     nodes = [node for graph in blueprint["graphs"].values() for node in graph["nodes"]]
     required["lights"].update(node["targetId"] for node in nodes if node["type"] == "light")
+    required["shaders"]={node["targetId"] for node in nodes if node["type"]=="shaderControl"}
     required["sounds"].update(node["trackId"] for node in nodes if node["type"] in ("sound", "soundControl"))
     required["assets"].update(entry["assetId"] for entry in [*nodes, *blueprint["states"].values()]
                                if entry.get("appearance") == "asset")
     required["assets"].update(node["assetId"] for node in nodes if node["type"] == "setAppearance")
     resources = {"elements": live_objects(row.scene).exclude(kind="lights"),
                  "lights": SceneObject.objects.filter(scene_id=row.scene_id, kind="lights"),
+                 "shaders": SceneObject.objects.filter(scene_id=row.scene_id,kind="shaders"),
                  "sounds": Track.objects.filter(campaign_id=row.scene.campaign_id),
                  "assets": MapAsset.objects.filter(campaign_id=row.scene.campaign_id, generated_for__isnull=True),
                  "handouts": Journal.objects.filter(campaign_id=row.scene.campaign_id),

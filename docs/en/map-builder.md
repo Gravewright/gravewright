@@ -1578,6 +1578,25 @@ without a blueprint retains native interaction. Streamers remain read-only. Play
 state and active image. **Automation**
 lists doors and levers together; pausing automation stops graph execution. Scene updates preserve its live state.
 
+### Direct shader controls
+
+In a Smart Object Blueprint, add **Control shader**, choose a shader from the
+same map and select its property. The action supports enabled state, color,
+intensity, opacity, speed, scale, radius, rotation, light response and emission.
+Connect an interaction, area event, signal or another action to its execution
+input. Chain several nodes to change multiple properties. The Value input accepts
+a Boolean, Text or Number connection according to the selected property; color
+uses a six-digit hex value. Native shader limits also apply to connected values.
+
+Independent shaders and composed torch shaders are supported. A component's
+enabled setting is retained while its torch is extinguished or hidden and is
+restored when the flame becomes visible. The action can update its parameters
+while the flame is off. Existing **Set light** and **Set flame** actions remain
+available. Shader targets follow copied objects and generated scene IDs, and can
+be rebound in saved behavior templates. Rehearsals report the changed shader
+without persisting the test. Updating an unchanged Builder parameter preserves
+its live value; an explicit Builder edit replaces that parameter.
+
 ### Composed torches
 
 Place an **Object** image, select it and choose **Behavior → Torch** in

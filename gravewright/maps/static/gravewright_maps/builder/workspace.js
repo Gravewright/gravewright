@@ -1271,7 +1271,7 @@ function mountWorkspace(root) {
             picking = { kind, exclude, finish };
             viewport.classList.add('is-picking'); viewport.focus({ preventScroll: true });
             notify(t(kind === 'elements' ? 'Click a live object, door or region on the map. Esc cancels.'
-                : kind === 'doors' ? 'Click a door on the map. Esc cancels.' : 'Click a light on the map. Esc cancels.'),
+                : kind === 'doors' ? 'Click a door on the map. Esc cancels.' : kind==='shaders'?'Click a shader on the map. Esc cancels.':'Click a light on the map. Esc cancels.'),
                 [['Cancel', () => finish(null)]]);
         });
     }
@@ -1467,7 +1467,7 @@ function mountWorkspace(root) {
         if (busy || state.preview || activeModal) return;
         cancelDrawing();
         activeModal = openSceneNetwork({ campaignId: root.dataset.campaignId, t, pick: pickOnMap,
-            load: async () => ({ elements: behaviorElements(), assets: behaviorMaterials(), materials: behaviorMaterials(), lights: state.document.lights,
+            load: async () => ({ elements: behaviorElements(), assets: behaviorMaterials(), materials: behaviorMaterials(), lights: state.document.lights,shaders:state.document.shaders,
                 sounds: state.sounds || [], users: state.users || [], handouts: state.handouts || [], clocks: behaviorClocks(), clues: behaviorClues(), mindmaps: behaviorMindmaps() }),
             save: async (owner, blueprint) => {
                 const target = { kind: owner.sourceKind, id: owner.id }, item = itemFor(target);
@@ -1499,7 +1499,7 @@ function mountWorkspace(root) {
         }).filter(Boolean);
         activeModal = openBlueprintEditor({ element: elements.find(item => item.id === object.id), elements,
             assets, materials: behaviorMaterials(), campaignId: root.dataset.campaignId, linkedScene: Boolean(state.sceneId), users: state.users || [], handouts: state.handouts || [],
-            clocks: behaviorClocks(), clues: behaviorClues(), mindmaps: behaviorMindmaps(),
+            clocks: behaviorClocks(), clues: behaviorClues(), mindmaps: behaviorMindmaps(), shaders:state.document.shaders,
             lights: state.document.lights, sounds: state.sounds || [], t, pick: pickOnMap,
             onSave: async blueprint => {
                 const current = itemFor(target); if (!current || !editable(target)) throw new Error(t('Choose a visible, unlocked object.'));

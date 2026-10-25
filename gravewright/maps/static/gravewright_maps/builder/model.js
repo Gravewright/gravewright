@@ -1032,6 +1032,7 @@ export function duplicateSelection(document, refs, dx = 1, dy = 1, { includeComp
         }
         for (const graph of Object.values(item.blueprint?.graphs || {})) for (const node of graph.nodes) {
             if (['light', 'lightReference'].includes(node.type) && lightCopies.has(node.targetId)) node.targetId = lightCopies.get(node.targetId);
+            if(node.type==='shaderControl'&&componentCopies.has(node.targetId))node.targetId=componentCopies.get(node.targetId);
             if (node.type === 'reference' && elementCopies.has(node.targetId)) node.targetId = elementCopies.get(node.targetId);
             if (node.type === 'elementGroup' && node.memberType !== 'sound') {
                 const mapping = node.memberType === 'light' ? lightCopies : elementCopies;

@@ -150,6 +150,10 @@ def gate_edit(scene, child, raw):
 
 def delete_group(parent):
     """Delete only the owner's exact scene-local component IDs."""
+    shader=parent.data.get("torch",{}).get("components",{}).get("shaders")
+    if shader:
+        from .blueprint_runtime import detach_scene_shaders
+        detach_scene_shaders(parent.scene_id,[shader["id"]])
     light = parent.data.get("torch", {}).get("components", {}).get("lights")
     if light:
         from .blueprint_runtime import detach_scene_lights

@@ -3931,5 +3931,13 @@
   "Invalid object preset.": "Modelo de objeto inválido.",
   "Object preset not found.": "Modelo de objeto não encontrado.",
   "Object library limit exceeded.": "O limite da biblioteca de objetos foi excedido.",
-  "Invalid test position.": "Posição de teste inválida."
+  "Invalid test position.": "Posição de teste inválida.",
+  "Control shader": "Controlar shader",
+  "Change a shader parameter when this behavior runs.": "Altere um parâmetro do shader quando este comportamento for executado.",
+  "Add a shader to this map first.": "Adicione um shader a este mapa primeiro.",
+  "Choose a shader from this map.": "Escolha um shader deste mapa.",
+  "Choose a shader from this scene.": "Escolha um shader desta cena.",
+  "Invalid shader control property.": "Propriedade de controle do shader inválida.",
+  "Invalid shader control value.": "Valor de controle do shader inválido.",
+  "Click a shader on the map. Esc cancels.": "Clique em um shader no mapa. Esc cancela."
 }

@@ -1,5 +1,5 @@
 {
-  "resources": {"assets":[{"id":"00000000-0000-4000-8000-000000000001"}],"lights":[{"id":"00000000-0000-4000-8000-000000000002"}],"sounds":[{"id":"00000000-0000-4000-8000-000000000003"}],"clocks":[{"id":"00000000-0000-4000-8000-000000000005"}],"clues":[{"id":"00000000-0000-4000-8000-000000000006"}]},
+  "resources": {"shaders":[{"id":"00000000-0000-4000-8000-000000000007"}],"assets":[{"id":"00000000-0000-4000-8000-000000000001"}],"lights":[{"id":"00000000-0000-4000-8000-000000000002"}],"sounds":[{"id":"00000000-0000-4000-8000-000000000003"}],"clocks":[{"id":"00000000-0000-4000-8000-000000000005"}],"clues":[{"id":"00000000-0000-4000-8000-000000000006"}]},
   "providers": [
     ["property","value","state",{"property":"state"}],
     ["property","value","state",{"property":"previous"}],
@@ -31,6 +31,9 @@
     ["eventContext","value","state",{"property":"previous"}]
   ],
   "consumers": [
+    ["shaderControl","value",["boolean"],{"targetId":"00000000-0000-4000-8000-000000000007","property":"enabled","value":true}],
+    ["shaderControl","value",["number"],{"targetId":"00000000-0000-4000-8000-000000000007","property":"speed","value":1}],
+    ["shaderControl","value",["text"],{"targetId":"00000000-0000-4000-8000-000000000007","property":"color","value":"#ffffff"}],
     ["state","target",["element","elementset"],{"targetState":"on"}],
     ["interact","target",["element","elementset"],{}],
     ["sprite","target",["element","elementset"],{"appearance":"asset","assetId":"00000000-0000-4000-8000-000000000001"}],

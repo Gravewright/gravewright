@@ -1,4 +1,5 @@
 /** Shared editor vocabulary; native objects remain authoritative for current state. */
+import { shaderProperties, validateShaderValue } from './shader-control.js';
 export const blueprintStates = Object.freeze(['closed', 'open', 'locked']);
 const leverStates = Object.freeze(['off', 'on']);
 const regionStates = Object.freeze(['empty', 'occupied']);
@@ -167,7 +168,7 @@ const verbOutputs = blueprintVerbEventsFor().map(eventOutput);
 const objectOutputs = blueprintVerbEventsFor('lever').map(eventOutput);
 const regionOutputs = blueprintVerbEventsFor('region').map(eventOutput);
 // Node types added with version 2; version 1 documents keep their original vocabulary.
-const versionTwoTypes = ['sequence', 'sprite', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'flame',
+const versionTwoTypes = ['shaderControl','sequence', 'sprite', 'property', 'compare', 'all', 'any', 'reference', 'reveal', 'barrier', 'soundControl', 'flame',
     'getVariable', 'setVariable', 'compareValue', 'emitEvent', ...controlNodeTypes, 'delay', 'timer', 'switch', 'random',
     'elementGroup', 'lightReference', 'soundReference', 'eventContext', 'move', 'rotate', 'setInteraction', 'setRegion',
     'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'interact', 'clockControl', 'clueControl', 'openMindMap', 'mindMapNode'];
@@ -194,6 +195,7 @@ export const blueprintContract = freeze({
     limits: { graphNodes: 32, graphEdges: 64, blueprintNodes: 128, coordinate: 5000, signalGraphs: 16, variables: 64, variableNumber: 1000000, variableText: 256 },
     portKinds: { execution: { implemented: true }, value: { implemented: true }, reference: { implemented: false } },
     nodes: {
+        shaderControl: {category:'action',label:'Control shader',inputs:[executionInput,{id:'value',kind:'value',type:'boolean',label:'Value'}],outputs:[executionNext]},
         door: { category: 'element', label: 'Door', inputs: [], outputs: verbOutputs },
         lever: { category: 'element', label: 'Lever', inputs: [], outputs: objectOutputs },
         torch: { category: 'element', label: 'Torch', inputs: [], outputs: objectOutputs },
@@ -311,6 +313,7 @@ export function executionOutputs(node) {
 export function nodeOutputs(node) { return executionOutputs(node).map(port => port.id); }
 function valuePorts(node, direction) {
     return (blueprintContract.nodes[node.type]?.[direction] || []).filter(port => port.kind === 'value').map(port => {
+        if (node.type==='shaderControl'&&port.id==='value')return {...port,type:shaderProperties[node.property]?.type};
         if (['getVariable', 'setVariable', 'compareValue', 'switch'].includes(node.type) && port.id === 'value') return { ...port, type: node.valueType };
         if (node.type === 'elementGroup') return { ...port, type: `${node.memberType}set` };
         if (node.type === 'eventContext') return { ...port, type: eventContextTypes[node.property] };
@@ -352,6 +355,7 @@ export function connectNodes(graph, from, output, to, { version = 2, input } = {
     graph.edges = edges;
 }
 const nodeFields = {
+    shaderControl:['targetId','property','value'],
     event: ['event'], light: ['targetId', 'enabled'], sound: ['trackId', 'volume'], state: ['targetState'], condition: ['state'],
     sequence: [], interact: [], sprite: ['appearance'], property: ['property'], compare: ['state'], all: [], any: [], reference: ['targetId'], reveal: [],
     barrier: ['channel', 'mode'], soundControl: ['trackId', 'action', 'volume'], clockControl: ['clockId', 'action', 'amount'],
@@ -390,6 +394,10 @@ function validateGraph(graph, event, version) {
             || typeof node.id !== 'string' || !nodeIdPattern.test(node.id) || seen.has(node.id)
             || !Number.isFinite(node.x) || !Number.isFinite(node.y) || Math.min(node.x, node.y) < 0 || Math.max(node.x, node.y) > 5000) throw new Error('Invalid blueprint node.');
         seen.add(node.id);
+        if(node.type==='shaderControl'){
+            if(!validUuid(node.targetId))throw Error('Choose a shader from this map.');
+            validateShaderValue(node.property,node.value);
+        }
         if (['state', 'condition', 'compare'].includes(node.type)
             && !(node.type === 'state' ? blueprintWritableStates : blueprintAllStates).includes(node.type === 'state' ? node.targetState : node.state)) throw new Error('Invalid blueprint state.');
         if (node.type === 'sprite' && !blueprintAppearances.includes(node.appearance) || node.type === 'property' && !blueprintProperties.includes(node.property)
@@ -461,7 +469,7 @@ export function validateBlueprintImageTargets(blueprint, element) {
     if (Object.values(blueprint.states || {}).some(state => state.appearance !== 'inherit')) invalid();
     return blueprint;
 }
-export function validateBlueprint(blueprint, { assets = [], materials = assets, lights = [], sounds = [], clocks, clues, mindmaps, element } = {}) {
+export function validateBlueprint(blueprint, { assets = [], materials = assets, lights = [], shaders = [], sounds = [], clocks, clues, mindmaps, element } = {}) {
     supportedBlueprint(blueprint);
     const states = blueprintStatesFor(blueprint.kind);
     if (!exactFields(blueprint, ['version', 'kind', 'states', 'graphs']) || !exactFields(blueprint.states, states)) throw new Error('Invalid blueprint state.');
@@ -489,6 +497,10 @@ export function validateBlueprint(blueprint, { assets = [], materials = assets, 
                 if (names.has(node.name) && names.get(node.name) !== node.valueType) throw new Error('A blueprint variable must keep the same type.');
                 names.set(node.name, node.valueType);
                 if (names.size > blueprintContract.limits.variables) throw new Error('The blueprint has too many variables.');
+            }
+            if(node.type==='shaderControl'){
+                if(!shaders.some(shader=>shader.id===node.targetId))throw Error('Choose a shader from this map.');
+                validateShaderValue(node.property,node.value);
             }
             if (node.type === 'light' && (!lightIds.has(node.targetId) || typeof node.enabled !== 'boolean')) throw new Error('Choose a light from this map.');
             if (['sound', 'soundControl'].includes(node.type) && (!soundIds.has(node.trackId) || !Number.isFinite(node.volume) || node.volume < 0 || node.volume > 1)) throw new Error('Choose a sound from this campaign.');
@@ -590,7 +602,7 @@ export function simulateGraph(blueprint, event, currentState, previousState = cu
             delay = { nodeId: node.id, seconds: node.seconds };
             return;
         }
-        if (['light', 'sound', 'state', 'interact', 'sprite', 'reveal', 'barrier', 'soundControl', 'flame', 'setVariable', 'emitEvent', 'timer',
+        if (['light', 'shaderControl', 'sound', 'state', 'interact', 'sprite', 'reveal', 'barrier', 'soundControl', 'flame', 'setVariable', 'emitEvent', 'timer',
             'move', 'rotate', 'setInteraction', 'setRegion', 'showMessage', 'showHandout', 'requestRoll', 'setQuestStatus', 'cameraFocus', 'teleport', 'setVisibility', 'setAppearance', 'clockControl', 'clueControl', 'openMindMap', 'mindMapNode'].includes(node.type)) {
             const action = structuredClone(node), aim = source(node.id, 'target');
             if (aim) action.target = structuredClone(value(aim));
@@ -610,6 +622,11 @@ export function simulateGraph(blueprint, event, currentState, previousState = cu
                 if (amount) action.amount = value(amount);
                 if (!Number.isInteger(action.amount) || action.amount < 0 || action.amount > 24)
                     throw new Error('Clue amount must be an integer from 0 to 24.');
+            }
+            if(node.type==='shaderControl'){
+                const input=source(node.id,'value');
+                if(input)action.value=value(input);
+                validateShaderValue(node.property,action.value);
             }
             actions.push(action);
         }

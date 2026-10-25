@@ -30,7 +30,7 @@ def inverse_blueprint(value, mapping):
 
     for graph in value.get("graphs", {}).values():
         for node in graph.get("nodes", []):
-            if node.get("type") in ("light", "lightReference", "reference"):
+            if node.get("type") in ("light", "lightReference", "reference", "shaderControl"):
                 node["targetId"] = source_id(node.get("targetId"))
             elif node.get("type") == "teleport":
                 node["destinationId"] = source_id(node.get("destinationId"))

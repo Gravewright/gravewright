@@ -305,6 +305,9 @@ def apply(scene, who, env, area, action, p):
                 raise MapError("The object changed.", "conflict")
             if action == "delete":
                 from .torches import detach_component
+                if area == "shaders":
+                    from .blueprint_runtime import detach_scene_shaders
+                    detach_scene_shaders(scene.pk,[obj.pk])
                 if area == "images":
                     from .blueprint_lifecycle import destroy_objects
                     destroy_objects(scene, who, [obj])
@@ -354,6 +357,9 @@ def apply(scene, who, env, area, action, p):
                 obj = get_object(scene, ref.get("id"), kind)
                 if action == "delete":
                     from .torches import detach_component
+                    if kind == "shaders":
+                        from .blueprint_runtime import detach_scene_shaders
+                        detach_scene_shaders(scene.pk,[obj.pk])
                     detach_component(scene, obj.pk)
                     obj.delete()
                     continue

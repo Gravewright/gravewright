@@ -241,6 +241,7 @@ boundaries:
 | `inspector-controller.js` | Shared selection fields, section modals and region/torch configuration |
 | `object-menu.js` | Object context menu, keyboard navigation and model submenu |
 | `interactive-presets.js` | Configurable generic object Blueprints and their catalog modal |
+| `shader-control.js` | Typed shader property controls shared by Blueprint editing, simulation and logs |
 | `layer-controller.js` | Layer controls, contents, selection and drag listeners |
 | `productivity.js`, `productivity-model.js` | Grouping, atomic arrangement, campaign object bundles, area guides and object strokes |
 | `player-test.js`, `player-test-model.js` | Detached player rehearsal, area crossings and rollback-only behavior requests |

@@ -27,6 +27,7 @@ def catalog_fields(identifier):
     """Independent valid examples make newly added catalog nodes require coverage."""
     return {
         "event": {"event": "signal:Probe"}, "light": {"targetId": identifier, "enabled": True},
+        "shaderControl": {"targetId":identifier,"property":"opacity","value":.5},
         "sound": {"trackId": identifier, "volume": .5}, "state": {"targetState": "on"},
         "interact": {}, "condition": {"state": "off"}, "sequence": {},
         "sprite": {"appearance": "asset", "assetId": identifier}, "property": {"property": "state"},

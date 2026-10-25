@@ -14,13 +14,13 @@ export function removeObject(document, kind, id) {
         dissolved.add(owner.id);
         for (const ref of torchChildren(document, owner)) remove(ref);
     } else if (owner) detached.push({ owner, field: kind === 'particles' ? 'particleId' : 'shaderId' });
-    const replacements = [], removedLights = removals.get('lights');
-    if (removedLights?.size) for (const element of [...document.doors || [], ...document.decorations || [], ...document.regions || []]) {
+    const replacements = [], removedLights = removals.get('lights'),removedShaders=removals.get('shaders');
+    if (removedLights?.size||removedShaders?.size) for (const element of [...document.doors || [], ...document.decorations || [], ...document.regions || []]) {
         if (removals.get('decorations')?.has(element.id) || dissolved.has(element.id)) continue;
         for (const [event, original] of Object.entries(element.blueprint?.graphs || {})) {
             // Removing an action keeps the execution path connected to its
             // continuation, including condition branches and adjacent actions.
-            const removed = original.nodes.filter(node => node.type === 'light' && removedLights.has(node.targetId));
+            const removed = original.nodes.filter(node => node.type === 'light' && removedLights?.has(node.targetId)||node.type==='shaderControl'&&removedShaders?.has(node.targetId));
             if (!removed.length) continue;
             const graph = clone(original);
             for (const node of removed) {

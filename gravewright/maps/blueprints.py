@@ -18,6 +18,7 @@ from .services import MapError
 from .blueprint_events import removed_event
 from .blueprint_memory import CONTROL_TYPES, clean_now, execute_control, reconcile_memory
 from .blueprint_context import CONTEXT_TYPES, clean_event_context
+from .shader_controls import clean_value as clean_shader_value, value_type as shader_value_type
 from .blueprint_variables import (
     MAX_SIGNAL_GRAPHS, VARIABLE_SCOPES, VARIABLE_TYPES, VALUE_OPERATORS,
     clean_snapshot, definitions, name as variable_name, signal_event, typed_value,
@@ -38,13 +39,13 @@ KIND_EVENTS["region"] = ("presence:enter", "presence:exit", "destroy")
 VERB_EVENTS = DOOR_EVENTS
 WRITABLE_STATES = DOOR_STATES + LEVER_STATES
 ALL_STATES = WRITABLE_STATES + REGION_STATES
-NODE_TYPES = ("event", "light", "sound", "state", "interact", "condition", "sequence", "sprite", "property", "compare",
+NODE_TYPES = ("event", "light", "shaderControl", "sound", "state", "interact", "condition", "sequence", "sprite", "property", "compare",
               "reference", "reveal", "barrier", "soundControl", "flame", "all", "any",
               "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random",
               "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion",
               "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport", *CONTROL_TYPES)
 # Node types introduced with version 2; version 1 documents keep their original vocabulary.
-VERSION_2_NODE_TYPES = ("interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport", *CONTROL_TYPES)
+VERSION_2_NODE_TYPES = ("shaderControl", "interact", "sequence", "sprite", "property", "compare", "reference", "reveal", "barrier", "soundControl", "flame", "all", "any", "getVariable", "setVariable", "compareValue", "emitEvent", "delay", "timer", "switch", "random", "elementGroup", "lightReference", "soundReference", "eventContext", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport", *CONTROL_TYPES)
 BARRIER_CHANNELS = ("movement", "vision", "light", "sound")
 SOUND_CONTROLS = ("stop", "volume")
 PURE_NODE_TYPES = ("property", "compare", "reference", "all", "any", "getVariable", "compareValue", "elementGroup", "lightReference", "soundReference", "eventContext")
@@ -80,6 +81,7 @@ MAX_BLUEPRINT_NODES = 128
 MAX_LAYOUT_COORDINATE = 5000
 _NODE_IDENTIFIER = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 _NODE_FIELDS = {
+    "shaderControl": {"targetId", "property", "value"},
     "event": {"event"},
     "light": {"targetId", "enabled"},
     "sound": {"trackId", "volume"},
@@ -251,7 +253,7 @@ def clean_audience(raw):
     return result
 
 
-def _clean_node(raw, event, *, version, assets, lights, tracks, appearance_assets):
+def _clean_node(raw, event, *, version, assets, lights, tracks, appearance_assets, shaders=None):
     if not isinstance(raw, dict) or raw.get("type") not in NODE_TYPES:
         raise MapError("Invalid blueprint node type.")
     kind = raw["type"]
@@ -271,6 +273,10 @@ def _clean_node(raw, event, *, version, assets, lights, tracks, appearance_asset
         if raw["event"] != event:
             raise MapError("Blueprint event does not match its graph.")
         result["event"] = event
+    elif kind == "shaderControl":
+        result["targetId"] = _reference(raw["targetId"], shaders, label="shader")
+        result["value"] = clean_shader_value(raw["property"], raw["value"])
+        result["property"] = raw["property"]
     elif kind in ("light", "flame"):
         if kind == "light":
             result["targetId"] = _reference(raw["targetId"], lights, label="light")
@@ -471,6 +477,8 @@ def data_outputs(node):
 
 
 def data_inputs(node):
+    if node["type"] == "shaderControl":
+        return {"value": shader_value_type(node["property"])}
     if node["type"] in ("setVariable", "compareValue", "switch"):
         return {"value": node["valueType"]}
     if node["type"] in ("move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance"):
@@ -500,7 +508,7 @@ def execution_outputs(node):
     return EXECUTION_OUTPUTS.get(node["type"], ("next",))
 
 
-def _clean_graph(raw, event, *, version, assets, lights, tracks, appearance_assets):
+def _clean_graph(raw, event, *, version, assets, lights, tracks, appearance_assets, shaders=None):
     _fields(raw, {"nodes", "edges"}, label="graph")
     if (
         not isinstance(raw["nodes"], list)
@@ -510,7 +518,7 @@ def _clean_graph(raw, event, *, version, assets, lights, tracks, appearance_asse
     ):
         raise MapError("Blueprint graph limit reached.")
     nodes = [
-        _clean_node(node, event, version=version, assets=assets, lights=lights, tracks=tracks, appearance_assets=appearance_assets)
+        _clean_node(node, event, version=version, assets=assets, lights=lights, tracks=tracks, appearance_assets=appearance_assets, shaders=shaders)
         for node in raw["nodes"]
     ]
     by_id = {node["id"]: node for node in nodes}
@@ -593,7 +601,7 @@ def _clean_graph(raw, event, *, version, assets, lights, tracks, appearance_asse
     return {"nodes": nodes, "edges": edges}
 
 
-def clean_blueprint(raw, *, asset_ids=None, light_ids=None, track_ids=None, appearance_asset_ids=None):
+def clean_blueprint(raw, *, asset_ids=None, light_ids=None, track_ids=None, appearance_asset_ids=None, shader_ids=None):
     """Validate a door graph, optionally restricting references to owned IDs.
 
     Passing an empty set rejects every reference of that resource type. ``None``
@@ -613,6 +621,7 @@ def clean_blueprint(raw, *, asset_ids=None, light_ids=None, track_ids=None, appe
     assets = _references(asset_ids)
     appearance_assets = assets if appearance_asset_ids is None else _references(appearance_asset_ids)
     lights = _references(light_ids)
+    shaders = _references(shader_ids)
     tracks = _references(track_ids)
     _fields(raw["states"], set(KIND_STATES[kind]), label="states")
     states = {}
@@ -636,7 +645,7 @@ def clean_blueprint(raw, *, asset_ids=None, light_ids=None, track_ids=None, appe
         if removed_event(event):
             continue
         graphs[event] = _clean_graph(
-            graph, event, version=version, assets=assets, lights=lights, tracks=tracks, appearance_assets=appearance_assets
+            graph, event, version=version, assets=assets, lights=lights, tracks=tracks, appearance_assets=appearance_assets, shaders=shaders
         )
         total_nodes += len(graphs[event]["nodes"])
         if total_nodes > MAX_BLUEPRINT_NODES:
@@ -776,13 +785,15 @@ def evaluate_graph(blueprint, event, current_state, previous_state=None, doors=N
         node = nodes[identifier]
         result["trace"].append(node["id"])
         kind = node["type"]
-        if kind in ("light", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport"):
+        if kind in ("light", "shaderControl", "sound", "state", "interact", "sprite", "reveal", "barrier", "soundControl", "flame", "setVariable", "emitEvent", "timer", "move", "rotate", "setInteraction", "setRegion", "setVisibility", "setAppearance", "showMessage", "showHandout", "requestRoll", "setQuestStatus", "clockControl", "clueControl", "openMindMap", "mindMapNode", "cameraFocus", "teleport"):
             action = deepcopy(node)
             source = sources.get((identifier, "target"))
             if source:
                 action["target"] = value(source)
             if kind == "setVariable" and (source := sources.get((identifier, "value"))):
                 action["value"] = value(source)
+            if kind == "shaderControl" and (source := sources.get((identifier, "value"))):
+                action["value"] = clean_shader_value(node["property"], value(source))
             if kind == "clockControl" and node["action"] != "reset" and (source := sources.get((identifier, "amount"))):
                 action["amount"] = _clock_amount(value(source))
             if kind == "clueControl" and node["action"] not in ("reset", "reveal", "hide") and (source := sources.get((identifier, "amount"))):

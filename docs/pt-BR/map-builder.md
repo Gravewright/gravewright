@@ -1659,6 +1659,25 @@ Jogadores recebem apenas o estado e a imagem ativos. **Automação** lista porta
 e alavancas juntas; pausar a automação interrompe a execução dos grafos. Atualizações da cena
 conservam seu estado de jogo.
 
+### Controle direto de shaders
+
+No Blueprint de um Objeto Inteligente, adicione **Controlar shader**, escolha um
+shader do mesmo mapa e selecione sua propriedade. A ação controla ativação, cor,
+intensidade, opacidade, velocidade, escala, raio, rotação, resposta e emissão de luz.
+Conecte uma interação, evento de área, sinal ou outra ação à entrada de execução.
+Encadeie nós para alterar várias propriedades. A entrada Valor aceita uma conexão
+de Verdadeiro ou Falso, Texto ou Número conforme a propriedade; a cor usa um valor
+hexadecimal de seis dígitos. Os limites nativos também valem para valores conectados.
+
+Funciona com shaders independentes e componentes de tochas. A ativação configurada
+do componente é preservada enquanto a tocha está apagada ou oculta e restaurada
+quando a chama fica visível. Os parâmetros podem ser alterados com a chama apagada.
+As ações **Definir luz** e **Definir chama** continuam disponíveis. Os alvos acompanham
+as cópias e os IDs da cena gerada e podem ser vinculados novamente em modelos de
+comportamento. Os ensaios mostram a alteração sem persistir o teste. Atualizar um
+parâmetro inalterado no Builder preserva seu valor em jogo; uma edição explícita
+do parâmetro no Builder o substitui.
+
 ### Tochas compostas
 
 Coloque uma imagem de **Objeto**, selecione-a e escolha **Comportamento → Tocha**

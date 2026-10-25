@@ -2,6 +2,7 @@ import { mountModal } from '/static/gravewright_table/modal.js';
 import { openTemplateLibrary } from './blueprint-templates.js';
 import { openInteractiveObjectCatalog } from './interactive-presets.js';
 import { createAutosave } from './autosave.js';
+import { shaderProperties, validateShaderValue } from './shader-control.js';
 import { defaultBlueprint, eventGraph, blueprintStatesFor, blueprintAllStates, blueprintWritableStates, blueprintVerbEventsFor, blueprintEventMetadata, dataInputs, dataOutputs, isPureNode,
     blueprintContract, connectNodes, validateBlueprint, simulateGraph, blueprintAppearance, upgradeBlueprint, elementInstanceNode,
     variableTypes, variableScopes, variableOperators, typedDefault, isBlueprintSignalEvent, controlNodeTypes, timerActions,
@@ -13,6 +14,7 @@ const ORIGIN = { x: 320, y: 160 }, PLANE = 5400, MAX_POSITION = 4700, PAD = 1200
 const MIN_ZOOM = .35, MAX_ZOOM = 1.5, ZOOM_STEP = .15, HISTORY_LIMIT = 100;
 const SVG = 'http://www.w3.org/2000/svg';
 const catalog = [
+    {type:'shaderControl',group:'Actions',description:'Change a shader parameter when this behavior runs.',missing:'Add a shader to this map first.',aliases:'shaderControl shader effect color intensity opacity speed'},
     { type: 'state', group: 'Actions', description: 'Change a door, lever or torch mechanism to one of its native states.' },
     { type: 'interact', group: 'Actions', description: 'Run the target object\'s On interaction behavior, including its connected image, light and sound actions.' },
     { type: 'flame', group: 'Actions', description: 'Light or extinguish a torch without moving its mechanism.', missing: 'Add a torch to this map first.' },
@@ -83,7 +85,7 @@ const typeNames = { state: 'State', boolean: 'True or False', number: 'Number', 
     elementset: 'Element group', light: 'Light', lightset: 'Light group', sound: 'Sound', soundset: 'Sound group' };
 
 /** Edit an isolated graph; persist valid authored edits without running its events. */
-export function openBlueprintEditor({ element, elements, door, doors = [], assets = [], materials = assets, lights = [], sounds = [], clocks = [], clues = [], mindmaps = [], users = [], handouts = [], campaignId, initialEvent, nested = false, autosave = true, linkedScene = false, t, pick, onSave, onDiscard, onClose }) {
+export function openBlueprintEditor({ element, elements, door, doors = [], assets = [], materials = assets, lights = [], shaders = [], sounds = [], clocks = [], clues = [], mindmaps = [], users = [], handouts = [], campaignId, initialEvent, nested = false, autosave = true, linkedScene = false, t, pick, onSave, onDiscard, onClose }) {
     if (!document.querySelector('link[href*="builder/blueprint-editor.css"]')) {
         const link = document.createElement('link'); link.rel = 'stylesheet';
         link.href = new URL('./blueprint-editor.css', import.meta.url).href; document.head.append(link);
@@ -115,7 +117,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     const kindName = value => t(emptyObject ? 'Empty Object' : { door: 'Door', lever: 'Lever', torch: 'Torch', region: 'Region' }[value]);
     const triggerName = value => t({ 'verb-interact': 'On interaction',
         'verb-destroy': 'On destroy', 'presence-enter': 'On area enter', 'presence-exit': 'On area exit' }[value] || value);
-    const typeName = value => t({ event: 'Event', light: 'Set light', sound: 'Play sound', state: 'Change state', interact: 'Interact with object', condition: 'Check state',
+    const typeName = value => t({ shaderControl:'Control shader', event: 'Event', light: 'Set light', sound: 'Play sound', state: 'Change state', interact: 'Interact with object', condition: 'Check state',
         sprite: 'Change sprite', sequence: 'Sequence', property: 'Get property', compare: 'Compare state',
         reference: 'Element reference', reveal: 'Reveal', barrier: 'Set barrier', soundControl: 'Control sound', clockControl: 'Control clock', clueControl: 'Control clue', openMindMap: 'Open mind map', mindMapNode: 'Control mind-map topic', flame: 'Set flame',
         all: 'All conditions', any: 'Any condition', getVariable: 'Get variable', setVariable: 'Set variable',
@@ -149,7 +151,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         : memberType === 'sound' ? sounds : [object, ...otherElements];
     const targetName = value => {
         const names = (Array.isArray(value) ? value : [value]).map(id => id === object.id ? object.name : elementName(id)
-            || groupMembers('light').find(row => row.id === id)?.name || sounds.find(row => row.id === id)?.name || t('Missing element'));
+            || groupMembers('light').find(row => row.id === id)?.name || shaders.find(row=>row.id===id)?.name || sounds.find(row => row.id === id)?.name || t('Missing element'));
         return names.join(', ') || t('Missing target');
     };
     const appearanceName = value => t({ inherit: 'Native appearance', hidden: 'Hidden image', asset: 'Use image' }[value]);
@@ -162,6 +164,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         : type === 'showHandout' ? handouts.length > 0
         : type === 'setQuestStatus' ? quests.length > 0
         : type === 'teleport' ? [object, ...otherElements].some(row => row.kind === 'region')
+        : type==='shaderControl'?shaders.length>0
         : ['light', 'lightReference'].includes(type) ? lights.length > 0 : ['sound', 'soundControl', 'soundReference'].includes(type) ? sounds.length > 0
         : type === 'reference' ? otherElements.length > 0 : true;
     const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
@@ -222,7 +225,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             try { await openInteractiveObjectCatalog({ element: { ...object, blueprint: draft },
                 doors: otherElements.filter(row => row.kind === 'door'), handouts, users: players, sounds, assets, materials: assets, t, signal, preserveState: true,
                 onApply: result => {
-                    validateBlueprint(result.blueprint, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
+                    validateBlueprint(result.blueprint, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object });
                     remember(); draft = structuredClone(result.blueprint); pending = null; selection.clear();
                     trigger = 'verb-interact'; renderSettings(); renderGraph(); fitView();
                 } }); } catch (cause) { error(cause); }
@@ -236,9 +239,9 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             if (focused?.matches('[data-blueprint-param]') && authoredControl(focused)) focused.dispatchEvent(new Event('change'));
             clearConnection();
             try { await openTemplateLibrary({ campaignId, blueprint: draft, ownerId: object.id,
-                catalog: { assets, materials, elements: [object, ...otherElements], lights, sounds, clocks, clues, mindmaps, users, handouts }, t,
+                catalog: { assets, materials, elements: [object, ...otherElements], lights, shaders, sounds, clocks, clues, mindmaps, users, handouts }, t,
                 onApply: blueprint => {
-                    validateBlueprint(blueprint, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
+                    validateBlueprint(blueprint, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object });
                     remember(); draft = structuredClone(blueprint); pending = null; selection.clear();
                     renderSettings(); renderGraph(); fitView();
                 } }); } catch (cause) { error(cause); }
@@ -365,7 +368,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         initialKey: JSON.stringify(normalizedBlueprint()),
         read: () => {
             const blueprint = normalizedBlueprint();
-            validateBlueprint(blueprint, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
+            validateBlueprint(blueprint, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object });
             return { key: JSON.stringify(blueprint), payload: blueprint };
         },
         canSave: () => !disposed && inputTimer === undefined && !pending && !wireDrag && !wireChoice
@@ -471,7 +474,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             if (create.disabled) return;
             const key = `signal:${name.value}`, candidate = structuredClone(draft);
             candidate.graphs[key] = eventGraph(key);
-            try { validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object }); }
+            try { validateBlueprint(candidate, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object }); }
             catch (cause) { error(cause); return; }
             remember(); draft = candidate; selectEvent(key);
         };
@@ -660,7 +663,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     function newAction(type, position) {
         if (!catalog.some(entry => entry.type === type) || !available(type)) return;
         return { id: 'node_' + crypto.randomUUID(), type, ...position,
-            ...({ light: { targetId: lights[0]?.id, enabled: true }, sound: { trackId: sounds[0]?.id, volume: .7 },
+            ...({ shaderControl:{targetId:shaders[0]?.id,property:'enabled',value:true},light: { targetId: lights[0]?.id, enabled: true }, sound: { trackId: sounds[0]?.id, volume: .7 },
                 state: { targetState: ['door', 'region'].includes(kind) ? 'open' : 'on' }, interact: {}, condition: { state }, sequence: {}, all: {}, any: {}, flame: { enabled: true },
                 sprite: spriteAssets[0] ? { appearance: 'asset', assetId: spriteAssets[0].id } : { appearance: 'hidden' },
                 property: { property: 'state' }, compare: { state },
@@ -695,7 +698,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         const candidate = structuredClone(draft), value = candidate.graphs[source.event] ||= eventGraph(source.event);
         if (action) value.nodes.push(action);
         if (source.id) connectNodes(value, source.id, source.output, targetId, { version: candidate.version, ...(input === undefined ? {} : { input }) });
-        validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
+        validateBlueprint(candidate, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object });
         remember(); draft.graphs = candidate.graphs;
     }
     function nextPosition(value) {
@@ -1114,7 +1117,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         for (const item of data.nodes) value.nodes.push({ ...structuredClone(item), id: ids.get(item.id),
             x: clamp(Math.round(origin.x + item.x), 0, MAX_POSITION), y: clamp(Math.round(origin.y + item.y), 0, MAX_POSITION) });
         for (const edge of data.edges) value.edges.push({ ...structuredClone(edge), from: ids.get(edge.from), to: ids.get(edge.to) });
-        try { validateBlueprint(candidate, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object }); } catch (cause) { error(cause); return; }
+        try { validateBlueprint(candidate, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object }); } catch (cause) { error(cause); return; }
         remember(); draft.graphs = candidate.graphs;
         selection.clear(); for (const id of ids.values()) selection.add(id);
         renderGraph(); canvas.focus({ preventScroll: true });
@@ -1134,6 +1137,12 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             const value = ['enabled', 'visible'].includes(key) ? control.value === 'true' : control.value;
             if (item[key] === value) return;
             remember(); item[key] = value; clearSimulation();
+            if(item.type==='shaderControl'&&key==='property'){
+                item.value=shaderProperties[value].value;
+                graph().edges=graph().edges.filter(edge=>edge.kind!=='data'||edge.to!==item.id||edge.input!=='value'
+                    ||dataOutputs(itemFor(edge.from)).some(port=>port.id===edge.output&&port.type===shaderProperties[value].type));
+                renderGraph();
+            }
             if (['reference', 'lightReference', 'soundReference'].includes(item.type)) renderGraph();
         });
         return field(label, control);
@@ -1617,6 +1626,16 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
         }
         if (item.type === 'light') content.append(parameter(item, 'Light', 'targetId', lights.map((light, index) => [light.id, light.name || `${t('Light')} ${index + 1} (${light.x}, ${light.y})`])),
             pickButton(item, 'lights', 'targetId'), parameter(item, 'Enabled', 'enabled', [['true', t('Enabled')], ['false', t('Disabled')]]));
+        if(item.type==='shaderControl'){
+            content.append(parameter(item,'Shader','targetId',shaders.map((shader,index)=>[shader.id,shader.name||`${t('Shader')} ${index+1}`])),
+                pickButton(item,'shaders','targetId'),parameter(item,'Property','property',Object.entries(shaderProperties).map(([key,field])=>[key,t(field.label)])));
+            const definition=shaderProperties[item.property];
+            const control=scalarControl(definition.type,item.value,'value',value=>{if(value===item.value)return;remember();item.value=value;clearSimulation();},
+                value=>{try{validateShaderValue(item.property,value);return '';}catch(error){return t(error.message);}});
+            if(definition.type==='number'){control.min=definition.min;control.max=definition.max;}
+            if(item.property==='color')control.type='color';
+            content.append(field('Value',control));
+        }
         if (item.type === 'flame') content.append(parameter(item, 'Flame', 'enabled', [['true', t('Lit')], ['false', t('Extinguished')]]));
         if (item.type === 'sound') {
             content.append(parameter(item, 'Sound', 'trackId', sounds.map(sound => [sound.id, sound.name])));
@@ -2086,7 +2105,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
     });
     listen(simulate, 'click', () => {
         try {
-            validateBlueprint(draft, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object }); clearSimulation();
+            validateBlueprint(draft, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object }); clearSimulation();
             const previous = state;
             const states = Object.fromEntries(otherElements.map(row => [row.id, row.state]));
             const now = Date.now(), current = graph(), result = simulateGraph({ ...draft, graphs: { ...draft.graphs, [event()]: current } }, event(), state, previous, states,
@@ -2110,6 +2129,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
                 const action = actions.get(id), item = byId.get(id);
                 if (action) {
                     const detail = action.type === 'sound' ? targetName(action.target ?? action.trackId)
+                        : action.type==='shaderControl'?`${targetName(action.targetId)} · ${t(shaderProperties[action.property].label)}: ${scalarText(action.value)}`
                         : action.type === 'light' ? `${targetName(action.target ?? action.targetId)} · ${t(action.enabled ? 'Enabled' : 'Disabled')}`
                         : action.type === 'flame' ? t(action.enabled ? 'Lit' : 'Extinguished') + (action.target ? ` · ${targetName(action.target)}` : '')
                         : action.type === 'sprite' ? (action.appearance === 'asset' ? spriteAssets.find(row => row.id === action.assetId)?.name : appearanceName(action.appearance))
@@ -2200,7 +2220,7 @@ export function openBlueprintEditor({ element, elements, door, doors = [], asset
             for (const [key, value] of Object.entries(draft.graphs)) {
                 if (!isBlueprintSignalEvent(key) && !Object.hasOwn(originalGraphs, key) && JSON.stringify(value) === JSON.stringify(eventGraph(key))) delete draft.graphs[key];
             }
-            validateBlueprint(draft, { assets, materials, lights, sounds, clocks, clues, mindmaps, element: object });
+            validateBlueprint(draft, { assets, materials, lights, shaders, sounds, clocks, clues, mindmaps, element: object });
             saving = true; body.inert = true; save.disabled = cancel.disabled = close.disabled = true;
             modal.setAttribute('aria-busy', 'true');
             if (JSON.stringify(draft) !== original) await onSave(structuredClone(draft));
