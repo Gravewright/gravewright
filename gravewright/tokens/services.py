@@ -59,16 +59,57 @@ def presentation(t):
     return {'token': {**config, 'size': size, 'display': display}, 'bars': safe_bars}
 
 
+def appearance(t, config):
+    """Keep scene presentation independent of the installed system's sheet schema."""
+    saved = t.appearance
+    return {
+        "nameDisplay": saved.get("nameDisplay", "selected-or-hover"),
+        "showTurnIndicator": saved.get("showTurnIndicator", True),
+        "bars": {
+            key: {
+                "visibility": saved.get("bars", {}).get(key, {}).get("visibility",
+                    "everyone" if config["display"].get(key, True) else "owner"),
+                "color": saved.get("bars", {}).get(key, {}).get("color", default),
+            }
+            for key, default in (("bar_1", "#4caf50"), ("bar_2", "#3b82f6"))
+        },
+    }
+
+
+def clean_appearance(raw, previous):
+    if not isinstance(raw, dict) or set(raw) - {"nameDisplay", "showTurnIndicator", "bars"}:
+        raise maps.MapError("Invalid token appearance.")
+    result = deepcopy(previous)
+    if "nameDisplay" in raw:
+        result["nameDisplay"] = choice(raw["nameDisplay"], {"always", "selected", "hover", "selected-or-hover"})
+    if "showTurnIndicator" in raw:
+        result["showTurnIndicator"] = boolean(raw["showTurnIndicator"])
+    if "bars" in raw:
+        bars = raw["bars"]
+        if not isinstance(bars, dict) or set(bars) - {"bar_1", "bar_2"}:
+            raise maps.MapError("Invalid token appearance.")
+        for key, bar in bars.items():
+            if not isinstance(bar, dict) or set(bar) - {"visibility", "color"}:
+                raise maps.MapError("Invalid token appearance.")
+            if "visibility" in bar:
+                result["bars"][key]["visibility"] = choice(bar["visibility"], {"everyone", "owner", "gm"})
+            if "color" in bar:
+                result["bars"][key]["color"] = maps.color(bar["color"])
+    return result
+
+
 def project(t, who):
     """Expose geometry and only the bars, names and conditions this member sees."""
     sheet = presentation(t)
     config = sheet["token"]
     gm = who.role == "gm"
     own = control(t, who)
+    style = appearance(t, config)
     bars = {
-        k: {**v, "color": ("#4caf50" if k == "bar_1" else "#3b82f6")}
+        k: {**v, "color": style["bars"][k]["color"]}
         for k, v in sheet["bars"].items()
-        if gm or own or config["display"].get(k, True)
+        if gm or style["bars"][k]["visibility"] == "everyone"
+        or style["bars"][k]["visibility"] == "owner" and own
     }
     return {
         "id": str(t.pk),
@@ -98,6 +139,9 @@ def project(t, who):
         "visionEnabled": t.vision_enabled,
         "visionRange": t.vision_range,
         "bars": bars,
+        "nameDisplay": style["nameDisplay"],
+        "showTurnIndicator": style["showTurnIndicator"],
+        **({"appearance": style} if gm else {}),
         "conditions": [
             deepcopy(c) for c in t.conditions if gm or c["visible_to"] == "everyone"
         ],
@@ -365,9 +409,13 @@ def command(campaign, user, action, raw, request_id):
                     "elevation",
                     "locked",
                     "disposition",
+                    "appearance",
                 }:
                     raise maps.MapError("Invalid token configuration.")
                 for k, v in values.items():
+                    if k == "appearance":
+                        t.appearance = clean_appearance(v, appearance(t, presentation(t)["token"]))
+                        continue
                     setattr(
                         t,
                         k,

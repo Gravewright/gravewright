@@ -27,6 +27,7 @@ class Token(models.Model):
     vision_enabled = models.BooleanField(default=True)
     vision_range = models.FloatField(default=0)
     conditions = models.JSONField(default=list)
+    appearance = models.JSONField(default=dict)
     version = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 

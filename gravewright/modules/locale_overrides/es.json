@@ -2738,5 +2738,16 @@
   "Choose a color, dimensions and whether to show the grid.": "Elige el color, las dimensiones y si quieres mostrar la cuadrícula.",
   "Width (px)": "Ancho (px)",
   "Height (px)": "Alto (px)",
-  "Create map": "Crear mapa"
+  "Create map": "Crear mapa",
+  "Token name display": "Visualización del nombre del token",
+  "Selected or hovered": "Al seleccionar o pasar el cursor",
+  "Always visible": "Siempre visible",
+  "Only when selected": "Solo al seleccionar",
+  "Only on hover": "Solo al pasar el cursor",
+  "Bar visibility": "Visibilidad de la barra",
+  "Owner and GM": "Propietario y director",
+  "Bar color": "Color de la barra",
+  "Show turn indicator": "Mostrar indicador de turno",
+  "Invalid token appearance.": "Apariencia del token no válida.",
+  "Everyone": "Todos"
 }

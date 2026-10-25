@@ -57,6 +57,62 @@ class TokenTests(TransactionTestCase):
         self.cmd("place", {"actorId": str(self.actor.pk), "gridX": 1, "gridY": 1})
         return Token.objects.latest("created_at")
 
+    def test_appearance_visibility_is_filtered_for_each_recipient(self):
+        from gravewright.campaigns.models import Membership
+        Membership.objects.create(campaign=self.campaign, user=self.outsider)
+        self.actor.data['bars'] = {'bar_1': {'value': 7, 'max': 10}, 'bar_2': {'value': 3, 'max': 5}}
+        self.actor.save()
+        token = self.place()
+        result = self.cmd('configure', {'tokenIds': [str(token.pk)], 'expectedVersion': token.version,
+            'values': {'appearance': {'nameDisplay': 'always', 'showTurnIndicator': False,
+                'bars': {'bar_1': {'visibility': 'owner', 'color': '#123456'},
+                         'bar_2': {'visibility': 'gm', 'color': '#abcdef'}}}}})
+        self.assertEqual(set(result['tokens'][0]['bars']), {'bar_1', 'bar_2'})
+        owner = services.state(self.campaign.pk, self.player.pk, self.map.pk)['tokens'][0]
+        other = services.state(self.campaign.pk, self.outsider.pk, self.map.pk)['tokens'][0]
+        self.assertEqual(set(owner['bars']), {'bar_1'})
+        self.assertEqual(owner['bars']['bar_1']['color'], '#123456')
+        self.assertEqual(other['bars'], {})
+        self.assertNotIn('appearance', owner)
+        self.assertEqual(other['nameDisplay'], 'always')
+        self.assertFalse(other['showTurnIndicator'])
+        token.refresh_from_db()
+        self.cmd('configure', {'tokenIds': [str(token.pk)], 'expectedVersion': token.version,
+            'values': {'appearance': {'bars': {'bar_1': {'visibility': 'everyone'}}}}})
+        other = services.state(self.campaign.pk, self.outsider.pk, self.map.pk)['tokens'][0]
+        self.assertEqual(set(other['bars']), {'bar_1'})
+        self.assertEqual(other['bars']['bar_1']['color'], '#123456')
+
+    def test_appearance_rejects_invalid_values_unauthorized_writes_and_conflicts(self):
+        token = self.place()
+        for value in ({'nameDisplay': 'unknown'}, {'showTurnIndicator': 1}, {'bars': []},
+                      {'bars': {'bar_3': {}}}, {'bars': {'bar_1': {'visibility': 'all'}}},
+                      {'bars': {'bar_1': {'color': 'red'}}}, {'extra': True}):
+            with self.subTest(value=value), self.assertRaises(MapError):
+                self.cmd('configure', {'tokenIds': [str(token.pk)], 'expectedVersion': token.version,
+                    'values': {'appearance': value}})
+            token.refresh_from_db()
+            self.assertEqual(token.appearance, {})
+        payload = {'tokenIds': [str(token.pk)], 'expectedVersion': token.version,
+                   'values': {'appearance': {'nameDisplay': 'hover'}}}
+        with self.assertRaises((MapError, JournalError)):
+            self.cmd('configure', payload, self.player)
+        self.cmd('configure', payload)
+        with self.assertRaises(MapError):
+            self.cmd('configure', payload)
+
+    def test_appearance_survives_duplication_and_legacy_bar_visibility(self):
+        self.actor.data['token']['display']['bar_1'] = False
+        self.actor.save()
+        token = self.place()
+        row = self.cmd('configure', {'tokenIds': [str(token.pk)], 'expectedVersion': token.version,
+            'values': {'appearance': {'nameDisplay': 'selected'}}})['tokens'][0]
+        self.assertEqual(row['appearance']['bars']['bar_1']['visibility'], 'owner')
+        copy = self.cmd('duplicate', {'tokenIds': [str(token.pk)]})['createdIds'][0]
+        duplicate = Token.objects.get(pk=copy)
+        self.assertEqual(duplicate.appearance['nameDisplay'], 'selected')
+        self.assertEqual(duplicate.appearance['bars']['bar_1']['visibility'], 'owner')
+
     def test_link_promotion_snapshot_and_sheet_revisions(self):
         one = self.place()
         self.assertTrue(one.linked)

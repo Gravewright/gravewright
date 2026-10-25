@@ -25,14 +25,7 @@
 .token-quick-controls select:where(:not([multiple])):where(:not([size]),[size="0"],[size="1"]){padding-inline-end:var(--space-7)}
 .token-condition-tooltip{position:fixed;z-index:20;max-width:min(260px,calc(100vw - var(--size-16)));padding:var(--space-1) var(--space-2);border:var(--size-1) solid var(--border-accent);border-radius:var(--radius-sm);background:#10151bf5;color:var(--text);box-shadow:0 var(--size-4) var(--size-12) #0006;font-size:var(--text-sm);line-height:1.4;white-space:pre-line;overflow-wrap:anywhere;pointer-events:none}.token-condition-tooltip[hidden]{display:none}
 .token-quick-controls textarea,.token-editor textarea{box-sizing:border-box;width:100%;min-width:0;padding:var(--space-1);border:var(--size-1) solid var(--border);border-radius:var(--radius-sm);background:#10151b;color:inherit;font:inherit;resize:vertical}.token-quick-controls__description{grid-column:1/-1}.token-condition-tooltip{max-height:var(--size-240);overflow:hidden}
-.token-workspace__turn-disc{fill:#4ade80;fill-opacity:.12;stroke:#4ade80;stroke-opacity:.85;animation:token-turn-pulse 2.8s ease-in-out infinite}
-.token-workspace__turn-wave{fill:none;stroke:#4ade80;transform-box:fill-box;transform-origin:center;animation:token-turn-wave 2.4s ease-out infinite}
-@keyframes token-turn-wave{0%{transform:scale(var(--wave-start-x),var(--wave-start-y));opacity:.9}80%,100%{transform:scale(1);opacity:0}}
-.token-workspace__turn--next{fill:#facc15;stroke:#facc15}
-.token-workspace__turn-wave.token-workspace__turn--next{fill:none}
+.token-workspace__turn-disc{fill:none;stroke:#4ade80;stroke-opacity:.85}
+.token-workspace__turn--next{stroke:#a9a193;stroke-opacity:.5;stroke-dasharray:4 4}
 .token-condition-duration{grid-column:1/-1;display:grid;grid-template-columns:1fr var(--size-70);gap:var(--space-1)}.token-condition-duration label{display:grid;gap:var(--space-half);min-width:0}.token-condition-duration label:last-child{grid-column:1/-1}.token-condition-duration label[hidden]{display:none}
-@keyframes token-turn-pulse{50%{fill-opacity:.22;stroke-opacity:.5}}
-@media(prefers-reduced-motion:reduce){.token-workspace__turn-disc{animation:none}}
-:root[data-render-profile="performance"] .token-workspace__turn-disc{animation:none}
-@media(prefers-reduced-motion:reduce){.token-workspace__turn-wave{animation:none;opacity:.3}}
-:root[data-render-profile="performance"] .token-workspace__turn-wave{animation:none;opacity:.3}
+.token-editor input[type=color]{height:34px;cursor:pointer}

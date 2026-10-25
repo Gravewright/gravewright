@@ -4,6 +4,8 @@ Run with the isolated migration_closure browser fixture.
 """
 
 from migration_closure import main
+from io import BytesIO
+from PIL import Image
 
 
 def check(gm, player, data, output):
@@ -68,6 +70,34 @@ def check(gm, player, data, output):
             return label?.visible && label.text === 'Guardian\\nPoisoned, Exhausted'
                 && label.style.lineHeight > label.style.fontSize;
         }"""), "Hovered token must show a readable second line"
+        for mode in ('always', 'selected', 'hover', 'selected-or-hover'):
+            for selected, hovered in ((False, False), (True, False), (False, True)):
+                visible = gm.evaluate("""async p => {
+                    const {board,piece,figures,Text} = textFixture;
+                    await board.setPieces([{...piece,nameDisplay:p.mode,selected:p.selected,hovered:p.hovered}]);
+                    return figures.children[0].children.find(child => child instanceof Text && child.text.startsWith('b')).visible;
+                }""", {'mode':mode,'selected':selected,'hovered':hovered})
+                expected = mode == 'always' or (selected if mode == 'selected' else hovered if mode == 'hover' else selected or hovered)
+                assert visible == expected, (mode, selected, hovered)
+        for only_second in (False, True):
+            gm.evaluate("""async onlySecond => {
+                const {board,piece,host} = textFixture;
+                host.dataset.tokenBars = '';
+                board.setViewport({x:0,y:0,scale:1});
+                const bars = {bar_2:{value:10,max:10,color:'#3b82f6'}};
+                if (!onlySecond) bars.bar_1 = {value:10,max:10,color:'#4caf50'};
+                await board.setPieces([{...piece,height:90,selected:false,conditions:[],bars}]);
+                await new Promise(requestAnimationFrame);
+                textFixture.app.render();
+            }""", only_second)
+            picture = Image.open(BytesIO(gm.locator('[data-token-bars] canvas').screenshot())).convert('RGB')
+            # Token spans y=45..135; 4px bars have exactly 5px clear from its edge.
+            assert picture.getpixel((100, 141)) == (59, 130, 246), "Bar 2 must stay below, even when alone"
+            assert picture.getpixel((100, 138)) == (48, 59, 51), "Keep the lower 5px gap clear"
+            if not only_second:
+                assert picture.getpixel((100, 37)) == (76, 175, 80), "Bar 1 must sit above"
+                assert picture.getpixel((100, 42)) == (48, 59, 51), "Keep the upper 5px gap clear"
+                picture.save(output / f'token-bars-{density}.png')
         gm.evaluate("textFixture.board.destroy(); textFixture.host.remove(); delete window.textFixture")
     print("Token text: zoom, density, movement, changed labels and cleanup passed")
 

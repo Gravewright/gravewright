@@ -1034,6 +1034,18 @@ thin outline and extra line spacing for conditions below the name.
 The browser scenario `tests/e2e/token_text_resolution.py`
 checks zoom, normal/dense displays, label updates and renderer disposal.
 
+**Configure token** lets the GM choose each bar's color and audience: everyone,
+owner and GM, or GM only. The server omits restricted bars from each recipient's
+token state. Existing sheet display flags remain the defaults until overridden.
+These settings belong to the scene token, survive duplication and do not change
+the system sheet schema. Bars keep their 5px gap above/below the token; the name
+and condition badges leave room for them. No numerical bar labels are added.
+The name can appear always, only on selection, only on hover, or on selection/hover
+(the compatibility default). A per-token switch controls the combat turn indicator:
+a static green outline for the current turn and a muted dashed outline for the next.
+`tests/e2e/token_appearance.py` checks native saves, recipient filtering, colors,
+turn indicators and the editor at desktop/mobile widths.
+
 Token acknowledgements and realtime snapshots can carry native
 `teleports: [{id, version}]` metadata, filtered against the recipient's visible
 tokens and their exact revisions. The token workspace remembers each accepted

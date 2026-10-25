@@ -1102,6 +1102,19 @@ entre linhas para as condições abaixo do nome. O cenário
 `tests/e2e/token_text_resolution.py` verifica zoom, telas comuns e de alta densidade,
 alterações de nomes e descarte do renderizador.
 
+**Configurar token** permite ao mestre escolher a cor e o público de cada barra:
+todos, dono e mestre ou somente mestre. O servidor omite as barras restritas do
+estado enviado a cada participante. As opções de exibição da ficha continuam
+como padrão até serem substituídas. Essas configurações pertencem ao token da
+cena, são preservadas ao duplicar e não alteram o esquema da ficha do sistema.
+As barras mantêm distância de 5px acima/abaixo do token; nome e indicadores de
+condições reservam espaço para elas. Não são adicionados valores numéricos às barras.
+O nome pode aparecer sempre, somente ao selecionar, somente ao passar o mouse ou
+ao selecionar/passar o mouse (padrão de compatibilidade). Uma opção por token controla
+o indicador de turno: contorno verde estático no turno atual e contorno tracejado
+discreto no próximo. `tests/e2e/token_appearance.py` verifica salvamento pela interface,
+permissões por destinatário, cores, indicadores e a janela em telas grandes/pequenas.
+
 Confirmações de tokens e estados em tempo real podem conter metadados nativos
 `teleports: [{id, version}]`, filtrados pelos tokens visíveis ao destinatário e
 suas revisões exatas. A área de tokens conserva cada revisão de teleporte aceita

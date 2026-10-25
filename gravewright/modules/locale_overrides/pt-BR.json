@@ -3885,5 +3885,16 @@
   "Choose a color, dimensions and whether to show the grid.": "Escolha a cor, as dimensões e se deseja exibir o grid.",
   "Width (px)": "Largura (px)",
   "Height (px)": "Altura (px)",
-  "Create map": "Criar mapa"
+  "Create map": "Criar mapa",
+  "Token name display": "Exibição do nome do token",
+  "Selected or hovered": "Ao selecionar ou passar o mouse",
+  "Always visible": "Sempre visível",
+  "Only when selected": "Somente ao selecionar",
+  "Only on hover": "Somente ao passar o mouse",
+  "Bar visibility": "Visibilidade da barra",
+  "Owner and GM": "Dono e mestre",
+  "Bar color": "Cor da barra",
+  "Show turn indicator": "Mostrar indicador de turno",
+  "Invalid token appearance.": "Aparência do token inválida.",
+  "Everyone": "Todos"
 }

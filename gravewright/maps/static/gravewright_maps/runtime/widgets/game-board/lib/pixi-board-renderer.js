@@ -388,7 +388,7 @@ var PixiBoardRenderer = class {
     view.appearance = key;
     view.root.alpha = piece.hidden ? 0.4 : 1;
     view.art.angle = piece.rotation ?? 0;
-    view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.mask ? 0 : 0.85 }).stroke({ width: Math.max(1, piece.size * 0.04), color: piece.accent });
+    view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.mask ? 0 : 0.85 });
     view.mask?.clear().ellipse(0, 0, radius, radiusY).fill({ color: "#ffffff" });
     if (view.art instanceof Sprite) {
       const source = Math.max(view.art.texture.width, view.art.texture.height) || 1;
@@ -401,8 +401,14 @@ var PixiBoardRenderer = class {
     view.label.text = piece.label + (piece.hovered && piece.conditions?.length ? "\n" + piece.conditions.slice(0, 4).map((c) => c.label).join(", ").slice(0, 100) : "");
     view.label.style.fontSize = piece.size * 0.24;
     view.label.style.lineHeight = piece.size * 0.32;
-    view.label.position.set(0, radiusY + piece.size * 0.08);
-    view.label.visible = !!piece.selected || !!piece.hovered;
+    const topBar = piece.bars?.bar_1?.max > 0;
+    const bottomBar = piece.bars?.bar_2?.max > 0;
+    const barHeight = 4, barGap = 5;
+    view.label.position.set(0, radiusY + Math.max(
+      piece.size * 0.08,
+      bottomBar ? barGap + barHeight + 5 : 0
+    ));
+    view.label.visible = piece.nameDisplay === "always" || (piece.nameDisplay === "selected" ? !!piece.selected : piece.nameDisplay === "hover" ? !!piece.hovered : !!piece.selected || !!piece.hovered);
     const details = view.details.clear();
     if (piece.combat?.is_current)
       details.ellipse(0, 0, radius + 6, radiusY + 6).stroke({ width: 3, color: "#e9c46a" });
@@ -410,12 +416,14 @@ var PixiBoardRenderer = class {
       const r = radius * 0.55;
       details.moveTo(-r, -r).lineTo(r, r).moveTo(r, -r).lineTo(-r, r).stroke({ width: 4, color: "#e77c7c" });
     }
-    Object.entries(piece.bars ?? {}).slice(0, 2).forEach(([slot, bar], index) => {
-      if (!(bar.max > 0))
+    ["bar_1", "bar_2"].forEach((slot) => {
+      const bar = piece.bars?.[slot];
+      if (!(bar?.max > 0))
         return;
-      const y = index ? -radiusY + 4 : radiusY - 8, width = piece.size - 8;
-      details.rect(-radius + 4, y, width, 4).fill({ color: "#000000", alpha: 0.65 });
-      details.rect(-radius + 4, y, width * Math.max(0, Math.min(1, bar.value / bar.max)), 4).fill(bar.color || "#79c39a");
+      const y = slot === "bar_1" ? -radiusY - barGap - barHeight : radiusY + barGap;
+      const width = piece.size - 8;
+      details.rect(-radius + 4, y, width, barHeight).fill({ color: "#000000", alpha: 0.65 });
+      details.rect(-radius + 4, y, width * Math.max(0, Math.min(1, bar.value / bar.max)), barHeight).fill(bar.color || "#79c39a");
     });
     for (const child of view.conditions.removeChildren())
       child.destroy();
@@ -426,7 +434,7 @@ var PixiBoardRenderer = class {
       const color = condition.kind === "negative" ? "#ee7777" : condition.kind === "positive" ? "#79c39a" : "#d6b578";
       const glyph = condition.kind === "negative" ? "\u2620" : condition.kind === "positive" ? "\u2726" : "\u25C6";
       const x = -radius + badgeSize / 2 + index % columns * (badgeSize + 2);
-      const y = -radiusY - badgeSize / 2 - 3 - Math.floor(index / columns) * (badgeSize + 2);
+      const y = -radiusY - badgeSize / 2 - 3 - (topBar ? barGap + barHeight + 2 : 0) - Math.floor(index / columns) * (badgeSize + 2);
       details.roundRect(x - badgeSize / 2, y - badgeSize / 2, badgeSize, badgeSize, 3).fill("#10151b").stroke({ color, width: 1 });
       const icon = new Text({ text: glyph, resolution: this.#textResolution, style: { fontFamily: "sans-serif", fontSize: badgeSize * 0.8, fill: color } });
       icon.anchor.set(0.5);

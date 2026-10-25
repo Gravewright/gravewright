@@ -234,6 +234,12 @@ export function createTokens(surface, board, map, gm, initial) {
         f.elevation.value = t.elevation || 0;
         f.locked.checked = !!t.locked;
         f.disposition.value = t.disposition || "neutral";
+        f.nameDisplay.value = t.nameDisplay || 'selected-or-hover';
+        f.showTurnIndicator.checked = t.showTurnIndicator !== false;
+        for (const [slot, color] of [['bar_1', '#4caf50'], ['bar_2', '#3b82f6']]) {
+          f[slot + 'Visibility'].value = t.appearance?.bars?.[slot]?.visibility || 'everyone';
+          f[slot + 'Color'].value = t.appearance?.bars?.[slot]?.color || color;
+        }
         el.querySelector("[data-token-size]").textContent =
           `Size: ${t.cells} × ${t.heightCells ?? t.cells} cells. Defined by the system's character sheet.`;
         for (const c of t.conditions || []) {
@@ -275,6 +281,14 @@ export function createTokens(surface, board, map, gm, initial) {
                       elevation: Number(f.elevation.value),
                       locked: f.locked.checked,
                       disposition: f.disposition.value,
+                      appearance: {
+                        nameDisplay: f.nameDisplay.value,
+                        showTurnIndicator: f.showTurnIndicator.checked,
+                        bars: Object.fromEntries(['bar_1', 'bar_2'].map(slot => [slot, {
+                          visibility: f[slot + 'Visibility'].value,
+                          color: f[slot + 'Color'].value,
+                        }])),
+                      },
                     },
                   }
                 : {
@@ -474,20 +488,9 @@ export function createTokens(surface, board, map, gm, initial) {
           gridY:(center.y+x*Math.sin(a)+y*Math.cos(a)+dy-g.y)/g.cell-(stored.heightCells??stored.cells)/2,rotation:(stored.rotation||0)+angle};
       }
       const turn = turns.get(t.id);
-      if (turn?.is_current || turn?.is_next) {
+      if (t.showTurnIndicator !== false && (turn?.is_current || turn?.is_next)) {
         const nextTurn = !turn.is_current;
         const turnClass = nextTurn ? ' token-workspace__turn--next' : '';
-        const radiusX = t.cells * g.cell / 2;
-        const radiusY = (t.heightCells ?? t.cells) * g.cell / 2;
-        const spread = 20 / scale;
-        group.append(node('ellipse', {
-          class: 'token-workspace__turn-wave' + turnClass,
-          cx: (t.gridX + t.cells / 2) * g.cell,
-          cy: (t.gridY + (t.heightCells ?? t.cells) / 2) * g.cell,
-          rx: radiusX + spread, ry: radiusY + spread,
-          style: `--wave-start-x:${radiusX / (radiusX + spread)};--wave-start-y:${radiusY / (radiusY + spread)}`,
-          'stroke-width': 3, 'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none',
-        }));
         group.append(node('ellipse', {
         class: 'token-workspace__turn-disc' + turnClass,
         [nextTurn ? 'data-combat-next' : 'data-combat-current']: t.id,
@@ -495,7 +498,7 @@ export function createTokens(surface, board, map, gm, initial) {
         cy: (t.gridY + (t.heightCells ?? t.cells) / 2) * g.cell,
         rx: t.cells * g.cell / 2 + 4 / scale,
         ry: (t.heightCells ?? t.cells) * g.cell / 2 + 4 / scale,
-        'stroke-width': 3 / scale, 'pointer-events': 'none',
+        'stroke-width': 2 / scale, 'pointer-events': 'none',
         }));
       }
       const r = node("rect", {
@@ -735,6 +738,7 @@ export function createTokens(surface, board, map, gm, initial) {
       hidden: t.hidden,
       selected: v.selected.includes(t.id),
       hovered: hover === t.id,
+      nameDisplay: t.nameDisplay,
       bars: t.bars,
       conditions: conditionLayout() === 'classic' ? t.conditions : [],
     }));

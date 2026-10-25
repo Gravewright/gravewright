@@ -48,6 +48,23 @@
           <label class="token-editor__check"
             ><input name="locked" type="checkbox" />Lock movement</label
           ><small data-token-size></small>
+          <label>{{ tr('Token name display') }}<select name="nameDisplay">
+            {% for value,label in [('selected-or-hover','Selected or hovered'),('always','Always visible'),('selected','Only when selected'),('hover','Only on hover')] %}
+            <option value="{{ value }}">{{ tr(label) }}</option>
+            {% endfor %}
+          </select></label>
+          {% for slot,label in [('bar_1','Bar 1'),('bar_2','Bar 2')] %}
+          <strong>{{ tr(label) }}</strong>
+          <div class="token-editor__pair">
+            <label>{{ tr('Bar visibility') }}<select name="{{ slot }}Visibility">
+              <option value="everyone">{{ tr('Everyone') }}</option>
+              <option value="owner">{{ tr('Owner and GM') }}</option>
+              <option value="gm">{{ tr('GM only') }}</option>
+            </select></label>
+            <label>{{ tr('Bar color') }}<input type="color" name="{{ slot }}Color" /></label>
+          </div>
+          {% endfor %}
+          <label class="token-editor__check"><input name="showTurnIndicator" type="checkbox" />{{ tr('Show turn indicator') }}</label>
         </div>
         <div data-mode="conditions" style="display: contents">
           <ul class="token-editor__conditions"></ul>
