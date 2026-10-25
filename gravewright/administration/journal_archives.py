@@ -74,6 +74,8 @@ def import_document(value, model_ids, inert, paths, identifiers, *, snapshot):
             lambda match: '/game/' + identifiers.get(match[1], match[1]), value)
         value = re.sub(r'^/game/journal/asset/([0-9a-f-]{36})(?=[/?#]|$)',
             lambda match: '/game/journal/asset/' + binding('gravewright_journals.asset', match[1]), value)
+        value = re.sub(r'^/game/actors/asset/([0-9a-f-]{36})(?=[/?#]|$)',
+            lambda match: '/game/actors/asset/' + binding('gravewright_actors.asset', match[1]), value)
         return re.sub(r'([?&]document=)(actor|item|journal|scene):([0-9a-f-]{36})(?=[&#]|$)',
             lambda match: match[1] + match[2] + ':' + binding(LEGACY_MODELS[match[2]], match[3]), value)
 
@@ -89,7 +91,7 @@ def import_document(value, model_ids, inert, paths, identifiers, *, snapshot):
                 elif key in ('assignees', 'prerequisites') and isinstance(child, list):
                     label = 'gravewright_actors.actor' if key == 'assignees' else 'gravewright_journals.journal'
                     result[key] = [binding(label, source) for source in child]
-                elif key in ('href', 'src') and isinstance(child, str):
+                elif key in ('href', 'src', 'image') and isinstance(child, str):
                     result[key] = link_url(child)
                 else:
                     result[key] = document(child)
