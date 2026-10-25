@@ -48,6 +48,7 @@ export class PixiBoardRenderer {
     #shapes = new Map();
     #layers = new Map();
     #pieces = new Map();
+    #textResolution = 1;
     #wantedPieces = new Map();
     /** The tiles asked for by the most recent `setTiles`; in-flight loads are judged against it. */
     #wanted = new Map();
@@ -63,6 +64,7 @@ export class PixiBoardRenderer {
     }
     constructor(application, label) {
         this.#application = application;
+        this.#textResolution = Math.min(MAX_RESOLUTION, application.renderer.resolution);
         // Tiles stack by level rather than by arrival, so a coarse backdrop stays under the finer level
         // replacing it however late either of them lands.
         this.#tiles.sortableChildren = true;
@@ -93,6 +95,18 @@ export class PixiBoardRenderer {
     setViewport(view) {
         this.#world.position.set(view.x, view.y);
         this.#world.scale.set(view.scale);
+        // Text textures otherwise keep their original density while the map enlarges them.
+        // Reuse each density across a zoom band; panning never regenerates text textures.
+        const resolution = Math.min(8, 2 ** Math.ceil(Math.log2(Math.max(1,
+            view.scale * this.#application.renderer.resolution))));
+        if (resolution !== this.#textResolution) {
+            this.#textResolution = resolution;
+            for (const piece of this.#pieces.values()) {
+                piece.label.resolution = resolution;
+                if (piece.art instanceof Text) piece.art.resolution = resolution;
+                for (const icon of piece.conditions.children) icon.resolution = resolution;
+            }
+        }
         this.invalidate();
     }
     /** Invalidate pending revisions without removing the tiles already on screen. */
@@ -359,9 +373,12 @@ export class PixiBoardRenderer {
         const ring = new Graphics();
         const details = new Graphics();
         const conditions = new Container();
-        const art = texture ? new Sprite(texture) : new Text({ text: initials(piece.label), style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
+        const art = texture ? new Sprite(texture) : new Text({ text: initials(piece.label), resolution: this.#textResolution, style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
         art.anchor.set(.5);
-        const label = new Text({ text: piece.label, style: { fill: "#f2ecdf", fontFamily: "serif", fontSize: 10, stroke: { color: PIECE_GROUND, width: 3 } } });
+        const label = new Text({ text: piece.label, resolution: this.#textResolution, style: {
+            fill: "#f2ecdf", fontFamily: "sans-serif", fontWeight: "600", fontSize: 10,
+            align: "center", stroke: { color: PIECE_GROUND, width: 2, join: "round" },
+        } });
         label.anchor.set(.5, 0);
         root.addChild(ring, art, details, conditions, label);
         const view = {
@@ -406,6 +423,7 @@ export class PixiBoardRenderer {
         }
         view.label.text = piece.label + (piece.hovered && piece.conditions?.length ? '\n' + piece.conditions.slice(0, 4).map(c => c.label).join(', ').slice(0, 100) : '');
         view.label.style.fontSize = piece.size * .24;
+        view.label.style.lineHeight = piece.size * .32;
         view.label.position.set(0, radiusY + piece.size * .08);
         view.label.visible = !!piece.selected || !!piece.hovered;
         const details = view.details.clear();
@@ -433,13 +451,13 @@ export class PixiBoardRenderer {
             const x = -radius + badgeSize / 2 + (index % columns) * (badgeSize + 2);
             const y = -radiusY - badgeSize / 2 - 3 - Math.floor(index / columns) * (badgeSize + 2);
             details.roundRect(x - badgeSize / 2, y - badgeSize / 2, badgeSize, badgeSize, 3).fill('#10151b').stroke({ color, width: 1 });
-            const icon = new Text({ text: glyph, style: { fontFamily: 'sans-serif', fontSize: badgeSize * .8, fill: color } });
+            const icon = new Text({ text: glyph, resolution: this.#textResolution, style: { fontFamily: 'sans-serif', fontSize: badgeSize * .8, fill: color } });
             icon.anchor.set(.5);
             icon.position.set(x, y);
             view.conditions.addChild(icon);
         });
         if (badges.length > 8) {
-            const more = new Text({ text: `+${badges.length - 8}`, style: { fontFamily: 'sans-serif', fontSize: 11, fill: '#f2ecdf', stroke: { color: '#10151b', width: 3 } } });
+            const more = new Text({ text: `+${badges.length - 8}`, resolution: this.#textResolution, style: { fontFamily: 'sans-serif', fontSize: 11, fill: '#f2ecdf', stroke: { color: '#10151b', width: 3 } } });
             more.position.set(radius + 3, -radiusY - 13);
             view.conditions.addChild(more);
         }

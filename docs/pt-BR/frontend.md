@@ -1093,6 +1093,15 @@ antiga. Uma falha na substituição mantém a imagem atual durante as tentativas
 limitadas de recuperação. Ocupação e geometria das regiões atualizam sua própria
 sobreposição, mantendo montados os recursos de piso, luz e shader não afetados.
 
+Nomes de tokens, iniciais sem imagem e indicadores de condições são rasterizados
+com densidade ajustada ao zoom da câmera e à resolução do renderizador. Faixas de
+densidade em potências de dois, limitadas a oito, mantêm o texto ampliado nítido
+sem recriar texturas ao mover a câmera ou dentro da mesma faixa de zoom. Os textos
+externos usam fonte sem serifa, alinhamento central, contorno fino e espaçamento
+entre linhas para as condições abaixo do nome. O cenário
+`tests/e2e/token_text_resolution.py` verifica zoom, telas comuns e de alta densidade,
+alterações de nomes e descarte do renderizador.
+
 Confirmações de tokens e estados em tempo real podem conter metadados nativos
 `teleports: [{id, version}]`, filtrados pelos tokens visíveis ao destinatário e
 suas revisões exatas. A área de tokens conserva cada revisão de teleporte aceita

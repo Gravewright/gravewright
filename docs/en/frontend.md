@@ -1026,6 +1026,14 @@ requests cannot paint an older revision. A failed replacement retains its curren
 art while the bounded retry runs. Region occupancy and geometry refresh their own
 overlay, keeping unrelated floor, light and shader resources mounted.
 
+Token names, fallback initials and condition badges rasterize at a density matched
+to the camera zoom and renderer resolution. Power-of-two density bands, capped at
+eight, keep enlarged text sharp without regenerating textures during panning or
+within the same zoom band. External labels use centered sans-serif text with a
+thin outline and extra line spacing for conditions below the name.
+The browser scenario `tests/e2e/token_text_resolution.py`
+checks zoom, normal/dense displays, label updates and renderer disposal.
+
 Token acknowledgements and realtime snapshots can carry native
 `teleports: [{id, version}]` metadata, filtered against the recipient's visible
 tokens and their exact revisions. The token workspace remembers each accepted

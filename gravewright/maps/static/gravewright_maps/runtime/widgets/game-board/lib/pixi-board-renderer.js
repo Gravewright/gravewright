@@ -32,6 +32,7 @@ var PixiBoardRenderer = class {
   #shapes = /* @__PURE__ */ new Map();
   #layers = /* @__PURE__ */ new Map();
   #pieces = /* @__PURE__ */ new Map();
+  #textResolution = 1;
   #wantedPieces = /* @__PURE__ */ new Map();
   /** The tiles asked for by the most recent `setTiles`; in-flight loads are judged against it. */
   #wanted = /* @__PURE__ */ new Map();
@@ -47,6 +48,7 @@ var PixiBoardRenderer = class {
   }
   constructor(application, label) {
     this.#application = application;
+    this.#textResolution = Math.min(MAX_RESOLUTION, application.renderer.resolution);
     this.#tiles.sortableChildren = true;
     this.#world.sortableChildren = true;
     this.#tiles.zIndex = BOARD_STACK.tiles;
@@ -73,6 +75,18 @@ var PixiBoardRenderer = class {
   setViewport(view) {
     this.#world.position.set(view.x, view.y);
     this.#world.scale.set(view.scale);
+    const resolution = Math.min(8, 2 ** Math.ceil(Math.log2(Math.max(
+      1,
+      view.scale * this.#application.renderer.resolution
+    ))));
+    if (resolution !== this.#textResolution) {
+      this.#textResolution = resolution;
+      for (const piece of this.#pieces.values()) {
+        piece.label.resolution = resolution;
+        if (piece.art instanceof Text) piece.art.resolution = resolution;
+        for (const icon of piece.conditions.children) icon.resolution = resolution;
+      }
+    }
     this.invalidate();
   }
   /** Invalidate pending revisions without removing the tiles already on screen. */
@@ -329,9 +343,16 @@ var PixiBoardRenderer = class {
     const ring = new Graphics();
     const details = new Graphics();
     const conditions = new Container();
-    const art = texture ? new Sprite(texture) : new Text({ text: initials(piece.label), style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
+    const art = texture ? new Sprite(texture) : new Text({ text: initials(piece.label), resolution: this.#textResolution, style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
     art.anchor.set(0.5);
-    const label = new Text({ text: piece.label, style: { fill: "#f2ecdf", fontFamily: "serif", fontSize: 10, stroke: { color: PIECE_GROUND, width: 3 } } });
+    const label = new Text({ text: piece.label, resolution: this.#textResolution, style: {
+      fill: "#f2ecdf",
+      fontFamily: "sans-serif",
+      fontWeight: "600",
+      fontSize: 10,
+      align: "center",
+      stroke: { color: PIECE_GROUND, width: 2, join: "round" }
+    } });
     label.anchor.set(0.5, 0);
     root.addChild(ring, art, details, conditions, label);
     const view = {
@@ -379,6 +400,7 @@ var PixiBoardRenderer = class {
     }
     view.label.text = piece.label + (piece.hovered && piece.conditions?.length ? "\n" + piece.conditions.slice(0, 4).map((c) => c.label).join(", ").slice(0, 100) : "");
     view.label.style.fontSize = piece.size * 0.24;
+    view.label.style.lineHeight = piece.size * 0.32;
     view.label.position.set(0, radiusY + piece.size * 0.08);
     view.label.visible = !!piece.selected || !!piece.hovered;
     const details = view.details.clear();
@@ -406,13 +428,13 @@ var PixiBoardRenderer = class {
       const x = -radius + badgeSize / 2 + index % columns * (badgeSize + 2);
       const y = -radiusY - badgeSize / 2 - 3 - Math.floor(index / columns) * (badgeSize + 2);
       details.roundRect(x - badgeSize / 2, y - badgeSize / 2, badgeSize, badgeSize, 3).fill("#10151b").stroke({ color, width: 1 });
-      const icon = new Text({ text: glyph, style: { fontFamily: "sans-serif", fontSize: badgeSize * 0.8, fill: color } });
+      const icon = new Text({ text: glyph, resolution: this.#textResolution, style: { fontFamily: "sans-serif", fontSize: badgeSize * 0.8, fill: color } });
       icon.anchor.set(0.5);
       icon.position.set(x, y);
       view.conditions.addChild(icon);
     });
     if (badges.length > 8) {
-      const more = new Text({ text: `+${badges.length - 8}`, style: { fontFamily: "sans-serif", fontSize: 11, fill: "#f2ecdf", stroke: { color: "#10151b", width: 3 } } });
+      const more = new Text({ text: `+${badges.length - 8}`, resolution: this.#textResolution, style: { fontFamily: "sans-serif", fontSize: 11, fill: "#f2ecdf", stroke: { color: "#10151b", width: 3 } } });
       more.position.set(radius + 3, -radiusY - 13);
       view.conditions.addChild(more);
     }
