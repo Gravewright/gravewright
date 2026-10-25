@@ -208,6 +208,8 @@ def preferences(request):
         if not isinstance(color, str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', color):
             raise accounts.AuthError('invalid_ping_color')
         UserPreference.objects.update_or_create(user=request.user, defaults={'ping_color': color.lower()})
+        from gravewright.maps.audience import color_changed
+        color_changed(request.user.pk)
         if is_datastar(request):
             return DatastarResponse(SSE.patch_signals({'_pingNotice': 'Color saved for your account.'}))
     color = UserPreference.objects.filter(user=request.user).values_list('ping_color', flat=True).first() or '#f2c679'

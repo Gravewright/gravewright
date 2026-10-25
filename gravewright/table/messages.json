@@ -139,7 +139,8 @@
     "sections": {
       "table": "Table",
       "extensions": "Extensions",
-      "preferences": "Preferences"
+      "preferences": "Preferences",
+      "shortcuts": "Shortcuts"
     },
     "rendering": {
       "title": "Visual quality",

@@ -111,16 +111,30 @@ de mensagens de sincronização, busca, viewport e heartbeat; os pontos de escri
 também os rejeitam. Controles no navegador são conveniências, não a autorização.
 
 **A visibilidade de cenas exige duas condições para quem não é mestre:** a cena deve
-ter `visibility='players'` e ser o `Broadcast` atual da campanha. Marcar uma cena
+ter `visibility='players'` e ser o destino atual do destinatário. Um
+`SceneAssignment` do jogador substitui o `Broadcast` da campanha; os demais
+jogadores e streamers continuam seguindo a transmissão. Marcar uma cena
 inativa como visível não a torna acessível. A mesma resolução protege manifestos,
 blocos de imagem, tokens e chat associado à cena.
 
 O comando explícito `maps.activate` do mestre define a visibilidade para jogadores
-e a transmissão na mesma transação. A mudança de visibilidade avança a revisão
+e a transmissão na mesma transação. Com `playerIds`, define o destino somente
+dos jogadores selecionados da campanha, preservando os demais destinos e a
+navegação do mestre. Ativar para todos remove os destinos individuais e reúne
+a mesa. As atribuições persistem ao reconectar e são removidas com a cena ou a
+participação; são separadas da `SceneNavigation` privada do mestre.
+A mudança de visibilidade avança a revisão
 da cena; ativar uma cena já visível mantém sua revisão. Gerar no Map Builder
 e navegar em particular não publicam a cena.
 
 ## Comandos, tentativas repetidas e revisões
+
+A atividade de ponteiros é transitória. `maps.cursor` aceita posições limitadas
+à cena de jogadores e mestres; o servidor fornece a identidade e a cor de
+identificação salva. A entrega verifica novamente o acesso do destinatário à cena
+e sua assinatura atual. O tráfego de ponteiros possui limite próprio e não consome
+o orçamento de comandos. Sair ou desconectar envia um evento de remoção; posições
+de cursores não entram no banco da campanha, em recibos ou em arquivos exportados.
 
 A maioria dos comandos persistentes de recursos da mesa segue esta sequência:
 

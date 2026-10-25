@@ -67,6 +67,40 @@ class ObjectAreaIntegrationTests(TestCase):
         row.refresh_from_db()
         self.assertEqual(row.data["lever"]["state"], "off")
 
+    def test_empty_circle_native_resize_quietly_updates_membership_and_reset_restores_box(self):
+        self.empty["presenceRadius"] = 1
+        row = self.generated()
+        token = self.place(4, 1)
+        self.assertFalse(AutomationRun.objects.filter(scene=self.scene).exists())
+        self.edit(row, presenceRadius=128)
+        row.refresh_from_db()
+        self.assertEqual(row.data["areaPresence"]["occupants"], [str(token.pk)])
+        self.assertFalse(AutomationRun.objects.filter(scene=self.scene).exists())
+        self.assertEqual(row.data["lever"]["state"], "off")
+        self.edit(row, x=200)
+        row.refresh_from_db()
+        self.assertEqual(row.data["presenceRadius"], 128)
+        self.edit(row, presenceRadius=None)
+        row.refresh_from_db()
+        self.assertNotIn("presenceRadius", row.data)
+        self.assertEqual(row.data["areaPresence"]["occupants"], [])
+
+    def test_circle_survives_linked_scene_updates_and_campaign_archive(self):
+        self.empty["presenceRadius"] = 2
+        row = self.generated()
+        self.empty["presenceRadius"] = 3
+        self.assertEqual(self.save(expected_version=1).status_code, 200)
+        self.scene.refresh_from_db()
+        result = self.post(self.url + "/update", {"request_id": str(uuid.uuid4()), "expected_version": 2,
+            "expected_scene_version": self.scene.version})
+        self.assertEqual(result.status_code, 200, result.content)
+        row.refresh_from_db()
+        self.assertEqual(row.data["presenceRadius"], 192)
+        clone = import_campaign(export_campaign(self.campaign), self.gm, "Copied circular objects")
+        source = MapBuilderProject.objects.get(campaign=clone)
+        self.assertEqual(source.document["decorations"][0]["presenceRadius"], 3)
+        self.assertEqual(source.scene.elements.get(data__empty=True).data["presenceRadius"], 192)
+
     def test_adding_listener_around_existing_token_is_quiet_and_exit_still_runs(self):
         blueprint = deepcopy(self.empty["blueprint"])
         self.empty.pop("blueprint")

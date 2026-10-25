@@ -451,7 +451,9 @@ class TimerMigrationTests(TransactionTestCase):
         previous = ("gravewright_maps", "0011_automationdelay")
         current = ("gravewright_maps", "0012_automationdelay_timer")
         executor = MigrationExecutor(connection)
-        latest = [target for target in executor.loader.graph.leaf_nodes() if target[0] == "gravewright_maps"]
+        # Rolling back maps also rolls back dependent table migrations. Restore
+        # every application's leaves before resuming work and leaving the test.
+        latest = executor.loader.graph.leaf_nodes()
         executor.migrate([previous])
         try:
             old_model = executor.loader.project_state([previous]).apps.get_model("gravewright_maps", "AutomationDelay")

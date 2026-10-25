@@ -113,6 +113,7 @@ and expected revisions. Their payloads use these public names:
 | `blueprints.control` | `{sceneId, elementId, expectedVersion, action, value?}` |
 | `maps.exportUniversalVtt` | `{sceneId}`; native interchange JSON |
 | `maps.navigate` | `{mapId}`; explicit `mapId: null` resumes following the broadcast in an unbound context |
+| `maps.activate` | `{mapId, playerIds?}`; GM-only. Omit `playerIds` to activate for everyone and clear individual destinations. A nonempty unique array of campaign player user IDs changes only those players' destinations. GM map state includes `players: [{id, name, color, sceneId}]`; other roles never receive this roster. |
 | `library.createFolder` | `{name}`; returns `{ok, id}` |
 | `library.updateFolder` / `deleteFolder` | `{folderId, name}` / `{folderId}` |
 | `library.move` / `delete` | `{assetId, folderId}` / `{assetId}`; native snake_case aliases remain accepted |
@@ -511,7 +512,7 @@ await context.api.cards.instantiate({ deck_definition_id: definition.deck.id });
 | `permission_denied` | Authenticated user cannot perform the action |
 | `invalid_data` | Payload/schema/path/value validation failed |
 | `conflict` | Entity, storage, activation revision or registration conflict |
-| `unavailable` | Unknown/unsupported operation, incompatible SDK, or service failure |
+| `unavailable` | Unknown/unsupported operation, incompatible SDK, or service failure (HTTP 503), including a required system provider that is not enabled |
 | `cancelled` | Caller cancelled live work |
 | `stale_context` | Mount/scene/activation context is no longer valid |
 

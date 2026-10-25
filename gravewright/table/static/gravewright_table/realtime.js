@@ -104,6 +104,7 @@ function receive(event) {
   } else if (type === 'table.presence') {
     mergePatch({_onlineCount: payload.members.length});
     if (roster && typeof payload.html === 'string') roster.innerHTML = payload.html;
+      window.dispatchEvent(new CustomEvent('gravewright:presence', {detail:payload}));
   } else if (type === 'chat.history') {
     messages.clear(); log.replaceChildren(); renderMessages(payload.messages || []);
   } else if (type === 'chat.message') {
@@ -138,6 +139,8 @@ function receive(event) {
     window.dispatchEvent(new CustomEvent('gravewright:map-layers',{detail:payload}));
   } else if (type === 'maps.ping') {
     window.dispatchEvent(new CustomEvent('gravewright:map-ping',{detail:payload}));
+  } else if (type === 'maps.cursor') {
+    window.dispatchEvent(new CustomEvent('gravewright:map-cursor',{detail:payload}));
   } else if (type === 'maps.state') {
     window.dispatchEvent(new CustomEvent('gravewright:maps', {detail:payload}));
   } else if (type === 'maps.ack' || type === 'maps.error') {
@@ -196,6 +199,7 @@ function connect() {
     if (socket !== current) return;
     joined = false;
     status('offline');
+      window.dispatchEvent(new Event('gravewright:disconnected'));
     clearInterval(watchdog);
     if (!stopping && ![4401,4403].includes(event.code)) {
       retryTimer = setTimeout(connect, retry);
@@ -245,6 +249,7 @@ window.gravewrightRealtime = {
   },
   mapLayers(mapId) { mapLayerId=mapId;send('maps.layers',{mapId}); },
   mapPing(payload) { send('maps.ping',payload); },
+  mapCursor(payload) { return send('maps.cursor',payload); },
   mapsSubscribe() { if(!mapsSubscribed){mapsSubscribed = true; send('maps.sync');} },
   mapCommand(action, data) {
     if (getPath('_presence') !== 'seated') return Promise.reject(new Error('Connect to the table before saving.'));

@@ -81,6 +81,14 @@ class SceneNavigation(models.Model):
     scene = models.ForeignKey(Scene, null=True, blank=True, on_delete=models.SET_NULL)
 
 
+class SceneAssignment(models.Model):
+    """A GM-assigned player destination; absence follows the campaign broadcast."""
+    membership = models.OneToOneField(
+        "gravewright_campaigns.Membership", primary_key=True, on_delete=models.CASCADE,
+    )
+    scene = models.ForeignKey(Scene, on_delete=models.CASCADE)
+
+
 class Receipt(models.Model):
     """Retry result shared by maps, actors, tokens and table.domain resources."""
     campaign = models.ForeignKey(

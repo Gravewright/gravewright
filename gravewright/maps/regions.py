@@ -138,7 +138,10 @@ def presence_rows(scene):
 
 
 def object_shape(data):
-    """The authored object box remains stable across fitted appearance images."""
+    """Use an explicit circle or the authored box, independent of fitted art."""
+    if "presenceRadius" in data:
+        return {"geometry": {"shape": "circle", "x": data["x"], "y": data["y"],
+                             "radius": data["presenceRadius"]}, "vertical_bottom": None, "vertical_top": None}
     authored = data.get("torch", data.get("lever", {}))
     width = authored.get("width", data["natural_width"] * data["scale"])
     height = authored.get("height", data["natural_height"] * data["scale"])
@@ -154,6 +157,17 @@ def object_shape(data):
             for dx, dy in ((-width / 2, -height / 2), (width / 2, -height / 2),
                            (width / 2, height / 2), (-width / 2, height / 2))]}
     return {"geometry": geometry, "vertical_bottom": None, "vertical_top": None}
+
+
+def copy_object_radius(result, raw, previous=None):
+    """Optional custom presence radius, in native scene pixels; null resets it."""
+    value = raw.get("presenceRadius", (previous or {}).get("presenceRadius"))
+    if value is not None:
+        from .objects import number
+        if not any(isinstance(result.get(key), dict) for key in ("lever", "torch")):
+            raise MapError("Choose a Smart Object before setting its activation area.")
+        result["presenceRadius"] = number(value, .001, 1_000_000)
+    return result
 
 
 def rebaseline_object(scene, row):

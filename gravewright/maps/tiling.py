@@ -123,6 +123,30 @@ def _validate_size(width, height):
         raise MapError("Map tile count exceeds the configured limit.")
 
 
+def generate_solid_pyramid(width, height, color, save_tile):
+    """Create bounded solid-color tiles without allocating a full-size raster."""
+    if any(type(value) is not int or value < 1 for value in (width, height)):
+        raise MapError("Use positive whole numbers for map dimensions.")
+    from .services import color as validate_color
+    color = validate_color(color)
+    _validate_size(width, height)
+    with _processing:
+        encoded_sizes = {}
+        top = max_lod(width, height)
+        for lod in range(top + 1):
+            w, h = level_size(width, height, lod)
+            for y in range((h + TILE_SIZE - 1) // TILE_SIZE):
+                for x in range((w + TILE_SIZE - 1) // TILE_SIZE):
+                    size = (min(TILE_SIZE, w - x * TILE_SIZE), min(TILE_SIZE, h - y * TILE_SIZE))
+                    if size not in encoded_sizes:
+                        with Image.new("RGB", size, color) as image, BytesIO() as encoded:
+                            image.save(encoded, format="WEBP", lossless=True)
+                            encoded_sizes[size] = encoded.getvalue()
+                    with ContentFile(encoded_sizes[size]) as content:
+                        save_tile(lod, x, y, content)
+    return width, height, top
+
+
 def _png_exif(incoming):
     """Find PNG EXIF before or after IDAT without decoding or copying pixels.
 

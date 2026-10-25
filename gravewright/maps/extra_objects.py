@@ -234,6 +234,8 @@ def image(scene, raw, previous=None):
             result["spriteBase"] = base
     if "interactionEnabled" in raw:
         result["interactionEnabled"] = boolean(raw["interactionEnabled"])
+    from .regions import copy_object_radius
+    copy_object_radius(result, raw, previous)
     if isinstance((previous or {}).get("surface"), dict):
         result["surface"] = deepcopy(previous["surface"])
     if isinstance((previous or {}).get("surfacePlane"), dict):

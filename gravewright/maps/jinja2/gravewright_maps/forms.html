@@ -2,11 +2,37 @@
   <header class="directory-dialog__header" data-v-gwdialog data-move-handle><strong>{{ game.newScene }}</strong><button class="directory-dialog__close" data-v-gwdialog type="button" aria-label="Close">{{ icon('X') }}</button></header>
   <div class="game-scene-create__body">
     <p>{{ game.chooseSceneSource }}</p>
+    <button class="game-scene-create__option" type="button" data-map-create="empty">{{ icon('Square') }}<span><strong>{{ tr('Empty map') }}</strong><small>{{ tr('Choose a color, dimensions and whether to show the grid.') }}</small></span></button>
     <button class="game-scene-create__option" type="button" data-map-create="upload">{{ icon('UploadSimple') }}<span><strong>{{ game.uploadMap }}</strong><small>{{ game.uploadMapHint }}</small></span></button>
     <a class="game-scene-create__option" data-map-create="builder">{{ icon('PaintBrush') }}<span><strong>{{ game.mapBuilder }}</strong><small>{{ game.mapBuilderHint }}</small></span></a>
     <button class="game-scene-create__option" type="button" data-map-create="uvtt">{{ icon('UploadSimple') }}<span><strong>{{ tr('Import Universal VTT') }}</strong><small>{{ tr('Import a map image, walls, portals and lights from a .uvtt, .dd2vtt or .df2vtt file.') }}</small></span></button>
   </div>
 </section></template>
+<template id="map-activate"><form class="directory-dialog" data-v-gwdialog data-movable role="dialog" aria-label="{{ tr('Activate for selected players') }}">
+  <header class="directory-dialog__header" data-v-gwdialog data-move-handle><strong>{{ tr('Activate for selected players') }}</strong><button class="directory-dialog__close" data-v-gwdialog type="button" aria-label="Close">{{ icon('X') }}</button></header>
+  <fieldset class="directory-dialog__fields" data-v-gwdialog>
+    <strong data-activation-scene></strong>
+    <p>{{ tr('Select one or more players. Other players stay on their current scene.') }}</p>
+    <div class="game-scene-player-choices" data-player-choices></div>
+    <button type="submit" disabled>{{ tr('Activate') }}</button>
+    <p role="alert" hidden></p>
+  </fieldset>
+</form></template>
+<template id="map-empty"><form class="directory-dialog game-scene-empty" data-v-gwdialog data-movable role="dialog" aria-label="{{ tr('Empty map') }}">
+  <header class="directory-dialog__header" data-v-gwdialog data-move-handle><strong>{{ tr('Empty map') }}</strong><button class="directory-dialog__close" data-v-gwdialog type="button" aria-label="Close">{{ icon('X') }}</button></header>
+  <fieldset class="directory-dialog__fields" data-v-gwdialog>
+    <label><span>{{ game.sceneName }}</span><input name="name" maxlength="120" required /></label>
+    <label class="game-scene-empty__color"><span>{{ tr('Background color') }}</span><input name="color" type="color" value="#354b66" required /></label>
+    <div class="game-scene-editor__columns">
+      <label><span>{{ tr('Width (px)') }}</span><input name="width" type="number" min="1" step="1" value="1400" required /></label>
+      <label><span>{{ tr('Height (px)') }}</span><input name="height" type="number" min="1" step="1" value="1400" required /></label>
+    </div>
+    <label class="game-scene-editor__check"><input name="gridVisible" type="checkbox" checked />{{ game.showGrid }}</label>
+    <label class="game-scene-editor__check"><input name="activate" type="checkbox" checked />{{ tr('Activate after creation') }}</label>
+    <button class="game-scene-editor__submit" type="submit">{{ icon('Plus') }}{{ tr('Create map') }}</button>
+    <p role="alert" hidden></p>
+  </fieldset>
+</form></template>
 <template id="map-upload"><form class="directory-dialog" data-v-gwdialog data-movable role="dialog" aria-label="{{ game.newScene }}"><header class="directory-dialog__header" data-v-gwdialog data-move-handle><strong data-v-gwdialog>{{ game.newScene }}</strong><button class="directory-dialog__close" data-v-gwdialog type="button" aria-label="Close">{{ icon('X') }}</button></header><fieldset class="directory-dialog__fields" data-v-gwdialog>
       <p>{{ game.sceneArchiveGrid }}</p>
       <div class="game-scene-editor__columns"><label><span>{{ game.sceneName }}</span><input name="name" required /></label><label><span>{{ game.gridSize }}</span><input name="gridSize" type="number" min="1" max="10000" step="0.0001" required /></label></div>

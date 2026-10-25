@@ -21,16 +21,22 @@ def check(gm,player,data,output):
     gm.keyboard.press('Escape')
     print('Command palette mounted',flush=True)
     player.evaluate("window.markerState=null;window.addEventListener('gravewright:map-layers',e=>window.markerState=e.detail)")
-    gm.get_by_role('button',name='Shapes',exact=True).click()
-    surface=gm.locator('.game-board__surface').bounding_box()
-    gm.mouse.move(surface['x']+450,surface['y']+200)
-    gm.mouse.down()
-    gm.mouse.move(surface['x']+650,surface['y']+260,steps=8)
-    gm.mouse.up()
+    # Existing area markers and the generic API remain compatible after removing Shapes.
+    gm.evaluate("""async mapId=>{
+      const state=await(await fetch('/api/maps/'+mapId+'/state')).json();
+      return gravewrightRealtime.mapCommand('objects',{mapId,area:'markers',action:'replace',data:{
+        expected_version:state.version,rows:[{id:crypto.randomUUID(),kind:'rect',
+          origin:{x:450,y:200},length:200,width:60,direction:0,angle:90,color:'#e1b466'}]
+      }});
+    }""",data['map'])
     player.wait_for_function('window.markerState?.markers?.length===1')
-    gm.keyboard.press('Escape')
-    print('Shared marker delivered to player',flush=True)
-    # Escape closes the shape editor; selecting a token requires Select mode.
+    player.locator('.measurement-workspace text').wait_for(state='visible')
+    assert gm.locator('[data-dock-tool="templates"]').count()==0
+    assert player.locator('[data-dock-tool="templates"]').count()==0
+    assert gm.locator('.measure-panel').count()==0
+    assert player.locator('.measure-panel').count()==0
+    print('Compatible shared marker API and player display verified without Shapes',flush=True)
+    # Token actions continue to use Select mode.
     gm.get_by_role('button',name='Select',exact=True).click()
     gm.get_by_role('button',name='Token: Fighter',exact=True).click()
     gm.get_by_role('button',name='Token: Fighter',exact=True).click(button='right')

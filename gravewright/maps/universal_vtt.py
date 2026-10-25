@@ -25,7 +25,7 @@ from PIL import Image, ImageChops
 from gravewright.campaigns.models import Campaign
 from gravewright.journals.services import identifier
 from . import objects, services, tiling
-from .models import Broadcast, MapAsset, Scene, SceneNavigation, SceneObject, SceneState, Tile
+from .models import MapAsset, Scene, SceneNavigation, SceneObject, SceneState, Tile
 
 MAX_JSON_BYTES = 64 * 1024 * 1024
 MAX_IMAGE_BYTES = 48 * 1024 * 1024
@@ -346,7 +346,8 @@ def import_map(campaign_id, user_id, raw, *, name, request_id, folder_id=None, a
             SceneState.objects.create(scene=scene, lighting={"mode": "none" if parsed["baked"] else "dynamic" if any(kind == "lights" for kind, _ in parsed["rows"]) else "manual",
                                                            "darkness": parsed["darkness"], "lights_out": not parsed["baked"]})
             if activate:
-                Broadcast.objects.update_or_create(campaign=who.campaign, defaults={"scene": scene})
+                from .audience import broadcast
+                broadcast(who, scene)
             SceneNavigation.objects.update_or_create(membership=who, defaults={"scene": None if activate else scene})
             response = {"scene": services.view(scene), "warnings": parsed["warnings"], "builderEditable": False}
             if builder_editable:

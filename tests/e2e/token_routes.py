@@ -129,20 +129,40 @@ def check(gm, player, data, output):
         "async id=>(await(await fetch('/api/maps/'+id+'/state')).json()).drawings.rows.length===1",
         arg=data["map"],
     )
-    gm.get_by_role("button", name="Close drawing", exact=True).click()
-    gm.get_by_role("button", name="Shapes", exact=True).first.click()
-    measure = gm.locator(".measure-panel")
-    for name in ("Circle", "Cube / rectangle", "Triangular cone", "Wide cone"):
-        measure.get_by_role("button", name=name, exact=True).click()
+    for index, (name, kind) in enumerate((("Rectangle", "rect"), ("Ellipse", "ellipse")), 2):
+        gm.locator(".drawing-paint").get_by_role("button", name=name, exact=True).click()
         gm.mouse.move(700, 350)
         gm.mouse.down()
         gm.mouse.move(840, 490, steps=3)
         gm.mouse.up()
-        expect(gm.locator(".measurement-workspace text")).to_have_count(2)
-        measure.get_by_role("button", name="Delete", exact=True).click()
-        expect(gm.locator(".measurement-workspace text")).to_have_count(1)
-    gm.get_by_role("button", name="Close measurement", exact=True).click()
-    print("Escape, line measurement, four templates and drawing passed", flush=True)
+        gm.wait_for_function(
+            "async p=>{const s=await(await fetch('/api/maps/'+p.map+'/state')).json();return s.drawings.rows.length===p.count&&s.drawings.rows.at(-1)?.kind===p.kind}",
+            arg={"map": data["map"], "count": index, "kind": kind},
+        )
+    gm.get_by_role("button", name="Close drawing", exact=True).click()
+    for page in (gm, player):
+        expect(page.locator('[data-dock-tool="templates"]')).to_have_count(0)
+        expect(page.get_by_role("button", name="Shapes", exact=True)).to_have_count(0)
+        page.get_by_role("button", name="Select", exact=True).first.click()
+        page.keyboard.press("t")
+        expect(page.locator(".measure-panel")).to_have_count(0)
+        expect(page.locator(".drawing-paint")).to_have_count(0)
+        expect(
+            page.locator('.game-dock__group:visible [data-dock-tool="select"]')
+        ).to_have_attribute("aria-pressed", "true")
+    gm.get_by_role("group", name="Layers", exact=True).get_by_role(
+        "button", name="GM", exact=True
+    ).click()
+    expect(gm.locator('[data-dock-tool="templates"]')).to_have_count(0)
+    gm.keyboard.press("t")
+    expect(gm.locator(".measure-panel")).to_have_count(0)
+    gm.get_by_role("button", name="Draw", exact=True).first.click()
+    expect(gm.locator(".drawing-paint")).to_be_visible()
+    expect(gm.locator(".drawing-paint").get_by_role("button", name="Rectangle", exact=True)).to_be_visible()
+    expect(gm.locator(".drawing-paint").get_by_role("button", name="Ellipse", exact=True)).to_be_visible()
+    gm.screenshot(path=str(output / "minipaint-shapes-without-standalone-tool.png"))
+    gm.get_by_role("button", name="Close drawing", exact=True).click()
+    print("Escape, local measurement, MiniPaint shapes and removed Shapes shortcut passed", flush=True)
 
 
 if __name__ == "__main__":

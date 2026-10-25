@@ -412,6 +412,16 @@ presence after the current object cache is persisted. A durable arrival gate
 prevents return loops until the token leaves the region; scene navigation and
 party membership are unchanged.
 
+Uploaded **Object** artwork can become a Smart Object directly: choose **Edit
+nodes** in its context menu or **Smart object** in its Behavior properties. A
+left-button double-click also opens the editor with either Selection or Objects
+active, without placing another object. Dragging still uses the active tool.
+The first opening creates
+a blank Blueprint with inherited artwork; it preserves the object's identity,
+image, layer and geometry. Author states and nodes freely, then use the existing
+autosave and scene generation workflow. Reopening an existing Smart Object keeps
+its authored behavior. Ready-made models remain optional.
+
 The **Interactive object catalog** in Builder selection, **Ready-made models**
 in the object context menu and the node editor's **Object catalog** share 14
 editable generic lever Blueprints. Models cover switches, chests, secret
@@ -516,6 +526,14 @@ Server `regions.py` validates identity ownership and computes occupancy/events
 from accepted token commands. Configuration or runtime region enable/transform
 changes quietly baseline occupancy, suppressing synthetic presence events.
 Disabling presence does not cancel unrelated named signals or scheduled work.
+Objects can opt into a circular activation area in the Builder's Behavior
+properties. `decoration.presenceRadius` is a radius in cells (0.05–200), converted
+to native image `presenceRadius` in pixels. The circle follows the object's
+center independently of artwork size and rotation. A selected object's circle
+and drag handle are editor guides; the radius is private to GMs and is never
+baked into the map image. Wire `presence:enter` or `presence:exit` to run effects
+on committed token crossings without clicking. Omitting the radius retains the
+existing oriented artwork box; changing the area quietly rebaselines occupancy.
 The native editor uses the current scene token catalog and a cancellable GM
 actor-catalog request, discarding late work on close. Filter configuration and
 occupant identities remain private.
@@ -926,6 +944,73 @@ uv run --locked python scripts/generate_frontend_api.py
 This generates only `modules/static/gravewright_modules/frontend-contract.js` from `contracts/frontend.json`. The original SDK's `generated.js` and JSON schemas are separate artifacts; this script does not regenerate them. `collectstatic` gathers deployable assets but does not run either JavaScript build.
 
 ## Board layers and resource lifetimes
+
+The **New scene** chooser includes **Empty map**. Its form asks for the scene
+name, background color, width and height in pixels, whether to show the grid,
+and whether to activate it after creation. Creation uses the current folder.
+When activation is unchecked, the creator previews the new scene while players
+stay on the existing active scene. The server creates
+ordinary lossless map tiles within the configured image and tile-count limits,
+so existing rendering, permissions, tools and campaign archives continue to work.
+
+The GM scene directory shows player dots in each player's saved identification
+color and a **GM** badge on the scene currently being viewed. Dot tooltips identify
+players, including offline members whose destinations persist. The context menu's
+**Activate for selected players** opens a checkbox list for one or more players;
+**Activate for players** still activates for everyone and clears individual
+destinations. Changing identification color refreshes the dots without reloading.
+The **GM** badge also identifies a private preview; there is no additional
+**Preparing** label. Scene pointers show other participants as translucent colored
+dots with their names, using each sender's saved ping color. The user's own mouse
+keeps its native cursor. Remote motion is interpolated in scene coordinates and
+projected through the viewer's camera, preserving screen size through pan/zoom.
+Positions are transient, sampled at most ten times per second, and discarded
+when users leave, disconnect or change scene. A stationary pointer remains visible
+across delayed updates; silence alone is not a departure. Scene tool overlays
+publish positions just like the rendering surface, excluding interface controls.
+Switching browser windows or tabs pauses publication while preserving the last
+shared position. Only actual scene departures, disconnects and explicit hide
+packets remove it; losing window focus is not a departure.
+Preferences → Mouse pointers has independent controls for viewing participants'
+pointers and sharing one's own. Both default to enabled, persist per profile on
+the current device and synchronize across tabs. Hiding received pointers keeps
+their last positions available for immediate redisplay without rendering them.
+Disabling sharing immediately hides that user's pointer remotely and stops
+publication; it does not affect map pings or other participants' settings.
+
+The same house menu has a **Keyboard shortcuts** topic for the table's executable
+dock tools and windows, including campaign search. `table/shortcuts.js` derives
+the defaults from the rendered dock, records combinations in focused fields,
+updates accessible shortcuts/tooltips and dispatches the existing buttons.
+Mappings persist per profile/device under `gravewright.shortcuts.<profile>` and
+synchronize across tabs. Each layer has its own tool scope; window bindings
+conflict across all layers. Existing default precedence is preserved. Users can
+unassign actions or restore all defaults. Escape cancels recording; text editing,
+composition, modal keyboard navigation and reserved browser/editing combinations
+retain their native behavior. Tool-specific gestures are not remapped here.
+
+These table additions use the installed Translator's English source-key contract:
+Jinja `tr(...)`, the native `gwText(...)` adapter and `createTranslator().t(...)`
+for browser-owned controls. Reviewed pt-BR/es host supplements cover new keys
+without changing installed signed language archives. Without an active language
+package, the host falls back to English and preserves the saved locale choice.
+Player names, scene names and authored measurement titles are marked
+`translate="no"`; key combinations and action IDs also remain unchanged.
+The integration scenario `tests/e2e/table_translator.py` accepts an explicit
+`GRAVEWRIGHT_TRANSLATOR_CATALOG_ROOT` containing real `en.json`, `pt-BR.json` and
+`es.json` catalogs. It installs a disposable package and checks the new table
+controls, uploaded Smart Objects, circular areas, authored values and fallback.
+Only authorized viewers of the same scene receive positions. Streamers receive
+pointers without sending them, and the GM layer does not publish mouse movement.
+
+The table dock provides drawing through Mini Paint (`Draw`, shortcut `B`).
+Rectangles and ellipses belong to that editor; there is no separate Shapes tool
+or `T` shortcut. Existing shared area markers remain visible, and their stored
+data and public APIs remain compatible. `Measure` continues to provide local
+scene measurements. Enable **Title** to edit a measurement label directly on the
+map, above its dimensions. Each title follows its measurement through movement
+and zoom and stays visible when the tool closes. Titles share the same local
+lifetime as measurements; they are not broadcast or saved to the campaign.
 
 The `maps/frontend/` tree separates entity models, feature models/UI, shared utilities, and the game-board widget. The board widget coordinates rendering, input, tile scheduling/cache/prefetch, native layers, vision polygons, lighting and shaders. Feature code contains walls, tokens, drawings, measurements, effects, and selection. Algorithm tests live beside the relevant models and are bundled by `maps/scripts/test_models.cjs` for Node's test runner.
 

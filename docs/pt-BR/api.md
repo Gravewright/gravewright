@@ -114,6 +114,7 @@ revisões esperadas dos serviços nativos. Os payloads públicos usam estes nome
 | `blueprints.control` | `{sceneId, elementId, expectedVersion, action, value?}` |
 | `maps.exportUniversalVtt` | `{sceneId}`; JSON nativo de intercâmbio |
 | `maps.navigate` | `{mapId}`; `mapId: null` explícito volta a seguir a transmissão em contexto sem cena fixa |
+| `maps.activate` | `{mapId, playerIds?}`; exclusivo do mestre. Omita `playerIds` para ativar para todos e remover destinos individuais. Um array não vazio de IDs de usuários jogadores da campanha, sem duplicatas, muda somente esses destinos. O estado de mapas do mestre inclui `players: [{id, name, color, sceneId}]`; os demais papéis não recebem essa lista. |
 | `library.createFolder` | `{name}`; retorna `{ok, id}` |
 | `library.updateFolder` / `deleteFolder` | `{folderId, name}` / `{folderId}` |
 | `library.move` / `delete` | `{assetId, folderId}` / `{assetId}`; aliases nativos snake_case continuam aceitos |
@@ -519,7 +520,7 @@ await context.api.cards.instantiate({ deck_definition_id: definition.deck.id });
 | `permission_denied` | Usuário sem permissão para a ação |
 | `invalid_data` | Falha de validação de payload/schema/caminho/valor |
 | `conflict` | Conflito de revisão de entidade, armazenamento, ativação ou registro |
-| `unavailable` | Operação desconhecida, SDK incompatível ou falha do serviço |
+| `unavailable` | Operação desconhecida, SDK incompatível ou falha do serviço (HTTP 503), incluindo um provedor obrigatório do sistema que não está habilitado |
 | `cancelled` | Cancelamento de operação pelo chamador |
 | `stale_context` | Montagem/cena/revisão deixou de ser válida |
 

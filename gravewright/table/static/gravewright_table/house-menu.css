@@ -168,6 +168,20 @@
 .house-menu__badge { margin-left: auto; color: var(--text-faint); font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
 
 .house-menu__preferences { display: grid; align-content: start; gap: var(--space-4); padding: var(--space-4); overflow-y: auto; }
+.house-menu__shortcuts { min-height: 0; font-size: 12px; }
+.house-menu__shortcuts > header p { margin: var(--space-0); color: var(--text-muted); line-height: 1.5; }
+.shortcut-group { display: grid; gap: var(--space-2); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+.shortcut-group h3 { margin: var(--space-2) var(--space-0); font-size: 14px; }
+.shortcut-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 180px) auto; align-items: center; gap: var(--space-2); }
+.shortcut-row label { overflow-wrap: anywhere; }
+.shortcut-row input { width: 100%; min-width: 0; box-sizing: border-box; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; cursor: pointer; }
+.shortcut-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.house-menu__shortcuts button { padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); font: inherit; cursor: pointer; }
+.house-menu__shortcuts [role=alert] { margin: var(--space-0); color: var(--danger-text); }
+@media (max-width: 600px) {
+    .shortcut-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .shortcut-row label { grid-column: 1 / -1; }
+}
 .house-menu__preferences > header { display: grid; gap: var(--space-1); }
 .house-menu__preferences > header strong { color: var(--text-bright); font-size: var(--text-md); }
 .house-menu__preferences > header p, .house-menu__preference-note { margin: var(--space-0); color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-relaxed); }

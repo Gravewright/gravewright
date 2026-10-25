@@ -43,6 +43,7 @@ export function bindEscape(doc = document) {
   documents.add(doc);
   doc.defaultView.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) return;
+    if (event.target.closest?.('[data-shortcut-record]')) return;
     if (event.repeat) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     // Menus and editor suggestions handle Escape before their containing window.
     if ([...doc.querySelectorAll('[role="menu"],.directory-context-menu,.gw-folder-menu')].some(visible)) return;

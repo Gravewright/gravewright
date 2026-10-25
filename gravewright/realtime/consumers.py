@@ -94,18 +94,29 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             await self.close(code=1009)
             return
         now = monotonic()
-        self.command_tokens = min(float(settings.WS_BURST_COMMANDS),
-            self.command_tokens + (now - self.command_sample) * settings.WS_COMMANDS_PER_SECOND)
-        self.command_sample = now
-        if self.command_tokens < 1:
-            await self.close(code=4429)
-            return
-        self.command_tokens -= 1
         try:
             message = json.loads(text_data)
         except ValueError, RecursionError:
-            await self.emit("error", {"code": "invalid_input"})
-            return
+            message = None
+        if isinstance(message, dict) and message.get('type') == 'maps.cursor':
+            if len(text_data.encode('utf-8')) > 512:
+                await self.close(code=1009)
+                return
+            payload = message.get('payload')
+            hiding = isinstance(payload, dict) and payload.get('position') is None
+            if hiding and not getattr(self, 'cursor_packet', None):
+                return
+            if not hiding and now - getattr(self, 'last_cursor_input', 0) < .075:
+                return
+            self.last_cursor_input = now
+        else:
+            self.command_tokens = min(float(settings.WS_BURST_COMMANDS),
+                self.command_tokens + (now - self.command_sample) * settings.WS_COMMANDS_PER_SECOND)
+            self.command_sample = now
+            if self.command_tokens < 1:
+                await self.close(code=4429)
+                return
+            self.command_tokens -= 1
         if not isinstance(message, dict) or not isinstance(
             message.get("payload", {}), dict
         ):
@@ -216,7 +227,11 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                 )
             except maps.MapError, journals.JournalError:
                 pass
+        elif kind == 'maps.cursor':
+            await self.map_cursor(payload)
         elif kind == "maps.layers":
+            if payload.get('mapId') != getattr(self, 'map_layer_id', None):
+                await self.hide_cursor()
             self.map_layer_id = payload.get("mapId")
             await self.room_map_layers({})
         elif kind == "maps.sync":
@@ -427,6 +442,42 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             seen.pop(key, None)
             await self.emit("token.drag", p)
 
+    async def hide_cursor(self):
+        packet = getattr(self, 'cursor_packet', None)
+        self.cursor_packet = None
+        if packet and getattr(self, 'joined_group', False):
+            await self.channel_layer.group_send(self.group, {'type': 'room.map_cursor',
+                'sender': self.channel_name, 'payload': {**packet, 'position': None}})
+
+    async def map_cursor(self, payload):
+        if payload.get('position') is None:
+            await self.hide_cursor()
+            return
+        if payload.get('mapId') != getattr(self, 'map_layer_id', None):
+            return
+        try:
+            from gravewright.maps.cursors import project
+            packet = await db(project)(self.member, payload)
+        except maps.MapError, journals.JournalError:
+            await self.hide_cursor()
+            return
+        packet['connectionId'] = str(self.connection_id)
+        self.cursor_packet = packet
+        await self.channel_layer.group_send(self.group, {'type': 'room.map_cursor',
+            'sender': self.channel_name, 'payload': packet})
+
+    async def room_map_cursor(self, event):
+        packet = event['payload']
+        if event['sender'] == self.channel_name or packet['mapId'] != getattr(self, 'map_layer_id', None):
+            return
+        if not await self.authorized():
+            return
+        try:
+            await db(maps.scene)(packet['mapId'], self.member)
+        except maps.MapError, journals.JournalError:
+            return
+        await self.emit('maps.cursor', packet)
+
     async def room_map_ping(self, event):
         if not await self.authorized():
             return
@@ -487,6 +538,20 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             await self.room_resources({'module':'audio'})
 
     async def room_maps(self, event):
+        packet = getattr(self, 'cursor_packet', None)
+        if packet:
+            try:
+                who = await db(maps.member)(self.campaign_id, self.user_id)
+                await db(maps.scene)(packet['mapId'], who)
+            except maps.MapError, journals.JournalError:
+                await self.hide_cursor()
+        region = getattr(self, 'stream_region', None)
+        if region:
+            try:
+                who = await db(maps.member)(self.campaign_id, self.user_id)
+                await db(maps.scene)(region['mapId'], who)
+            except maps.MapError, journals.JournalError:
+                await self.stop_stream()
         await self.api_changed('maps')
         if await self.authorized():
             await self.chat_history()
@@ -681,6 +746,7 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             await self.close(code=1011)
 
     async def disconnect(self, code):
+        await self.hide_cursor()
         await self.stop_stream()
         await self.end_drag("cancel")
         if self.heartbeat_task:

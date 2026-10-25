@@ -110,16 +110,30 @@ search, viewport and heartbeat messages; write boundaries also reject streamers.
 Client-side controls are a convenience, not the permission boundary.
 
 **Scene visibility has two requirements for non-GMs:** the scene must have
-`visibility='players'` and be the campaign's current `Broadcast`. Marking an inactive
-scene visible does not make it readable. The same lookup protects manifests, tiles,
+`visibility='players'` and be the recipient's current destination. A player's
+`SceneAssignment` overrides the campaign `Broadcast`; other players and streamers
+continue following that broadcast. Marking an inactive scene visible does not
+make it readable. The same lookup protects manifests, tiles,
 tokens and scene-context chat.
 
 The GM's explicit `maps.activate` command sets player visibility and the broadcast
-in the same transaction. A visibility change advances the scene revision;
+in the same transaction. With `playerIds`, it instead assigns the scene only to
+those campaign players, preserving everyone else's destination and GM navigation.
+Activation for everyone clears individual assignments and reunites the table.
+Assignments persist across reconnects and disappear when their scene or membership
+is deleted; they are separate from a GM's private `SceneNavigation`.
+A visibility change advances the scene revision;
 activating an already player-visible scene keeps its revision. Map Builder
 generation and private navigation do not publish a scene.
 
 ## Commands, retries and revisions
+
+Map pointer activity is ephemeral. `maps.cursor` accepts bounded scene positions
+from players and GMs; the server supplies identity and the saved identification
+color. Delivery rechecks the recipient's scene access and current subscription.
+Pointer traffic has its own sampling limit and cannot exhaust the command budget.
+Leaving or disconnecting publishes a clear event; no cursor position enters the
+campaign database, receipts or archives.
 
 Most persistent tabletop resource commands follow this sequence:
 

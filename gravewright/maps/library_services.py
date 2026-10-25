@@ -7,7 +7,7 @@ from django.db.models import F, Q
 from gravewright.campaigns.models import Campaign
 from gravewright.journals.services import identifier
 from . import services
-from .models import AssetFolder, Broadcast, MapAsset, Receipt, SceneObject, SceneState
+from .models import AssetFolder, MapAsset, Receipt, SceneObject, SceneState
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
@@ -37,9 +37,9 @@ def visible_door_art(scene_id, asset_id=None):
 
 
 def active_scene(member):
-    active = Broadcast.objects.filter(
-        campaign_id=member.campaign_id, scene__visibility="players"
-    ).values_list("scene_id", flat=True).first()
+    from .audience import destination
+    row = destination(member)
+    active = row.pk if row and row.visibility == 'players' else None
     if active is not None:
         services.scene(active, member)
     return active

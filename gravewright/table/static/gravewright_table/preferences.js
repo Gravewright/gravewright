@@ -1,9 +1,11 @@
 import { renderingPreferences } from '/static/gravewright_maps/render-profile.js';
 import { HttpClient } from '/static/gravewright_modules/http-client.js';
 import { conditionLayout } from '/static/gravewright_tokens/quick-controls.js';
+import { mountShortcuts } from './shortcuts.js';
 
 const table = document.querySelector('#table-workspace');
 if (table) {
+    const stopShortcuts = mountShortcuts(table);
     const http = new HttpClient();
     const observers = [];
     function whenVisible(root, load) {
@@ -57,10 +59,14 @@ if (table) {
         const color = ping.querySelector('input');
         const error = ping.querySelector('[role=alert]');
         let saved = color.value;
+        function apply(value) {
+            saved = color.value = value.pingColor;
+            window.dispatchEvent(new CustomEvent('gravewright:player-preferences', { detail: value }));
+        }
         whenVisible(ping, async () => {
             try {
                 const value = await http.get('/api/player-preferences');
-                saved = color.value = value.pingColor;
+                apply(value);
                 color.disabled = false;
             } catch { error.hidden = false; }
         });
@@ -68,7 +74,7 @@ if (table) {
             color.disabled = true; error.hidden = true;
             try {
                 const value = await http.post('/api/player-preferences', { pingColor: color.value });
-                saved = color.value = value.pingColor;
+                apply(value);
             } catch { color.value = saved; error.hidden = false; }
             finally { color.disabled = false; }
         });
@@ -105,7 +111,7 @@ if (table) {
     }
     window.addEventListener('pagehide', event => {
         if (!event.persisted) {
-            stop(); observers.forEach(observer => observer.disconnect());
+            stop(); stopShortcuts(); observers.forEach(observer => observer.disconnect());
             window.removeEventListener('gravewright:condition-layout', showConditions);
             window.removeEventListener('storage', showConditions);
         }

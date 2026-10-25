@@ -142,7 +142,7 @@ def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene
         code = {'forbidden': 'permission_denied', 'not_a_member': 'permission_denied',
                 'gm_required': 'permission_denied', 'owner_required': 'permission_denied',
                 'blocked': 'permission_denied', 'invalid_input': 'invalid_data'}.get(code, code)
-        if code not in ('not_found', 'permission_denied', 'conflict', 'invalid_data'):
+        if code not in ('not_found', 'permission_denied', 'conflict', 'invalid_data', 'unavailable'):
             code = 'invalid_data'
         raise ModuleFailure(code, str(error)) from None
     except (ValueError, TypeError, KeyError):

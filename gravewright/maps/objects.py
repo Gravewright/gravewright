@@ -316,6 +316,7 @@ def layer_state(scene, who):
         for r in result["images"]:
             # A lever shows players its state and active image, never its graphs.
             r.pop("blueprint", None)
+            r.pop("presenceRadius", None)
             r.pop("sprite", None)
             r.pop("spriteBase", None)
             r.pop("automationVariables", None)

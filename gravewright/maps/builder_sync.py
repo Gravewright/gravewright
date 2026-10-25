@@ -73,6 +73,8 @@ def projection(data, kind, cell, mapping):
                       y=(data["y"] - height / 2) / cell,
                       width=width / cell, height=height / cell,
                       rotation=data.get("torch", {}).get("baseRotation", data.get("rotation", 0)))
+        if "presenceRadius" in data:
+            result["presenceRadius"] = data["presenceRadius"] / cell
     elif kind == "lights":
         result.update(x=data["x"] / cell, y=data["y"] / cell,
                       brightRadius=data["bright_radius"], dimRadius=data["dim_radius"])
@@ -167,7 +169,7 @@ def _native_overrides(previous, before, after, kind):
                         "asset_id", "rotationAnchor", "thickness", "movement_behavior", "vision_behavior",
                         "light_behavior", "sound_behavior", "blocks_light", "blocks_sight", "discovered"))
     elif kind == "images" and not any(key in before for key in ("surface", "surfacePlane")):
-        handled.update(("x", "y", "rotation", "asset_id", "src", "natural_width", "natural_height", "scale", "spriteBase"))
+        handled.update(("x", "y", "rotation", "asset_id", "src", "natural_width", "natural_height", "scale", "spriteBase", "presenceRadius"))
         # The component's box is projected; its base layer has no builder field.
         for key in ("lever", "torch"):
             for value in (left, right):

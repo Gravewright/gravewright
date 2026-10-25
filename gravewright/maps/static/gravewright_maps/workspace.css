@@ -46,3 +46,8 @@
 .game-scene-create .game-scene-create__option:focus-visible{outline:var(--size-2) solid var(--focus-ring, var(--accent));outline-offset:var(--size-2)}
 
 .game-directory__scene[data-scene-builder-origin]>svg{color:var(--danger)}
+
+.map-pointers{position:absolute;inset:0;z-index:7;overflow:hidden;pointer-events:none}
+.map-pointer{position:absolute;left:0;top:0;width:1px;height:1px;pointer-events:none}
+.map-pointer__dot{position:absolute;left:-6px;top:-6px;box-sizing:border-box;width:12px;height:12px;border:1px solid #0008;border-radius:50%;opacity:.45}
+.map-pointer__name{position:absolute;top:10px;left:0;transform:translateX(-50%);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:white;font:14px sans-serif;text-shadow:0 1px 2px #000,0 -1px 2px #000}

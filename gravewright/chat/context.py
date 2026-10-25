@@ -1,7 +1,7 @@
 """Resolve an explicitly selected scene or the public broadcast, never a foreign block."""
 
 from gravewright.accounts.services import AuthError
-from gravewright.maps.models import Broadcast, Scene
+from gravewright.maps.models import Scene
 
 
 def scene_for(who, map_id=None, block_id=None):
@@ -20,13 +20,9 @@ def scene_for(who, map_id=None, block_id=None):
                 raise AuthError("invalid_scene")
             map_id = row.pk
         if not map_id:
-            map_id = (
-                Broadcast.objects.filter(
-                    campaign_id=who.campaign_id, scene__visibility="players"
-                )
-                .values_list("scene_id", flat=True)
-                .first()
-            )
+            from gravewright.maps.audience import destination
+            active = destination(who)
+            map_id = active.pk if active and active.visibility == 'players' else None
         return maps.scene(map_id, who) if map_id else None
     except maps.MapError, JournalError, ValueError:
         raise AuthError("invalid_scene") from None

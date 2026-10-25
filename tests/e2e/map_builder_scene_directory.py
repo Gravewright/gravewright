@@ -190,8 +190,9 @@ def check_browser(base, seed, output, executable):
             directory()
             compact_icon(scene_id)
             expect(primary(scene_id).locator('strong')).to_have_text(authored_name)
-            expect(primary(scene_id).locator('[data-navigating]')).to_be_visible()
-            expect(primary(seed['broadcastScene']).locator('[data-broadcast]')).to_be_visible()
+            expect(primary(scene_id).locator('[data-navigating]')).to_have_count(0)
+            expect(primary(scene_id).locator('.game-scene-gm')).to_have_text('GM')
+            expect(primary(seed['broadcastScene']).locator('.game-scene-player-dot')).to_have_count(1)
             menu = open_menu(seed['selectedScene'])
             expect(menu.locator('[data-scene-builder-edit]')).to_have_count(1)
             close_menu(seed['selectedScene'])
@@ -266,7 +267,7 @@ def check_browser(base, seed, output, executable):
               mapId:args.id,version:args.version,settings:{visibility:'players'}})""", {'id': scene_id, 'version': version})
             directory(); open_menu(scene_id)
             page.get_by_role('menuitem', name='Activate for players', exact=True).click()
-            expect(primary(scene_id).locator('[data-broadcast]')).to_be_visible()
+            expect(primary(scene_id).locator('.game-scene-player-dot')).to_have_count(1)
             assert scenes()['activeMapId'] == scene_id
             compact_icon(scene_id)
             records.append({'case': 'existing-broadcast-action-and-active-status-coexist-with-MapBuilder-origin'})
@@ -349,7 +350,7 @@ def check_browser(base, seed, output, executable):
             updated_pixels = native_sample('scene-after-builder-update.png', (155, 87, 55))
             assert updated_pixels != original_pixels
             directory(); compact_icon(scene_id)
-            expect(primary(scene_id).locator('[data-broadcast]')).to_be_visible()
+            expect(primary(scene_id).locator('.game-scene-player-dot')).to_have_count(1)
             expect(page.locator('[data-scene-builder-origin]')).to_have_count(1)
             records.append({'case': 'view-context-edit-autosave-and-primary-update-replace-the-same-scene',
                             'scene': scene_id, 'sceneCount': len(identifiers),
@@ -370,7 +371,7 @@ def check_browser(base, seed, output, executable):
             assert scene(scene_id)['builderProjectId'] == project['id']
             repeated_pixels = native_sample('scene-after-review-update.png', (60, 128, 81))
             directory(); compact_icon(scene_id)
-            expect(primary(scene_id).locator('[data-broadcast]')).to_be_visible()
+            expect(primary(scene_id).locator('.game-scene-player-dot')).to_have_count(1)
             expect(page.locator('[data-scene-builder-origin]')).to_have_count(1)
             records.append({'case': 'review-update-reuses-the-linked-scene-without-duplicates',
                             'scene': scene_id, 'sceneCount': len(identifiers), 'pixel': repeated_pixels})

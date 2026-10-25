@@ -285,6 +285,16 @@ export function createCanvasRenderer({ root, getDocument, getView, assetById, on
         for (const ref of refs) {
             const source = doc[ref.kind]?.find(item => item.id === ref.id), item = isNativeKind(ref.kind) ? torchComponentState(doc, ref.kind, source) : source;
             const style = { fill: 'none', stroke: '#e4bf76', 'stroke-width': 2, 'stroke-dasharray': '5 3', 'vector-effect': 'non-scaling-stroke' };
+            if (ref.kind === 'decorations' && Number.isFinite(item.presenceRadius)) {
+                const cx = item.x + item.width / 2, cy = item.y + item.height / 2;
+                container.append(svg('circle', { cx, cy, r: item.presenceRadius, fill: 'none', stroke: '#e4bf76',
+                    'stroke-width': 2, 'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none',
+                    'data-builder-presence-area': item.id }));
+                if (refs.length === 1) container.append(svg('circle', { cx: cx + item.presenceRadius, cy,
+                    r: 6 / scale, fill: '#e4bf76', stroke: '#253038', 'stroke-width': 1,
+                    'vector-effect': 'non-scaling-stroke', 'pointer-events': 'all', cursor: 'ew-resize',
+                    'data-builder-area-handle': item.id }));
+            }
             if (ref.kind === 'doors' || ref.kind === 'walls') {
                 container.append(svg('line', { x1: item.x1, y1: item.y1, x2: item.x2, y2: item.y2, ...style }));
                 if (ref.kind === 'doors' && refs.length === 1) {

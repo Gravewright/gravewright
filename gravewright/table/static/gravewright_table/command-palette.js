@@ -63,7 +63,6 @@ export function mountCommandPalette(palette, table) {
   input.addEventListener('input',schedule);filter.onchange=()=>void search();
   palette.addEventListener('pointerdown',event=>{if(event.target===palette)close();});
   window.addEventListener('keydown',event=>{
-    if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();show();return;}
     if(palette.hidden)return;
     if(event.key==='Escape'){event.preventDefault();close();}
     else if(event.target===input&&['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();if(results.length)choose((selected+(event.key==='ArrowDown'?1:-1)+results.length)%results.length);}

@@ -48,6 +48,8 @@ def image(scene, raw, previous=None):
         result["blueprint"] = blueprint
     if "interactionEnabled" in raw:
         result["interactionEnabled"] = boolean(raw["interactionEnabled"])
+    from .regions import copy_object_radius
+    copy_object_radius(result, raw, before)
     if "areaPresence" in before:
         result["areaPresence"] = deepcopy(before["areaPresence"])
     return preserve_interaction(before, copy_runtime(before, result))
@@ -66,4 +68,6 @@ def native(scene, source, cell, z_index):
     for key in ("name", "interactionEnabled"):
         if key in source:
             result[key] = deepcopy(source[key])
+    if "presenceRadius" in source:
+        result["presenceRadius"] = source["presenceRadius"] * cell
     return result

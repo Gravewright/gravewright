@@ -56,6 +56,61 @@ class ObjectAreaTests(TestCase):
     def owner(self):
         return self.scene.elements.get(kind="images", data__lever__isnull=False)
 
+    def test_circular_area_runs_outside_artwork_without_interaction(self):
+        self.doc["decorations"][0].update(presenceRadius=2, interactionEnabled=False)
+        self.generated()
+        owner = self.owner()
+        self.assertEqual(owner.data["presenceRadius"], 128)
+        shape = regions.object_shape(owner.data)
+        self.assertTrue(Geometry.contains(shape, 192, 192, 0))
+        self.assertFalse(Geometry.contains(shape, 310, 210, 0))
+        token = self.place(0, 2.5)
+        self.move(token, 2.5, 2.5, user=self.player)
+        self.assertTrue(self.light_enabled())
+        self.assertEqual(self.owner().data["lever"]["state"], "off")
+        self.move(token, 5, 2.5, user=self.player)
+        self.assertFalse(self.light_enabled())
+        self.assertEqual([event["event"] for event in self.events()], ["presence:enter", "presence:exit"])
+
+    def test_crossing_entire_circle_runs_enter_and_exit(self):
+        self.doc["decorations"][0]["presenceRadius"] = 2
+        self.generated()
+        token = self.place(0, 2.5)
+        self.move(token, 5, 2.5)
+        self.assertEqual([event["event"] for event in self.events()], ["presence:enter", "presence:exit"])
+        self.assertEqual(self.owner().data["areaPresence"]["occupants"], [])
+
+    def test_circle_is_private_and_survives_native_move_and_source_projection(self):
+        from gravewright.maps import builder_sync, extra_objects
+        self.doc["decorations"][0]["presenceRadius"] = 2
+        self.generated()
+        owner = self.owner()
+        moved = extra_objects.image(self.scene, {"x": 256}, owner.data)
+        self.assertEqual(moved["presenceRadius"], 128)
+        self.assertEqual(regions.object_shape(moved)["geometry"]["x"], 256)
+        projected = builder_sync.projection(moved, "images", 64, {})
+        self.assertEqual(projected["presenceRadius"], 2)
+        reset = extra_objects.image(self.scene, {"presenceRadius": None}, moved)
+        self.assertNotIn("presenceRadius", reset)
+        self.assertEqual(regions.object_shape(reset)["geometry"]["shape"], "rect")
+        state = objects.layer_state(self.scene, services.member(self.campaign.pk, self.player.pk))
+        self.assertTrue(state["images"])
+        self.assertTrue(all("presenceRadius" not in image for image in state["images"]))
+
+    def test_builder_rejects_invalid_or_non_smart_activation_area(self):
+        from gravewright.maps import builder_services
+        who = services.member(self.campaign.pk, self.gm.pk)
+        for radius in (True, 0, -.1, 201, "2", None):
+            with self.subTest(radius=radius), self.assertRaises(services.MapError):
+                self.doc["decorations"][0]["presenceRadius"] = radius
+                builder_services.clean_document(self.doc, who)
+        self.doc["decorations"][0]["presenceRadius"] = 2
+        self.doc["decorations"][0].pop("lever")
+        self.doc["decorations"][0].pop("blueprint")
+        with self.assertRaises(services.MapError):
+            builder_services.clean_document(self.doc, who)
+
+
     def events(self):
         return [event for run in AutomationRun.objects.filter(scene=self.scene).order_by("created_at", "id")
                 for event in run.data["events"]]

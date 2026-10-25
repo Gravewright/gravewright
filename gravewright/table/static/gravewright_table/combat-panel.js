@@ -13,6 +13,99 @@
 
 
 (function () {
+    let activeMenu, menuSequence = 0;
+
+    function closeMenu(restoreFocus = false) {
+        activeMenu?.close(restoreFocus);
+    }
+
+    function openMenu(details, trigger, originals, last = false) {
+        closeMenu();
+        const doc = trigger.ownerDocument, view = doc.defaultView;
+        const panel = trigger.closest('[data-native-directory]');
+        const popup = doc.createElement('div');
+        popup.className = 'gw-combat-menu__list directory-context-menu';
+        popup.id = `combat-actions-${++menuSequence}`;
+        popup.setAttribute('role', 'menu');
+        popup.setAttribute('aria-label', trigger.getAttribute('aria-label'));
+        Object.assign(popup.style, {position: 'fixed', right: 'auto', top: '0px', left: '0px',
+            zIndex: String(Math.max(1500, (Number.parseInt(view.getComputedStyle(panel || trigger).zIndex) || 0) + 1)),
+            boxSizing: 'border-box', minWidth: `${Math.max(0, Math.min(180, view.innerWidth - 16))}px`,
+            maxWidth: `${Math.max(0, view.innerWidth - 16)}px`, maxHeight: `${Math.max(0, view.innerHeight - 16)}px`, overflowY: 'auto'});
+        const releases = [];
+        const listen = (target, type, handler, options) => {
+            target.addEventListener(type, handler, options);
+            releases.push(() => target.removeEventListener(type, handler, options));
+        };
+        let observer;
+        const close = restoreFocus => {
+            if (activeMenu?.popup !== popup) return;
+            activeMenu = undefined;
+            observer?.disconnect();
+            for (const release of releases) release();
+            popup.remove();
+            details.open = false;
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.removeAttribute('aria-controls');
+            if (restoreFocus && trigger.isConnected) trigger.focus();
+        };
+        activeMenu = {popup, panel, close};
+        for (const original of originals.querySelectorAll('button')) {
+            const choice = original.cloneNode(true);
+            choice.setAttribute('role', 'menuitem');
+            choice.tabIndex = -1;
+            choice.addEventListener('click', event => {
+                event.preventDefault();event.stopPropagation();
+                const enabled = original.isConnected && !original.disabled;
+                close(true);
+                // Keep the original button in the panel so its delegated command
+                // retains the combatant identity and the native action handler.
+                if (enabled) original.click();
+            });
+            popup.appendChild(choice);
+        }
+        details.open = true;
+        trigger.setAttribute('aria-expanded', 'true');
+        trigger.setAttribute('aria-controls', popup.id);
+        doc.body.appendChild(popup);
+        const anchor = trigger.getBoundingClientRect(), box = popup.getBoundingClientRect();
+        const top = anchor.bottom + box.height + 4 <= view.innerHeight - 8 ? anchor.bottom + 4 : anchor.top - box.height - 4;
+        popup.style.left = `${Math.max(8, Math.min(anchor.right - box.width, view.innerWidth - box.width - 8))}px`;
+        popup.style.top = `${Math.max(8, Math.min(top, view.innerHeight - box.height - 8))}px`;
+        const choices = () => [...popup.querySelectorAll('button')].filter(button => !button.disabled);
+        (last ? choices().at(-1) : choices()[0])?.focus();
+        const outside = event => {if (!popup.contains(event.target) && !trigger.contains(event.target)) close(false);};
+        listen(doc, 'pointerdown', outside, true);
+        listen(doc, 'click', outside, true);
+        listen(doc, 'keydown', event => {
+            if (event.key === 'Escape') {event.preventDefault();event.stopPropagation();close(true);return;}
+            if (event.key === 'Tab') {close(true);return;}
+            if (!popup.contains(event.target) || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            const buttons = choices(), index = buttons.indexOf(doc.activeElement);
+            buttons[event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+                : (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length]?.focus();
+        });
+        const scrollPosition = target => target === view || target === doc
+            ? [view.scrollX || 0, view.scrollY || 0] : [target.scrollLeft || 0, target.scrollTop || 0];
+        const scrollPositions = new Map([[view, scrollPosition(view)], [doc, scrollPosition(doc)]]);
+        for (let parent = trigger.parentElement; parent; parent = parent.parentElement) scrollPositions.set(parent, scrollPosition(parent));
+        listen(view, 'scroll', event => {
+            if (popup.contains(event.target)) return;
+            const previous = scrollPositions.get(event.target), current = scrollPosition(event.target);
+            // Clicking a clipped trigger can queue its scroll-into-view event
+            // before this menu opens. Only a later position change dismisses it.
+            if (!previous || previous.some((value, index) => value !== current[index])) close(false);
+        }, true);
+        for (const event of ['resize', 'pagehide', 'gravewright:module-scene']) listen(view, event, () => close(false));
+        observer = new view.MutationObserver(records => {
+            if (!trigger.isConnected || panel?.hidden || panel?.hasAttribute('data-window-minimized')
+                || records.some(record => record.target === panel && record.type === 'attributes')) close(false);
+        });
+        observer.observe(doc.body, {childList: true, subtree: true});
+        if (panel) observer.observe(panel, {attributes: true, attributeFilter: ['hidden', 'class', 'style', 'data-window-minimized']});
+    }
+
     const FALLBACK_LABELS = {
         start: "Start combat",
         end: "End combat",
@@ -224,10 +317,13 @@
         const trigger = el("summary", "gw-combat-menu__trigger");
         trigger.title = L.actions;
         trigger.setAttribute("aria-label", L.actions);
+        trigger.setAttribute('aria-haspopup', 'menu');
+        trigger.setAttribute('aria-expanded', 'false');
         trigger.appendChild(icon("ph-dots-three-outline-vertical"));
         menu.appendChild(trigger);
 
         const list = el("div", "gw-combat-menu__list");
+        list.hidden = true;
         if (combatant.token_id) {
             list.append(
                 menuItem("token/focus", "ph-crosshair", L.centerToken, { data: { tokenId: combatant.token_id } }),
@@ -265,6 +361,15 @@
             );
         }
         if (list.children.length) menu.appendChild(list); else return wrap;
+        trigger.addEventListener('click', event => {
+            event.preventDefault();event.stopPropagation();
+            if (activeMenu?.popup && menu.open) closeMenu();
+            else openMenu(menu, trigger, list);
+        });
+        trigger.addEventListener('keydown', event => {
+            if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+            event.preventDefault();event.stopPropagation();openMenu(menu, trigger, list, event.key === 'ArrowUp');
+        });
         wrap.appendChild(menu);
         return wrap;
     }
@@ -355,6 +460,7 @@
     }
 
     function renderPanel(panel, state) {
+        if (activeMenu?.panel === panel) closeMenu();
         const target = panel.querySelector("[data-combat-state]");
         if (!target) return;
         const L = labelsFor(panel);

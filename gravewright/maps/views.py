@@ -10,13 +10,28 @@ from django.views.decorators.http import require_GET, require_POST
 from gravewright.campaigns.models import Campaign
 from gravewright.journals.services import JournalError, member
 from . import services, tiling
-from .models import Scene, Tile, Broadcast, SceneNavigation
+from .models import Scene, Tile, SceneNavigation
 
 
 def notify(campaign_id):
     async_to_sync(get_channel_layer().group_send)(
         f"table.{campaign_id.hex}", {"type": "room.maps"}
     )
+
+
+@require_POST
+def empty(request, campaign_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required."}, status=403)
+    from . import empty_maps
+    try:
+        payload = json.loads(request.body)
+        result = empty_maps.create(campaign_id, request.user.pk, payload)
+        return JsonResponse(result, status=201)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Invalid empty map settings."}, status=400)
+    except (services.MapError, JournalError) as error:
+        return JsonResponse({"error": str(error)}, status=400)
 
 
 @require_POST
@@ -69,9 +84,8 @@ def upload(request, campaign_id):
                 tile.scene = row
             Tile.objects.bulk_create(tiles)
             if request.POST.get("activate") == "true":
-                Broadcast.objects.update_or_create(
-                    campaign_id=campaign_id, defaults={"scene": row}
-                )
+                from .audience import broadcast
+                broadcast(who, row)
             SceneNavigation.objects.update_or_create(
                 membership=who,
                 defaults={"scene": None if request.POST.get("activate") == "true" else row},

@@ -4,6 +4,7 @@ import math
 import re
 from django.conf import settings as django_settings
 from django.db import transaction
+from gravewright.accounts.models import UserPreference
 from gravewright.campaigns.models import Campaign
 from gravewright.journals.services import member, identifier
 from .models import Scene, Folder, Broadcast, Receipt, SceneNavigation
@@ -96,21 +97,21 @@ def manage(who):
 
 
 def scene(scene_id, who, write=False):
-    """Resolve a campaign scene; non-GMs can read only the current player broadcast."""
+    """Resolve a scene through the member's assigned destination and read grants."""
     row = Scene.objects.filter(
         pk=identifier(scene_id), campaign_id=who.campaign_id
     ).first()
     if write:
         manage(who)
     from gravewright.table.ownership import resource_allows
+    from .audience import destination
+    assigned = destination(who) if who.role != 'gm' else None
     if row is None or (
         who.role != "gm"
         and (
             row.visibility != "players"
             or not resource_allows(who, 'scenes', row, default='read')
-            or not Broadcast.objects.filter(
-                campaign_id=who.campaign_id, scene=row
-            ).exists()
+            or assigned is None or assigned.pk != row.pk
         )
     ):
         raise MapError("Scene not found or access denied.", "not_found")
@@ -175,12 +176,8 @@ def view(row):
 def state(campaign_id, user_id):
     who = member(campaign_id, user_id)
     from gravewright.table.ownership import resource_allows
-    active = (
-        Broadcast.objects.filter(campaign_id=campaign_id)
-        .select_related("scene")
-        .first()
-    )
-    broadcast = active.scene if active else None
+    from .audience import destination, players
+    broadcast = destination(who)
     if broadcast and who.role != "gm" and (broadcast.visibility == "gm" or not resource_allows(who, 'scenes', broadcast, default='read')):
         broadcast = None
     maps = (
@@ -218,6 +215,7 @@ def state(campaign_id, user_id):
         "activeMapId": active_id,
         "navigatingMapId": str(navigation.scene_id) if navigation else active_id,
         "followingActiveMap": navigation is None,
+        **({'players': players(campaign_id)} if who.role == 'gm' else {}),
         "folders": [
             {
                 "id": str(row.pk),
@@ -390,15 +388,17 @@ def apply(who, action, p):
         return {"folderId": str(row.pk)}
     row = scene(p.get("mapId"), who, write=True)
     if action == "activate":
+        from .audience import assign, broadcast
+        if 'playerIds' in p:
+            # Validate recipients before publishing any previously private scene.
+            assign(who, row, p['playerIds'])
         # Broadcasting is the GM's explicit decision to show a prepared scene.
         if row.visibility != "players":
             row.visibility = "players"
             row.version += 1
             row.save(update_fields=["visibility", "version", "updated_at"])
-        Broadcast.objects.update_or_create(
-            campaign_id=who.campaign_id, defaults={"scene": row}
-        )
-        SceneNavigation.objects.filter(membership=who).update(scene=None)
+        if 'playerIds' not in p:
+            broadcast(who, row)
     elif action == "update":
         if type(p.get("version")) is not int or p["version"] != row.version:
             raise MapError(
@@ -455,12 +455,17 @@ def ping(campaign_id, user_id, payload):
             or not 0 <= value <= maximum
         ):
             raise MapError("Ping outside the map.")
+    ping_color = (
+        UserPreference.objects.filter(user_id=user_id)
+        .values_list("ping_color", flat=True)
+        .first()
+    )
     return {
         "mapId": str(row.pk),
         "x": payload["x"],
         "y": payload["y"],
         "focus": payload.get("focus") is True and who.role == "gm",
-        "color": "#f2c679",
+        "color": ping_color or "#f2c679",
     }
 
 

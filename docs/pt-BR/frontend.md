@@ -442,6 +442,17 @@ chegada depois de persistir os objetos da ação atual. Uma trava de chegada
 persistente impede voltas até o token sair da região; navegação de cenas e
 composição do grupo permanecem as mesmas.
 
+Imagens enviadas como **Objeto** podem virar Smart Objects diretamente: escolha
+**Editar nós** no menu de contexto ou **Objeto inteligente** nas propriedades de
+Comportamento. Dois cliques com o botão esquerdo também abrem o editor, tanto em
+Seleção quanto em Objetos, sem colocar outro objeto. Arrastar continua usando a
+ferramenta ativa.
+A primeira abertura cria um Blueprint vazio que herda a imagem, preservando a
+identidade, a imagem, a camada e a geometria do objeto. Estados e nós podem ser
+configurados livremente, com os fluxos existentes de salvamento automático e
+geração da cena. Reabrir um Smart Object mantém seu comportamento autoral.
+Os modelos prontos continuam opcionais.
+
 O **Catálogo de objetos interativos** na seleção do Builder, **Modelos prontos**
 no menu de contexto do objeto e o **Catálogo de objetos** do editor de nós
 compartilham 14 Blueprints editáveis de mecanismos genéricos. Os modelos cobrem
@@ -550,6 +561,15 @@ sinais nomeados ou tarefas agendadas independentes. O editor nativo usa o
 catálogo atual de tokens e uma requisição cancelável de atores do mestre,
 descartando resultados posteriores ao fechamento. Filtros e identidades dos
 ocupantes continuam privados.
+Objetos podem usar uma área de ativação circular nas propriedades de
+Comportamento do Builder. `decoration.presenceRadius` é o raio em células
+(0,05–200), convertido em pixels no `presenceRadius` da imagem nativa. O círculo
+acompanha o centro do objeto independentemente do tamanho e da rotação da arte.
+O círculo e sua alça aparecem no editor quando o objeto está selecionado; o raio
+é privado dos mestres e não é incorporado à imagem do mapa. Conecte
+`presence:enter` ou `presence:exit` para executar efeitos nas travessias
+confirmadas de tokens sem clicar. Sem raio, permanece a caixa orientada da arte;
+alterar a área recalcula a ocupação silenciosamente.
 
 Blueprint V2 também implementa `getVariable`, `setVariable`, `compareValue` e
 `emitEvent`. Nós de variável guardam `scope` (`element`/`scene`), `name`,
@@ -988,6 +1008,75 @@ uv run --locked python scripts/generate_frontend_api.py
 O script gera somente `modules/static/gravewright_modules/frontend-contract.js` a partir de `contracts/frontend.json`. `generated.js` e schemas do SDK original são artefatos separados, não gerados por esse script. `collectstatic` reúne arquivos para implantação, mas não executa builds JavaScript.
 
 ## Camadas do tabuleiro e ciclo dos recursos
+
+O seletor **Nova cena** inclui **Mapa Vazio**. O formulário pede o nome da cena,
+a cor de fundo, a largura e a altura em pixels, se deve exibir o grid e se deve
+ativar a cena ao criar. A criação usa a pasta atual. Com a ativação desmarcada,
+somente o criador visualiza a nova cena; os jogadores continuam na cena ativa.
+O servidor gera tiles comuns sem
+perda de qualidade, respeitando os limites configurados de imagem e quantidade
+de tiles. Renderização, permissões, ferramentas e arquivos de campanha seguem
+os fluxos existentes.
+
+A lista de cenas do mestre mostra bolinhas com a cor de identificação salva de
+cada jogador e a marca **GM** na cena visualizada. As dicas das bolinhas identificam
+os jogadores, incluindo participantes desconectados com destino persistido.
+**Ativar para jogadores selecionados**, no menu de contexto, abre uma lista para
+selecionar um ou mais jogadores. **Ativar para jogadores** continua ativando para
+todos e remove destinos individuais. Alterar a cor atualiza as bolinhas sem recarregar.
+A marca **GM** também identifica a visualização privada, sem o texto adicional
+**Preparando**. Os ponteiros dos outros participantes aparecem como bolinhas
+translúcidas com seus nomes, usando a cor de ping salva de cada remetente. O próprio
+mouse mantém o cursor nativo. O movimento remoto é interpolado em coordenadas da
+cena e projetado pela câmera de quem vê, com tamanho constante no pan e no zoom.
+As posições são transitórias, enviadas no máximo dez vezes por segundo e removidas
+ao sair, desconectar ou trocar de cena. Um ponteiro parado permanece visível
+mesmo com atualizações atrasadas; o silêncio sozinho não indica saída. As camadas
+das ferramentas da cena também transmitem posições, exceto controles da interface.
+Trocar de janela ou aba pausa a transmissão e preserva a última posição
+compartilhada. A remoção ocorre ao sair da cena, desconectar ou receber uma ordem
+explícita para ocultar; perder o foco da janela não representa uma saída.
+Preferências → Ponteiros do mouse oferece controles independentes para ver os
+ponteiros dos participantes e compartilhar o próprio. Ambos começam habilitados,
+são salvos por perfil neste dispositivo e sincronizados entre abas. Ocultar os
+ponteiros recebidos mantém suas posições disponíveis para reexibição imediata,
+sem renderizá-los. Desabilitar o compartilhamento oculta imediatamente o ponteiro
+para os demais e interrompe a transmissão; não afeta pings nem preferências alheias.
+
+O mesmo menu possui o tópico **Atalhos do teclado** para ferramentas e janelas
+executáveis do dock, incluindo a busca da campanha. `table/shortcuts.js` obtém
+os padrões do dock renderizado, grava combinações nos campos em foco, atualiza
+atalhos acessíveis/dicas e aciona os botões existentes. As configurações são
+salvas por perfil/dispositivo em `gravewright.shortcuts.<profile>` e sincronizadas
+entre abas. Cada camada possui seu escopo de ferramentas; atalhos de janelas
+conflitam em todas as camadas. A precedência dos padrões existentes é preservada.
+É possível remover atalhos ou restaurar todos os padrões. Escape cancela a
+gravação; edição de texto, composição, navegação em modais e combinações
+reservadas ao navegador/edição mantêm seu comportamento nativo. Gestos
+específicos das ferramentas não são remapeados neste tópico.
+
+Esses recursos usam o contrato de chaves-fonte em inglês do Translator instalado:
+`tr(...)` no Jinja, o adaptador nativo `gwText(...)` e `createTranslator().t(...)`
+nos controles do navegador. Complementos revisados do host para pt-BR/es cobrem
+as novas chaves sem alterar arquivos assinados de idiomas já instalados. Sem um
+pacote de idioma ativo, o host usa inglês e preserva o idioma escolhido no perfil.
+Nomes de jogadores, cenas e títulos autorais de medições usam `translate="no"`;
+combinações de teclas e IDs de ações também permanecem iguais.
+O cenário `tests/e2e/table_translator.py` aceita
+`GRAVEWRIGHT_TRANSLATOR_CATALOG_ROOT` com catálogos reais `en.json`, `pt-BR.json`
+e `es.json`. Ele instala um pacote descartável e verifica os novos controles,
+Smart Objects enviados pelo usuário, áreas circulares, valores autorais e fallback.
+Somente destinatários autorizados na mesma cena recebem as posições. Streamers
+apenas recebem ponteiros, e a camada GM não transmite o movimento do mouse.
+
+O dock da mesa oferece desenho pelo Mini Paint (`Desenhar`, atalho `B`).
+Retângulos e elipses pertencem a esse editor; não há ferramenta Formas separada
+nem atalho `T`. Os marcadores de área compartilhados existentes continuam
+visíveis, com os dados salvos e as APIs públicas compatíveis. `Medir` continua
+oferecendo medidas locais da cena. Ative **Título** para editar um rótulo na
+própria marcação, acima das dimensões. Cada título acompanha a medição ao mover
+e ampliar o mapa e permanece visível ao fechar a ferramenta. Títulos seguem o
+mesmo ciclo local das medições: não são transmitidos nem salvos na campanha.
 
 `maps/frontend/` separa modelos de entidades, modelos/UI de funcionalidades, utilitários e widget do tabuleiro. O widget coordena renderização, entrada, agendamento/cache/pré-carregamento de tiles, camadas nativas, polígonos de visão, luzes e shaders. As funcionalidades incluem paredes, tokens, desenhos, medidas, efeitos e seleção. Testes de algoritmos ficam ao lado dos modelos e são empacotados por `maps/scripts/test_models.cjs` para o executor de testes do Node.
 

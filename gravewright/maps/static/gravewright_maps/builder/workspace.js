@@ -8,6 +8,7 @@ import { createCanvasRenderer, ringPath } from './canvas-renderer.js';
 import { createInspectorController } from './inspector-controller.js';
 import { createObjectMenu } from './object-menu.js';
 import { interactiveObjectPresets } from './interactive-presets.js';
+import { defaultBlueprint } from './blueprint-model.js';
 import { createLayerController } from './layer-controller.js';
 import { createFloorPainter } from './floor-painter.js';
 import { createTerrainPainter } from './terrain-painter.js';
@@ -898,7 +899,7 @@ function mountWorkspace(root) {
         if (target.kind === 'decorations' && item.torch) entries.push({ id: 'components', label: t('Torch components'), action: () => openProperties(target, 'components') });
         if (target.kind === 'regions') entries.push({ id: 'region', label: t('Presence filters'), action: () => openProperties(target, 'region') });
         if (hasNativeEditor(target.kind)) entries.push({ id: 'native', label: t('Open game editor'), action: () => openNativeEditor(target) });
-        if (['doors', 'regions'].includes(target.kind) || target.kind === 'decorations' && isSmartDecoration(item))
+        if (['doors', 'regions'].includes(target.kind) || target.kind === 'decorations' && (isSmartDecoration(item) || item.assetId))
             entries.push({ id: 'nodes', label: t('Edit nodes'), action: () => openBehavior(target) });
         entries.push({ id: 'duplicate', label: t('Duplicate'), action: () => transformSelection('duplicate') },
             { id: 'rotate', label: t('Rotate'), action: () => transformSelection('rotate') },
@@ -912,6 +913,12 @@ function mountWorkspace(root) {
         if (busy || !ready || state.preview) return false;
         flushFocusedField();
         const bounds = documentBounds(state.document);
+        const areaHandle = event.target.closest('[data-builder-area-handle]');
+        if (areaHandle) {
+            const target = { kind: 'decorations', id: areaHandle.dataset.builderAreaHandle };
+            if (!editable(target)) return false;
+            gesture = { before: clone(state.document), areaRadius: target.id }; return true;
+        }
         if (state.tool === 'floor' && state.paintMode === 'brush' && !state.samplingFloor && event.button === 0 && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
             if (point.x < 0 || point.y < 0 || point.x > bounds.width || point.y > bounds.height) return false;
             brushResize = { point: { x: point.x, y: point.y }, clientX: event.clientX, size: state.brush.floorSize };
@@ -922,7 +929,7 @@ function mountWorkspace(root) {
         if (point.x < 0 || point.y < 0 || point.x > bounds.width || point.y > bounds.height) return false;
         if (state.tool === 'floor' && (state.samplingFloor || event.altKey)) { pickFloorMaterial(point); return false; }
         const before = clone(state.document), target = hit(point, event);
-        if (!resumePaint && (hasNativeEditor(target?.kind) || target?.kind === 'decorations' && isSmartDecoration(itemFor(target)))
+        if (!resumePaint && (hasNativeEditor(target?.kind) || target?.kind === 'decorations' && (isSmartDecoration(itemFor(target)) || itemFor(target)?.assetId))
             && !['select', 'erase'].includes(state.tool) && !floorPainter.polygon) {
             gesture = { before, pendingEdit: { point, event, target } }; return true;
         }
@@ -1016,6 +1023,12 @@ function mountWorkspace(root) {
         }
     }
     function move(point, event) {
+        if (gesture?.areaRadius) {
+            const item = itemFor({ kind: 'decorations', id: gesture.areaRadius });
+            if (!item) return;
+            item.presenceRadius = round(clamp(Math.hypot(point.x - item.x - item.width / 2, point.y - item.y - item.height / 2), .05, 200));
+            renderSelection(); return;
+        }
         if (brushResize) { resizeBrush(event); return; }
         if (wallControls?.active) { wallControls.move(point); return; }
         if (terrainPainter?.active) { terrainPainter.move(point); return; }
@@ -1066,6 +1079,9 @@ function mountWorkspace(root) {
         move(point);
         if (floorPainter.active) { floorPainter.end(['brush', 'fill'].includes(state.paintMode) ? point : bounded(point, false, floorSnap())); return; }
         if (!gesture) return;
+        if (gesture.areaRadius) {
+            gesture = undefined; commit(); renderCanvas(); renderProperties(); return;
+        }
         if (gesture.pendingEdit) {
             const target = gesture.pendingEdit.target; gesture = undefined;
             setSelection([target]); renderSelection(); renderProperties(); return;
@@ -1246,6 +1262,7 @@ function mountWorkspace(root) {
         event.preventDefault(); event.stopImmediatePropagation(); picking.finish(null);
     }, { signal, capture: true });
     viewport.addEventListener('dblclick', event => {
+        if (event.button !== 0) return;
         if (picking) { event.preventDefault(); return; }
         if (floorPainter.polygon) { event.preventDefault(); floorPainter.finish(); return; }
         if (busy || state.preview || activeModal) return;
@@ -1255,7 +1272,7 @@ function mountWorkspace(root) {
         if ((isNativeKind(target?.kind) || target?.kind === 'walls') && !event.target.closest('.map-builder__wall-control')) {
             event.preventDefault(); void openNativeEditor(target); return;
         }
-        if (!['doors', 'regions'].includes(target?.kind) && !(target?.kind === 'decorations' && isSmartDecoration(itemFor(target)))) return;
+        if (!['doors', 'regions'].includes(target?.kind) && !(target?.kind === 'decorations' && (isSmartDecoration(itemFor(target)) || itemFor(target)?.assetId))) return;
         event.preventDefault(); openBehavior(target);
     }, { signal });
     viewport.addEventListener('contextmenu', event => {
@@ -1439,7 +1456,12 @@ function mountWorkspace(root) {
     function openBehavior(target) {
         if (busy || state.preview || activeModal || !target || !editable(target)) return;
         const object = itemFor(target);
-        if (!['doors', 'regions'].includes(target.kind) && !(target.kind === 'decorations' && isSmartDecoration(object))) return;
+        if (!['doors', 'regions'].includes(target.kind) && !(target.kind === 'decorations' && (isSmartDecoration(object) || object?.assetId))) return;
+        if (target.kind === 'decorations' && !isSmartDecoration(object)) {
+            object.lever = { state: 'off' };
+            object.blueprint ||= defaultBlueprint('lever');
+            commit(); renderCanvas(); renderLayers();
+        }
         cancelDrawing(); setSelection([target]); renderSelection(); renderProperties();
         const kind = target.kind === 'regions' ? 'region' : target.kind === 'doors' ? 'door' : object.torch ? 'torch' : 'lever';
         const elements = behaviorElements();

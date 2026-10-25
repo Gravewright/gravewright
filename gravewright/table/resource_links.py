@@ -197,9 +197,9 @@ class Resolver:
         from gravewright.maps.services import state, scene
         projected = state(self.who.campaign_id, self.who.user_id)
         if self._presentation:
-            from gravewright.maps.models import Broadcast
-            broadcast = {str(value) for value in Broadcast.objects.filter(
-                campaign_id=self.who.campaign_id).values_list('scene_id', flat=True)}
+            from gravewright.maps.audience import destination
+            active = destination(self.who)
+            broadcast = {str(active.pk)} if active else set()
             allowed = []
             for row in projected['maps']:
                 if row['id'] not in broadcast:

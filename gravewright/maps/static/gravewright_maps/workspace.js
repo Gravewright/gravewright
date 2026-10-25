@@ -9,6 +9,7 @@ import { openUniversalVtt } from './universal-vtt.js';
 import { createSceneBuilder } from './scene-builder.js';
 import { HttpClient } from '/static/gravewright_modules/http-client.js';
 import { createTranslator } from '/static/gravewright_modules/i18n.js';
+import { mountMapPointers } from './map-pointer.js';
 import {
   mergePatch,
   getPath,
@@ -69,14 +70,18 @@ let state = { maps: [], folders: [], activeMapId: null, is_gm: false },
   layers,
   tokens,
   boardMapId;
+mountMapPointers(workspace, {
+  getScene: () => ({ map: current, board }),
+  send: payload => window.gravewrightRealtime?.mapCursor(payload) || false,
+});
 const sceneText = {
-  preview: modalText('View scene', 'Visualizar cena'),
-  activate: modalText('Activate for players', 'Ativar para jogadores'),
-  preload: modalText('Preload scene', 'Pré-carregar cena'),
-  preparing: modalText('Preparing', 'Em preparação'),
-  loading: modalText('Preloading', 'Pré-carregando'),
-  ready: modalText('Preloaded', 'Pré-carregada'),
-  editBuilder: modalText('Edit with MapBuilder', 'Editar com MapBuilder'),
+  activateSelected: interchangeText('Activate for selected players'),
+  preview: interchangeText('View scene'),
+  activate: interchangeText('Activate for players'),
+  preload: interchangeText('Preload scene'),
+  loading: interchangeText('Preloading'),
+  ready: interchangeText('Preloaded'),
+  editBuilder: interchangeText('Edit with MapBuilder'),
   exportUniversal: interchangeText('Export Universal VTT'),
 };
 let preloadTask, preloadAbort, preloadGeneration = 0, preparing, prepared, preparedTimer;
@@ -154,7 +159,7 @@ function form(kind, onSubmit) {
       el.close();
     } catch (cause) {
       const error = el.querySelector("[role=alert]");
-      error.textContent = cause.message;
+      error.textContent = interchangeText(cause.message);
       show(error, true);
     } finally {
       button.disabled = false;
@@ -210,6 +215,7 @@ function createScene(groupId = "") {
   dialog = el;
   el.querySelector("header button").onclick = () => el.close();
   el.querySelector('[data-map-create="upload"]').onclick = () => upload(groupId);
+  el.querySelector('[data-map-create="empty"]').onclick = () => emptyMap(groupId);
   el.querySelector('[data-map-create="uvtt"]').onclick = () => {
     el.close(); dialog = openUniversalVtt({ campaignId: campaign, folderId: groupId, t: interchangeText });
   };
@@ -217,6 +223,49 @@ function createScene(groupId = "") {
   if (groupId) builder.searchParams.set("folder", groupId);
   el.querySelector('[data-map-create="builder"]').href = builder.href;
   mountModal(el);
+}
+function activateSelected(map) {
+  const el = form('activate', async el => {
+    const playerIds = [...el.querySelectorAll('[data-player-choices] input:checked')].map(input => input.value);
+    if (!playerIds.length) throw Error(interchangeText('Select one or more players.'));
+    await command('activate', {mapId: map.id, playerIds});
+  });
+  const sceneName = el.querySelector('[data-activation-scene]');
+  sceneName.translate = false; sceneName.textContent = map.name;
+  const choices = el.querySelector('[data-player-choices]');
+  for (const player of state.players || []) {
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox'; checkbox.value = player.id;
+    const dot = playerDot(player);
+    dot.removeAttribute('role'); dot.removeAttribute('aria-label'); dot.setAttribute('aria-hidden', 'true');
+    const name = document.createElement('span'); name.translate = false; name.textContent = player.name;
+    label.append(checkbox, dot, name);
+    choices.append(label);
+  }
+  choices.onchange = () => { el.querySelector('[type=submit]').disabled = !choices.querySelector('input:checked'); };
+}
+function playerDot(player) {
+  const dot = document.createElement('span');
+  dot.translate = false;
+  dot.className = 'game-scene-player-dot'; dot.dataset.playerId = player.id;
+  dot.style.backgroundColor = player.color;
+  dot.title = player.name; dot.setAttribute('role', 'img'); dot.setAttribute('aria-label', player.name);
+  return dot;
+}
+function emptyMap(groupId = "") {
+  let signature, requestId;
+  const el = form("empty", async el => {
+    const payload = { ...values(el), groupId };
+    const next = JSON.stringify(payload);
+    if (next !== signature) { signature = next; requestId = crypto.randomUUID(); }
+    const result = await builderHttp.post(`/api/containers/${campaign}/scene-empty`, { ...payload, requestId });
+    following = payload.activate;
+    state.maps = state.maps.filter(map => map.id !== result.id).concat(result);
+    if (payload.activate) state.activeMapId = result.id;
+    void navigate(result, false);
+  });
+  el.elements.name.value = interchangeText('Empty map');
 }
 function upload(groupId = "") {
   const el = form(
@@ -576,10 +625,17 @@ function tree() {
         icon.setAttribute('role', 'img');
         icon.setAttribute('aria-label', 'MapBuilder');
       }
-      show(el.querySelector("[data-broadcast]"), map.id === state.activeMapId);
-      el.querySelector('[data-broadcast]').textContent = modalText('Active for players', 'Ativa para jogadores');
-      el.querySelector('[data-navigating]').textContent = sceneText.preparing;
-      show(el.querySelector("[data-navigating]"), map.id === current?.id && map.id !== state.activeMapId);
+      show(el.querySelector("[data-broadcast]"), !state.is_gm && map.id === state.activeMapId);
+      el.querySelector('[data-broadcast]').textContent = interchangeText('Active for players');
+      if (state.is_gm) {
+        const audience = document.createElement('span'); audience.className = 'game-scene-audience';
+        if (map.id === current?.id) {
+          const gm = document.createElement('span'); gm.className = 'game-scene-gm';
+          gm.textContent = interchangeText('GM'); gm.title = interchangeText('Your current scene'); audience.append(gm);
+        }
+        for (const player of state.players || []) if (player.sceneId === map.id) audience.append(playerDot(player));
+        el.append(audience);
+      }
       if (preparing === map.id || prepared?.id === map.id && prepared.version === map.version) {
         const badge = document.createElement('small'); badge.dataset.scenePrepared = '';
         badge.textContent = preparing === map.id ? sceneText.loading : sceneText.ready;
@@ -600,6 +656,7 @@ function tree() {
               await command("activate", { mapId: map.id });
             },
           ],
+          ...(state.is_gm && state.players?.length ? [[sceneText.activateSelected, () => activateSelected(map)]] : []),
           [sceneText.preview, () => navigate(map)],
           [sceneText.preload, () => prepare(map)],
           [labels.editScene, () => settings(map)],

@@ -154,6 +154,9 @@ export function normalizeDocument(document) {
     for (const kind of ['doors', 'decorations']) for (const item of result[kind] || []) {
         if (Object.hasOwn(item, 'interactionEnabled') && typeof item.interactionEnabled !== 'boolean') throw new TypeError('Invalid element interaction setting.');
     }
+    for (const item of result.decorations || []) if (Object.hasOwn(item, 'presenceRadius')
+        && (!Number.isFinite(item.presenceRadius) || item.presenceRadius < .05 || item.presenceRadius > 200 || !item.lever && !item.torch))
+        throw new TypeError('Invalid activation radius.');
     for (const item of result.doors || []) if (Object.hasOwn(item, 'rotationAnchor')
         && (result.schemaVersion !== 3 || !['start', 'center', 'end'].includes(item.rotationAnchor)))
         throw new TypeError('Invalid door rotation anchor.');

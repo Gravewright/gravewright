@@ -700,7 +700,7 @@ def clean_document(raw, who, *, scene_id=None):
                     raise services.MapError("Invalid zone elevation.")
             doc["regions"].append(row)
         for item in raw.get("decorations", []):
-            row = base(item, "decoration", ("id", "assetId", "x", "y", "width", "height", "rotation", "lever", "torch", "blueprint", "interactionEnabled", "empty", "name"))
+            row = base(item, "decoration", ("id", "assetId", "x", "y", "width", "height", "rotation", "lever", "torch", "blueprint", "interactionEnabled", "presenceRadius", "empty", "name"))
             if "empty" in item:
                 row["empty"] = objects.boolean(item["empty"])
                 if not row["empty"] or row["assetId"] is not None or "torch" in item or "lever" not in item:
@@ -723,6 +723,10 @@ def clean_document(raw, who, *, scene_id=None):
                 row["lever"] = {"state": item["lever"]["state"]}
             elif "blueprint" in item and "torch" not in item:
                 raise services.MapError("Only levers can have a blueprint.")
+            if "presenceRadius" in item:
+                if not any(key in row for key in ("lever", "torch")):
+                    raise services.MapError("Choose a Smart Object before setting its activation area.")
+                row["presenceRadius"] = number(item["presenceRadius"], .05, 200, "activation radius")
             for key, bound in (("x", bound_columns), ("y", bound_rows), ("width", bound_columns), ("height", bound_rows)):
                 row[key] = number(item.get(key), 0 if key in ("x", "y") else .05, bound, f"decoration {key}")
             row["rotation"] = number(item.get("rotation", 0), -36000, 36000, "decoration rotation") % 360
@@ -1023,6 +1027,8 @@ def native_objects(doc, scene, *, dynamic_planes=(), stored=None):
                              "z_index": layers.get(row.get("layerId"), 0) + index / (LIMITS["maxObjects"] + 1)}, previous)
         if "interactionEnabled" in row:
             data["interactionEnabled"] = row["interactionEnabled"]
+        if "presenceRadius" in row:
+            data["presenceRadius"] = row["presenceRadius"] * cell
         append(row["id"], "images", data, row)
         if "torch" in row:
             result[-1].builder_torch_rotation = row["rotation"]

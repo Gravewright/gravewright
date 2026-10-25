@@ -7,6 +7,7 @@ import { isNativeKind, renderNativeProperties } from './native-controls.js';
 import { moveSelectionToLayer } from './layer-model.js';
 import { sameDocument } from './asset-removal.js';
 import { interactiveObjectPresets, openInteractiveObjectCatalog } from './interactive-presets.js';
+import { defaultBlueprint } from './blueprint-model.js';
 
 export function createInspectorController({ root, state, t, signal: parentSignal, toolHints, selection, library,
     isBusy, isDisposed, commit, renderCanvas, renderLayers, renderSelection, applyPreviewControls,
@@ -241,6 +242,32 @@ export function createInspectorController({ root, state, t, signal: parentSignal
         }
         if (kind === 'decorations') {
             const first = container.childElementCount;
+            if (item.assetId || item.empty || item.lever || item.torch) {
+                const areaLabel = node('label', { class: 'map-builder__torch-lit' });
+                const enabled = node('input', { type: 'checkbox', 'data-builder-property': 'presenceArea' });
+                enabled.checked = Number.isFinite(item.presenceRadius);
+                areaLabel.append(enabled, node('span', {}, t('Circular activation area'))); container.append(areaLabel);
+                enabled.addEventListener('change', () => {
+                    if (isBusy() || state.preview) return;
+                    if (enabled.checked) {
+                        if (!isSmartDecoration(item)) { item.lever = { state: 'off' }; item.blueprint ||= defaultBlueprint('lever'); }
+                        item.presenceRadius = Math.min(200, Math.max(item.width, item.height) / 2 + .5);
+                    } else delete item.presenceRadius;
+                    commit(); renderCanvas(); renderLayers(); renderProperties();
+                }, { signal });
+                if (enabled.checked) {
+                    const label = node('label', {}, t('Activation radius (cells)'));
+                    const radius = node('input', { type: 'number', required: '', min: '.05', max: '200', step: 'any', 'data-builder-property': 'presenceRadius' });
+                    radius.value = item.presenceRadius; label.append(radius); container.append(label);
+                    radius.addEventListener('change', () => {
+                        if (isBusy() || state.preview || !radius.reportValidity()) return;
+                        const value = Number(radius.value);
+                        if (!Number.isFinite(value) || value < .05 || value > 200) return;
+                        item.presenceRadius = value; commit(); renderCanvas();
+                    }, { signal });
+                    container.append(node('p', { class: 'map-builder__hint' }, t('Drag the circle handle to resize the area. Connect On area enter or On area exit in the Smart Object to run effects without clicking.')));
+                }
+            }
             const behaviorLabel = node('label', {}, t('Behavior'));
             const behavior = node('select', { 'data-builder-property': 'behavior' });
             behavior.append(new Option(t('None'), 'none'), new Option(t('Lever'), 'lever'), new Option(t('Torch'), 'torch'));
@@ -266,7 +293,7 @@ export function createInspectorController({ root, state, t, signal: parentSignal
                 try {
                     if (item.torch) detachTorch(item);
                     delete item.lever; delete item.blueprint;
-                    if (nextBehavior === 'none') delete item.interactionEnabled;
+                    if (nextBehavior === 'none') { delete item.interactionEnabled; delete item.presenceRadius; }
                     if (behavior.value === 'lever') {
                         item.lever = { state: 'off' };
                     } else if (behavior.value === 'torch') {
@@ -289,9 +316,11 @@ export function createInspectorController({ root, state, t, signal: parentSignal
                 initial.append(new Option(t('Deactivated'), 'off'), new Option(t('Activated'), 'on'));
                 initial.value = item.lever.state; label.append(initial); container.append(label);
                 initial.addEventListener('change', () => { item.lever.state = initial.value; commit(); renderCanvas(); }, { signal });
-                const edit = node('button', { type: 'button', 'data-builder-edit-behavior': '' }, t('Edit behavior'));
+            }
+            if (!item.torch && (item.lever || item.assetId)) {
+                const edit = node('button', { type: 'button', 'data-builder-edit-behavior': '' }, t(item.lever ? 'Edit behavior' : 'Smart object'));
                 edit.addEventListener('click', () => { closePropertyModal(); openBehavior(currentTarget); }, { signal }); container.append(edit);
-                container.append(node('p', { class: 'map-builder__hint' }, t(item.empty ? 'Double-click the object to edit its states and actions.' : 'Double-click the lever to edit its states and actions.')));
+                container.append(node('p', { class: 'map-builder__hint' }, t('Double-click the object to edit its states and actions.')));
             }
             if (item.torch) renderTorchProperties(container, item, { signal, target: currentTarget });
             for (const child of [...container.children].slice(first)) child.dataset.builderPropertySection ||= 'behavior';

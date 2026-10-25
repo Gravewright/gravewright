@@ -55,20 +55,8 @@ function createTools(surface, board, map, gm, api, stateAPI) {
       sync();
     }
   } });
-  let markerQueue = Promise.resolve();
-  const markerKeys = ["id", "kind", "origin", "length", "width", "direction", "angle", "color"];
-  const clean = (rows) => rows.map((row) => Object.fromEntries(markerKeys.map((k) => [k, row[k]])));
-  const markers = Measurement(hosts.markers, { ...common, props: { ...base(), active: false, shared: true, rows: state.markers || [], maxRows: state.capabilities?.maxMarkers, measureValue: map.measureValue, measureUnit: map.measureUnit }, emit(type, rows) {
-    if (type === "close") {
-      stateAPI.mergePatch({ _tool: "select" });
-      sync();
-    }
-    if (type !== "change" || JSON.stringify(clean(rows)) === JSON.stringify(clean(state.markers || []))) return;
-    const expected = state.version;
-    markerQueue = markerQueue.then(() => api.command("markers", "replace", { rows: clean(rows), expected_version: expected })).catch((error) => {
-      window.dispatchEvent(new CustomEvent("gravewright:tool-error", { detail: { message: error.message } }));
-      return api.read();
-    });
+  const markerProps = () => ({ ...base(), active: false, shared: true, rows: state.markers || [], measureValue: map.measureValue, measureUnit: map.measureUnit });
+  const markers = Measurement(hosts.markers, { props: markerProps(), emit() {
   } });
   selection = createSelection(surface, board, map, gm, api, stateAPI, { rows: () => measureRows, replace: (rows) => measurement.call("replace", rows) });
   function sync() {
@@ -78,8 +66,8 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     board.editingLayer?.(layer || "game");
     levers.update(state);
     selection?.update(state);
-    const measure = ["measure", "templates"].includes(tool);
-    markers.update({ ...base(), active: tool === "templates", shared: true, rows: state.markers || [], maxRows: state.capabilities?.maxMarkers, measureValue: map.measureValue, measureUnit: map.measureUnit });
+    const measure = tool === "measure";
+    markers.update(markerProps());
     measurement.update({ ...base(), active: tool === "measure", maxRows: state.capabilities?.maxMeasurements, measureValue: map.measureValue, measureUnit: map.measureUnit });
     const draw = gm && tool === "draw" && ["game", "gm"].includes(layer);
     if (draw && !drawing)

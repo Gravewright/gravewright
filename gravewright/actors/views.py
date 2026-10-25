@@ -139,15 +139,8 @@ def asset(request, asset_id):
         item = Asset.objects.select_related("actor").get(pk=asset_id)
         who = services.member(item.campaign_id, request.user.pk)
         if item.actor and not services.access(item.actor, who):
-            from gravewright.maps.models import Broadcast
-
-            scene_id = (
-                Broadcast.objects.filter(
-                    campaign_id=item.campaign_id, scene__visibility="players"
-                )
-                .values_list("scene_id", flat=True)
-                .first()
-            )
+            from gravewright.maps.library_services import active_scene
+            scene_id = active_scene(who)
             # Rendering a visible token authorizes its image, not the actor's sheet.
             if (
                 item.kind not in ("token", "portrait")
@@ -163,5 +156,5 @@ def asset(request, asset_id):
         response["Cache-Control"] = "private, no-store"
         response["X-Content-Type-Options"] = "nosniff"
         return response
-    except Asset.DoesNotExist, JournalError, FileNotFoundError:
+    except Asset.DoesNotExist, JournalError, MapError, FileNotFoundError:
         raise Http404 from None
