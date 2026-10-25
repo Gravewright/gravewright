@@ -81,6 +81,7 @@
 .campaign-dialog__form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-5); }
 .campaign-dialog__column { display: grid; min-width: 0; align-content: start; gap: var(--space-4); }
 .campaign-dialog__column .campaign-dialog__description textarea { min-height: var(--size-144); line-height: var(--leading-normal); resize: vertical; }
+.campaign-dialog__description-count { margin: var(--space-1) var(--space-0) var(--space-0); color: var(--text-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
 
 .campaign-dialog__image { display: grid; min-width: 0; gap: var(--space-3); margin: var(--space-0); padding: var(--space-0); border: 0; }
 .campaign-dialog__image legend { padding: var(--space-0); color: var(--text-faint); font-size: var(--text-md); font-weight: var(--weight-bold); letter-spacing: var(--tracking-caps); text-transform: uppercase; }
