@@ -211,6 +211,8 @@ vizinhos, servidos diretamente, possuem estas responsabilidades:
 | `object-menu.js` | Menu de contexto dos objetos, navegação por teclado e submenu de modelos |
 | `interactive-presets.js` | Blueprints genéricos configuráveis e modal do catálogo de objetos |
 | `layer-controller.js` | Controles, conteúdo e seleção de camadas e listeners de arraste |
+| `productivity.js`, `productivity-model.js` | Agrupamento, alinhamento atômico, modelos da campanha, áreas e pincel de objetos |
+| `player-test.js`, `player-test-model.js` | Ensaio separado como jogador, passagem por áreas e solicitações de teste com rollback |
 | `canvas-renderer.js` | Arte SVG, marcações de seleção e caches descartáveis de terreno/parede |
 
 Os controladores recebem estado e callbacks explícitos, sem importar o workspace

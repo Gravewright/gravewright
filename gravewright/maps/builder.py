@@ -12,6 +12,19 @@ from gravewright.web.localization import template_context
 from gravewright.web.responses import navigate
 
 from . import blueprint_templates, builder_services, services
+from . import builder_presets
+
+
+@require_http_methods(["GET", "POST"])
+def object_presets(request, campaign_id):
+    return response(request, campaign_id, lambda: builder_presets.catalog(campaign_id, request.user.pk)
+                    if request.method == "GET" else builder_presets.save(campaign_id, request.user.pk, body(request)))
+
+
+@require_http_methods(["GET", "DELETE"])
+def object_preset(request, campaign_id, preset_id):
+    return response(request, campaign_id, lambda: builder_presets.detail(campaign_id, request.user.pk, preset_id)
+                    if request.method == "GET" else builder_presets.remove(campaign_id, request.user.pk, preset_id))
 
 
 @require_GET

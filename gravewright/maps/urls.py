@@ -2,6 +2,8 @@ from django.urls import path
 from . import views, assets, builder, testing_views, universal_vtt_views
 
 urlpatterns = [
+    path('api/containers/<uuid:campaign_id>/map-builder/object-presets', builder.object_presets),
+    path('api/containers/<uuid:campaign_id>/map-builder/object-presets/<uuid:preset_id>', builder.object_preset),
     path('api/containers/<uuid:campaign_id>/universal-vtt/import', universal_vtt_views.import_map),
     path('api/maps/<uuid:map_id>/universal-vtt', universal_vtt_views.export_map),
     path('game/<uuid:campaign_id>/map-builder', builder.page, name='map-builder'),

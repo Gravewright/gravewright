@@ -35,6 +35,7 @@ GROUPS = {
         "gravewright_maps.scenestate",
         "gravewright_maps.sceneobject",
         "gravewright_maps.mapbuilderproject",
+        "gravewright_maps.builderobjectpreset",
     ],
     "actors": [
         "gravewright_actors.folder",
@@ -122,7 +123,7 @@ def records(campaign, selected, *, snapshot=False):
             preparation_archives.export_record(record, snapshot=snapshot)
             mindmap_archives.export_record(record, snapshot=snapshot)
             if not selected["audio"] and label in {
-                "gravewright_maps.sceneobject", "gravewright_maps.mapbuilderproject"
+                "gravewright_maps.sceneobject", "gravewright_maps.mapbuilderproject", "gravewright_maps.builderobjectpreset"
             }:
                 record["fields"] = deepcopy(record["fields"])
                 omit_blueprint_audio(record)
@@ -414,7 +415,7 @@ def preserve_shader_text(record, field_name, rewritten):
     if (record["model"] == "gravewright_maps.sceneobject" and field_name == "data"
             and record["fields"].get("kind") == "shaders"):
         candidates.append((original, rewritten))
-    elif record["model"] == "gravewright_maps.mapbuilderproject" and isinstance(original, dict) and isinstance(rewritten, dict):
+    elif record["model"] in {"gravewright_maps.mapbuilderproject", "gravewright_maps.builderobjectpreset"} and isinstance(original, dict) and isinstance(rewritten, dict):
         if field_name == "document":
             candidates.extend(zip(original.get("shaders", []), rewritten.get("shaders", [])))
         elif field_name == "generation":
@@ -497,7 +498,7 @@ def remap_omitted_bindings(record, field_name, rewritten, model_ids, inert_ids):
     source_destinations = {}
     if record["model"] == "gravewright_maps.sceneobject" and field_name == "data":
         candidates.append((original, rewritten, False))
-    elif (record["model"] == "gravewright_maps.mapbuilderproject"
+    elif (record["model"] in {"gravewright_maps.mapbuilderproject", "gravewright_maps.builderobjectpreset"}
           and isinstance(original, dict) and isinstance(rewritten, dict)):
         if field_name == "document":
             source_destinations = {before["id"]: after["id"] for before, after in
@@ -758,11 +759,11 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                             kwargs[field_name] = rewrite(value, identifiers, paths)
                             preserve_shader_text(record, field_name, kwargs[field_name])
                             if record["model"] in ("gravewright_maps.scene", "gravewright_maps.sceneobject",
-                                                   "gravewright_maps.mapbuilderproject"):
+                                                   "gravewright_maps.mapbuilderproject", "gravewright_maps.builderobjectpreset"):
                                 preserve_blueprint_values(value, kwargs[field_name])
                                 remap_omitted_bindings(record, field_name, kwargs[field_name], model_ids, inert_ids)
                                 discard_area_presence(record["model"], field_name, kwargs[field_name])
-                            if (record["model"] == "gravewright_maps.mapbuilderproject"
+                            if (record["model"] in {"gravewright_maps.mapbuilderproject", "gravewright_maps.builderobjectpreset"}
                                     and field_name == "document" and isinstance(value, dict)
                                     and isinstance(value.get("assets"), list)):
                                 # Family names are authored labels, even when they contain an ID.

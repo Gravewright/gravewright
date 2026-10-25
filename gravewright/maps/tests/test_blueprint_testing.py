@@ -251,6 +251,17 @@ class BlueprintTestingTests(TestCase):
         self.assertFalse(self.light_object.data["enabled"])
         self.assertEqual(AutomationRun.objects.get(scene=self.scene).outcome, "paused")
 
+    def test_draft_position_is_bounded_and_rehearsal_still_rolls_back(self):
+        before = self.snapshot()
+        result = blueprint_testing.run_draft(self.campaign.pk, self.gm.pk,
+            self.draft(actorId=str(self.actor.pk), position={"x": 1.5, "y": 1.5}))
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(self.snapshot(), before)
+        for position in ({"x": -1, "y": 1}, {"x": True, "y": 1}, {"x": 10000, "y": 1}, []):
+            with self.subTest(position=position), self.assertRaises(services.MapError):
+                blueprint_testing.run_draft(self.campaign.pk, self.gm.pk, self.draft(position=position))
+            self.assertEqual(self.snapshot(), before)
+
     def test_draft_executes_current_unsaved_source_and_binds_native_resources_without_files(self):
         self.doc["doors"][0]["blueprint"] = chain(node("lamp", "light", targetId=self.light_id, enabled=True),
             node("variable", "setVariable", scope="element", name="Draft", valueType="number", value=42))

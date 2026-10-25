@@ -242,6 +242,8 @@ boundaries:
 | `object-menu.js` | Object context menu, keyboard navigation and model submenu |
 | `interactive-presets.js` | Configurable generic object Blueprints and their catalog modal |
 | `layer-controller.js` | Layer controls, contents, selection and drag listeners |
+| `productivity.js`, `productivity-model.js` | Grouping, atomic arrangement, campaign object bundles, area guides and object strokes |
+| `player-test.js`, `player-test-model.js` | Detached player rehearsal, area crossings and rollback-only behavior requests |
 | `canvas-renderer.js` | SVG artwork, selection overlays and disposable terrain/wall caches |
 
 Controllers receive explicit state and callbacks rather than importing the

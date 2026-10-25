@@ -76,6 +76,38 @@ células da área de trabalho do Builder.
 | **Atualizar cena** | Aplicar o projeto à cena vinculada | Clientes que veem essa cena recebem a atualização confirmada |
 | **Ativar para jogadores** no menu da cena | Tornar a cena visível e transmiti-la | Jogadores conectados passam a vê-la |
 
+## Ferramentas do Builder
+
+Abra **Ferramentas do Builder** no cabeçalho. Selecione objetos com Shift-clique
+ou um retângulo de seleção antes de usar as ações da seleção.
+
+- **Agrupar seleção em uma camada** cria uma camada nomeada e move a seleção para
+  ela. Use as camadas do projeto para ocultar, bloquear, selecionar ou mover o grupo.
+- **Alinhar e distribuir** alinha bordas ou centros e distribui três ou mais objetos
+  com espaçamento igual. A rotação gira a seleção como um grupo. Limites inválidos,
+  camadas bloqueadas e portas sobrepostas mantêm o documento original.
+- **Meus objetos** salva até 100 objetos selecionados, incluindo componentes
+  vinculados, imagens, raios de ativação e grafos de Smart Objects. Os modelos pertencem
+  à campanha e podem ser usados em outro projeto da mesma campanha. Escolha Posicionar
+  e clique no mapa; Esc cancela. As cópias recebem novos IDs e remapeiam as referências
+  internas. Mantenha as referências dentro do conjunto ou ligadas a recursos da campanha.
+  A biblioteca comporta 128 modelos; excluir um modelo preserva as instâncias nos mapas.
+- **Mostrar todas as áreas de ativação dos objetos** exibe círculos coloridos e
+  nomeados sem selecionar objetos. Respeita a visibilidade e o isolamento de camadas
+  e não aparece na Prévia nem nas cenas geradas. Os retângulos das regiões também são exibidos.
+- **Pincel de objetos** distribui um objeto enviado ou uma família de imagens ao
+  arrastar. Escolha Objetos na biblioteca normal, selecione a imagem e ative Pintar
+  vários objetos. Configure espaçamento e variações de tamanho e rotação. Cada traço
+  corresponde a uma etapa de Desfazer; os limites do projeto continuam valendo.
+- **Testar como jogador** abre um mapa separado com um token de teste. Clique ou
+  use as setas para andar, ajuste o raio de visão e use Interagir perto de objetos.
+  Reutiliza a geometria de colisão e visão da mesa, incluindo portas abertas. A passagem
+  pelas áreas ensaia eventos de entrada/saída pelo motor de comportamentos do servidor,
+  que desfaz o ensaio ao terminar. Escolha um personagem da campanha para ações que
+  dependem de token. Reiniciar descarta o ensaio. Fechar preserva o rascunho e a cena
+  em jogo. Os temporizadores não avançam e mensagens, áudio e mudanças de câmera não
+  são enviados aos jogadores. O ensaio é genérico e não simula regras de um sistema.
+
 ## Construir a primeira sala
 
 1. Como mestre da campanha, escolha **Nova cena → Map Builder**. A pasta de cenas

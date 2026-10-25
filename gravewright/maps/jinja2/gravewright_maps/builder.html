@@ -1,6 +1,6 @@
 {% extends 'gravewright_web/base.html' %}
 {% block styles %}{{ super() }}<link rel="stylesheet" href="{{ static('gravewright_table/permissions.css') }}"><link rel="stylesheet" href="{{ static('gravewright_table/window-polish.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/tools.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/walls.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/builder/workspace.css') }}"><link rel="stylesheet" href="{{ static('gravewright_maps/builder/blueprint-editor.css') }}">{% endblock %}
-{% block extra_head %}<script type="module" src="{{ static('gravewright_maps/builder/workspace.js') }}"></script>{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ static('gravewright_maps/builder/productivity.css') }}"><script type="module" src="{{ static('gravewright_maps/builder/workspace.js') }}"></script>{% endblock %}
 {% macro builder_icon(name) -%}
 <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
   {% if name == 'select' %}<path d="M5 2v20l5-6 4 7 4-2-4-7h8Z"/>
@@ -36,6 +36,7 @@
       <div class="map-builder__history-tools" role="group" aria-label="History"><button type="button" class="map-builder__icon-button" data-builder-undo title="Undo (Ctrl+Z)" aria-label="Undo">{{ icon('ArrowCounterClockwise') }}</button><button type="button" class="map-builder__icon-button" data-builder-redo title="Redo (Ctrl+Shift+Z)" aria-label="Redo">{{ icon('ArrowClockwise') }}</button></div>
       <button type="button" class="map-builder__save-state" data-builder-save title="Autosave" aria-label="Autosave">{{ icon('Check') }}<span data-builder-save-state role="status" aria-live="polite">Not saved</span></button>
       <button type="button" data-builder-test title="Test behavior" aria-label="Test behavior">{{ icon('CaretRight') }}<span>Test behavior</span></button>
+      <button type="button" data-builder-productivity-open>{{ icon('Gear') }}<span>{{ tr('Builder tools') }}</span></button>
       <button type="button" data-builder-preview aria-pressed="false">Preview</button>
       <button type="button" data-builder-update hidden>Update scene</button>
       <button type="button" class="map-builder__generate" data-builder-generate>Generate scene</button>

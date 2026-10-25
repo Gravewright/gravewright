@@ -230,6 +230,18 @@ class MapBuilderProject(models.Model):
         ordering = ["-updated_at", "id"]
 
 
+class BuilderObjectPreset(models.Model):
+    """Campaign-owned object bundles with artwork and behavior kept together."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    campaign = models.ForeignKey("gravewright_campaigns.Campaign", on_delete=models.CASCADE, related_name="+")
+    name = models.CharField(max_length=120)
+    document = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name", "id"]
+
+
 class BlueprintTemplate(models.Model):
     """Campaign-owned, parameterized behavior snapshots without instance bindings."""
 

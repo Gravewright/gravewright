@@ -208,7 +208,7 @@ def _draft_surfaces(document, scene):
 
 def run_draft(campaign_id, user_id, payload):
     """Build an ephemeral native scene from a validated unsaved Builder document."""
-    request_id = _payload(payload, ("request_id", "document", "elementId", "event"), ("actorId", "projectId"))
+    request_id = _payload(payload, ("request_id", "document", "elementId", "event"), ("actorId", "projectId", "position"))
     source_id = str(identifier(payload["elementId"]))
     from .builder_services import clean_document, native_objects, remap_native_blueprints, project
     from .blueprint_clocks import clock_scope
@@ -248,6 +248,18 @@ def run_draft(campaign_id, user_id, payload):
                 cell, size = document["cellSize"], presentation(token)["token"]["size"]
                 token.grid_x = selected.data["x"] / cell - size / 2
                 token.grid_y = selected.data["y"] / cell - size / 2
+                token.save(update_fields=["grid_x", "grid_y"])
+        if "position" in payload:
+            from .objects import number
+            position = payload["position"]
+            if not isinstance(position, dict) or set(position) != {"x", "y"}:
+                raise services.MapError("Invalid test position.")
+            x = number(position["x"], 0, document["columns"])
+            y = number(position["y"], 0, document["rows"])
+            if token:
+                from gravewright.tokens.services import presentation
+                size = presentation(token)["token"]["size"]
+                token.grid_x, token.grid_y = x - size / 2, y - size / 2
                 token.save(update_fields=["grid_x", "grid_y"])
         baseline(scene, rows)
         SceneObject.objects.bulk_create(rows)

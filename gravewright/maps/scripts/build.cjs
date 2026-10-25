@@ -77,6 +77,7 @@ async function buildAssets({ root = projectRoot, outputRoot = root, dependencies
   results.push(await buildNamedModules({ esbuild, source, output, common,
     entries: { tools: source + "/native/tools.js", "builder-catalog": source + "/native/builder-catalog.js",
       "builder-editors": source + "/native/builder-editors.js", "builder-native": source + "/native/builder-preview.js",
+      "builder-player-test": source + "/native/builder-player-test.js",
       "vendor/board": source + "/widgets/game-board/ui/board.js" }, resources: [worker] }));
   results.push(await esbuild.build({ ...common, stdin: { contents: 'import "pixi.js/unsafe-eval"; export * from "pixi.js";',
     resolveDir: source, sourcefile: __filename }, minify: true, outfile: output + "/vendor/pixi.js" }));

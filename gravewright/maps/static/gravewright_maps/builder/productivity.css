@@ -1,0 +1,17 @@
+.builder-productivity{width:680px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-md);font-size:14px}
+.builder-productivity header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-2);border-bottom:1px solid var(--border)}
+.builder-productivity__body{overflow:auto;padding:var(--space-3);display:grid;gap:var(--space-3)}
+.builder-productivity section{display:grid;gap:var(--space-2);border-bottom:1px solid var(--border);padding-bottom:var(--space-3)}
+.builder-productivity h3,.builder-productivity p{margin:var(--space-0)}
+.builder-productivity p{color:var(--text-muted);font-size:12px;line-height:1.5}
+.builder-productivity [role=alert]{color:var(--danger,#ee7777)}
+.builder-productivity label{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2)}
+.builder-productivity input:not([type=checkbox]),.builder-productivity select{min-width:0;max-width:55%;width:220px;padding:var(--space-1);background:var(--surface);border:1px solid var(--border);color:inherit;border-radius:var(--radius-sm);font:inherit}
+.builder-productivity button{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--space-1) var(--space-2);cursor:pointer}
+.builder-productivity button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.builder-productivity__actions{display:flex;flex-wrap:wrap;gap:var(--space-1)}
+.builder-productivity__preset{display:flex;align-items:center;gap:var(--space-1);padding:var(--space-1)}
+.builder-productivity__preset strong{flex:1;overflow-wrap:anywhere;min-width:0}
+.builder-player-test{width:1100px}.builder-player-test__map{position:relative;height:500px;max-height:55dvh;background:#10151b;overflow:hidden;touch-action:none}
+.builder-player-test__map>svg{width:100%;height:100%;display:block}.builder-player-test__map>.playtest__effects{position:absolute;inset:0;pointer-events:none}
+@media(max-width:500px){.builder-productivity label{flex-wrap:wrap}.builder-productivity input:not([type=checkbox]),.builder-productivity select{max-width:100%;width:100%}.builder-productivity__body{padding:var(--space-2)}}

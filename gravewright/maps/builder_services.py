@@ -428,6 +428,14 @@ def validate_imported_projects(campaign):
     from types import SimpleNamespace
     from .empty_objects import image as empty_image
     who = SimpleNamespace(campaign=campaign, campaign_id=campaign.pk)
+    from .builder_presets import clean_bundle
+    from .models import BuilderObjectPreset
+    presets = BuilderObjectPreset.objects.filter(campaign=campaign)
+    if presets.count() > 128:
+        raise services.MapError("Object library limit exceeded.")
+    for preset in presets:
+        services.title(preset.name)
+        clean_bundle(preset.document, who)
     for source in MapBuilderProject.objects.filter(campaign=campaign):
         history = source.generation if isinstance(source.generation, dict) else {}
         for doc in (source.document, history.get("dynamicDocument", {}), history.get("sourceDocument", {})):

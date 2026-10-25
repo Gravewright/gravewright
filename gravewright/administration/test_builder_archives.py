@@ -11,7 +11,7 @@ from PIL import Image
 
 from gravewright.accounts.models import User
 from gravewright.campaigns.models import Campaign, Membership
-from gravewright.maps.models import Folder, MapAsset, MapBuilderProject, Scene, SceneObject
+from gravewright.maps.models import BuilderObjectPreset, Folder, MapAsset, MapBuilderProject, Scene, SceneObject
 
 from .archives import export_campaign, import_campaign, options, records
 
@@ -42,6 +42,18 @@ class BuilderArchiveTests(TestCase):
             scene=self.scene, name="Workshop room", document=self.document, version=3)
         SceneObject.objects.create(scene=self.scene, kind="walls", data={
             "kind": "door", "asset_id": str(self.asset.pk), "x1": 70, "y1": 70, "x2": 140, "y2": 70})
+
+    def test_object_library_survives_export_clone_and_snapshot(self):
+        preset = BuilderObjectPreset.objects.create(campaign=self.campaign, name="Reusable room", document=self.document)
+        restored = import_campaign(export_campaign(self.campaign), self.user, "Imported library")
+        copied = BuilderObjectPreset.objects.get(campaign=restored)
+        self.assertNotEqual(copied.pk, preset.pk)
+        self.assertEqual(copied.document['assets'][0]['assetId'], str(MapAsset.objects.get(campaign=restored).pk))
+        snapshot = export_campaign(self.campaign, snapshot=True)
+        preset_id = preset.pk
+        preset.delete()
+        import_campaign(snapshot, self.user, target=self.campaign)
+        self.assertEqual(BuilderObjectPreset.objects.get(pk=preset_id).document, self.document)
 
     def test_clone_remaps_project_scene_folder_and_asset_references(self):
         restored = import_campaign(export_campaign(self.campaign), self.user, "Imported workshop")

@@ -17,6 +17,8 @@ import { addWall, snapWallPoint } from './wall-edit.js';
 import { wallProperties, nativeWallProperties, wallPropertyFields } from './wall-properties.js';
 import { torchChildren, torchOwner, torchComponentState } from './torch-model.js';
 import { createRegion, regionInstance } from './region-model.js';
+import { createProductivity } from './productivity.js';
+import { openPlayerTest } from './player-test.js';
 
 import { openBlueprintEditor } from './blueprint-editor.js';
 import { openSceneNetwork } from './scene-network.js';
@@ -109,7 +111,7 @@ function mountWorkspace(root) {
     const terrainMode = () => documentEditingMode(state.document) === 'paint';
     const floorSnap = () => !terrainMode() && state.snap;
     const undo = retainedUndo || history(state.document); retainedUndo = undo;
-    let busy = false, gesture, brushResize, disposed = false;
+    let busy = false, gesture, brushResize, disposed = false, productivity;
     let ready = false, bootstrapFailed = false, lastFailure;
     let filterActorCatalog;
     const filterTokenCatalogs = new Map();
@@ -782,6 +784,7 @@ function mountWorkspace(root) {
     function selected() { return state.selection && state.document[state.selection.kind].find(item => item.id === state.selection.id); }
     function renderSelection() {
         wallControls?.render(canvasRenderer.renderSelection(selectionRefs(), camera.scale));
+        productivity?.drawAreas();
     }
     const objectMenu = createObjectMenu({ t, signal, onError: cause => notify(t(cause.message), [], 'error') });
     const { renderProperties, openProperties, openPreset } = createInspectorController({
@@ -797,6 +800,24 @@ function mountWorkspace(root) {
             modal?.addEventListener('close', () => { if (activeModal === modal) { picking?.finish(null); activeModal = null; } }, { once: true });
         },
     });
+    productivity = createProductivity({root,state,t,signal,base,refs:selectionRefs,select:setSelection,commit,
+        render:()=>{renderCanvas();renderLayers();renderProperties();},setTool,brushAssets:brushAssetIds,notify,
+        remember:rememberDraft,isBusy:()=>busy||!ready||!!activeModal,playerTest:openPlayerSimulation});
+    async function openPlayerSimulation() {
+        if(busy||activeModal)return;
+        flushFocusedField();cancelDrawing();
+        const source=clone(state.document),http=new HttpClient();setBusy(true);
+        try{
+            const catalog=await http.get(base+'/testing-catalog',{signal});if(disposed)return;
+            activeModal=openPlayerTest({source,actors:catalog.actors,t,
+                preview:(host,document,afterPaint)=>renderTestPreview(host,document,null,afterPaint),
+                execute:(document,elementId,event,actorId,position,signal)=>http.post(base+'/test',{
+                    request_id:crypto.randomUUID(),document,elementId,event,position,...(actorId?{actorId}:{}),
+                    ...(state.version>0?{projectId:state.id}:{})},{signal}),
+                onClose:()=>{activeModal=null;}});
+        }catch(error){if(!disposed)notify(t(error.message),[],'error');}
+        finally{if(!disposed)setBusy(false);}
+    }
     function createTorchComponent(item, kind) {
         const tool = kind === 'lights' ? 'light' : kind === 'particles' ? 'particle' : 'shader';
         const preset = tool === 'light' ? 'torch' : tool === 'particle' ? 'ember' : state.nativeChoices.shader;
@@ -913,6 +934,7 @@ function mountWorkspace(root) {
         if (busy || !ready || state.preview) return false;
         flushFocusedField();
         const bounds = documentBounds(state.document);
+        if(productivity?.place(point))return false;
         const areaHandle = event.target.closest('[data-builder-area-handle]');
         if (areaHandle) {
             const target = { kind: 'decorations', id: areaHandle.dataset.builderAreaHandle };
@@ -929,6 +951,10 @@ function mountWorkspace(root) {
         if (point.x < 0 || point.y < 0 || point.x > bounds.width || point.y > bounds.height) return false;
         if (state.tool === 'floor' && (state.samplingFloor || event.altKey)) { pickFloorMaterial(point); return false; }
         const before = clone(state.document), target = hit(point, event);
+        const activePaintLayer=state.document.layers.find(layer=>layer.id===state.activeLayer);
+        if(state.tool==='decoration'&&activePaintLayer&&layerVisible(activePaintLayer)&&!activePaintLayer.locked&&productivity?.startBrush(point)){
+            gesture={before,scatter:true};renderCanvas();return true;
+        }
         if (!resumePaint && (hasNativeEditor(target?.kind) || target?.kind === 'decorations' && (isSmartDecoration(itemFor(target)) || itemFor(target)?.assetId))
             && !['select', 'erase'].includes(state.tool) && !floorPainter.polygon) {
             gesture = { before, pendingEdit: { point, event, target } }; return true;
@@ -1023,6 +1049,7 @@ function mountWorkspace(root) {
         }
     }
     function move(point, event) {
+        if(gesture?.scatter){productivity.paint(point);return;}
         if (gesture?.areaRadius) {
             const item = itemFor({ kind: 'decorations', id: gesture.areaRadius });
             if (!item) return;
@@ -1077,6 +1104,7 @@ function mountWorkspace(root) {
         if (floorPainter.active) { floorPainter.end(['brush', 'fill'].includes(state.paintMode) ? point : bounded(point, false, floorSnap())); return; }
         if (!gesture) return;
         move(point);
+        if(gesture?.scatter){gesture=undefined;if(productivity.finishBrush()){commit();renderCanvas();renderLayers();renderProperties();}return;}
         if (floorPainter.active) { floorPainter.end(['brush', 'fill'].includes(state.paintMode) ? point : bounded(point, false, floorSnap())); return; }
         if (!gesture) return;
         if (gesture.areaRadius) {
@@ -1361,7 +1389,7 @@ function mountWorkspace(root) {
             const asset = assetById(entry.assetId); return asset && { ...asset, role: entry.role, name: assetName(asset) };
         }).filter(Boolean);
     }
-    function renderTestPreview(host, source, result) {
+    function renderTestPreview(host, source, result, afterPaint) {
         const projected = projectTestDocument(source, result);
         let closed = false, renderer;
         function paint() {
@@ -1393,6 +1421,7 @@ function mountWorkspace(root) {
                 const message = document.createElement('p'); message.textContent = t(error.message || 'Could not render native effects.'); message.setAttribute('role', 'alert'); host.append(message);
             } });
             renderer.update(projected);
+            afterPaint?.();
         }
         testPreviewRefresh = paint; paint();
         return () => { closed = true; if (testPreviewRefresh === paint) testPreviewRefresh = undefined; renderer?.dispose(); };

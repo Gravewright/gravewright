@@ -74,6 +74,38 @@ native grids, disable snapping when positioning between Builder workspace cells.
 | **Update scene** | Apply project changes to the linked scene | Clients viewing that scene receive the committed update |
 | **Activate for players** in the scene context menu | Make the scene player-visible and broadcast it | Connected players switch to it |
 
+## Builder tools
+
+Open **Builder tools** in the header. Select objects with Shift-click or a
+selection rectangle before using selection actions.
+
+- **Group selection in a layer** creates a named layer and moves the selection
+  into it. Use Project layers to hide, lock, select or move the group.
+- **Align and distribute** aligns edges or centers and distributes three or more
+  objects with equal gaps. Rotation applies to the selection as a group. Invalid
+  bounds, locked layers and overlapping doors leave the document unchanged.
+- **My objects** saves up to 100 selected objects, including linked components,
+  artwork, activation radii and Smart Object graphs. Models belong to the campaign
+  and can be placed in another project in that campaign. Choose Place, then click
+  the map; Escape cancels. Copies receive new IDs and remap internal references.
+  Keep references self-contained or bound to campaign resources. The library holds
+  128 models; deleting a model preserves instances already placed on maps.
+- **Show all object activation areas** displays named, colored circular guides
+  without selecting objects. It respects layer visibility and isolation and is
+  omitted from Preview and generated scenes. Region rectangles are included too.
+- **Object brush** stamps an imported object or image family along a drag. Choose
+  Objects in the normal library, select artwork and enable Paint multiple objects.
+  Configure spacing and size/rotation variation. Each stroke is one Undo step;
+  project limits still apply.
+- **Test as player** opens a detached map with a test pawn. Click or use arrows to
+  walk, adjust vision radius and Interact with nearby objects. It shares the table's
+  collision and visibility geometry, including open doors. Area crossings rehearse
+  enter/exit events through the server's rollback-only behavior engine. Choose a
+  campaign actor for token-dependent actions. Reset discards the rehearsal. Closing
+  preserves the draft and live scene. Timers do not advance and messages, audio and
+  camera changes are not delivered to players. This is a generic map rehearsal,
+  not a simulation of system-specific rules.
+
 ## Build the first room
 
 1. As the campaign GM, choose **New scene → Map Builder**. The selected scene
