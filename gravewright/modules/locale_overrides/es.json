@@ -2793,5 +2793,10 @@
   "Choose a shader from this scene.": "Elige un shader de esta escena.",
   "Invalid shader control property.": "Propiedad de control del shader no válida.",
   "Invalid shader control value.": "Valor de control del shader no válido.",
-  "Click a shader on the map. Esc cancels.": "Haz clic en un shader del mapa. Esc cancela."
+  "Click a shader on the map. Esc cancels.": "Haz clic en un shader del mapa. Esc cancela.",
+  "Value per cell": "Valor por casilla",
+  "Measurement unit": "Unidad de medida",
+  "Group": "Grupo",
+  "No group": "Sin grupo",
+  "Image scale": "Escala de la imagen"
 }

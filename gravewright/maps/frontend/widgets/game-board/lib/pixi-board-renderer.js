@@ -4,7 +4,8 @@ import { tileBlobCache } from "../model/tile-blob-cache.js";
 // generators for polyfills that do the same work without eval, so the policy stays strict. It must
 // be imported before any renderer is created.
 import "pixi.js/unsafe-eval";
-import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+import { Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+import { createPixiApplication } from './pixi-application.js';
 // The whole namespace, because a contributed layer needs the engine's constructors and must not
 // bring its own copy of them: a second Pixi shares no classes and no renderer with this one.
 import * as engine from "pixi.js";
@@ -54,6 +55,18 @@ export class PixiBoardRenderer {
     #wanted = new Map();
     #destroyed = false;
     #renderFrame = 0;
+    #contextRestored = () => {
+        // Pixi returns text canvases to its pool after upload. Recreate their
+        // pixels rather than uploading a canvas that has since been cleared.
+        const pending = [this.#application.stage];
+        while (pending.length) {
+            const node = pending.pop();
+            if (node instanceof Text) node.unload();
+            if (node.children) pending.push(...node.children);
+        }
+        this.#application.renderer.resetState();
+        this.invalidate();
+    };
     /** Coalesce visual changes; a still scene consumes no render-loop frames. */
     invalidate() {
         if (this.#destroyed || this.#renderFrame) return;
@@ -78,6 +91,7 @@ export class PixiBoardRenderer {
         this.#world.addChild(this.#tiles, this.#grid, this.#figures, this.#marks);
         application.stage.addChild(this.#world);
         application.canvas.setAttribute("role", "img");
+        application.canvas.addEventListener('webglcontextrestored', this.#contextRestored);
         this.setLabel(label);
         this.invalidate();
     }
@@ -264,6 +278,7 @@ export class PixiBoardRenderer {
         if (this.#destroyed)
             return;
         this.#destroyed = true;
+        this.#application.canvas.removeEventListener('webglcontextrestored', this.#contextRestored);
         cancelAnimationFrame(this.#renderFrame);
         this.#renderFrame = 0;
         this.#wanted = new Map();
@@ -504,20 +519,7 @@ export class PixiBoardRenderer {
     }
 }
 export const createPixiBoardRenderer = async ({ host, background, label }) => {
-    const application = new Application();
-    try {
-        await application.init({ resizeTo: host, background, antialias: true, autoDensity: true, autoStart: false, resolution: Math.min(devicePixelRatio, MAX_RESOLUTION) });
-    }
-    catch (error) {
-        // A stage that failed halfway through `init` still holds a renderer; leaving it alive would
-        // leak a WebGL context on every retry.
-        try {
-            if (application.renderer)
-                application.destroy(false, { children: true });
-        }
-        catch { /* Never came up. */ }
-        throw error;
-    }
+    const application = await createPixiApplication({ resizeTo: host, background, antialias: true, autoDensity: true, autoStart: false, resolution: Math.min(devicePixelRatio, MAX_RESOLUTION) });
     host.appendChild(application.canvas);
     return new PixiBoardRenderer(application, label);
 };

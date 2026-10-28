@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
   }
 }
 
-// gravewright/maps/frontend/features/lighting/model/light-profiles.js
+// features/lighting/model/light-profiles.js
 var lightPresets = [
   { id: "torch", get name() {
     return text("Torch");

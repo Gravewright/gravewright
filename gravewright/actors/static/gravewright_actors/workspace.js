@@ -226,13 +226,18 @@ function folder(existing, parentId) {
   const el = form(
     "map-folder-form",
     existing ? "Edit folder" : labels.createActorFolder,
-    (el) =>
-      command(existing ? "folder.update" : "folder.create", {
+    async (el) => {
+      await command(existing ? "folder.update" : "folder.create", {
         id: existing?.id,
         parentId: parentId ?? existing?.parentId,
         name: el.elements.label.value,
         color: el.elements.color.value,
-      }),
+      });
+      if (!existing && parentId) {
+        try { localStorage.setItem(`gravewright.directory.${campaign}.actors.${parentId}`, "true"); } catch {}
+        paint();
+      }
+    },
   );
   if (existing) {
     el.elements.label.value = existing.name;
@@ -426,12 +431,12 @@ function paint() {
   show(templates, !!state.templateConfig);
   templates.replaceChildren();
   if (!state.templateConfig) return;
-  const folder = clone("journal-folder");
-  folder.querySelector(".gw-folder__label").textContent = "Templates";
-  folder.querySelector(".gw-folder__count").textContent =
+  const templateFolder = clone("journal-folder");
+  templateFolder.querySelector(".gw-folder__label").textContent = "Templates";
+  templateFolder.querySelector(".gw-folder__count").textContent =
     state.templates.length;
-  folder.querySelector(".gw-folder__actions")?.remove();
-  const body = folder.querySelector(".gw-folder__content");
+  templateFolder.querySelector(".gw-folder__actions")?.remove();
+  const body = templateFolder.querySelector(".gw-folder__content");
   let expanded = !!search;
   try {
     expanded ||=
@@ -440,8 +445,8 @@ function paint() {
       ) === "true";
   } catch {}
   show(body, expanded);
-  folder.classList.toggle("gw-folder--open", expanded);
-  folder.querySelector(".gw-folder__toggle").onclick = () => {
+  templateFolder.classList.toggle("gw-folder--open", expanded);
+  templateFolder.querySelector(".gw-folder__toggle").onclick = () => {
     try {
       localStorage.setItem(
         `gravewright.directory.${campaign}.actors.__templates__`,
@@ -489,7 +494,7 @@ function paint() {
     }
     body.append(row);
   }
-  templates.append(folder);
+  templates.append(templateFolder);
 }
 window.gravewrightActors = {
   showDirectory() {

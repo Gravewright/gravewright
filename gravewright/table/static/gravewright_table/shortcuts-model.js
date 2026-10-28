@@ -10,7 +10,7 @@ export function validCombination(value) {
 }
 export function reserved(value) {
     const parts = value.split('+'), key = parts.at(-1);
-    return ['F5', 'F11', 'F12'].includes(key) || value === 'Alt+F4'
+    return (['F5', 'F11', 'F12'].includes(key) && value !== 'F5') || value === 'Alt+F4'
         || parts.some(part => part === 'Control' || part === 'Meta') && 'ACFLNPRTVWXYZ'.includes(key) && key.length === 1;
 }
 export function conflicts(entries, id, value, bindings) {

@@ -290,3 +290,41 @@
 #chat-log article { position:relative; padding-right:var(--space-8); }
 .chat-message-delete { position:absolute; top:var(--size-3); right:var(--size-3); width:var(--size-26); height:var(--size-26); border:var(--size-1) solid transparent; border-radius:var(--radius-sm); background:transparent; color:var(--text-muted); font-size:20px; cursor:pointer; }
 .chat-message-delete:hover,.chat-message-delete:focus-visible { color:#ef9696; border-color:#ef969666; background:#ef969611; }
+
+/* Keep play controls visible; secondary panels use a labeled disclosure. */
+.game-table { --game-dock-height: 64px; }
+.game-dock { padding: var(--space-2); border-radius: var(--radius-lg); }
+.game-dock__row { gap: var(--space-2); }
+.game-dock__group[data-shortcut-layer] { flex-wrap: nowrap; padding: var(--space-half); border-radius: var(--radius-md); background: rgb(255 255 255 / 4%); }
+.game-dock__item { width: 36px; height: 36px; }
+.game-dock__primary .game-dock__item, .game-dock__menu-toggle { display: flex; width: auto; gap: var(--space-2); padding: var(--space-2); font-size: 12px; }
+.game-dock .game-dock__primary .game-dock__tip { position: static; display: block; width: auto; padding: 0; border: 0; background: none; box-shadow: none; transform: none; font-size: 12px; }
+.game-dock .game-dock__primary .game-dock__tip kbd { display: none; }
+.game-dock__menu-toggle > svg:last-child { width: 14px; height: 14px; transform: rotate(-90deg); transition: transform var(--transition-fast); }
+.game-dock__menu-toggle[aria-expanded=true] > svg:last-child { transform: rotate(90deg); }
+.game-dock__overflow { position: absolute; right: 0; bottom: calc(100% + var(--space-2)); width: 400px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 160px); overflow: auto; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-lg); background: #14181d; box-shadow: var(--shadow-window); }
+.game-dock__overflow[hidden] { display: none; }
+.game-dock__overflow h2 { margin: var(--space-1) var(--space-1) var(--space-2); font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.game-dock__overflow .game-dock__group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-1); margin-bottom: var(--space-3); }
+.game-dock__overflow .game-dock__group:last-child { margin-bottom: 0; }
+.game-dock__overflow .game-dock__item { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-2); width: 100%; height: auto; min-height: 42px; padding: var(--space-2); text-align: left; border-radius: var(--radius-md); }
+.game-dock__overflow .game-dock__item svg { flex: 0 0 21px; }
+.game-dock .game-dock__overflow .game-dock__tip { position: static; display: flex; flex: 1; min-width: 0; justify-content: space-between; width: auto; padding: 0; border: 0; background: none; box-shadow: none; transform: none; white-space: normal; font-size: 12px; }
+.game-dock .game-dock__overflow .game-dock__tip kbd { flex-shrink: 0; font-size: 12px; }
+.game-dock .game-dock__row .game-dock__item:hover, .game-dock .game-dock__overflow .game-dock__item:hover { transform: none; box-shadow: none; }
+.game-dock__overflow .game-dock__utilities { padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+@media (max-width: 610px) {
+    .game-table { --game-dock-height: 104px; }
+    .game-dock__row { justify-content: center; gap: var(--space-1); }
+    .game-dock__group[data-shortcut-layer] { flex-basis: 100%; }
+    .game-dock__primary .game-dock__item, .game-dock__menu-toggle { gap: var(--space-1); padding: var(--space-1); }
+    .game-dock__overflow { right: 0; max-height: calc(100dvh - 170px); }
+}
+.game-dock .game-dock__overflow .game-dock__tip { display: block; overflow-wrap: anywhere; }
+.game-dock .game-dock__overflow .game-dock__tip kbd { display: table; max-width: 100%; margin-top: var(--space-half); white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 610px) {
+    .game-dock { padding: var(--space-1); }
+    .game-dock__primary .game-dock__item, .game-dock__menu-toggle { flex-direction: column; height: auto; min-height: 46px; }
+    .game-dock__menu-toggle > svg:last-child { display: none; }
+    .game-dock__primary { gap: var(--space-1); }
+}

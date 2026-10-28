@@ -99,7 +99,14 @@ function form(name, submit) {
 }
 function create(folderId = '') { const dialog = form('create', async (el) => { const result = await commands('create', { title: el.querySelector('[name=title]').value, folder_id: folderId, journal_type: el.querySelector('[name=type]').value }); open(result.journal_id); }); dialog.querySelector('select').onchange = e => dialog.querySelector('button[type=submit]').textContent = 'Create ' + typeLabels[e.target.value].toLocaleLowerCase(); }
 function folderForm(parent = '', existing) {
-    const el = form('folder-form', async (form) => { await commands(existing ? 'folder-update' : 'folder-create', { folder_id: existing?.id, parent_id: parent, name: form.querySelector('[name=name]').value, color: form.querySelector('[name=color]').value }); });
+    const el = form('folder-form', async (form) => {
+        await commands(existing ? 'folder-update' : 'folder-create', { folder_id: existing?.id, parent_id: parent, name: form.querySelector('[name=name]').value, color: form.querySelector('[name=color]').value });
+        if (!existing && parent) {
+            closedFolders.delete(parent);
+            try { localStorage.setItem(storedKey, JSON.stringify([...closedFolders])); } catch {}
+            tree();
+        }
+    });
     el.querySelector('[name=colorPicker]').addEventListener('input', e => el.querySelector('[name=color]').value = e.target.value);
     el.querySelector('[name=color]').addEventListener('input', e => el.querySelector('[name=colorPicker]').value = e.target.value);
     if (existing) {

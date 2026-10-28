@@ -1,0 +1,21 @@
+{% macro label(en, pt, es) %}{{ pt if language.id=='pt-BR' else es if language.id=='es' else en }}{% endmacro %}
+<section class="theme-settings">
+  <h1>{{ label('Theme','Tema','Tema') }}</h1>
+  <p>{{ label('Choose the colors of your interface. Changes apply immediately and are saved in this browser.', 'Escolha as cores da interface. As mudanças são imediatas e ficam salvas neste navegador.', 'Elige los colores de la interfaz. Los cambios se aplican al instante y se guardan en este navegador.') }}</p>
+  <fieldset class="theme-options">
+    <legend>{{ label('Available themes','Temas disponíveis','Temas disponibles') }}</legend>
+    {% for key, name, description in [
+      ('classic',label('Classic','Clássico','Clásico'),label('Charcoal and gold','Carvão e dourado','Carbón y dorado')),
+      ('ocean',label('Ocean','Oceano','Océano'),label('Deep blue and cyan','Azul profundo e ciano','Azul profundo y cian')),
+      ('forest',label('Forest','Floresta','Bosque'),label('Dark green and sage','Verde escuro e sálvia','Verde oscuro y salvia')),
+      ('amethyst',label('Amethyst','Ametista','Amatista'),label('Plum and lavender','Ameixa e lavanda','Ciruela y lavanda'))
+    ] %}
+    <label class="theme-option" data-theme-preview="{{ key }}">
+      <input type="radio" name="interface-theme" value="{{ key }}" data-theme-choice />
+      <span class="theme-option__preview" aria-hidden="true"><span></span><span></span><span></span></span>
+      <strong>{{ name }}</strong><span>{{ description }}</span>
+    </label>
+    {% endfor %}
+  </fieldset>
+  <p data-theme-storage-error hidden role="status">{{ label('The theme was applied, but this browser could not save your choice.', 'O tema foi aplicado, mas o navegador não conseguiu salvar sua escolha.', 'El tema se aplicó, pero el navegador no pudo guardar tu elección.') }}</p>
+</section>

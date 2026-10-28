@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
   }
 }
 
-// gravewright/maps/frontend/features/walls/model/walls.js
+// features/walls/model/walls.js
 var solid = { movement: "block", vision: "block", light: "block", sound: "block" };
 var wallPresets = [
   { id: "normal", get name() {
@@ -105,7 +105,7 @@ function enclosed(w, a, b) {
   return [1, 2].every((n) => w[`x${n}`] >= Math.min(a.x, b.x) && w[`x${n}`] <= Math.max(a.x, b.x) && w[`y${n}`] >= Math.min(a.y, b.y) && w[`y${n}`] <= Math.max(a.y, b.y));
 }
 
-// gravewright/maps/frontend/features/walls/ui/walls.js
+// features/walls/ui/walls.js
 var box = (value) => ({ value });
 var derive = (read) => ({ get value() {
   return read();

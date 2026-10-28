@@ -1,5 +1,5 @@
 // gravewright/maps/frontend/native/builder-preview.js
-import { Application } from "/static/gravewright_maps/vendor/pixi.js";
+import { createPixiApplication } from "./runtime/widgets/game-board/lib/pixi-application.js";
 import { PixiBoardRenderer } from "./runtime/widgets/game-board/lib/pixi-board-renderer.js";
 import { SceneLayers } from "./runtime/widgets/game-board/lib/scene-layers.js";
 import { renderingPreferences } from "/static/gravewright_maps/render-profile.js";
@@ -33,9 +33,9 @@ function mountNativePreview({ host, svg, onError }) {
     if (!board) {
       if (initializing) return;
       initializing = true;
-      const application = new Application();
+      let application;
       try {
-        await application.init({
+        application = await createPixiApplication({
           resizeTo: host,
           backgroundAlpha: 0,
           antialias: true,
@@ -55,7 +55,7 @@ function mountNativePreview({ host, svg, onError }) {
         stateChanged = true;
       } catch (cause) {
         try {
-          if (application.renderer) application.destroy({ removeView: true, releaseGlobalResources: false }, { children: true });
+          if (application?.renderer) application.destroy({ removeView: true, releaseGlobalResources: false }, { children: true });
         } catch {
         }
         if (!closed) onError(cause);

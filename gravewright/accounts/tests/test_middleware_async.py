@@ -89,6 +89,11 @@ class MiddlewareAsyncTests(SimpleTestCase):
         self.assertEqual(calls, [])
         self.assertEqual(response['Cache-Control'], 'no-store')
         self.assertIn("frame-ancestors 'none'", response['Content-Security-Policy'])
+        policy = dict(directive.strip().split(' ', 1) for directive in response['Content-Security-Policy'].split(';'))
+        self.assertEqual(policy['default-src'], "'self'")
+        for directive in ('object-src', 'frame-src', 'child-src', 'manifest-src'):
+            self.assertEqual(policy[directive], "'none'")
+        self.assertEqual(policy['worker-src'], "'self'")
         response = await chain(RequestFactory().get('/login'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(calls, ['/login'])

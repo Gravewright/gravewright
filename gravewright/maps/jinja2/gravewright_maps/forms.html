@@ -27,7 +27,23 @@
       <label><span>{{ tr('Width (px)') }}</span><input name="width" type="number" min="1" step="1" value="1400" required /></label>
       <label><span>{{ tr('Height (px)') }}</span><input name="height" type="number" min="1" step="1" value="1400" required /></label>
     </div>
-    <label class="game-scene-editor__check"><input name="gridVisible" type="checkbox" checked />{{ game.showGrid }}</label>
+    <div class="game-scene-editor__columns">
+      <label><span>{{ game.gridSize }}</span><input name="gridSize" type="number" min="1" max="10000" step="0.0001" required /></label>
+      <label><span>{{ game.imageScale }}</span><input name="imageScale" type="number" min="0.01" max="100" step="0.01" required /></label>
+    </div>
+    <div class="game-scene-editor__columns">
+      <label><span>{{ game.measureValue }}</span><input name="measureValue" type="number" min="0.0001" max="1000000" step="any" required /></label>
+      <label><span>{{ game.measureUnit }}</span><input name="measureUnit" type="text" maxlength="24" placeholder="{{ game.measureUnitPlaceholder }}" /></label>
+    </div>
+    <div class="game-scene-editor__columns">
+      <label><span>{{ game.group }}</span><select name="groupId"></select></label>
+      <label><span>{{ game.visibility }}</span><select name="visibility"><option value="players">{{ game.players }}</option><option value="gm">{{ game.gmOnly }}</option></select></label>
+    </div>
+    <div class="game-scene-editor__grid">
+      <label class="game-scene-editor__check"><input name="gridVisible" type="checkbox" />{{ game.showGrid }}</label>
+      <label><span>{{ game.gridColor }}</span><input name="gridColor" type="color" /></label>
+      <label class="game-scene-editor__range"><span>{{ game.gridOpacity }}</span><input name="gridOpacity" type="range" min="0" max="1" step="0.1" /><output>0.4</output></label>
+    </div>
     <label class="game-scene-editor__check"><input name="activate" type="checkbox" checked />{{ tr('Activate after creation') }}</label>
     <button class="game-scene-editor__submit" type="submit">{{ icon('Plus') }}{{ tr('Create map') }}</button>
     <p role="alert" hidden></p>

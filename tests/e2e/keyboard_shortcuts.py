@@ -19,7 +19,27 @@ def check(gm, player, data, output):
     def close():
         gm.locator('.house-menu__close').click()
 
+    layers = ['game', 'gm', 'composition', 'audio', 'effects', 'walls', 'lighting']
+    for index, layer in enumerate(layers, 1):
+        button = gm.locator(f'[data-menubar-shortcut="layer-{layer}"]')
+        expect(button).to_have_attribute('aria-keyshortcuts', f'F{index}')
+        gm.keyboard.press(f'F{index}')
+        expect(button).to_have_attribute('aria-pressed', 'true')
+        expect(button).to_have_attribute('title', __import__('re').compile(f'F{index}$'))
+    gm.keyboard.press('F1')
+    expect(gm.locator('[data-menubar-shortcut="layer-game"]')).to_have_attribute('aria-pressed', 'true')
+    expect(player.locator('[data-menubar-shortcut]')).to_have_count(0)
+    gm.evaluate("() => {const input=document.createElement('input');input.id='function-key-input';document.body.append(input);input.focus()}")
+    gm.locator('#function-key-input').press('F2')
+    expect(gm.locator('[data-menubar-shortcut="layer-game"]')).to_have_attribute('aria-pressed', 'true')
+    gm.locator('#function-key-input').evaluate('input=>input.remove()')
     panel = open_settings()
+    expect(field('window:layer-effects')).to_have_value('F5')
+    field('window:layer-effects').focus()
+    field('window:layer-effects').press('F6')
+    expect(panel.locator('[data-shortcut-error]')).to_contain_text('already assigned')
+    field('window:layer-effects').press('F5')
+    expect(panel.locator('[data-shortcut-error]')).to_be_hidden()
     measure = field('tool:game:measure')
     expect(measure).to_have_value('R')
     measure.focus()
@@ -94,6 +114,11 @@ def check(gm, player, data, output):
     metrics = panel.evaluate(MEASURE)
     assert not metrics['tiny'] and not metrics['overflow'], metrics
     gm.screenshot(path=str(output / 'keyboard-shortcuts-pt-BR-mobile.png'))
+    close()
+    gm.set_viewport_size({'width': 1440, 'height': 1000})
+    expect(gm.locator('[data-scene-builder-open]')).to_be_visible()
+    gm.keyboard.press('F8')
+    gm.wait_for_url('**/map-builder?project=*')
     print('Keyboard shortcuts: recording, conflicts, reserved combinations, cancellation, dispatch, typing, persistence, profile isolation, unassign/reset, remapped search and Portuguese mobile layout passed', flush=True)
 
 

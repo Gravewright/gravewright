@@ -227,7 +227,9 @@ def command(who,action,p):
         if not row.combatants:raise MapError('Add combatants first.')
         row.config={**row.config, '_encounter_id':str(uuid.uuid4())}
         row.active=True;row.round=1;row.turn=0;row.history=[]
-    elif action=='stop':row.active=False;row.round=0;row.turn=0;row.history=[]
+    elif action=='stop':
+        row.active=False;row.round=0;row.turn=0;row.history=[];row.combatants=[]
+        row.config.pop('_encounter_id', None)
     elif action=='next':
         if row.combatants and all(c.get('defeated') for c in row.combatants):raise MapError('No undefeated combatants.')
         if not row.active or not row.combatants:raise MapError('Combat has not started.')

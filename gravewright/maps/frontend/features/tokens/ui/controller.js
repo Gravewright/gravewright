@@ -328,7 +328,7 @@ export function tokenController(element, options) {
         publish(first);
         routeFrame = requestAnimationFrame(tick);
     }
-    const onLayer = t => props.gm || (t.layer || (t.hidden ? 'gm' : 'game')) === (props.layer || 'game');
+    const onLayer = t => (t.layer || (t.hidden ? 'gm' : 'game')) === (props.layer || 'game');
   const selectable = tokens => tokens.filter(onLayer);
   const selection = derive(() => props.tokens.filter((t) => onLayer(t) && selected.value.includes(t.id)));
     const interactive = derive(() => props.tool === "select");

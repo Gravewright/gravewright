@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
   }
 }
 
-// gravewright/maps/frontend/features/walls/model/walls.js
+// features/walls/model/walls.js
 var solid = { movement: "block", vision: "block", light: "block", sound: "block" };
 var wallPresets = [
   { id: "normal", get name() {

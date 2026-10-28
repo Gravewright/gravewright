@@ -25,6 +25,10 @@ def create(campaign_id, user_id, payload):
     grid = payload.get("gridVisible")
     if type(grid) is not bool:
         raise services.MapError("Invalid grid visibility.")
+    options = services.settings(payload)
+    visibility = payload.get("visibility", "players")
+    if visibility not in ("players", "gm"):
+        raise services.MapError("Invalid visibility.")
     activate = payload.get("activate", True)
     if type(activate) is not bool:
         raise services.MapError("Invalid scene activation.")
@@ -57,7 +61,7 @@ def create(campaign_id, user_id, payload):
             target = services.folder(payload.get("groupId"), who)
             row = Scene.objects.create(
                 campaign_id=campaign_id, folder=target, name=name, width=width, height=height,
-                max_lod=max_lod, settings={**services.DEFAULTS, "gridVisible": grid},
+                max_lod=max_lod, settings=options, visibility=visibility,
             )
             for tile in tiles:
                 tile.scene = row

@@ -948,9 +948,16 @@ This generates only `modules/static/gravewright_modules/frontend-contract.js` fr
 
 ## Board layers and resource lifetimes
 
+`pixi-application.js` initializes the real board or builder-preview WebGL context directly. Shared empty/white textures use initialized, premultiplied pixels. After context restoration, the board rebuilds pooled text textures and schedules a repaint without waiting for user input. The build retains explicit compatibility adjustments for Pixi context detection and restored texture bindings; it fails if upstream source no longer matches those adjustments.
+
+The standalone `tests/web/firefox_webgl_browser.py` scenario serves built assets and synthetic graphics without campaign data. It checks warning-free startup, transparency and opaque pixels, then deliberately loses/restores the GPU context and compares the complete rendered image. It requires Playwright Firefox.
+
 The **New scene** chooser includes **Empty map**. Its form asks for the scene
-name, background color, width and height in pixels, whether to show the grid,
-and whether to activate it after creation. Creation uses the current folder.
+name, background color and width and height in pixels. It also offers the same
+creation settings as an uploaded map: grid size, scale, distance per cell, unit,
+grid visibility/color/opacity, folder and player/GM visibility. The current
+folder is preselected; it can be changed or cleared. Both paths use the shared
+scene-settings validation. Activation after creation remains optional.
 When activation is unchecked, the creator previews the new scene while players
 stay on the existing active scene. The server creates
 ordinary lossless map tiles within the configured image and tile-count limits,
@@ -1168,3 +1175,26 @@ uv run --locked python tests/e2e/frontend_api.py
 ```
 
 For rendering or interaction changes, use relevant scenarios under `tests/e2e/`, including `mixed_selection.py`, `token_routes.py`, `light_rendering.py`, `effect_geometry.py`, `effect_pixels.py`, `map_prefetch.py` and `realtime.py`. The browser harness and dependencies are explained in [testing](testing.md). Test player and GM sessions where behavior is permission-dependent, and check disposal/reconnect when adding subscriptions. Keep labels and message catalogs aligned with the application's supported languages.
+
+Scene selection follows the active workspace: Game selects game tokens and cards; Walls selects walls; Lighting selects lights; Effects selects effects; Sound selects sound sources; Images selects public images. GM selects private tokens, private images and regions. Drawing and measurement editing use their own tools. Click, marquee, context menus and Select All share this scope; changing workspaces cancels pending selection gestures.
+
+The menubar uses F1–F8 in visual order: Game, GM, Images, Sound, Effects, Walls, Lighting and Edit Scene. These global bindings are listed in shortcut settings and can be reassigned. F5 selects Effects instead of reloading while the table accepts shortcuts; Ctrl+R remains available to reload. Hidden or unavailable actions do not run, and typing or modal focus does not switch layers.
+
+The bottom dock separates current-layer tools from labeled Chat, Actors and Combat buttons. The Panels disclosure groups scene and content directories, search, settings and campaign tools. It retains the original controls and keyboard mappings: shortcuts work with the disclosure closed, while unavailable controls remain unavailable. Escape returns focus to the disclosure button; outside clicks and focus leaving the disclosure close it. Narrow screens use two rows and a scrollable panel list.
+
+The chat titlebar groups chat-specific actions separately from the shared Reset layout, Minimize/Restore and Close controls. Its own minimize button participates in the shared window contract, preventing a duplicate control. The chat header stays below the menubar on narrow screens; detached chat retains Clear history for the GM and Close.
+
+The table's Extensions panel lists ordinary installed modules, but only the
+active version of the campaign's selected system. Other installed systems remain
+available in the global Systems and Marketplace catalogs.
+
+Inside includes a Theme section for owners and players, with Classic, Ocean,
+Forest and Amethyst palettes. Shared interface colors apply immediately, including
+on the table. The choice is local to the browser (`gravewright.interface-theme`),
+not campaign data. Missing or invalid choices use Classic; unavailable browser
+storage leaves the current selection usable and displays a saving warning.
+
+Creating a subfolder in Scenes, Actors, Journals or Items expands its parent after
+the server confirms creation. The expanded state uses the directory's existing
+browser preference so the new folder remains visible after a reload. Failed
+creation does not change the parent's expanded state.

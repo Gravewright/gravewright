@@ -52,6 +52,28 @@ class EmptyMapTests(TestCase):
                 self.assertEqual(image.size, (min(512, w - 512 * tile.x), min(512, h - 512 * tile.y)))
         self.assertEqual(services.manifest(row)['maxLod'], row.max_lod)
 
+    def test_creation_uses_the_same_scene_settings_as_uploaded_maps(self):
+        options = {'gridSize': 96, 'gridOffsetX': 12, 'gridOffsetY': -8,
+                   'imageScale': 1.5, 'measureValue': 2.5, 'measureUnit': 'm',
+                   'gridVisible': True, 'gridColor': '#abcdef', 'gridOpacity': 0.7}
+        result = self.create(**options, visibility='gm', activate=False)
+        scene = Scene.objects.get(pk=result['id'])
+        self.assertEqual(scene.settings, services.settings(options))
+        self.assertEqual(scene.visibility, 'gm')
+        self.assertNotIn(result['id'], {row['id'] for row in services.state(self.campaign.pk, self.player.pk)['maps']})
+        for key, value in options.items():
+            self.assertEqual(result[key], value)
+
+    def test_invalid_scene_settings_are_rejected_before_generating_tiles(self):
+        for values in ({'gridSize': 0}, {'imageScale': True}, {'gridOpacity': 2},
+                       {'measureValue': -1}, {'measureUnit': 'm' * 25},
+                       {'gridColor': 'red'}, {'visibility': 'anyone'}):
+            with self.subTest(values=values), patch('gravewright.maps.empty_maps.tiling.generate_solid_pyramid') as generate:
+                with self.assertRaises(services.MapError):
+                    self.create(**values)
+                generate.assert_not_called()
+        self.assertFalse(Scene.objects.exists())
+
     def test_retry_returns_one_scene_without_creating_more_files(self):
         result = self.create(gridVisible=True)
         files = sorted(Path(self.temp.name).rglob('*.webp'))

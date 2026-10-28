@@ -1,3 +1,4 @@
+import { tablePackages } from "./table-packages.js";
 import { HttpClient } from "./http-client.js";
 import { BrowserBridge } from "./browser-bridge.js";
 import { ModuleRuntime } from "./module-runtime.js";
@@ -30,7 +31,8 @@ if (table) {
     error.role = "alert";
     error.hidden = true;
     pane.append(error);
-    if (!packages.length) {
+    const visiblePackages = tablePackages(packages, table.dataset.systemId, state?.modules);
+    if (!visiblePackages.length) {
       const p = document.createElement("p");
       p.textContent = "No JavaScript modules installed.";
       pane.append(p);
@@ -38,7 +40,7 @@ if (table) {
     const list = document.createElement('ul');
     list.className = 'module-marketplace__list';
     pane.append(list);
-    for (const pkg of packages) {
+    for (const pkg of visiblePackages) {
       const row = document.createElement("li");
       row.className = "module-marketplace__item";
       row.dataset.packageId = pkg.id;

@@ -84,6 +84,8 @@ Termos upstream específicos que devem acompanhar os pacotes redistribuídos:
 
 ### Renderização de mapas
 
+A compilação do PixiJS inclui dois ajustes locais de compatibilidade em `gravewright/maps/scripts/build.cjs`: um contexto WebGL fornecido evita a sondagem descartável, e os vínculos de texturas são limpos quando o contexto é restaurado. A versão upstream e a licença MIT permanecem inalteradas.
+
 A compilação atual dos mapas registra estas bibliotecas. Suas funções incluem renderização PixiJS, eventos, conversão de cores, triangulação, detecção de dispositivos móveis, leitura de SVG, cache e leitura de XML.
 
 | Pacote | Versão | Licença | Aviso |

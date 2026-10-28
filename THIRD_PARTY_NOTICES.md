@@ -84,6 +84,8 @@ Specific upstream terms worth retaining with redistributed packages:
 
 ### Map rendering
 
+The PixiJS build includes two local compatibility adjustments in `gravewright/maps/scripts/build.cjs`: a supplied WebGL context bypasses the disposable capability probe, and texture bindings are cleared when a context is restored. The upstream version and MIT license are unchanged.
+
 The current map build records these libraries. Their roles include PixiJS rendering, events, color conversion, triangulation, mobile detection, SVG parsing, caching and XML parsing.
 
 | Package | Version | License | Notice |

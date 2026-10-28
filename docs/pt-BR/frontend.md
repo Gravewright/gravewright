@@ -1012,9 +1012,17 @@ O script gera somente `modules/static/gravewright_modules/frontend-contract.js` 
 
 ## Camadas do tabuleiro e ciclo dos recursos
 
+`pixi-application.js` inicializa diretamente o contexto WebGL real do tabuleiro ou da prévia do construtor. As texturas vazia/branca compartilhadas usam pixels inicializados e pré-multiplicados. Após a restauração do contexto, o tabuleiro recria texturas de texto reutilizadas e agenda uma renderização sem esperar interação do usuário. A compilação mantém ajustes explícitos de compatibilidade para a detecção de contexto e os vínculos de texturas restaurados do Pixi; ela falha se o código upstream deixar de corresponder aos ajustes.
+
+O cenário independente `tests/web/firefox_webgl_browser.py` serve recursos compilados e gráficos sintéticos sem dados de campanha. Verifica inicialização sem avisos, transparência e pixels opacos; depois provoca perda/restauração do contexto da GPU e compara a imagem renderizada completa. Requer o Firefox do Playwright.
+
 O seletor **Nova cena** inclui **Mapa Vazio**. O formulário pede o nome da cena,
-a cor de fundo, a largura e a altura em pixels, se deve exibir o grid e se deve
-ativar a cena ao criar. A criação usa a pasta atual. Com a ativação desmarcada,
+a cor de fundo e a largura e a altura em pixels. Também oferece as mesmas opções
+de criação de um mapa de imagem: tamanho da grade, escala, distância por célula,
+unidade, visibilidade/cor/opacidade da grade, pasta e visibilidade para jogadores
+ou somente GM. A pasta atual vem selecionada e pode ser trocada ou removida.
+Ambos os fluxos usam a validação compartilhada de configurações de cena.
+Com a ativação ao criar desmarcada,
 somente o criador visualiza a nova cena; os jogadores continuam na cena ativa.
 O servidor gera tiles comuns sem
 perda de qualidade, respeitando os limites configurados de imagem e quantidade
@@ -1244,3 +1252,27 @@ uv run --locked python tests/e2e/frontend_api.py
 ```
 
 Para renderização/interação, use cenários relevantes de `tests/e2e/`, incluindo `mixed_selection.py`, `token_routes.py`, `light_rendering.py`, `effect_geometry.py`, `effect_pixels.py`, `map_prefetch.py` e `realtime.py`. O ambiente de navegador está descrito em [testes](testing.md). Verifique sessões de mestre e jogador quando houver permissões distintas e valide limpeza/reconexão de assinaturas novas. Mantenha textos e catálogos alinhados aos idiomas suportados pela aplicação.
+
+A seleção da cena respeita a aba ativa: Jogo seleciona tokens de jogo e cartas; Paredes seleciona paredes; Iluminação seleciona luzes; Efeitos seleciona efeitos; Som seleciona fontes de som; Imagens seleciona imagens públicas. GM seleciona tokens privados, imagens privadas e regiões. Desenhos e medições são editados pelas ferramentas próprias. Clique, seleção por área, menus de contexto e Selecionar tudo respeitam esse limite; trocar de aba cancela gestos de seleção pendentes.
+
+A barra superior usa F1–F8 na ordem visual: Jogo, Mestre, Imagens, Som, Efeitos, Paredes, Iluminação e Editar Cena. Esses atalhos globais aparecem nas configurações e podem ser alterados. F5 seleciona Efeitos em vez de recarregar quando a mesa aceita atalhos; Ctrl+R continua disponível para recarregar. Ações ocultas ou indisponíveis não são acionadas, e digitar ou usar um modal não troca de aba.
+
+A barra inferior separa as ferramentas da camada atual dos botões com nome de Chat, Personagens e Combate. O botão Painéis reúne os diretórios de cenas e conteúdo, busca, configurações e ferramentas da campanha. Os controles e atalhos originais são preservados: os atalhos funcionam com o menu fechado, e controles indisponíveis continuam indisponíveis. Escape devolve o foco ao botão Painéis; clicar fora ou mover o foco para fora fecha o menu. Em telas estreitas, a barra usa duas linhas e a lista de painéis permite rolagem.
+
+O cabeçalho do chat separa as ações próprias dos controles padrão de Restaurar disposição, Minimizar/Restaurar e Fechar. O botão de minimizar participa do contrato compartilhado de janelas, evitando a duplicação do controle. Em telas estreitas, o cabeçalho fica abaixo da barra superior; o chat destacado mantém Limpar histórico para o GM e Fechar.
+
+O painel Extensões da mesa lista os módulos comuns instalados, mas apenas a
+versão ativa do sistema selecionado na campanha. Os demais sistemas instalados
+continuam disponíveis nos catálogos globais de Sistemas e Marketplace.
+
+O Inside inclui a seção Tema para proprietários e jogadores, com as paletas
+Clássico, Oceano, Floresta e Ametista. As cores compartilhadas da interface mudam
+imediatamente, inclusive na mesa. A escolha é local ao navegador
+(`gravewright.interface-theme`), não aos dados da campanha. Uma escolha ausente ou
+inválida usa Clássico; se o armazenamento estiver indisponível, a seleção continua
+funcionando e um aviso informa que ela não foi salva.
+
+Criar uma subpasta em Cenas, Personagens, Diários ou Itens abre a pasta-mãe após a
+confirmação do servidor. O estado aberto usa a preferência existente do diretório
+no navegador, mantendo a nova pasta visível após recarregar. Uma criação que falha
+não altera o estado aberto ou fechado da pasta-mãe.

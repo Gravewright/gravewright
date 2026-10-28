@@ -111,7 +111,7 @@ export function createTokens(surface, board, map, gm, initial) {
       dynamic: state.lighting.mode === "dynamic",
       measureValue: map.measureValue,
       measureUnit: map.measureUnit,
-      tool: gm || ["game", "gm"].includes(getPath("_layer"))
+      tool: ["game", "gm"].includes(getPath("_layer") || "game")
         ? getPath("_tool")
         : "inactive",
     };

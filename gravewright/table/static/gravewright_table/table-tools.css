@@ -1087,4 +1087,5 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
     text-align: center;
     color: var(--text-faint);
 }
-[data-native-directory]{z-index:1100;right:var(--size-16);top:var(--size-70);max-height:80vh;overflow:auto;}
+/* Keep native directories in the game-panel stack, below the house menu. */
+[data-native-directory]{right:var(--size-16);top:var(--size-70);max-height:80vh;overflow:auto;}

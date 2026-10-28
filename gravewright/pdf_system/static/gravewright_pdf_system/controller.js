@@ -11,13 +11,13 @@ function fieldBounds(viewport, rect, offsetTop = 0) {
   };
 }
 
-// gravewright/pdf_system/frontend/text.js
+// ../../pdf_system/frontend/text.js
 function text(value, ...args) {
   const i18n = typeof window !== "undefined" && window.gravewright?.i18n;
   return i18n ? i18n.t(value, args) : value.replace(/\{(\d+)\}/g, (match, i) => args[Number(i)] === void 0 ? match : String(args[Number(i)]));
 }
 
-// gravewright/pdf_system/frontend/pdfjs-loader.js
+// ../../pdf_system/frontend/pdfjs-loader.js
 var cached;
 function loadPdfjs(url) {
   if (!cached) {
@@ -35,7 +35,7 @@ function loadPdfjs(url) {
   return cached;
 }
 
-// gravewright/pdf_system/frontend/mapping.js
+// ../../pdf_system/frontend/mapping.js
 var BAR_SLOTS = [
   { key: "bar1Value", label: text("Bar 1 \xB7 Current"), path: "sheet.bars.bar_1.value" },
   { key: "bar1Max", label: text("Bar 1 \xB7 Maximum"), path: "sheet.bars.bar_1.max" },
@@ -102,7 +102,7 @@ function writeCanonical(actor, path, value) {
   cursor[last] = value;
 }
 
-// gravewright/pdf_system/frontend/manual-fields.js
+// ../../pdf_system/frontend/manual-fields.js
 var MANUAL_FIELD_TYPES = Object.freeze(["text", "number", "checkbox", "multiline"]);
 var MAX_MANUAL_FIELDS = 256;
 var MIN_MANUAL_SIZE = 1e-3;
@@ -161,7 +161,7 @@ function manualFieldBounds(field, viewport, offsetTop = 0) {
   };
 }
 
-// gravewright/pdf_system/sheet-shape.js
+// ../../pdf_system/sheet-shape.js
 function pdfCharacterDefaults() {
   return {
     pdf: { template: "generic", page: 1, zoom: 1, spread: false, asset: "", textColor: "#111111" },
@@ -184,7 +184,7 @@ function normalizePdfCharacterData(value) {
   return merge(defaults, value);
 }
 
-// gravewright/pdf_system/frontend/field-actions.js
+// ../../pdf_system/frontend/field-actions.js
 function actionsForSource(pdf, source) {
   const key = sourceKey(source), result = /* @__PURE__ */ Object.create(null);
   const actions = Array.isArray(pdf?.fieldActions) ? pdf.fieldActions : [];
@@ -252,7 +252,7 @@ function fieldActionCandidate(actor, source, name, config, fields, originals) {
   return candidate;
 }
 
-// gravewright/pdf_system/frontend/formulas.js
+// ../../pdf_system/frontend/formulas.js
 var fail = (message) => {
   throw new Error(message);
 };
@@ -551,7 +551,7 @@ function recalculateFields(actor, source, { previous } = {}) {
   return { changed: changed2, errors, fields };
 }
 
-// gravewright/pdf_system/frontend/layout-history.js
+// ../../pdf_system/frontend/layout-history.js
 var LISTS = ["manualFields", "fieldActions", "calculatedFields", "fieldBindings"];
 function captureLayout(actor, source) {
   const key = sourceKey(source);
@@ -628,7 +628,7 @@ function pasteLayout(actor, source, clipboard, { page, pageCount, dx = 0.02, dy 
   return { candidate, ids: definitions.map((field) => field.id) };
 }
 
-// gravewright/pdf_system/frontend/layout-editor.js
+// ../../pdf_system/frontend/layout-editor.js
 var finite3 = (value) => typeof value === "number" && Number.isFinite(value);
 var clamp = (value, lower, upper) => Math.max(lower, Math.min(upper, value));
 var valid = (field) => field && typeof field.id === "string" && [field.x, field.y, field.width, field.height].every(finite3) && field.x >= 0 && field.y >= 0 && field.width >= 1e-3 && field.height >= 1e-3 && field.x + field.width <= 1 && field.y + field.height <= 1;
@@ -714,7 +714,7 @@ function snapLayoutRect(rect, grid = {}) {
   return { x, y, width: right - x, height: bottom - y };
 }
 
-// gravewright/pdf_system/frontend/raster-pdf.js
+// ../../pdf_system/frontend/raster-pdf.js
 var encode = (value) => new TextEncoder().encode(value);
 function rasterPdf(pages) {
   if (!Array.isArray(pages) || !pages.length || pages.length > 100)
@@ -778,7 +778,7 @@ ${start}
   return result;
 }
 
-// gravewright/pdf_system/frontend/diagnostics.js
+// ../../pdf_system/frontend/diagnostics.js
 function mappingDiagnostics(view) {
   const source = sourceKey(view.currentSource), pdf = view.actor?.data.pdf;
   if (!pdf || !source) return [];
@@ -822,7 +822,7 @@ function mappingDiagnostics(view) {
   return issues;
 }
 
-// gravewright/pdf_system/frontend/controller.js
+// ../../pdf_system/frontend/controller.js
 function pdfController(host, options) {
   const props = options.props;
   const box = (initial) => {

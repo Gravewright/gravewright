@@ -1,5 +1,17 @@
-<aside id="chat-panel" class="game-panel{{ ' game-panel--detached' if detached_chat else '' }}" data-movable style="--panel-index:0;display:none" data-show="$_chatOpen &amp;&amp; !$_chatDetached" data-class="{'game-panel--minimized':$_chatMinimized,'gw-window--focused':!$_chatMinimized,'gw-movable-resizable':!$_chatMinimized}">
-<header data-move-handle><strong class="game-panel__title">{{ icon('ChatCircleText','duotone') }}Chat</strong><div>{% if member_role == 'gm' %}<button type="button" data-chat-clear aria-label="Clear chat history" title="Clear chat history">{{ icon('Trash') }}</button>{% endif %}<button type="button" aria-label="{{ game.detach }}" title="{{ game.detach }}" data-on:click="window.gravewrightRealtime.detach()">{{ icon('ArrowsOutSimple') }}</button><button type="button" aria-label="{{ game.minimize }}" title="{{ game.minimize }}" data-on:click="$_chatMinimized=!$_chatMinimized">{{ icon('Minus') }}</button><button type="button" aria-label="Close" title="Close" data-on:click="window.gravewrightRealtime.closeChat()">{{ icon('X') }}</button></div></header>
+<aside id="chat-panel" class="game-panel{{ ' game-panel--detached' if detached_chat else '' }}" data-movable data-window-top-boundary=".game-menubar" style="--panel-index:0;display:none" data-show="$_chatOpen &amp;&amp; !$_chatDetached" data-class="{'game-panel--minimized':$_chatMinimized,'gw-window--focused':!$_chatMinimized,'gw-movable-resizable':!$_chatMinimized}">
+<header data-move-handle>
+<strong class="game-panel__title">{{ icon('ChatCircleText','duotone') }}Chat</strong>
+<div class="chat-panel__controls">
+<span class="chat-panel__actions">
+{% if member_role == 'gm' %}<button type="button" data-chat-clear aria-label="Clear chat history" title="Clear chat history">{{ icon('Trash') }}</button>{% endif %}
+<button type="button" data-chat-action="detach" aria-label="{{ game.detach }}" title="{{ game.detach }}" data-on:click="window.gravewrightRealtime.detach()">{{ icon('ArrowsOutSimple') }}</button>
+</span>
+<span class="gw-window__controls">
+<button type="button" data-window-action="minimize" data-chat-action="minimize" aria-label="{{ game.minimize }}" title="{{ game.minimize }}" data-on:click="$_chatMinimized=!$_chatMinimized">{{ icon('Minus') }}</button>
+<button type="button" data-chat-action="close" aria-label="Close" title="Close" data-on:click="window.gravewrightRealtime.closeChat()">{{ icon('X') }}</button>
+</span>
+</div>
+</header>
 <div class="game-panel__chat">
 <div id="chat-log" class="game-panel__log" data-show="$_hasChat" style="display:none" aria-live="polite" aria-relevant="additions"></div>
 <div class="game-panel__placeholder" data-show="!$_hasChat">{{ icon('ChatCircleText') }}<strong>{{ game.chatWelcome }}</strong><p>{{ game.chatHint }}</p></div>

@@ -46,7 +46,7 @@ if (typeof window !== "undefined") {
   }
 }
 
-// gravewright/maps/frontend/features/tokens/model/token-interaction.js
+// features/tokens/model/token-interaction.js
 function hitToken(point, tokens, cell) {
   return [...tokens].reverse().find((t) => point.x >= t.gridX * cell && point.x <= (t.gridX + t.cells) * cell && point.y >= t.gridY * cell && point.y <= (t.gridY + (t.heightCells ?? t.cells)) * cell);
 }
@@ -70,12 +70,12 @@ function movementBlocked(token, to, walls, cell) {
   });
 }
 
-// gravewright/maps/frontend/features/tokens/model/token-vision.js
+// features/tokens/model/token-vision.js
 function distancePerCell(value) {
   return Number.isFinite(value) && value > 0 ? value : 1;
 }
 
-// gravewright/maps/frontend/features/tokens/model/token-route.js
+// features/tokens/model/token-route.js
 function routeMeasurements(route, measureValue) {
   const scale = distancePerCell(measureValue);
   const segments = route.slice(1).map((step, index) => {
@@ -108,7 +108,7 @@ function routePosition(route, lengths, distance) {
   return { tokens: to.map((token, i) => ({ ...token, gridX: from[i].gridX + (token.gridX - from[i].gridX) * t, gridY: from[i].gridY + (token.gridY - from[i].gridY) * t })), passed: segment, done: false };
 }
 
-// gravewright/maps/frontend/features/tokens/model/token-pathfinding.js
+// features/tokens/model/token-pathfinding.js
 function suggestTokenRoute(route, walls, cell, width, height, limits = {}) {
   if (route.length < 2 || !(cell > 0) || !Number.isFinite(width + height + cell))
     return;
@@ -200,7 +200,7 @@ function suggestTokenRoute(route, walls, cell, width, height, limits = {}) {
   }
 }
 
-// gravewright/maps/frontend/features/tokens/model/token-motion.js
+// features/tokens/model/token-motion.js
 var TOKEN_SETTLE_MS = 120;
 function tokenTeleported(from, to) {
   return (from.teleportVersion ?? 0) !== (to.teleportVersion ?? 0);
@@ -216,7 +216,7 @@ function interpolateTokens(from, to, progress) {
   });
 }
 
-// gravewright/maps/frontend/features/tokens/model/token-teleports.js
+// features/tokens/model/token-teleports.js
 function createTokenTeleports() {
   const markers = /* @__PURE__ */ new Map(), versions = /* @__PURE__ */ new Map();
   return {
@@ -244,7 +244,7 @@ function createTokenTeleports() {
   };
 }
 
-// gravewright/maps/frontend/features/tokens/model/token-snapshots.js
+// features/tokens/model/token-snapshots.js
 function createTokenSnapshots() {
   let current = [];
   const pending = /* @__PURE__ */ new Set();
@@ -289,13 +289,13 @@ function createTokenSnapshots() {
   };
 }
 
-// gravewright/maps/frontend/features/tokens/ui/controller.js
+// features/tokens/ui/controller.js
 import { renderingPreferences } from "/static/gravewright_maps/render-profile.js";
 
-// gravewright/maps/frontend/widgets/game-board/model/board-input.js
+// widgets/game-board/model/board-input.js
 var LONG_PRESS_MS = 700;
 
-// gravewright/maps/frontend/features/tokens/ui/controller.js
+// features/tokens/ui/controller.js
 function tokenController(element, options) {
   const props = { ...options.props }, emit = options.emit, nextTick = () => Promise.resolve();
   const box = (initial) => {
@@ -574,7 +574,7 @@ function tokenController(element, options) {
     publish(first);
     routeFrame = requestAnimationFrame(tick);
   }
-  const onLayer = (t) => props.gm || (t.layer || (t.hidden ? "gm" : "game")) === (props.layer || "game");
+  const onLayer = (t) => (t.layer || (t.hidden ? "gm" : "game")) === (props.layer || "game");
   const selectable = (tokens) => tokens.filter(onLayer);
   const selection = derive(() => props.tokens.filter((t) => onLayer(t) && selected.value.includes(t.id)));
   const interactive = derive(() => props.tool === "select");

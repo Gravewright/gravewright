@@ -27,11 +27,15 @@ class AuthSecurityMiddleware(MiddlewareMixin):
         if not request.path.startswith(('/static/', '/admin/')):
             response['Cache-Control'] = 'no-store'
             # Datastar compiles trusted expressions in data-* attributes.
+            # Firefox source inspection uses generic resource requests. Allow
+            # same-origin fallback while denying frames, objects and manifests
+            # explicitly instead of relying on default-src for those types.
             response['Content-Security-Policy'] = (
-                "default-src 'none'; script-src 'self' 'unsafe-eval' "
+                "default-src 'self'; script-src 'self' 'unsafe-eval' "
                 f"'nonce-{request.csp_nonce}'; "
                 "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; "
                 "font-src 'self'; media-src 'self' blob:; connect-src 'self'; base-uri 'none'; "
-                "form-action 'self'; frame-ancestors 'none'"
+                "form-action 'self'; frame-ancestors 'none'; object-src 'none'; "
+                "frame-src 'none'; child-src 'none'; worker-src 'self'; manifest-src 'none'"
             )
         return response

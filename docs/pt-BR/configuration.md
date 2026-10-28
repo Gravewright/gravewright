@@ -134,6 +134,8 @@ Apenas uma pirâmide de mapa é gerada por vez em cada processo do servidor, inc
 
 A geração nativa prepara a imagem-fonte e os tiles em `data/runner/tmp/` dentro da instalação. Um `GRAVEWRIGHT_RUNNER_ROOT` explícito altera a raiz das ferramentas, e um override Django de `FILE_UPLOAD_TEMP_DIR` tem prioridade para a área temporária dos tiles; caminhos relativos partem da raiz da instalação. A pasta deve permitir escrita e comportar a fonte, os tiles preparados e eventuais arquivos temporários dos codecs enquanto os tiles finais são gravados na mídia. Falhas de armazenamento ou de geração nativa permanecem erros do servidor, e tiles já gravados são removidos se o upload falhar. Consulte [implantação](deployment.md) para timeouts de upload síncrono e dimensionamento.
 
+A política de segurança de conteúdo HTTP permite requisições genéricas da mesma origem, incluindo a inspeção de fontes pelo Firefox. Scripts, estilos, imagens, fontes, mídia e conexões mantêm diretivas explícitas. Objetos, frames, contextos de navegação filhos e manifestos são bloqueados explicitamente; workers ficam limitados à mesma origem.
+
 ## Configurações sem variáveis de ambiente
 
 Estas opções são definidas em Python, sem leitura automática de entradas com o mesmo nome no `.env`:

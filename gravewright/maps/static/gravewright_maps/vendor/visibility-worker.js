@@ -7,10 +7,10 @@ var __commonJS = (cb, mod) => function __require() {
   }
 };
 
-// gravewright/maps/scripts/build.cjs
+// ../scripts/build.cjs
 import "../runtime/widgets/game-board/model/visibility-worker.js";
 var require_build = __commonJS({
-  "gravewright/maps/scripts/build.cjs"() {
+  "../scripts/build.cjs"() {
   }
 });
 export default require_build();

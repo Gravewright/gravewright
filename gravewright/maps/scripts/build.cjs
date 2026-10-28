@@ -79,7 +79,27 @@ async function buildAssets({ root = projectRoot, outputRoot = root, dependencies
       "builder-editors": source + "/native/builder-editors.js", "builder-native": source + "/native/builder-preview.js",
       "builder-player-test": source + "/native/builder-player-test.js",
       "vendor/board": source + "/widgets/game-board/ui/board.js" }, resources: [worker] }));
-  results.push(await esbuild.build({ ...common, stdin: { contents: 'import "pixi.js/unsafe-eval"; export * from "pixi.js";',
+  // Pixi probes and deliberately loses an extra context even when a caller has
+  // supplied the actual WebGL context. Honor that context before probing.
+  const providedContext = { name: 'pixi-provided-context', setup(build) {
+    build.onLoad({ filter: /[/\\]autoDetectRenderer\.mjs$/ }, async args => {
+      const original = await fs.promises.readFile(args.path, 'utf8');
+      const before = 'rendererType === "webgl" && isWebGLSupported(\n      options.failIfMajorPerformanceCaveat ?? AbstractRenderer.defaultOptions.failIfMajorPerformanceCaveat\n    ))';
+      const after = 'rendererType === "webgl" && (options.context || isWebGLSupported(\n      options.failIfMajorPerformanceCaveat ?? AbstractRenderer.defaultOptions.failIfMajorPerformanceCaveat\n    )))';
+      if (!original.includes(before)) throw Error('Review the Pixi supplied-context compatibility patch.');
+      return { contents: original.replace(before, after), loader: 'js' };
+    });
+    // Bindings belong to the old context. Keeping them makes the restored
+    // renderer skip uploads for empty textures and existing text atlases.
+    build.onLoad({ filter: /[/\\]GlTextureSystem\.mjs$/ }, async args => {
+      const original = await fs.promises.readFile(args.path, 'utf8');
+      const before = 'this._premultiplyAlpha = false;\n    for (let i = 0; i < 16; i++)';
+      const after = 'this._premultiplyAlpha = false;\n    this._activeTextureLocation = -1;\n    this._boundTextures.fill(null);\n    for (let i = 0; i < 16; i++)';
+      if (!original.includes(before)) throw Error('Review the Pixi context-restoration compatibility patch.');
+      return { contents: original.replace(before, after), loader: 'js' };
+    });
+  } };
+  results.push(await esbuild.build({ ...common, plugins: [...common.plugins, providedContext], stdin: { contents: 'import "pixi.js/unsafe-eval"; export * from "pixi.js";',
     resolveDir: source, sourcefile: __filename }, minify: true, outfile: output + "/vendor/pixi.js" }));
   // Keep the previously published worker URL while its real module remains
   // beside visibility-jobs.js for the source's relative new URL() reference.

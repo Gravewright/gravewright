@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
   }
 }
 
-// gravewright/maps/frontend/shared/lifecycle/scope.js
+// shared/lifecycle/scope.js
 var ResourceScope = class {
   #abort = new AbortController();
   #cleanups = [];
@@ -76,7 +76,7 @@ var ResourceScope = class {
   }
 };
 
-// gravewright/maps/frontend/native/widget.js
+// native/widget.js
 var CELL = /* @__PURE__ */ Symbol("cell");
 var expressions = /* @__PURE__ */ new Map();
 function evaluate(code, ctx, eventMode = false) {
@@ -484,7 +484,7 @@ function widget(markup, setup) {
   };
 }
 
-// gravewright/maps/frontend/shared/ui/directory/DirectoryContextMenu.native.js
+// shared/ui/directory/DirectoryContextMenu.native.js
 var DirectoryContextMenu_native_default = widget([{ "tag": "menu", "attrs": { "ref": "menu", "class": "gw-folder-menu directory-context-menu" }, "bind": { "aria-label": "label", "style": "{ left: `${position.x}px`, top: `${position.y}px` }" }, "events": [{ "event": "click", "code": "", "mods": ["stop"] }, { "event": "contextmenu", "code": "", "mods": ["prevent", "stop"] }], "children": [{ "tag": "slot", "attrs": {}, "bind": {}, "events": [], "children": [] }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const props = options.props;
   const emit = options.emit;
@@ -536,7 +536,7 @@ var DirectoryContextMenu_native_default = widget([{ "tag": "menu", "attrs": { "r
   return { props, emit, menu, position, place, outside, other, keyboard };
 });
 
-// gravewright/maps/frontend/features/table-library/model/library-upload.js
+// features/table-library/model/library-upload.js
 var IMAGE_ACCEPT = "image/png,image/jpeg,image/webp";
 var AUDIO_ACCEPT = "audio/ogg,audio/opus,audio/mpeg,audio/mp4,audio/wav,.ogg,.opus,.mp3,.m4a,.wav";
 var mimeByExtension = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", ogg: "audio/ogg", opus: "audio/opus", mp3: "audio/mpeg", m4a: "audio/mp4", wav: "audio/wav", pdf: "application/pdf" };
@@ -578,7 +578,7 @@ function uploadError(error) {
   return text("Could not complete the action. Check the connection and try again.");
 }
 
-// gravewright/maps/frontend/features/table-library/ui/AssetUploadLibrary.native.js
+// features/table-library/ui/AssetUploadLibrary.native.js
 var PhImage = "PhImage";
 var PhMusicNotes = "PhMusicNotes";
 var PhWaveform = "PhWaveform";

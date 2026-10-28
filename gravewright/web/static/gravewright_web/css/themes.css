@@ -1,0 +1,109 @@
+/* Shared interface palettes; scene artwork and system-owned colors are unchanged. */
+[data-theme-preview="classic"] {
+  --bg: #11151a;
+  --surface: #181d23;
+  --surface-raised: #20262d;
+  --surface-raised-2: #252c34;
+  --surface-field: #151a20;
+  --border: #303842;
+  --border-strong: #46505c;
+  --border-control: #637183;
+  --text-bright: #f0ebdd;
+  --text: #d8d2c3;
+  --text-muted: #a9a193;
+  --text-faint: #939da8;
+  --accent: #c09a5a;
+  --accent-hover: #d2ac6b;
+  --accent-bright: #e2bd7c;
+  --accent-dark: #8b6a3c;
+  --layer-accent-rgb: 192, 154, 90;
+  --focus-ring: var(--accent-hover);
+  --accent-glow: rgba(var(--layer-accent-rgb), .14);
+  --hairline: var(--border);
+  --text-on-accent: #11151a;
+}
+:root[data-theme="ocean"], [data-theme-preview="ocean"] {
+  --bg: #0d1722;
+  --surface: #142333;
+  --surface-raised: #1c3042;
+  --surface-raised-2: #233b50;
+  --surface-field: #10202e;
+  --border: #334e65;
+  --border-strong: #4a6b85;
+  --border-control: #688da8;
+  --text-bright: #ecf5fa;
+  --text: #d0e1ed;
+  --text-muted: #a3bacb;
+  --text-faint: #8fa9bd;
+  --accent: #71bddc;
+  --accent-hover: #97d7ee;
+  --accent-bright: #c0eafa;
+  --accent-dark: #4388a5;
+  --layer-accent-rgb: 113, 189, 220;
+  --focus-ring: var(--accent-hover);
+  --accent-glow: rgba(var(--layer-accent-rgb), .14);
+  --hairline: var(--border);
+  --text-on-accent: #11151a;
+}
+:root[data-theme="forest"], [data-theme-preview="forest"] {
+  --bg: #101b17;
+  --surface: #182a22;
+  --surface-raised: #21382d;
+  --surface-raised-2: #2a4436;
+  --surface-field: #13231c;
+  --border: #375343;
+  --border-strong: #52745e;
+  --border-control: #789d84;
+  --text-bright: #eff5e9;
+  --text: #d6e4d4;
+  --text-muted: #aebfa9;
+  --text-faint: #93ad98;
+  --accent: #9dc78b;
+  --accent-hover: #b7dca5;
+  --accent-bright: #d5edc7;
+  --accent-dark: #658958;
+  --layer-accent-rgb: 157, 199, 139;
+  --focus-ring: var(--accent-hover);
+  --accent-glow: rgba(var(--layer-accent-rgb), .14);
+  --hairline: var(--border);
+  --text-on-accent: #11151a;
+}
+:root[data-theme="amethyst"], [data-theme-preview="amethyst"] {
+  --bg: #1b1422;
+  --surface: #281e33;
+  --surface-raised: #352842;
+  --surface-raised-2: #40304e;
+  --surface-field: #21192c;
+  --border: #513d62;
+  --border-strong: #715584;
+  --border-control: #9779ab;
+  --text-bright: #f6effa;
+  --text: #e2d5ec;
+  --text-muted: #bdaacb;
+  --text-faint: #ad95bc;
+  --accent: #c1a0e1;
+  --accent-hover: #d6bcef;
+  --accent-bright: #ead6fb;
+  --accent-dark: #8a66ac;
+  --layer-accent-rgb: 193, 160, 225;
+  --focus-ring: var(--accent-hover);
+  --accent-glow: rgba(var(--layer-accent-rgb), .14);
+  --hairline: var(--border);
+  --text-on-accent: #11151a;
+}
+
+.theme-settings { max-width: 1080px; }
+.theme-settings h1 { margin: 0 0 var(--space-3); font-size: var(--text-hero); }
+.theme-settings > p { color: var(--text-muted); margin-bottom: var(--space-6); }
+.theme-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--space-4); border: 0; padding: 0; margin: 0; }
+.theme-options legend { margin-bottom: var(--space-4); font-size: var(--text-lg); color: var(--text-bright); }
+.theme-option { position: relative; display: grid; gap: var(--space-3); padding: var(--space-4); border: 2px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--text); cursor: pointer; }
+.theme-option:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.theme-option:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 4px; }
+.theme-option input { position: absolute; top: var(--space-4); right: var(--space-4); width: 18px; height: 18px; accent-color: var(--accent); }
+.theme-option strong { font-size: var(--text-lg); color: var(--text-bright); }
+.theme-option > span:last-child { font-size: var(--text-base); color: var(--text-muted); }
+.theme-option__preview { height: 100px; display: grid; grid-template-columns: 24% 1fr; grid-template-rows: 22px 1fr; gap: var(--space-2); padding: var(--space-3); margin-top: var(--space-6); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.theme-option__preview span:first-child { grid-row: 1 / 3; background: var(--surface-raised); border-left: 3px solid var(--accent); }
+.theme-option__preview span:nth-child(2) { background: var(--accent); border-radius: var(--radius-sm); }
+.theme-option__preview span:last-child { background: var(--surface-raised); border-radius: var(--radius-sm); }

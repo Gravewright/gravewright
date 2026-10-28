@@ -7,6 +7,8 @@
     <title>{{ app_name }} VTT · {{ release_label }}</title>
     <link rel="stylesheet" href="{{ static('gravewright_web/css/tokens.css') }}" />
     {% block styles %}<link rel="stylesheet" href="{{ static('gravewright_web/css/index.css') }}" />{% endblock %}
+    <link rel="stylesheet" href="{{ static('gravewright_web/css/themes.css') }}" />
+    <script src="{{ static('gravewright_web/theme.js') }}"></script>
     {% block before_scripts %}{% endblock %}
     <script type="importmap" nonce="{{ request.csp_nonce }}">{{ module_import_map()|tojson }}</script>
     <script type="module" src="{{ static('gravewright_web/escape.js') }}"></script>

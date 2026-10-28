@@ -13,14 +13,14 @@ export function mountShortcuts(table) {
     const error = panel.querySelector('[data-shortcut-error]'), list = panel.querySelector('[data-shortcut-list]');
     const entries = [], fields = new Map();
     let bindings = {};
-    const visible = node => node.getClientRects().length > 0 && !node.closest('[hidden],[inert]');
-    for (const button of table.querySelectorAll('.game-dock button[aria-keyshortcuts]')) {
-        if (button.getAttribute('aria-disabled') === 'true' || button.hidden) continue;
+    const visible = node => Boolean(node && node.getClientRects().length > 0 && !node.closest('[hidden],[inert]'));
+    for (const button of table.querySelectorAll('.game-dock button[aria-keyshortcuts], .game-menubar [data-menubar-shortcut]')) {
+        if (button.getAttribute('aria-disabled') === 'true') continue;
         const group = button.closest('[data-shortcut-layer]'), scope = group?.dataset.shortcutLayer;
-        const action = button.dataset.dockTool || button.dataset.panel
+        const action = button.dataset.menubarShortcut || button.dataset.dockTool || button.dataset.panel
             || (button.hasAttribute('data-open-command-palette') ? 'search' : 'settings');
         const id = scope ? `tool:${scope}:${action}` : `window:${action}`;
-        entries.push({ id, scope, group: group?.dataset.shortcutLabel || t('Windows'), button,
+        entries.push({ id, scope, group: group?.dataset.shortcutLabel || (button.dataset.menubarShortcut ? 'Layers' : t('Windows')), button,
             label: button.getAttribute('aria-label'), defaultKey: button.getAttribute('aria-keyshortcuts') });
     }
     const node = (tag, text, attrs = {}) => {
@@ -34,6 +34,7 @@ export function mountShortcuts(table) {
             const value = bindings[entry.id] ?? entry.defaultKey;
             entry.button.setAttribute('aria-keyshortcuts', value);
             if (entry.id === 'window:search') table.querySelector('[data-command-palette]')?.setAttribute('aria-keyshortcuts', value);
+            if (entry.button.dataset.menubarShortcut) entry.button.title = `${entry.label}${value ? ' · ' + displayCombination(value) : ''}`;
             const tip = entry.button.querySelector('kbd');
             if (tip) { tip.textContent = displayCombination(value); tip.hidden = !value; }
             const field = fields.get(entry.id);
@@ -106,7 +107,9 @@ export function mountShortcuts(table) {
         if ([...document.querySelectorAll('[aria-modal=true]')].some(visible)) return;
         const value = combination(event);
         if (!value) return;
-        const entry = entries.find(item => visible(item.button) && !item.button.disabled
+        const available = button => visible(button) || (button.closest('[data-dock-overflow]')?.hidden
+            && !button.hidden && !button.closest('[inert]') && visible(table.querySelector('[data-dock-menu-toggle]')));
+        const entry = entries.find(item => available(item.button) && !item.button.disabled
             && item.button.getAttribute('aria-disabled') !== 'true'
             && (bindings[item.id] ?? item.defaultKey).split(' ').includes(value));
         if (!entry) return;

@@ -6,7 +6,8 @@ import { effects, translatedCopies } from "../../effects/model/effects.js";
 import { resizeImage } from "../../images/model/image-transform.js";
 import { previewBoardImage } from "../../images/model/image-preview.js";
 import { text as gwText } from "../../../shared/config/i18n/text.js";
-import { imageInWorkspace, isGMImage, canMoveImageToGame } from "../../images/model/image-layer.js";
+import { isGMImage, canMoveImageToGame } from "../../images/model/image-layer.js";
+import { objectInSelectionWorkspace } from "../model/selection-scope.js";
 function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   const abort = new AbortController(), signal = abort.signal, svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.classList.add("selection-workspace");
@@ -19,7 +20,10 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   let state = api.state, selected = [], drag, preview, resizePreview, busy = false, menu, dialog, timer, pingTimer, clipboard = [], lastPoint = { x: 0, y: 0 };
   const cell = () => map.gridSize * map.imageScale, origin = () => ({ x: (map.gridOffsetX || 0) * map.imageScale, y: (map.gridOffsetY || 0) * map.imageScale });
   const active = () => stateAPI.getPath("_tool") === "select" && !document.querySelector(".grid-calibration-panel") && document.querySelector("#table-workspace")?.dataset.role !== "streamer";
-  const all = () => sceneObjects(state, (window.gravewrightTokenState?.tokens || []).filter((t) => gm || (t.layer || (t.hidden ? "gm" : "game")) === (stateAPI.getPath("_layer") || "game")), cell(), gm, measurements.rows(), origin()).filter((o) => o.kind !== "image" || imageInWorkspace(o.data, stateAPI.getPath("_layer") || "game"));
+  const scope = () => `${stateAPI.getPath("_layer") || "game"}:${stateAPI.getPath("_tool")}`;
+  let selectionScope = scope();
+  const inWorkspace = (o) => objectInSelectionWorkspace(o, stateAPI.getPath("_layer") || "game");
+  const all = () => sceneObjects(state, window.gravewrightTokenState?.tokens || [], cell(), gm, measurements.rows(), origin()).filter(inWorkspace);
   const chosen = () => all().filter((o) => selected.includes(o.key));
   const mixed = () => chosen().some((o) => o.kind !== "token");
   const point = (e) => {
@@ -177,7 +181,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   }, command: (_c, _m, action, data) => tokenCommand(action, data) };
   const adapter = { command: (_c, _b, area, action, data) => ["cards", "spatial-sounds"].includes(area) ? window.gravewrightTableMedia.areaCommand(area, action, data) : api.command(area, action, data) };
   async function execute(action, t = preview || { center: chosen().length ? centerOf(chosen()) : { x: 0, y: 0 }, dx: 0, dy: 0, angle: 0 }) {
-    if (busy || !chosen().length) return;
+    if (!active() || busy || !chosen().length) return;
     clearTimeout(timer);
     busy = true;
     menu?.remove();
@@ -218,11 +222,11 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     menu?.remove();
   }
   async function paste() {
-    if (!clipboard.length || busy) return;
+    if (!active() || !clipboard.some(inWorkspace) || busy) return;
     busy = true;
     try {
       for (const area of ["effects", "light-selection"]) {
-        const rows = translatedCopies(clipboard, lastPoint).filter((o) => o.kind === "light" === (area === "light-selection"));
+        const rows = translatedCopies(clipboard.filter(inWorkspace), lastPoint).filter((o) => o.kind === "light" === (area === "light-selection"));
         if (rows.length) await api.command(area, "paste", { effects: rows });
       }
       await api.read();
@@ -328,6 +332,11 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   }, { signal });
   window.addEventListener("gravewright:map-viewport", paint, { signal });
   return { update(next) {
+    if (selectionScope !== scope()) {
+      cancel();
+      selected = [];
+      selectionScope = scope();
+    }
     state = next;
     const valid = new Set(all().map((o) => o.key));
     selected = selected.filter((k) => valid.has(k));

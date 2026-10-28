@@ -134,7 +134,7 @@ function error(message) {
 function options(select) {
   select.replaceChildren();
   const empty = new Option(labels.noGroup || "No group", "");
-  if (select.closest(".game-scene-settings")) select.append(empty);
+  select.append(empty);
   for (const folder of state.folders)
     select.append(new Option(folder.label, folder.id));
 }
@@ -256,7 +256,7 @@ function playerDot(player) {
 function emptyMap(groupId = "") {
   let signature, requestId;
   const el = form("empty", async el => {
-    const payload = { ...values(el), groupId };
+    const payload = values(el);
     const next = JSON.stringify(payload);
     if (next !== signature) { signature = next; requestId = crypto.randomUUID(); }
     const result = await builderHttp.post(`/api/containers/${campaign}/scene-empty`, { ...payload, requestId });
@@ -265,7 +265,7 @@ function emptyMap(groupId = "") {
     if (payload.activate) state.activeMapId = result.id;
     void navigate(result, false);
   });
-  el.elements.name.value = interchangeText('Empty map');
+  populate(el, { ...defaults, name: interchangeText('Empty map'), color: '#354b66', width: 1400, height: 1400, groupId });
 }
 function upload(groupId = "") {
   const el = form(
@@ -406,13 +406,17 @@ function settings(map) {
   };
 }
 function folderForm(parentId = "", existing) {
-  const el = form("folder-form", (el) =>
-    command(existing ? "folder-update" : "folder-create", {
+  const el = form("folder-form", async (el) => {
+    await command(existing ? "folder-update" : "folder-create", {
       ...values(el),
       folderId: existing?.id,
       parentId,
-    }),
-  );
+    });
+    if (!existing && parentId) {
+      try { localStorage.setItem(closedKey + "." + parentId, "true"); } catch {}
+      tree();
+    }
+  });
   if (existing || parentId) {
     const title = existing ? "Edit folder" : "Create folder";
     el.setAttribute("aria-label", title);

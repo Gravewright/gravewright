@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
   }
 }
 
-// gravewright/maps/frontend/features/lighting/model/light-profiles.js
+// features/lighting/model/light-profiles.js
 var lightPresets = [
   { id: "torch", get name() {
     return text("Torch");
@@ -49,7 +49,7 @@ var lightPresets = [
   }, bright_radius: 2, dim_radius: 4, intensity: 0.85, color: "#ffd8a8", angle: 360 }
 ];
 
-// gravewright/maps/frontend/features/effects/model/particle-profiles.js
+// features/effects/model/particle-profiles.js
 var PARTICLE_DEFAULTS = {
   smoke: { scale: 3, density: 0.6, color: "#9aa3ad" },
   ember: { scale: 2, density: 0.5, color: "#ff9040" },
@@ -65,7 +65,7 @@ var PARTICLE_DEFAULTS = {
   runes: { scale: 3, density: 0.65, color: "#69a7ff" }
 };
 
-// gravewright/maps/frontend/features/scene-layers/lib/shader-language.js
+// features/scene-layers/lib/shader-language.js
 var PREAMBLE = `#version 300 es
 precision highp float;
 
@@ -197,7 +197,7 @@ var USER_PREFIX = `#define uTexture gwUTexture
 `;
 var USER_SUFFIX = "\n#undef main\nvoid main() { gwUserMain(); finalColor *= gwUOpacity; finalColor = gwIlluminate(finalColor, vTextureCoord, gwULightResponse); }\n";
 
-// gravewright/maps/frontend/features/effects/model/shader-validation.js
+// features/effects/model/shader-validation.js
 var ShaderDraftValidator = class {
   gl;
   validate(source) {
@@ -226,7 +226,7 @@ var ShaderDraftValidator = class {
   }
 };
 
-// gravewright/maps/frontend/features/scene-layers/lib/shader-presets.js
+// features/scene-layers/lib/shader-presets.js
 var shaderPresets = [
   {
     "opacity": 1,
@@ -1420,7 +1420,7 @@ var shaderPresets = [
   }
 ];
 
-// gravewright/maps/frontend/features/effects/model/effects.js
+// features/effects/model/effects.js
 function defaults() {
   return { light_response: 0, light_emission: 0, bright_radius: 2, dim_radius: 4, angle: 360, animation: "none", x: 0, y: 0, kind: "smoke", scale: 3, density: 0.6, color: "#9aa3ad", enabled: true, rotation: 0, name: "Shader", source: "void main() { float a = 0.35 * uIntensity; finalColor = vec4(uColor * a, a); }", radius: 0, opacity: 1, intensity: 0.6, speed: 1, blend_mode: "normal" };
 }
@@ -1444,7 +1444,7 @@ function translatedCopies(items, at) {
   return items.map((e) => ({ kind: e.kind, data: payload(e.kind, { ...e.data, x: at.x + e.x - center.x, y: at.y + e.y - center.y }) }));
 }
 
-// gravewright/maps/frontend/features/scene-layers/ui/sources.js
+// features/scene-layers/ui/sources.js
 var box = (value) => ({ value });
 var derive = (read) => ({ get value() {
   return read();

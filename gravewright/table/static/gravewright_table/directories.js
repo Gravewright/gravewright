@@ -98,7 +98,14 @@ function itemActions(item){
  return entries;
 }
 function itemFolderForm(parentId='',existing){
- return dialog(modalText(existing?'Edit folder':'Create folder',existing?'Editar pasta':'Criar pasta'),[{name:'name',label:modalText('Name','Nome'),value:existing?.name,required:true},{name:'color',label:modalText('Color','Cor'),value:existing?.color||'#c9a44c',type:'color'}],form=>command('items',existing?'folder-update':'folder-create',{id:existing?.id,name:form.elements.name.value,color:form.elements.color.value,parentId:existing?.parentId||parentId}),{key:existing?'item:folder:'+existing.id:'item:folder-create'});
+ return dialog(modalText(existing?'Edit folder':'Create folder',existing?'Editar pasta':'Criar pasta'),[{name:'name',label:modalText('Name','Nome'),value:existing?.name,required:true},{name:'color',label:modalText('Color','Cor'),value:existing?.color||'#c9a44c',type:'color'}],async form=>{
+  await command('items',existing?'folder-update':'folder-create',{id:existing?.id,name:form.elements.name.value,color:form.elements.color.value,parentId:existing?.parentId||parentId});
+  if(!existing&&parentId){
+   closedItemFolders.delete(parentId);
+   try{localStorage.setItem(itemFolderKey,JSON.stringify([...closedItemFolders]));}catch{}
+   render('items');
+  }
+ },{key:existing?'item:folder:'+existing.id:'item:folder-create'});
 }
 function itemFolderActions(folder){return [
  [modalText('Create item','Criar item'),'create',()=>createItem(undefined,folder.id)],

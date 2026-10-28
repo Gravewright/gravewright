@@ -1,7 +1,8 @@
 // gravewright/maps/frontend/widgets/game-board/lib/pixi-board-renderer.js
 import { tileBlobCache } from "../model/tile-blob-cache.js";
 import "/static/gravewright_maps/vendor/pixi.js";
-import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from "/static/gravewright_maps/vendor/pixi.js";
+import { Assets, Container, Graphics, Sprite, Text, Texture } from "/static/gravewright_maps/vendor/pixi.js";
+import { createPixiApplication } from "./pixi-application.js";
 import * as engine from "/static/gravewright_maps/vendor/pixi.js";
 import { BOARD_STACK } from "../model/board-renderer.js";
 import { AssetReferencePool } from "../model/asset-reference-pool.js";
@@ -38,6 +39,16 @@ var PixiBoardRenderer = class {
   #wanted = /* @__PURE__ */ new Map();
   #destroyed = false;
   #renderFrame = 0;
+  #contextRestored = () => {
+    const pending = [this.#application.stage];
+    while (pending.length) {
+      const node = pending.pop();
+      if (node instanceof Text) node.unload();
+      if (node.children) pending.push(...node.children);
+    }
+    this.#application.renderer.resetState();
+    this.invalidate();
+  };
   /** Coalesce visual changes; a still scene consumes no render-loop frames. */
   invalidate() {
     if (this.#destroyed || this.#renderFrame) return;
@@ -58,6 +69,7 @@ var PixiBoardRenderer = class {
     this.#world.addChild(this.#tiles, this.#grid, this.#figures, this.#marks);
     application.stage.addChild(this.#world);
     application.canvas.setAttribute("role", "img");
+    application.canvas.addEventListener("webglcontextrestored", this.#contextRestored);
     this.setLabel(label);
     this.invalidate();
   }
@@ -250,6 +262,7 @@ var PixiBoardRenderer = class {
     if (this.#destroyed)
       return;
     this.#destroyed = true;
+    this.#application.canvas.removeEventListener("webglcontextrestored", this.#contextRestored);
     cancelAnimationFrame(this.#renderFrame);
     this.#renderFrame = 0;
     this.#wanted = /* @__PURE__ */ new Map();
@@ -477,17 +490,7 @@ var PixiBoardRenderer = class {
   }
 };
 var createPixiBoardRenderer = async ({ host, background, label }) => {
-  const application = new Application();
-  try {
-    await application.init({ resizeTo: host, background, antialias: true, autoDensity: true, autoStart: false, resolution: Math.min(devicePixelRatio, MAX_RESOLUTION) });
-  } catch (error) {
-    try {
-      if (application.renderer)
-        application.destroy(false, { children: true });
-    } catch {
-    }
-    throw error;
-  }
+  const application = await createPixiApplication({ resizeTo: host, background, antialias: true, autoDensity: true, autoStart: false, resolution: Math.min(devicePixelRatio, MAX_RESOLUTION) });
   host.appendChild(application.canvas);
   return new PixiBoardRenderer(application, label);
 };

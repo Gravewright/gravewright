@@ -5,7 +5,9 @@ import {effects,translatedCopies} from '../../effects/model/effects.js';
 import {resizeImage} from '../../images/model/image-transform.js';
 import {previewBoardImage} from '../../images/model/image-preview.js';
 import {text as gwText} from '../../../shared/config/i18n/text.js';
-import {imageInWorkspace,isGMImage,canMoveImageToGame} from '../../images/model/image-layer.js';
+import {isGMImage,canMoveImageToGame} from '../../images/model/image-layer.js';
+
+import {objectInSelectionWorkspace} from '../model/selection-scope.js';
 
 // This controller observes the shared surface in capture phase. Token-only
 // gestures continue to reach the existing token controller, including Ctrl paths.
@@ -16,7 +18,10 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  let state=api.state,selected=[],drag,preview,resizePreview,busy=false,menu,dialog,timer,pingTimer,clipboard=[],lastPoint={x:0,y:0};
  const cell=()=>map.gridSize*map.imageScale,origin=()=>({x:(map.gridOffsetX||0)*map.imageScale,y:(map.gridOffsetY||0)*map.imageScale});
  const active=()=>stateAPI.getPath('_tool')==='select'&&!document.querySelector('.grid-calibration-panel')&&document.querySelector('#table-workspace')?.dataset.role!=='streamer';
- const all=()=>sceneObjects(state,(window.gravewrightTokenState?.tokens||[]).filter(t=>gm||(t.layer||(t.hidden?'gm':'game'))===(stateAPI.getPath('_layer')||'game')),cell(),gm,measurements.rows(),origin()).filter(o=>o.kind!=='image'||imageInWorkspace(o.data,stateAPI.getPath('_layer')||'game'));
+ const scope=()=>`${stateAPI.getPath('_layer')||'game'}:${stateAPI.getPath('_tool')}`;
+ let selectionScope=scope();
+ const inWorkspace=o=>objectInSelectionWorkspace(o,stateAPI.getPath('_layer')||'game');
+ const all=()=>sceneObjects(state,window.gravewrightTokenState?.tokens||[],cell(),gm,measurements.rows(),origin()).filter(inWorkspace);
  const chosen=()=>all().filter(o=>selected.includes(o.key));
  const mixed=()=>chosen().some(o=>o.kind!=='token');
  const point=e=>{const b=surface.getBoundingClientRect(),v=board.viewport();return {x:(e.clientX-b.left-v.x)/v.scale,y:(e.clientY-b.top-v.y)/v.scale};};
@@ -77,7 +82,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  const tokenApi={remove:(_,id)=>tokenCommand('remove',{tokenIds:[id]}),move:async(_,id,data)=>{const result=await tokenCommand('move',{id,...data});return result.tokens.find(t=>t.id===id);},command:(_c,_m,action,data)=>tokenCommand(action,data)};
  const adapter={command:(_c,_b,area,action,data)=>['cards','spatial-sounds'].includes(area)?window.gravewrightTableMedia.areaCommand(area,action,data):api.command(area,action,data)};
  async function execute(action,t=preview||{center:chosen().length?centerOf(chosen()):{x:0,y:0},dx:0,dy:0,angle:0}){
-  if(busy||!chosen().length)return;clearTimeout(timer);busy=true;menu?.remove();dialog?.close();notice.hidden=true;
+  if(!active()||busy||!chosen().length)return;clearTimeout(timer);busy=true;menu?.remove();dialog?.close();notice.hidden=true;
   const rows=chosen();try{const result=await applySelection(adapter,tokenApi,map.containerId,map.blockId,map.id,cell(),state,rows,action,t.center,t.dx,t.dy,t.angle,origin());if(signal.aborted)return;
    if(['delete','transform'].includes(action))measurements.replace(transformMeasures(measurements.rows(),rows.filter(o=>o.kind==='measure').map(o=>o.id),action,t.center,t.dx,t.dy,t.angle));
    if(result.failed.length){notice.textContent=`${result.failed.length} object(s) refused. Other changes were applied. Refreshing the scene…`;notice.hidden=false;select(result.failed);}else if(action==='delete')select([]);
@@ -87,7 +92,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  }
  function rotate(angle,defer=false){if(busy||drag||!chosen().length)return;preview={...(preview||{center:rotationCenter(chosen()),dx:0,dy:0,angle:0}),angle:(preview?.angle||0)+angle};publish();clearTimeout(timer);if(defer)timer=setTimeout(()=>void execute('transform'),180);else void execute('transform');}
  function copy(){clipboard=[...effects(state),...effects(state,'lighting')].filter(o=>selected.includes(o.key));menu?.remove();}
- async function paste(){if(!clipboard.length||busy)return;busy=true;try{for(const area of ['effects','light-selection']){const rows=translatedCopies(clipboard,lastPoint).filter(o=>(o.kind==='light')===(area==='light-selection'));if(rows.length)await api.command(area,'paste',{effects:rows});}await api.read();}catch(error){notice.textContent=error.message;notice.hidden=false;}finally{busy=false;}}
+ async function paste(){if(!active()||!clipboard.some(inWorkspace)||busy)return;busy=true;try{for(const area of ['effects','light-selection']){const rows=translatedCopies(clipboard.filter(inWorkspace),lastPoint).filter(o=>(o.kind==='light')===(area==='light-selection'));if(rows.length)await api.command(area,'paste',{effects:rows});}await api.read();}catch(error){notice.textContent=error.message;notice.hidden=false;}finally{busy=false;}}
  function confirmDelete(){
   dialog?.close();
   dialog=openFormModal(modalText('Remove scene objects','Remover objetos da cena'),[],()=>execute('delete'),{key:'scene-selection-delete',submitLabel:modalText('Remove selection','Remover seleção')});
@@ -124,5 +129,5 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  window.addEventListener('keydown',key,{capture:true,signal});window.addEventListener('blur',cancel,{signal});
  window.addEventListener('gravewright:token-selection',()=>{if(!mixed())select((window.gravewrightTokenSelection||[]).map(id=>'token:'+id));},{signal});
  window.addEventListener('gravewright:map-viewport',paint,{signal});
- return {update(next){state=next;const valid=new Set(all().map(o=>o.key));selected=selected.filter(k=>valid.has(k));if(!active()){cancel();selected=[];}paint();},destroy(){abort.abort();cancel();dialog?.close();svg.remove();notice.remove();}};
+ return {update(next){if(selectionScope!==scope()){cancel();selected=[];selectionScope=scope();}state=next;const valid=new Set(all().map(o=>o.key));selected=selected.filter(k=>valid.has(k));if(!active()){cancel();selected=[];}paint();},destroy(){abort.abort();cancel();dialog?.close();svg.remove();notice.remove();}};
 }

@@ -1,5 +1,5 @@
 /** Transparent native scene renderer synchronized with the builder's SVG camera. */
-import { Application } from 'pixi.js';
+import { createPixiApplication } from '../widgets/game-board/lib/pixi-application.js';
 import { PixiBoardRenderer } from '../widgets/game-board/lib/pixi-board-renderer.js';
 import { SceneLayers } from '../widgets/game-board/lib/scene-layers.js';
 import { renderingPreferences } from '../shared/rendering/render-profile.js';
@@ -31,9 +31,9 @@ export function mountNativePreview({ host, svg, onError }) {
         if (!board) {
             if (initializing) return;
             initializing = true;
-            const application = new Application();
+            let application;
             try {
-                await application.init({ resizeTo: host, backgroundAlpha: 0, antialias: true,
+                application = await createPixiApplication({ resizeTo: host, backgroundAlpha: 0, antialias: true,
                     autoDensity: true, autoStart: false, resolution: Math.min(globalThis.devicePixelRatio || 1, 2) });
                 if (closed) { application.destroy(false, { children: true }); return; }
                 host.append(application.canvas);
@@ -43,7 +43,7 @@ export function mountNativePreview({ host, svg, onError }) {
                 layers = new SceneLayers(board);
                 stateChanged = true;
             } catch (cause) {
-                try { if (application.renderer) application.destroy({ removeView: true, releaseGlobalResources: false }, { children: true }); } catch { /* Failed initialization owns no usable stage. */ }
+                try { if (application?.renderer) application.destroy({ removeView: true, releaseGlobalResources: false }, { children: true }); } catch { /* Failed initialization owns no usable stage. */ }
                 if (!closed) onError(cause);
                 return;
             } finally { initializing = false; }

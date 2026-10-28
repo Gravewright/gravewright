@@ -70,6 +70,8 @@ Formas adicionais:
 | `table.search(query, options)` | Busca documentos com acesso mínimo de leitura. As opções aceitam `kind` (`actor`, `item`, `journal`, `quest`, `quest_board`, `scene`, `compendium`) e `recent` (até 12 referências `{id, type}` com consulta vazia). Os resultados incluem `snippet` autorizado, `kind` e `actions`; as referências recentes são revalidadas a cada consulta. |
 | `table.lobby(options)` / `table.updateLobby(payload, options)` | Lê/altera a sala de espera nativa |
 
+`combat.stop` encerra o encontro e limpa os participantes, a iniciativa e o histórico de turnos e rodadas. Os atores e tokens da cena são preservados; adicione participantes novamente antes de iniciar outro encontro.
+
 Os seis atalhos de transição de combate (`nextTurn`, `previousTurn`, `nextRound`, `previousRound`, `start`, `stop`) também buscam a versão atual quando omitida. Fornecer versões explicitamente permite detectar alterações concorrentes:
 
 ```javascript

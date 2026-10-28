@@ -217,3 +217,11 @@
 :is(body:has(#table-workspace),body.game-detached) .ownership-dialog form { padding:var(--space-3); }
 :is(body:has(#table-workspace),body.game-detached) .ownership-dialog form>header { margin:calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) var(--space-0); }
 :is(body:has(#table-workspace),body.game-detached) :is(.gw-window--detached,.journal-window--detached,.game-panel--detached,.dice-tray--detached) { border-radius:0; }
+
+/* Chat keeps its actions separate from the shared reset/minimize/close controls. */
+#chat-panel .chat-panel__controls, #chat-panel .chat-panel__controls > span { display: flex; align-items: center; flex-shrink: 0; gap: var(--space-1); }
+#chat-panel .chat-panel__actions { padding-right: var(--space-1); border-right: 1px solid var(--border); }
+#chat-panel [data-chat-action=close]:hover { background: #dc68681a; color: #ef9999; }
+#chat-panel.game-panel--detached > header button:first-child { display: grid; }
+#chat-panel.game-panel--detached > header button:is([data-chat-action=detach],[data-chat-action=minimize],[data-window-action=reset]) { display: none; }
+#chat-panel.game-panel--detached .chat-panel__actions:not(:has([data-chat-clear])) { display: none; }

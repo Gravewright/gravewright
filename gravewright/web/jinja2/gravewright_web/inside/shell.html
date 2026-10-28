@@ -1,3 +1,4 @@
+{% from 'gravewright_web/inside/theme.html' import label as theme_label with context %}
 {% from 'gravewright_web/inside/macros.html' import get_button, avatars with context %}
 <main id="inside-shell" class="{{ 'gw-shell' if owner else 'player-home' }}" data-signals__ifmissing="{_compact:false,_view:'grid',_menu:'',_pending:false,_search:{{ search|tojson|forceescape }},_system:{{ system_filter|tojson|forceescape }}}" {% if owner %}data-class="{'gw-shell--compact':$_compact}"{% endif %}>
 {% if owner %}
@@ -10,6 +11,7 @@
     <button class="gw-nav__item{{ ' gw-nav__item--active' if section=='administration' else '' }}" type="button" data-on:click="@get('/inside?section=administration', {retry:'never'})">{{ icon('Gear',css='gw-nav__icon') }}<span class="gw-nav__label">Administration</span></button>
   </nav>
   <nav class="gw-nav__list gw-nav__list--secondary" aria-label="{{ campaigns.preferences }}">
+  <button class="gw-nav__item{{ ' gw-nav__item--active' if section=='theme' else '' }}" type="button" aria-label="{{ theme_label('Theme','Tema','Tema') }}" title="{{ theme_label('Theme','Tema','Tema') }}" data-on:click="@get('/inside?section=theme', {retry:'never'})">{{ icon('Eye',css='gw-nav__icon') }}<span class="gw-nav__label">{{ theme_label('Theme','Tema','Tema') }}</span></button>
   {% for key, glyph in [('settings','Gear'),('privacy','ShieldCheck')] %}<button class="gw-nav__item{{ ' gw-nav__item--active' if section==key else '' }}" type="button" data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})">{{ icon(glyph,css='gw-nav__icon') }}<span class="gw-nav__label">{{ campaigns.nav[key] }}</span></button>{% endfor %}
   </nav>
 </aside>
@@ -23,16 +25,18 @@
   {% elif section in ['addons','marketplace','systems'] %}{% include 'gravewright_web/inside/modules.html' %}
   {% elif section=='administration' %}{% include 'gravewright_web/inside/administration.html' %}
   {% elif section=='settings' %}{% include 'gravewright_accounts/settings/account.html' %}
+  {% elif section=='theme' %}{% include 'gravewright_web/inside/theme.html' %}
   {% elif section=='privacy' %}{% include 'gravewright_web/inside/privacy.html' %}{% endif %}
   </div>
 </section>
 {% else %}
 <header class="player-home__header">
   <div class="player-home__brand"><span class="gw-mark" aria-hidden="true"></span><div><strong>Gravewright</strong><small>Virtual Tabletop</small></div></div>
-  <nav aria-label="{{ campaigns.navigation }}">{% for key,label in [('campaigns',campaigns.nav.campaigns),('settings',campaigns.nav.playerSettings)] %}<button type="button" class="{{ 'player-home__nav-active' if section==key else '' }}" data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})">{{ label }}</button>{% endfor %}</nav>
+  <nav aria-label="{{ campaigns.navigation }}">{% for key,label in [('campaigns',campaigns.nav.campaigns),('theme',theme_label('Theme','Tema','Tema')),('settings',campaigns.nav.playerSettings)] %}<button type="button" class="{{ 'player-home__nav-active' if section==key else '' }}" data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})">{{ label }}</button>{% endfor %}</nav>
   <div class="player-home__account"><span class="gw-avatar">{{ user.name[:1]|upper }}</span><span><strong>{{ user.name }}</strong></span><button type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
 </header>
-{% if section=='settings' %}<section class="player-home__profile">{% include 'gravewright_accounts/settings/account.html' %}</section>
+{% if section=='theme' %}<section class="player-home__profile">{% include 'gravewright_web/inside/theme.html' %}</section>
+{% elif section=='settings' %}<section class="player-home__profile">{% include 'gravewright_accounts/settings/account.html' %}</section>
 {% elif not rows or joining %}
 <section class="player-home__content">
   <div class="player-home__intro"><p>{{ playerHome.joinAnotherEyebrow if rows else campaigns.participantEmptyEyebrow }}</p><h1>{{ playerHome.joinAnotherTitle if rows else campaigns.participantEmptyTitle }}</h1><span>{{ playerHome.joinAnotherDescription if rows else campaigns.participantEmptyDescription }}</span></div>

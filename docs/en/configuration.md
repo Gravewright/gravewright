@@ -133,6 +133,8 @@ Only one map pyramid is generated at a time per server process, including decodi
 
 Native tiling stages the source image and generated tiles under installation-root `data/runner/tmp/`. An explicit `GRAVEWRIGHT_RUNNER_ROOT` changes the tool root, and a Django `FILE_UPLOAD_TEMP_DIR` override takes precedence for tiling scratch space; relative paths resolve against the installation root. The directory must be writable and have room for the source, staged tiles and any codec spill files while final tiles are saved to media storage. Storage or native generation failures remain server errors, and already saved tiles are removed if the upload fails. See [deployment](deployment.md) for synchronous upload timeouts and capacity planning.
 
+The HTTP content security policy permits same-origin generic resource requests, including Firefox source inspection. Scripts, styles, images, fonts, media and connections retain their explicit directives. Objects, frames, child browsing contexts and manifests are denied explicitly; workers are limited to the same origin.
+
 ## Settings without environment switches
 
 The following are configured in Python, not loaded automatically from similarly named `.env` entries:
