@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/board-view.js
+// widgets/game-board/model/board-view.js
 import { classifyTile } from "./tile-scheduler.js";
 function fitToSurface(surface, map) {
   const scale = Math.min(surface.width / map.width, surface.height / map.height);

@@ -379,13 +379,13 @@ class PortalTests(TestCase):
             self.assertFalse(send.called)
         marker = {"id": str(token.pk), "version": token.version}
         self.assertEqual(result["teleports"], [marker])
-        notifications = [call.args[1] for call in send.call_args_list if call.args[1]["type"] == "room.tokens"]
+        notifications = [call.args[1] for call in send.call_args_list if "tokens" in call.args[1].get("refresh", ())]
         self.assertTrue(notifications)
         self.assertTrue(all(event.get("teleports") == [marker] for event in notifications))
         self.assertTrue(all(event.get("mapId") == str(self.scene.pk) for event in notifications))
         self.assertTrue(all("teleports" not in call.args[1]
-                            for call in send.call_args_list if call.args[1]["type"] != "room.tokens"))
-        self.assertNotIn("room.maps", [call.args[1]["type"] for call in send.call_args_list])
+                            for call in send.call_args_list if "tokens" not in call.args[1].get("refresh", ())))
+        self.assertFalse(any("maps" in call.args[1].get("refresh", ()) for call in send.call_args_list))
         self.assertNotIn("teleports", self.move(token, 5, 5, user=self.player))
         current_version = token.version
         replay = self.token_command("move", {"id": str(token.pk), "gridX": 2, "gridY": 1,
@@ -410,8 +410,8 @@ class PortalTests(TestCase):
         self.scene.refresh_from_db()
         self.assertEqual(self.scene.version, scene_version)
         self.assertEqual(services.manifest(self.scene)["tileUrlTemplate"], tile_url)
-        self.assertNotIn("room.maps", [call.args[1]["type"] for call in send.call_args_list])
-        notifications = [call.args[1] for call in send.call_args_list if call.args[1]["type"] == "room.tokens"]
+        self.assertFalse(any("maps" in call.args[1].get("refresh", ()) for call in send.call_args_list))
+        notifications = [call.args[1] for call in send.call_args_list if "tokens" in call.args[1].get("refresh", ())]
         self.assertEqual(len(notifications), 1)
         self.assertEqual(notifications[0]["teleports"], [{"id": str(token.pk), "version": token.version}])
         self.assertEqual(notifications[0]["mapId"], str(self.scene.pk))

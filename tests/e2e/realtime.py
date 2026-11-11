@@ -164,10 +164,10 @@ def main():
                     if reference:
                         reference.set_viewport_size({'width': 1440, 'height': 1000})
 
-                def both(name):
+                def both(name, reference_name=None):
                     page.get_by_role('button',name=name,exact=True).click()
                     if reference:
-                        reference.get_by_role('button',name=name,exact=True).click()
+                        reference.get_by_role('button',name=reference_name or name,exact=True).click()
 
                 def post(target_page,path,data):
                     token=next(c['value'] for c in target_page.context.cookies() if c['name']=='gravewright-csrf')
@@ -242,7 +242,8 @@ def main():
                 capture('chat-messages')
                 both('Minimize')
                 capture('chat-minimized')
-                both('Minimize')
+                # The shared window controls rename the toggle while the panel is minimized.
+                both('Restore', 'Minimize')
                 # The movable panel keeps its original drag/resize behavior.
                 header=page.locator('#chat-panel header')
                 box=header.bounding_box()

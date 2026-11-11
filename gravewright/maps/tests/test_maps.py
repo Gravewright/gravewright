@@ -693,8 +693,16 @@ class MapTests(TransactionTestCase):
         self.assertEqual(self.client.get(f"/api/maps/{m['id']}/state").status_code, 404)
 
     async def test_websocket_wall_delivery_to_player(self):
+        from gravewright.realtime.projections import apply
         m = await db(self.upload)()
         gm, player = self.socket(self.gm), self.socket(self.player)
+        layers = {}
+
+        async def merged(socket):
+            # Like the browser: later projections may arrive as deltas of the last one.
+            payload = await self.event(socket, "maps.layers")
+            layers[socket] = apply(layers[socket], payload) if payload.get("delta") else payload
+            return layers[socket]
         try:
             for socket in (gm, player):
                 self.assertTrue((await socket.connect())[0])
@@ -702,7 +710,7 @@ class MapTests(TransactionTestCase):
                 await socket.send_json_to(
                     {"type": "maps.layers", "payload": {"mapId": m["id"]}}
                 )
-                self.assertEqual((await self.event(socket, "maps.layers"))["walls"], [])
+                self.assertEqual((await merged(socket))["walls"], [])
             await gm.send_json_to(
                 {
                     "type": "maps.command",
@@ -725,7 +733,7 @@ class MapTests(TransactionTestCase):
                 }
             )
             await self.event(gm, "maps.ack")
-            state = await self.event(player, "maps.layers")
+            state = await merged(player)
             self.assertEqual(len(state["walls"]), 1)
             await player.send_json_to(
                 {
@@ -746,9 +754,6 @@ class MapTests(TransactionTestCase):
                 }
             )
             await self.event(player, "maps.ack")
-            self.assertEqual(
-                (await self.event(player, "maps.layers"))["walls"][0]["door_state"],
-                "open",
-            )
+            self.assertEqual((await merged(player))["walls"][0]["door_state"], "open")
         finally:
             await self.finish()

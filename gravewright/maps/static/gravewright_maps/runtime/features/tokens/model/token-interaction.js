@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/tokens/model/token-interaction.js
+// features/tokens/model/token-interaction.js
 function hitToken(point, tokens, cell) {
   return [...tokens].reverse().find((t) => point.x >= t.gridX * cell && point.x <= (t.gridX + t.cells) * cell && point.y >= t.gridY * cell && point.y <= (t.gridY + (t.heightCells ?? t.cells)) * cell);
 }

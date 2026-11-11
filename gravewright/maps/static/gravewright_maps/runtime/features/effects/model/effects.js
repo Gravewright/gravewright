@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/model/effects.js
+// features/effects/model/effects.js
 function defaults() {
   return { light_response: 0, light_emission: 0, bright_radius: 2, dim_radius: 4, angle: 360, animation: "none", x: 0, y: 0, kind: "smoke", scale: 3, density: 0.6, color: "#9aa3ad", enabled: true, rotation: 0, name: "Shader", source: "void main() { float a = 0.35 * uIntensity; finalColor = vec4(uColor * a, a); }", radius: 0, opacity: 1, intensity: 0.6, speed: 1, blend_mode: "normal" };
 }

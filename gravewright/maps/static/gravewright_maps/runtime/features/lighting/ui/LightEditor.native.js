@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/lighting/ui/LightEditor.native.js
+// features/lighting/ui/LightEditor.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { vMovableResizable } from "../../../shared/lib/dom/movable-resizable.js";
 import { widget, model } from "../../../native/widget.js";

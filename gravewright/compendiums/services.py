@@ -29,10 +29,30 @@ def state(who,scene_id=None):
         entries=[dict(id=str(e.pk),name=e.name,kind=e.kind,type=e.entry_type if isinstance(e.entry_type,str) else '',version=e.version) for e in p.entries.all()]) for p in rows if resource_allows(who,'compendiums',p,default='read' if p.shared else 'none')]+summaries(who),'isGM':who.role=='gm'}
 
 
-def command(who,action,p):
+def prepare_import(who, payload):
+    """Read and validate immutable file snapshots before entering a write transaction."""
+    manage(who)
+    if isinstance(payload.get('packId'), str) and payload['packId'].startswith('native:'):
+        from .catalog import prepare_import as prepare_native
+        return prepare_native(who, payload)
+    row = pack(payload.get('packId'), who)
+    entry = row.entries.filter(pk=identifier(payload.get('id'))).first()
+    if not entry:
+        raise MapError('Entry not found.')
+    if row.system_id and row.system_id != who.campaign.system:
+        raise MapError('This compendium requires a different system.')
+    prepared = {'entry': (entry.pk, entry.version, entry.bundle.name, entry.kind, deepcopy(entry.data))}
+    if entry.bundle:
+        from gravewright.administration.archives import read_archive, MAX_ARCHIVE
+        with entry.bundle.open('rb') as file:
+            prepared['archive'] = read_archive(file.read(MAX_ARCHIVE + 1))
+    return prepared
+
+
+def command(who,action,p, *, prepared=None):
     if isinstance(p.get('packId'),str) and p['packId'].startswith('native:'):
         from .catalog import command as native_command
-        return native_command(who,action,p)
+        return native_command(who,action,p,prepared=prepared)
     if action=='create':
         manage(who);row=Pack.objects.create(campaign_id=who.campaign_id,name=title(p.get('name')),system_id=who.campaign.system)
         return {'id':str(row.pk)}
@@ -94,10 +114,14 @@ def command(who,action,p):
     if action=='remove':version(entry,p);entry.delete();row.version+=1;row.save();return {}
     if action=='import':
         if row.system_id and row.system_id!=who.campaign.system:raise MapError('This compendium requires a different system.')
+        if prepared is not None and prepared.get('entry') != (entry.pk, entry.version, entry.bundle.name, entry.kind, entry.data):
+            raise MapError('This resource changed. Refresh before editing.', 'conflict')
         if entry.bundle:
-            from gravewright.administration.archives import import_campaign,MAX_ARCHIVE
-            with entry.bundle.open('rb') as file:raw=file.read(MAX_ARCHIVE+1)
-            result=import_campaign(raw,who.user,target=who.campaign,merge=True)
+            from gravewright.administration.archives import _import_validated_campaign
+            # Internal direct callers retain validation; public commands always
+            # prepare first and compare the live entry while holding the lock.
+            prepared = prepared if prepared is not None else prepare_import(who, p)
+            result=_import_validated_campaign(*prepared['archive'],who.user,target=who.campaign,merge=True)
             return {'id':str(result.imported_resource),'kind':entry.kind}
         data=deepcopy(entry.data)
         if entry.kind=='actor':

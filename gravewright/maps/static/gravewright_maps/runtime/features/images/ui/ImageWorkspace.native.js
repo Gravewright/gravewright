@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/ui/ImageWorkspace.native.js
+// features/images/ui/ImageWorkspace.native.js
 import { modalText } from "/static/gravewright_table/form-modal.js";
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import DirectoryContextMenu from "../../../shared/ui/directory/DirectoryContextMenu.native.js";

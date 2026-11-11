@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/regions/model/regions.js
+// features/regions/model/regions.js
 import { normalizeRegionFilters, regionMatchesFilters, regionFilterDispositions, regionFilterVisibility } from "/static/gravewright_maps/region-filters.js";
 function containsRegion(geometry, point, tolerance = 0) {
   if (!geometry || !point) return false;

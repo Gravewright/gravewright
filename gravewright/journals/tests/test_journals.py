@@ -102,7 +102,12 @@ class JournalTests(TransactionTestCase):
                 await socket.send_json_to({'type':'journals.sync'});await self.event(socket,'journals.state')
             await gm.send_json_to({'type':'journals.command','payload':{'action':'create','data':{'title':'Secret chronicle'},'requestId':str(uuid.uuid4())}})
             ack=await self.event(gm,'journals.ack');jid=ack['result']['journal_id']
-            self.assertEqual((await self.event(player,'journals.state'))['journals'],[])
+            # The player's projection did not change: nothing about the secret is sent.
+            for _ in range(20):
+                if await player.receive_nothing(timeout=.05,interval=.01):continue
+                frame=await player.receive_json_from(timeout=1)
+                if frame['type']=='session.ping':await player.send_json_to({'type':'session.pong'})
+                self.assertNotIn('Secret chronicle',str(frame))
             payload=await db(self.payload)(jid);payload['visibility']='shared'
             await gm.send_json_to({'type':'journals.command','payload':{'action':'update','data':payload,'requestId':str(uuid.uuid4())}})
             await self.event(gm,'journals.ack')

@@ -297,6 +297,25 @@ salvos apenas na fixture isolada para comparação antes/depois. A suíte Django
 notificações, estabilidade da projeção de atores, áudio independente e revogação
 de acesso durante a entrega.
 
+As suítes do transporte de tempo real em `gravewright/realtime/tests/` também cobrem
+a recuperação de lock (`test_database_busy`), as faixas separadas do socket
+(`test_socket_lanes`), um envelope por commit (`test_dispatch_envelope`) e sua tabela
+de dependências (`test_dispatch_dependencies`, que compara as projeções de cada
+usuário antes e depois de comandos reais; defina `GRAVEWRIGHT_PRINT_DEPENDENCIES=1`
+para listar o que mudou), o envio só do que mudou e as revisões dos envelopes
+(`test_projection_diff`), a autorização em cache (`test_authorization_cache`), os
+leases de presença (`test_presence_leases`), o registro de manipuladores lentos sem
+payload (`test_instrumentation` e `test_metrics`) e os orçamentos de notificação por
+destinatário (`test_refresh_budget`). Defina `GRAVEWRIGHT_REALTIME_BENCHMARK_OUTPUT`
+com um arquivo JSON explícito dentro da instalação para registrar 20 repetições por
+cenário de orçamento, incluindo entregas em regime permanente; os tempos são
+observações. As fronteiras transacionais são cobertas por
+`gravewright.table.tests.test_transaction_boundaries` e
+`gravewright.tokens.test_transaction_boundaries`, e a contagem de consultas do
+histórico do chat por `gravewright.chat.tests.test_history_queries`.
+`tests/table/realtime.test.mjs` executa `realtime.js` com um relógio virtual para
+verificar retentativas `busy`, prazos de comando e a aplicação de deltas.
+
 No Linux, o Playwright pode precisar de bibliotecas do sistema; `uv run --locked playwright install --with-deps chromium` também as instala e pode exigir privilégios administrativos. Os cenários iniciam servidores próprios em portas temporárias e criam dados fictícios. A maioria usa configurações de desenvolvimento e grava diagnósticos em `test-results/`; os cenários HTTPS e do executor usam configurações específicas descritas abaixo. Execute em sequência: vários compartilham `test-results/migration-closure/`.
 
 `tests/e2e/compendium_server.py --fixture <diretório-novo-vazio>` inicia uma

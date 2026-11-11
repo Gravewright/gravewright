@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/shared/lifecycle/scope.js
+// shared/lifecycle/scope.js
 var ResourceScope = class {
   #abort = new AbortController();
   #cleanups = [];

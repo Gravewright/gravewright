@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/map-ping.js
+// widgets/game-board/model/map-ping.js
 var PING_DURATION = 2e3;
 var DEFAULT_PING_COLOR = "#f2c679";
 function pingShapes(age, scale, focus, inputColor = DEFAULT_PING_COLOR) {

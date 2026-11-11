@@ -8,6 +8,23 @@ from django.conf import settings
 from gravewright.table.domain import MapError, manage, title, document, number
 from .models import ContentAccess
 
+# Like Foundry's default pack ownership, players observe item and spell reference
+# packs until the GM hides them. Actor, journal, scene and card packs can hold
+# adventure spoilers, so they stay hidden until the GM shares them.
+PLAYER_VISIBLE_PACKS = {'item_pack', 'spell_pack'}
+
+
+def native_defaults(pack_type):
+    """Role levels used when the GM has not configured a native pack."""
+    return {'player': 'read'} if pack_type in PLAYER_VISIBLE_PACKS else {}
+
+
+def native_level(who, collection, pack):
+    """A role's configured ContentAccess level, or the pack's default."""
+    row = ContentAccess.objects.filter(campaign_id=who.campaign_id, collection=collection, pack=str(pack.get('id')), role=who.role).first()
+    return row.level if row else native_defaults(pack.get('type')).get(who.role, 'none')
+
+
 KINDS = {'actor_pack':'actor', 'item_pack':'item', 'spell_pack':'item',
          'journal_pack':'journal', 'scene_pack':'scene', 'card_pack':'deck', 'deck_pack':'deck'}
 
@@ -135,7 +152,8 @@ def available(who, pack_id=None):
             if who.role != 'gm':
                 from gravewright.table.ownership import policy
                 explicit = policy(who, 'compendiums', rid)
-                allowed = explicit.get(who.role, explicit.get('default', 'none')) in {'read', 'owner'} if explicit is not None else ContentAccess.objects.filter(campaign_id=who.campaign_id,collection=collection_key(base,collection),pack=str(pack.get('id')),role=who.role,level__in=['read','owner']).exists()
+                level = explicit.get(who.role, explicit.get('default', 'none')) if explicit is not None else native_level(who, collection_key(base, collection), pack)
+                allowed = level in {'read', 'owner'}
                 if not allowed:
                     continue
             yield rid,base,collection,pack
@@ -160,7 +178,28 @@ def read_ids(payload):
     return ids
 
 
-def command(who, action, payload):
+def prepare_import(who, payload):
+    """Validate native deck artwork before reserving the campaign writer."""
+    manage(who)
+    requested = payload.get('packId')
+    record = next((row for row in available(who, requested) if row[0] == requested), None)
+    if record is None:
+        raise MapError('Compendium not found.', 'not_found')
+    _, base, collection, pack = record
+    entry = next((row for row in pack.get('entries', [])
+                  if isinstance(row, dict) and str(row.get('id')) == str(payload.get('id'))), None)
+    if entry is None:
+        raise MapError('Entry not found.', 'not_found')
+    from copy import deepcopy
+    prepared = {'native': (str(base), pack['type'], deepcopy(entry))}
+    if KINDS[pack['type']] == 'deck':
+        data = document(entry.get('data', {}))
+        data.pop('importFolder', None)
+        prepared['cards'] = prepare_deck(base, data or entry)
+    return prepared
+
+
+def command(who, action, payload, *, prepared=None):
     requested_pack = payload.get('packId')
     record=next((record for record in available(who, requested_pack) if record[0] == requested_pack),None)
     if record is None:
@@ -195,6 +234,8 @@ def command(who, action, payload):
     system=entry.get('systemId',entry.get('system_id',who.campaign.system))
     if system!=who.campaign.system:
         raise MapError('This compendium requires a different system.')
+    if prepared is not None and prepared.get('native') != (str(base), pack['type'], entry):
+        raise MapError('This resource changed. Refresh before editing.', 'conflict')
     kind=KINDS[pack['type']]
     name=title(entry.get('name',entry.get('title','Imported')))
     data=document(entry.get('data',{}))
@@ -225,7 +266,7 @@ def command(who, action, payload):
         if type(width) is not int or type(height) is not int:raise MapError('Invalid scene dimensions.')
         result=Scene.objects.create(campaign_id=who.campaign_id,name=name,width=width,height=height)
     else:
-        return import_deck(who,base,name,data or entry)
+        return import_deck(who,base,name,data or entry, prepared=prepared.get('cards') if prepared else None)
     if kind in ('actor','journal'):
         if kind=='actor':
             from gravewright.actors.models import Folder
@@ -240,10 +281,8 @@ def command(who, action, payload):
     return {'id':str(result.pk),'kind':kind}
 
 
-def import_deck(who,base,name,data):
-    from django.core.files.base import ContentFile
-    from gravewright.cards.models import CardAsset
-    from gravewright.cards.services import command as cards
+def prepare_deck(base, data):
+    """Return bounded, verified artwork bytes without writing any database rows."""
     from PIL import Image
     import io
     rows=data.get('cards',[])
@@ -263,6 +302,14 @@ def import_deck(who,base,name,data):
         quantity=row.get('quantity',1)
         if type(quantity) is not int or not 1<=quantity<=500 or len(prepared)+quantity>500:raise MapError('Invalid card quantity.')
         prepared.extend([(title(row.get('name',row.get('label','Card'))),raw)]*quantity)
+    return prepared
+
+
+def import_deck(who,base,name,data, *, prepared=None):
+    from django.core.files.base import ContentFile
+    from gravewright.cards.models import CardAsset
+    from gravewright.cards.services import command as cards
+    prepared = prepare_deck(base, data) if prepared is None else prepared
     files=[]
     try:
         entries=[]

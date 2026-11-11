@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/native/builder-editor-model.js
+// native/builder-editor-model.js
 import { defaults } from "../features/effects/model/effects.js";
 import { PARTICLE_DEFAULTS } from "../features/effects/model/particle-profiles.js";
 import { shaderPresets } from "../features/scene-layers/lib/shader-presets.js";

@@ -129,8 +129,9 @@ class ClueBlueprintRuntimeTests(TestCase):
         self.assertEqual(clue_api.state(self.campaign.pk, self.player.pk)['clues'], [])
         for secret in (self.clue.name, self.clue.content, self.clue.gm_notes, str(self.clue.pk)):
             self.assertNotIn(secret, str(response))
-        clue_events = [call.args[1] for call in send.call_args_list if call.args[1].get('module') == 'clues']
-        self.assertEqual(clue_events, [{'type': 'room.resources', 'module': 'clues'}])
+        clue_events = [call.args[1] for call in send.call_args_list
+                        if 'resources:clues' in call.args[1].get('refresh', ())]
+        self.assertEqual([event['refresh'] for event in clue_events], [['resources:clues']])
         self.assertEqual(ClueReceipt.objects.get().user_id, self.gm.pk)
         with self.assertRaises(services.MapError):
             clue_api.command(self.campaign.pk, self.player.pk, 'advance', {

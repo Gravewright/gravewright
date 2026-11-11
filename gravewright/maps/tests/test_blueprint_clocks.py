@@ -133,8 +133,9 @@ class ClockBlueprintRuntimeTests(TestCase):
         self.assertEqual(clock_api.state(self.campaign.pk, self.player.pk)['clocks'], [])
         self.assertNotIn(self.clock.name, str(response))
         self.assertNotIn(str(self.clock.pk), str(response))
-        clock_events = [call.args[1] for call in send.call_args_list if call.args[1].get('module') == 'clocks']
-        self.assertEqual(clock_events, [{'type': 'room.resources', 'module': 'clocks'}])
+        clock_events = [call.args[1] for call in send.call_args_list
+                        if 'resources:clocks' in call.args[1].get('refresh', ())]
+        self.assertEqual([event['refresh'] for event in clock_events], [['resources:clocks']])
         receipt = ClockReceipt.objects.get()
         self.assertEqual(receipt.user_id, self.gm.pk)
         with self.assertRaises(services.MapError):

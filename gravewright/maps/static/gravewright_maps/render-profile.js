@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/shared/storage/browser-key-value-store.js
+// shared/storage/browser-key-value-store.js
 var BrowserKeyValueStore = class {
   open;
   constructor(open) {

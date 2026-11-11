@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/scene-image-art.js
+// widgets/game-board/model/scene-image-art.js
 var SceneImageArt = class {
   #load;
   #apply;

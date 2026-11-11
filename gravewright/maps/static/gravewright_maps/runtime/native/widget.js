@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/native/widget.js
+// native/widget.js
 var CELL = /* @__PURE__ */ Symbol("cell");
 var expressions = /* @__PURE__ */ new Map();
 function evaluate(code, ctx, eventMode = false) {

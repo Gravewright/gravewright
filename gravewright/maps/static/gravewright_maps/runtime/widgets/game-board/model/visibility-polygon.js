@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/visibility-polygon.js
+// widgets/game-board/model/visibility-polygon.js
 import { WallRayIndex } from "./wall-ray-index.js";
 var baseAngles = Array.from({ length: 128 }, (_, i) => i * Math.PI * 2 / 128);
 function createVisibilityContext(walls) {

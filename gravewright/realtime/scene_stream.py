@@ -13,14 +13,13 @@ from time import monotonic, time
 
 from django.conf import settings
 
-from channels.db import database_sync_to_async as db
-
 from gravewright.journals.services import JournalError
 from gravewright.maps import services as maps
 from gravewright.maps.render_priority import RenderPriority
 from gravewright.maps.render_scheduler import RenderPriorityScheduler, SchedulerBudget
 
 from .gm_guided_prefetch import GmGuidedPrefetchBroker
+from .metrics import database_sync_to_async as db
 
 
 def resolve(campaign_id, user_id, payload):
@@ -72,15 +71,19 @@ class SceneStreamMixin:
             viewport_ttl_ms=15_000,
         )
 
-    async def stop_stream(self):
+    async def stop_stream(self, wait=True):
         self.stream_region = None
         if hasattr(self, "render_scheduler"):
             self.render_scheduler.clear()
         task = getattr(self, "stream_task", None)
         if task:
             task.cancel()
-            with suppress(asyncio.CancelledError):
-                await task
+            if wait:
+                with suppress(asyncio.CancelledError):
+                    await task
+            else:
+                # A cancelled synchronous call still runs to completion; consume its outcome.
+                task.add_done_callback(lambda done: done.cancelled() or done.exception())
             self.stream_task = None
 
     async def scene_viewport(self, payload):

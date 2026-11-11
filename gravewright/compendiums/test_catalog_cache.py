@@ -311,8 +311,13 @@ class CatalogCacheTests(TestCase):
             self.assertEqual(set(summary),{'id','name','kind','type','version'})
             self.assertNotIn('privateBody',json.dumps(pack))
             payload = {'packId':pack['id'],'ids':['document']}
-            with self.assertRaises(domain.MapError):
-                domain.command(self.campaign.pk,self.player.pk,'compendiums','read',payload,uuid.uuid4())
+            if pack['name'].split(' / ')[-1] in catalog.PLAYER_VISIBLE_PACKS:
+                # Item and spell reference packs are player-readable by default.
+                self.assertEqual(domain.command(self.campaign.pk,self.player.pk,'compendiums','read',payload,uuid.uuid4())['entries'][0],
+                                 expected[pack['name'].split(' / ')[-1]])
+            else:
+                with self.assertRaises(domain.MapError):
+                    domain.command(self.campaign.pk,self.player.pk,'compendiums','read',payload,uuid.uuid4())
             grant = DocumentAccess.objects.create(campaign=self.campaign,kind='compendiums',
                 resource_id=pack['id'],grants={'player':'read'})
             result = domain.command(self.campaign.pk,self.player.pk,'compendiums','read',payload,uuid.uuid4())

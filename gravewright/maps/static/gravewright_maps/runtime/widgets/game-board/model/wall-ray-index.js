@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/wall-ray-index.js
+// widgets/game-board/model/wall-ray-index.js
 function entry(node, x, y, dx, dy, distance) {
   let near = 0, far = distance;
   if (Math.abs(dx) < 1e-12) {

@@ -1,6 +1,7 @@
 """Token transport metadata follows the recipient's live, scene-scoped projection."""
 
 from datetime import timedelta
+from functools import partial
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 import uuid
@@ -37,9 +38,14 @@ class TokenTeleportTests(TransactionTestCase):
         self.foreign = Token.objects.create(scene=self.foreign_scene, actor=actor, version=7)
 
     def recipient(self, role):
-        return SimpleNamespace(campaign_id=self.campaign.pk, user_id=self.users[role].pk,
+        recipient = SimpleNamespace(campaign_id=self.campaign.pk, user_id=self.users[role].pk,
             token_map_id=str(self.scene.pk), authorized=AsyncMock(return_value=True), emit=AsyncMock(),
             api_changed=AsyncMock(), room_resources=AsyncMock())
+        recipient.deliver_tokens = partial(TableConsumer.deliver_tokens, recipient)
+        recipient.notify_api = partial(TableConsumer.notify_api, recipient)
+        recipient.emit_projection = partial(TableConsumer.emit_projection, recipient)
+        recipient.forget_projections = partial(TableConsumer.forget_projections, recipient)
+        return recipient
 
     def marker(self, token, **values):
         return {"id": str(token.pk), "version": token.version, **values}

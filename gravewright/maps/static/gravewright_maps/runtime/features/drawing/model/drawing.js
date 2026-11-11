@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/drawing/model/drawing.js
+// features/drawing/model/drawing.js
 function bounds(row) {
   const xs = row.points.map((p) => p.x), ys = row.points.map((p) => p.y), pad = row.width / 2 + 2;
   const x = Math.min(...xs), y = Math.min(...ys);

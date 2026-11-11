@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/lib/warm-tiles.js
+// widgets/game-board/lib/warm-tiles.js
 import { increment, metrics } from "../model/prefetch-metrics.js";
 import { regionTileUrls, tileUrl } from "../model/board-view.js";
 import { tileBlobCache } from "../model/tile-blob-cache.js";

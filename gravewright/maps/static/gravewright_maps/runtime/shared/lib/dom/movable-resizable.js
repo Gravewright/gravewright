@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/shared/lib/dom/movable-resizable.js
+// shared/lib/dom/movable-resizable.js
 var cleanups = /* @__PURE__ */ new WeakMap();
 var windows = /* @__PURE__ */ new Set();
 function mount(element) {

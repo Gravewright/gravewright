@@ -99,6 +99,11 @@ class InstalledCompendiumTests(TestCase):
         suffix = " / Magias" if spells else " / Itens"
         return next(pack for pack in self.state(user)["packs"] if edition in pack["name"] and pack["name"].endswith(suffix))
 
+    def hide_from_players(self):
+        """Item and spell packs are player-visible by default; start from hidden packs."""
+        for pack in self.state()["packs"]:
+            self.command("permissions", {"packId": pack["id"], "level": "none"})
+
     def package_root(self):
         return self.directory / "modules/packages" / SYSTEM / self.package.version / self.package.digest
 
@@ -128,11 +133,17 @@ class InstalledCompendiumTests(TestCase):
         self.package.save(update_fields=["revoked"])
         self.assertEqual(self.state()["packs"], [])
 
-    def test_default_private_read_grants_and_explicit_denial(self):
+    def test_item_packs_default_to_player_read_and_explicit_denial(self):
         pack = self.pack()
         payload = {"packId": pack["id"], "id": self.entry_id("2014", "weapon")}
-        self.assertEqual(self.state(self.player)["packs"], [])
+        # Like Foundry's default ownership, players observe item packs; streamers do not.
+        self.assertEqual(len(self.state(self.player)["packs"]), 4)
         self.assertEqual(self.state(self.streamer)["packs"], [])
+        self.assertEqual(self.command("read", payload, self.player)["type"], "weapon")
+        with self.assertRaises(domain.MapError):
+            self.command("import", payload, self.player)
+        self.hide_from_players()
+        self.assertEqual(self.state(self.player)["packs"], [])
         with self.assertRaises(domain.MapError):
             self.command("read", payload, self.player)
         access = DocumentAccess.objects.create(campaign=self.campaign, kind="compendiums", resource_id=pack["id"], grants={"default": "read", "streamer": "none"})
@@ -148,6 +159,7 @@ class InstalledCompendiumTests(TestCase):
         self.assertEqual(self.state(self.player)["packs"], [])
 
     def test_permission_command_allows_read_but_never_player_import(self):
+        self.hide_from_players()
         pack = self.pack()
         self.command("permissions", {"packId": pack["id"], "level": "read"})
         self.assertEqual(len(self.state(self.player)["packs"]), 1)
@@ -160,6 +172,7 @@ class InstalledCompendiumTests(TestCase):
         self.assertFalse(Item.objects.exists())
 
     def test_batch_read_preserves_individual_documents_order_and_permissions(self):
+        self.hide_from_players()
         pack = self.pack()
         ids = [self.entry_id('2014', kind) for kind in ('armor', 'weapon')]
         payload = {'packId': pack['id'], 'ids': ids}
@@ -216,6 +229,7 @@ class InstalledCompendiumTests(TestCase):
 
     def test_raw_package_assets_cannot_bypass_table_scoped_read_grants(self):
         prefix = f'/api/module-packages/{SYSTEM}/{self.package.version}/{self.package.digest}/'
+        self.hide_from_players()
         self.assertEqual(self.state(self.player)['packs'], [])
         for user in (self.gm, self.player):
             self.client.force_login(user)

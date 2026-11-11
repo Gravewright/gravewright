@@ -22,6 +22,9 @@ def configure():
     )}
     values['PRIVACY_ENABLED'] = env_bool('PRIVACY_ENABLED',False)
     values['APP_DEBUG'] = env_bool('APP_DEBUG', False)
+    values['GRAVEWRIGHT_REALTIME_SLOW_MS'] = int(os.environ.get('GRAVEWRIGHT_REALTIME_SLOW_MS', 500))
+    if values['GRAVEWRIGHT_REALTIME_SLOW_MS'] < 0:
+        raise ValueError('GRAVEWRIGHT_REALTIME_SLOW_MS must be nonnegative.')
     defaults = {
         'CAMPAIGN_SNAPSHOT_RETENTION': 20,
         'ADMINISTRATIVE_AUDIT_RETENTION_DAYS': 180,

@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/native/tools.js
+// native/tools.js
 import { createSelection } from "./runtime/features/selection/ui/selection-workspace.js";
 import Drawing from "./runtime/features/drawing/ui/DrawingWorkspace.native.js";
 import Measurement from "./runtime/features/measurement/ui/MeasurementWorkspace.native.js";

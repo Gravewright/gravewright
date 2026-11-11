@@ -32,7 +32,7 @@ class ClockFrontendTests(TestCase):
         clock = first.json()['value']['clock']
         self.assertEqual(clock['description'], payload['description'])
         self.assertIsNone(clock['sceneId'])
-        self.assertEqual(published.call_args.args[1], {'type': 'room.resources', 'module': 'clocks'})
+        self.assertEqual({key: value for key, value in published.call_args.args[1].items() if key != 'revision'}, {'type': 'room.changes', 'resource': 'clocks', 'action': 'create', 'refresh': ['resources:clocks']})
         self.assertEqual(self.call('create', payload, rid).json(), first.json())
         self.assertEqual(ProgressClock.objects.count(), 1)
         self.client.force_login(self.player)
@@ -100,7 +100,8 @@ class ClockFrontendTests(TestCase):
         direct = self.call('create', {'name': 'PRIVATE_CLOCK_RECEIPT'}, request_id)
         self.assertEqual(direct.status_code, 403, direct.content)
         cross_resource = self.client.post(f'/api/tables/{self.campaign.pk}/api', {
-            'domain': 'items', 'method': 'create', 'payload': {'name': 'Unrelated', 'type': 'unused'},
+            # Players may create items, but item folders remain GM-only.
+            'domain': 'items', 'method': 'createFolder', 'payload': {'name': 'Unrelated'},
             'requestId': str(request_id),
         }, content_type='application/json')
         self.assertEqual(cross_resource.status_code, 403, cross_resource.content)

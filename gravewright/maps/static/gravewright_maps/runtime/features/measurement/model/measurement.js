@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/measurement/model/measurement.js
+// features/measurement/model/measurement.js
 import { formatNumber, text as gwText } from "../../../shared/config/i18n/text.js";
 var unitsPerPixel = (cell, value) => (Number.isFinite(value) && value > 0 ? value : 1) / (Number.isFinite(cell) && cell > 0 ? cell : 70);
 function dragMeasure(seed, end, constrain = false) {

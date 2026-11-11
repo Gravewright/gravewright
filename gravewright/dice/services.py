@@ -74,6 +74,20 @@ def fail(reservation_id, error):
     Submission.objects.filter(pk=reservation_id).update(error=str(error)[:512])
 
 
+def release(reservation_id):
+    """Drop a claim whose completion rolled back, so a retry of the same request can roll.
+
+    A claim whose message was committed (for example by another worker) is kept:
+    the retry then replays that message instead of rolling again.
+    """
+    with transaction.atomic():
+        claim = Submission.objects.select_for_update().filter(pk=reservation_id).first()
+        if claim and not Message.objects.filter(
+                campaign_id=claim.campaign_id, author_id=claim.author_id,
+                request_id=claim.request_id).exists():
+            claim.delete()
+
+
 def complete(reservation_id, data, result, session_key, campaign_id, user_id):
     """Reauthorize and commit a reserved result with its fixed recipient audience."""
     with transaction.atomic():

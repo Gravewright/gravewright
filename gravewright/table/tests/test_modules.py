@@ -39,6 +39,23 @@ class TableModuleTests(TestCase):
         self.command('items','permissions',{'id':item['id'],'version':1,'permissions':{str(self.player.pk):'read'}})
         self.assertEqual(len(self.state('items',self.player)['items']),1)
         with self.assertRaises(MapError):self.command('items','update',{'id':item['id'],'version':1,'name':'Stale'})
+    def test_players_create_items_they_own_without_filing_or_sharing(self):
+        from unittest.mock import patch
+        from gravewright.items.models import Folder
+        other=User.objects.create_user(email='other-modules@example.test',password='a-long-password',name='Other')
+        Membership.objects.create(campaign=self.campaign,user=other,role='player')
+        folder=Folder.objects.create(campaign=self.campaign,name='Loot')
+        with patch('gravewright.items.services.types', return_value=[{'id':'gear','label':'Gear'}]):
+            item=self.command('items','create',{'name':'Rope','type':'gear','data':{'weight':1}},self.player)['item']
+            for payload in ({'folderId':str(folder.pk)},{'permissions':{'default':'owner'}},{'type':'invented'}):
+                with self.assertRaises(MapError):self.command('items','create',{'name':'Bad','type':'gear',**payload},self.player)
+        self.assertTrue(item['canEdit'])
+        self.assertEqual([row['name'] for row in self.state('items',self.player)['items']],['Rope'])
+        self.assertEqual(self.state('items',other)['items'],[])
+        self.assertEqual(self.state('items')['items'][0]['permissions'],{str(self.player.pk):'owner'})
+        self.command('items','update',{'id':item['id'],'version':1,'name':'Silk rope'},self.player)
+        for action in ('delete','duplicate','permissions'):
+            with self.assertRaises(MapError):self.command('items',action,{'id':item['id'],'version':2,'permissions':{}},self.player)
     def test_cards_are_private_and_draw_is_idempotent(self):
         deck=self.command('cards','create',{'name':'Deck','cards':['Secret Ace','Two']})['id']
         request=uuid.uuid4();payload={'deck_instance_id':deck,'count':1}

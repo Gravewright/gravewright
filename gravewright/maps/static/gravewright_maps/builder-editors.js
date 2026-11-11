@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/native/builder-editors.js
+// native/builder-editors.js
 import LightEditor from "./runtime/features/lighting/ui/LightEditor.native.js";
 import EffectEditor from "./runtime/features/effects/ui/EffectEditor.native.js";
 import { ShaderDraftValidator } from "./runtime/features/effects/model/shader-validation.js";

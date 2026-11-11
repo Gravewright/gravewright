@@ -26,6 +26,8 @@ export function mountCompendiums(root, initial) {
   const campaign=document.getElementById('table-workspace').dataset.tableId;
   const gm=document.getElementById('table-workspace').dataset.role==='gm';
   let state=initial, query='', kind='', source='', busy=new Set(), dragged, highlighted;
+  // Players may drag items into sheets they own, as in Foundry; the sheet authorizes the drop.
+  const draggable=entryKind=>gm||entryKind==='item';
   const opened=new Set(), container=node('section','gw-compendiums');
   const toolbar=node('div','gw-compendiums__toolbar'),filters=node('div','gw-compendiums__filters'),search=node('input'),type=node('select'),pack=node('select');
   search.type='search';
@@ -54,7 +56,7 @@ export function mountCompendiums(root, initial) {
   function pending(packId,id){
     const active=busy.has(packId+':'+id);
     for(const row of list.querySelectorAll('.gw-compendiums__entry'))if(row.dataset.compendiumPack===packId&&row.dataset.compendiumEntry===id){
-      row.draggable=gm&&!active;row.querySelector('.gw-compendiums__import')?.toggleAttribute('disabled',active);
+      row.draggable=draggable(row.dataset.compendiumKind)&&!active;row.querySelector('.gw-compendiums__import')?.toggleAttribute('disabled',active);
       row.setAttribute('aria-busy',String(active));
     }
   }
@@ -91,7 +93,7 @@ export function mountCompendiums(root, initial) {
       if(gm){const permissions=button('⋯',()=>openPermissions('compendiums',p.id));permissions.className='gw-compendiums__permissions';permissions.title=text('Permissions','Permissões');permissions.setAttribute('aria-label',text('Permissions','Permissões')+' '+p.name);group.append(permissions);}
       if(!entries.length)group.append(node('p','gw-compendiums__empty',text('Empty package.','Pacote vazio.')));
       for(const e of entries){
-        const row=node('div','gw-compendiums__entry');row.dataset.compendiumEntry=e.id;row.dataset.compendiumPack=p.id;row.draggable=gm&&!busy.has(p.id+':'+e.id);
+        const row=node('div','gw-compendiums__entry');row.dataset.compendiumEntry=e.id;row.dataset.compendiumPack=p.id;row.dataset.compendiumKind=e.kind;row.draggable=draggable(e.kind)&&!busy.has(p.id+':'+e.id);
         row.ondragstart=event=>{if(!row.draggable){event.preventDefault();return;}dragged={campaign,packId:p.id,id:e.id,kind:e.kind};event.dataTransfer.setData(mime,JSON.stringify(dragged));event.dataTransfer.effectAllowed='copy';};
         row.ondragend=clearDrag;
         const label=button(e.name,()=>preview(p,e));label.className='gw-compendiums__name';label.title=text('Preview','Prévia')+': '+e.name;

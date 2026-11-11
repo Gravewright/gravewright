@@ -69,11 +69,14 @@ def command(who,action,p):
             row.name=title(p.get('name',row.name));row.parent=parent;row.color=color(p.get('color',row.color));row.save()
         return {'id':str(row.pk)}
     if action=='create':
-        manage(who)
+        # Players may create items they own; filing and sharing stay with the GM.
+        if who.role!='gm' and (p.get('folderId') or p.get('permissions')):
+            raise MapError('Only the GM can file or share items.', 'forbidden')
         if p.get('type') not in {t['id'] for t in types(who.campaign.system,campaign_id=who.campaign_id)}:
             raise MapError('Enable a system that provides item types to create items.')
+        grants=permissions(p.get('permissions',{}),who) if who.role=='gm' else {str(who.user_id):'owner'}
         row=Item.objects.create(campaign_id=who.campaign_id,name=title(p.get('name')),type=title(p.get('type','item'),80),system_id=who.campaign.system,
-            data=document(p.get('data',{})),permissions=permissions(p.get('permissions',{}),who),folder=folder(p.get('folderId'),who))
+            data=document(p.get('data',{})),permissions=grants,folder=folder(p.get('folderId'),who))
     else:
         row=get(p.get('id'),who,True);version(row,p)
         if action=='delete':manage(who);row.delete();return {}

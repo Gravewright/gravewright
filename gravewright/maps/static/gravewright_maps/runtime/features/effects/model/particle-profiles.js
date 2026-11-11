@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/model/particle-profiles.js
+// features/effects/model/particle-profiles.js
 function phaseOf(id) {
   let hash = 0;
   for (let i = 0; i < id.length; i++)

@@ -583,6 +583,11 @@ def remap_omitted_bindings(record, field_name, rewritten, model_ids, inert_ids):
 def import_campaign(raw, user, title="", *, target=None, merge=False):
     """Import a validated content graph, remapping identifiers and stored file paths."""
     payload, blobs = read_archive(raw)
+    return _import_validated_campaign(payload, blobs, user, title, target=target, merge=merge)
+
+
+def _import_validated_campaign(payload, blobs, user, title="", *, target=None, merge=False):
+    """Persist trusted output of read_archive; callers retain live authorization checks."""
     name = title or payload["campaign"]["name"]
     if not isinstance(name, str) or not 2 <= len(name.strip()) <= 80:
         raise AuthError("invalid_container_name")

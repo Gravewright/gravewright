@@ -253,7 +253,7 @@ class ProgressClockTests(TestCase):
                 self.assertFalse(send.called)
                 self.assertEqual(changes, [])
             self.assertEqual(send.call_count, 1)
-            self.assertEqual(send.call_args.args[1], {'type': 'room.resources', 'module': 'clocks'})
+            self.assertEqual({key: value for key, value in send.call_args.args[1].items() if key != 'revision'}, {'type': 'room.changes', 'resource': 'clocks', 'action': 'create', 'refresh': ['resources:clocks']})
             self.assertNotIn('GM_ONLY_SECRET', str(send.call_args))
             self.assertEqual(len(changes), 1)
             self.assertEqual(changes[0][0], 'clocks')

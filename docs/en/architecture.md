@@ -43,8 +43,34 @@ flowchart TD
 - `gravewright/realtime/consumers.py` handles transport, subscriptions and transient
   connection state. It invokes synchronous services through
   `database_sync_to_async`; expensive dice evaluation uses `asyncio.to_thread`.
+  Each socket runs commands, subscriptions and deliveries in order on its own
+  thread, so commands from one connection stay ordered while a slow query cannot
+  stall other players. Samples where only the newest value matters (cursor,
+  viewport and token drag, whether sent by this socket or relayed from another)
+  run in a second lane with a thread of its own: a newer sample replaces an
+  unprocessed one, and each drag stream keeps its own end or cancel. Pongs renew
+  the presence lease on a pool thread. A reader admits frames by their arrival
+  time (size, cursor throttle and command rate), so frames that waited behind a
+  slow command are not mistaken for a burst; more than 256 waiting frames close
+  the socket with code 4429. Handlers log a payload-free warning when they reach
+  `GRAVEWRIGHT_REALTIME_SLOW_MS` (see [Configuration](configuration.md)). Pings
+  and liveness do not wait for the database, and a disconnect abandons pending
+  handlers so presence cleanup finishes within Daphne's close timeout.
 - `gravewright/realtime/dispatch.py` schedules committed resource invalidations,
-  chat delivery and trusted Python extension signals.
+  chat delivery and trusted Python extension signals. Each commit becomes one
+  `room.changes` event listing the projections to refresh (`dispatch.refreshes`),
+  so a socket authorizes once, delivers each projection once (board first,
+  dependent resources last) and sends `api.changed` once per domain. Playback,
+  item and compendium edits refresh only their own resource; combat, cards and
+  other audio changes also refresh the map layers, which show them; compendium
+  imports refresh everything an archive may touch. The
+  `gravewright.realtime.tests.test_dispatch_dependencies` suite compares real
+  projections before and after commands to keep this table complete. Modules
+  therefore receive `api.changed` hints only for domains a commit can change.
+
+This guide describes the current transport. The approved
+[realtime design direction](realtime-direction.md) records planned changes to it and
+the status of each stage.
 
 The default database is SQLite with `transaction_mode='IMMEDIATE'`. Services express
 serialization with atomic transactions and campaign/membership locks. SQLite does
@@ -55,7 +81,12 @@ Standard production settings require a Redis Channels layer. The in-memory layer
 for one development process and by the dedicated [local runner](windows-runner.md);
 it cannot carry notifications between workers. Redis
 is the event transport, while campaign content, sessions and presence leases remain
-in the database. See [Configuration](configuration.md).
+in the database. See [Configuration](configuration.md). Each socket holds one
+presence lease (`PresenceConnection`, valid for `GRAVEWRIGHT_PRESENCE_TTL`). A pong
+renews it only during the second half of its lifetime, so most pongs write nothing;
+a renewal recreates the lease if another socket's cleanup removed it while the
+renewal was delayed. Heartbeat upkeep removes expired leases (left by crashed
+workers) at most once per half TTL in each process, reading before it deletes.
 
 The WebSocket origin check uses `GRAVEWRIGHT_PUBLIC_ORIGIN` when configured and
 requires both the request Host and browser Origin to match its scheme, domain and
@@ -103,7 +134,17 @@ WebSocket authorization also rereads the live database session, its configured a
 backend and the user's session authentication hash. It checks membership when
 receiving commands, in delivery handlers and during heartbeats. Removing a member,
 expiring a streamer link or invalidating a session therefore affects existing
-connections as they are rechecked.
+connections as they are rechecked. A socket may reuse its last successful check for
+up to two seconds (`AUTHORIZATION_TTL` in `consumers.py`), never beyond the session or
+streamer-link expiry. Logout, session deletion, password changes, membership removal
+or role changes, user deactivation, streamer-link changes and campaign deletion
+invalidate that cache before the next frame: after commit they advance a
+process-wide epoch and send `room.access` to the affected campaign and user groups,
+so sockets in other processes revalidate at once (`gravewright/realtime/access.py`
+and `signals.py`). Code that changes those rows without model signals, such as
+`QuerySet.update`, must call `access.revoke`; edits made directly in the database are
+noticed when the cached result expires. Write commands are still authorized by their
+services. See [stage 6 of the realtime direction](realtime-direction.md#stage-6-cached-transport-authorization).
 
 Streamer access is read-only. The socket consumer permits a limited set of sync,
 search, viewport and heartbeat messages; write boundaries also reject streamers.
@@ -147,6 +188,16 @@ Most persistent tabletop resource commands follow this sequence:
 The exact order and replay behavior vary by domain; follow the owning service.
 Uploads and administrative operations do not all use this receipt protocol.
 
+Work that does not need the write reservation stays outside it. Compendium reads
+check live membership and grants without opening `BEGIN IMMEDIATE`, and create no
+receipt or notification. Compendium imports read and validate their archives and
+artwork first, then compare the entry's revision again inside the transaction and
+fail with `conflict` if it changed. Token commands look for a receipt before taking
+the lock (and again inside it), store only created IDs and teleport markers in the
+transaction, and build the acknowledgement's visible tokens after commit; region
+automation still commits with the move. Original SDK 1.0 operations stay inside a
+transaction because every call renews its mount lease.
+
 | Identity store | Used by | Retry behavior |
 | --- | --- | --- |
 | `maps.Receipt` | Maps, actors, tokens, items, combat, cards, audio, compendiums | Shared `(campaign, user, request_id)` namespace. Most return the saved result; tokens rebuild visible state and filter saved created IDs. |
@@ -158,6 +209,19 @@ that same command. In particular, do not reuse a UUID between an actor command a
 an audio command: they share the same receipt table. Receipts do not generally
 compare the retried action or payload with the original one.
 
+When SQLite reports a lock (`database is locked`) while a socket handles a command,
+the consumer answers on that command's error channel with code `busy` and the same
+request ID, and the socket stays open. The browser keeps the command pending and
+silently resends the same payload after 1, 2, 4 and then every 8 seconds; the receipt
+makes the retry safe. A roll whose completion meets a lock releases its claim, so the
+retry rolls again; the rolled-back result never left the server. Subscriptions,
+searches and lobby updates that meet a lock are replayed on the next heartbeat upkeep,
+deliveries are queued again the same way, and samples that a newer one replaces are
+dropped. Other database errors still close the socket. Each command also has a
+45-second deadline, above the 30-second SQLite timeout: when it expires the browser
+closes the socket and reconnects, resending pending commands with their original IDs.
+Pings never resend pending chat messages or rolls; only a reconnection does.
+
 Request identity and resource revision solve different problems. The request UUID
 deduplicates a command; fields such as `version`, `sheetVersion` and
 `expectedVersion` detect a stale editor. A conflict requires refreshed state and an
@@ -166,7 +230,18 @@ explicitly chosen new edit, not blindly changing a version number.
 `transaction.on_commit()` prevents subscribers from being notified of rolled-back
 changes. Dispatch uses robust callbacks and does not provide a durable event queue:
 a committed mutation can survive a delivery failure. Clients should resynchronize
-through state endpoints/subscriptions. Python `resource_changed` handlers are
+through state endpoints/subscriptions. Each refresh envelope carries a per-campaign
+revision, incremented in the committing transaction (`realtime.CampaignRevision`).
+A socket that sees a gap, for example because a full channel queue dropped an
+envelope, refreshes every projection it subscribes to; a late or repeated envelope
+is ignored. Each socket also remembers the projections it last sent: an unchanged
+projection sends nothing, and tokens and map layers send `delta` frames
+(`upserts`, `removes`, `order`, `unset`) computed from the recipient's own complete
+projection, so they never carry data that projection would not. The first
+projection after a subscription, scene change or reconnection is sent whole. A
+`resources.sync` for one table module resets only that module's projections, so the
+burst that subscribes every module does not make later envelopes resend the others.
+Python `resource_changed` handlers are
 trusted in-process callbacks; they are neither cross-process durable jobs nor an
 untrusted-code sandbox.
 
@@ -325,11 +400,11 @@ external callers use the public wrappers or `api.resources`.
 
 | Domain | Responsibility and important boundary |
 | --- | --- |
-| Items | Versioned item documents with per-user grants. The native PDF implementation currently returns no item types, so ordinary item creation is unavailable until that capability is implemented. |
+| Items | Versioned item documents with per-user grants. Players may create items and become their owner; filing, duplication, sharing and deletion remain GM-only. The native PDF implementation currently returns no item types, so ordinary item creation is unavailable until that capability is implemented. |
 | Combat | A scene's encounter, initiative, current turn and bounded turn history. Turn order changes preserve combatant identity; progression can advance effects on actor documents. |
 | Cards | Reusable definitions and mutable deck instances; draw/hand/scene/discard zones, ownership and face visibility. A GM's control permission does not automatically expose another player's hidden face. |
 | Audio | Track uploads, playlists, playback transport and soundtrack scheduling. State projects positions using server time and spatial gain using controlled listener tokens and acoustic walls. HTTP file delivery remains separately authorized. |
-| Compendiums | Campaign packs and native content catalog access. Portable bundles capture an allowlisted dependency graph and import documents/assets into a compatible campaign system. |
+| Compendiums | Campaign packs and native content catalog access. Portable bundles capture an allowlisted dependency graph and import documents/assets into a compatible campaign system. Native item and spell packs are readable by players until the GM hides them; actor, journal, scene and card packs and campaign packs stay hidden until shared. Only the GM imports. |
 
 The older declarative formula helper in `combat/formula_engine.py` is distinct from
 the chat dice grammar. Current combat initiative calls `dice.engine.evaluate`;

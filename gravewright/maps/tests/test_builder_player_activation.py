@@ -64,7 +64,7 @@ class BuilderPlayerActivationTests(TestCase):
         self.assertEqual(result["map"]["visibility"], "players")
         self.assertEqual(Broadcast.objects.get(campaign=self.campaign).scene_id, generated.pk)
         self.assertIsNone(SceneNavigation.objects.get(membership=self.membership).scene_id)
-        self.assertTrue(any(call.args[1]["type"] == "room.maps" for call in send.call_args_list))
+        self.assertTrue(any("maps" in call.args[1].get("refresh", ()) for call in send.call_args_list))
         for user in (self.player, self.streamer):
             self.client.force_login(user)
             after = services.state(self.campaign.pk, user.pk)

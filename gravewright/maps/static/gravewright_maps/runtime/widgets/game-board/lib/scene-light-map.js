@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/lib/scene-light-map.js
+// widgets/game-board/lib/scene-light-map.js
 import { Container, Graphics, RenderTexture, Texture } from "/static/gravewright_maps/vendor/pixi.js";
 import { paintAnimatedLight } from "../../../features/lighting/model/light-profiles.js";
 import { AnimatedLight, LightTexturePool } from "./animated-light.js";

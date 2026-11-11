@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/scene-darkness.js
+// widgets/game-board/model/scene-darkness.js
 function sceneDarkness(lighting) {
   if (lighting.mode !== "dynamic" || lighting.lights_out === false)
     return 0;

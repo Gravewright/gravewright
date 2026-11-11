@@ -288,6 +288,24 @@ isolated fixture for before/after comparisons. The Django
 `gravewright.realtime.tests.test_token_refresh_cost` suite checks notification
 cost, actor projection stability, independent audio updates and live revocation.
 
+The realtime transport suites under `gravewright/realtime/tests/` also cover lock
+recovery (`test_database_busy`), separate socket lanes (`test_socket_lanes`), one
+envelope per commit (`test_dispatch_envelope`) and its dependency table
+(`test_dispatch_dependencies`, which compares every user's projections before and
+after real commands; set `GRAVEWRIGHT_PRINT_DEPENDENCIES=1` to print what changed),
+changed-only delivery and envelope revisions (`test_projection_diff`), cached
+authorization (`test_authorization_cache`), presence leases
+(`test_presence_leases`), payload-free slow-handler logging (`test_instrumentation`
+and `test_metrics`) and per-recipient notification budgets (`test_refresh_budget`).
+Set `GRAVEWRIGHT_REALTIME_BENCHMARK_OUTPUT` to an explicit installation-local JSON
+file to record 20 repetitions per budget scenario, including steady-state
+deliveries; timings are observations. Transaction boundaries are covered by
+`gravewright.table.tests.test_transaction_boundaries` and
+`gravewright.tokens.test_transaction_boundaries`, and chat history query counts by
+`gravewright.chat.tests.test_history_queries`. `tests/table/realtime.test.mjs` runs
+`realtime.js` with a virtual clock to check `busy` retries, command deadlines and
+delta merging.
+
 On Linux, Playwright may need system browser libraries; `uv run --locked playwright install --with-deps chromium` also installs those and can require administrator privileges. Scenarios launch their own servers on temporary ports and seed synthetic data. Most use development settings and write diagnostics under `test-results/`; the HTTPS and runner scenarios use dedicated settings described below. Run scenarios sequentially: several share `test-results/migration-closure/`.
 
 `tests/e2e/compendium_server.py --fixture <new-empty-directory>` starts a

@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/scene-layers/ui/SceneSourcesWorkspace.native.js
+// features/scene-layers/ui/SceneSourcesWorkspace.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import DirectoryContextMenu from "../../../shared/ui/directory/DirectoryContextMenu.native.js";
 import LightPicker from "../../lighting/ui/LightPicker.native.js";

@@ -34,7 +34,7 @@ def resolve(who, kind, key):
         _, base, collection, pack = found
         explicit = DocumentAccess.objects.filter(campaign_id=who.campaign_id,kind=kind,resource_id=key).first()
         return kind, SimpleNamespace(pk=key, name=pack.get('label', pack.get('name', str(pack.get('id')))), version=explicit.version if explicit else 1,
-                                     shared=False, native=True, collection=base.name, pack=str(pack.get('id'))), None
+                                     shared=False, native=True, collection=base.name, pack=str(pack.get('id')), pack_type=pack.get('type')), None
     if kind == 'pages':
         parts = key.split(':', 1)
         if len(parts) != 2:
@@ -81,7 +81,9 @@ def snapshot(who, kind, row, section=None):
         default = 'read' if kind == 'cards' or kind == 'scenes' and row.visibility == 'players' or kind == 'compendiums' and row.shared else 'none'
         grants, revision = policy.grants if policy else {'default': default}, row.version
         if getattr(row, 'native', False) and not policy:
+            from gravewright.compendiums.catalog import native_defaults
             from gravewright.compendiums.models import ContentAccess
+            grants.update(native_defaults(row.pack_type))
             grants.update({a.role: 'read' if a.level in {'read','owner'} else 'none' for a in ContentAccess.objects.filter(campaign_id=who.campaign_id,collection=row.collection,pack=row.pack)})
     members = [{'id': str(m.user_id), 'name': m.user.name, 'role': m.role} for m in Membership.objects.filter(campaign_id=who.campaign_id, user__is_active=True).select_related('user').order_by('user__name', 'user_id')]
     return {'kind': kind, 'id': key, 'title': section['title'] if section else getattr(row, 'name', getattr(row, 'title', getattr(row, 'label', ''))),

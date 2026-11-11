@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/prefetch-metrics.js
+// widgets/game-board/model/prefetch-metrics.js
 var counters = ["created", "prefetch_requested", "prefetch_completed", "promoted_to_visible", "expired_unused", "bytes_downloaded", "bytes_used", "bytes_wasted", "cache_hit", "cache_miss", "cancelled", "lead_time_ms", "latency_saved_ms", "scheduler_debt_ms", "candidates", "prefetch_started", "promoted", "bytes_prefetched", "bytes_promoted", "bytes_expired", "bytes_evicted", "score_at_prefetch", "score_at_promotion", "dwell_at_prefetch_ms", "momentum_at_prefetch"];
 var metrics = Object.fromEntries(counters.map((k) => ["gm_hint_" + k, 0]));
 var hints = /* @__PURE__ */ new Map();

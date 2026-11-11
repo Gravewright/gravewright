@@ -13,6 +13,7 @@ from config.asgi import application
 from gravewright.accounts.models import User
 from gravewright.campaigns.models import Campaign, Membership
 from gravewright.chat.models import Message
+from gravewright.realtime import consumers
 from gravewright.realtime.models import PresenceConnection
 
 
@@ -154,24 +155,40 @@ class SocketTests(TransactionTestCase):
             await self.finish()
 
     async def test_open_socket_loses_access_when_session_or_membership_changes(self):
-        for mutation in ('logout', 'password', 'membership'):
+        def change_password():
+            user = User.objects.get(pk=self.player.pk)
+            user.set_password('changed-password-123')
+            user.save()
+        for mutation in ('logout', 'password', 'expired-in-database', 'membership'):
             socket = self.socket(self.player)
             self.assertTrue((await socket.connect(timeout=5))[0])
             await self.event(socket, 'chat.history')
+            started = asyncio.get_running_loop().time()
             if mutation == 'logout':
-                await db(Session.objects.filter(session_key=self.sessions[self.player.pk]).update)(expire_date=timezone.now()-timedelta(seconds=1))
+                # What django.contrib.auth.logout does: the session row is deleted.
+                key = self.sessions[self.player.pk]
+                await db(lambda: Session.objects.get(session_key=key).delete())()
             elif mutation == 'password':
-                await db(User.objects.filter(pk=self.player.pk).update)(password='changed')
+                await db(change_password)()
+            elif mutation == 'expired-in-database':
+                # Edits that bypass model signals are noticed when the cached
+                # authorization expires (AUTHORIZATION_TTL).
+                await db(Session.objects.filter(session_key=self.sessions[self.player.pk]).update)(expire_date=timezone.now()-timedelta(seconds=1))
             else:
                 await db(Membership.objects.filter(pk=self.player_member.pk).delete)()
             # Buffered non-sensitive presence events may precede the close frame.
-            for _ in range(30):
+            while True:
                 frame = await socket.receive_output(timeout=3)
                 if frame['type'] == 'websocket.close':
                     self.assertEqual(frame['code'], 4403)
                     break
-            else:
-                self.fail('Revoked socket stayed connected')
+                if 'session.ping' in frame.get('text', ''):
+                    await socket.send_json_to({'type': 'session.pong'})
+                if asyncio.get_running_loop().time() - started > 4:
+                    self.fail(f'Revoked socket stayed connected after {mutation}')
+            elapsed = asyncio.get_running_loop().time() - started
+            limit = consumers.AUTHORIZATION_TTL + 1 if mutation == 'expired-in-database' else 1
+            self.assertLess(elapsed, limit, mutation)
             await socket.disconnect(); self.sockets.remove(socket)
             if mutation != 'membership':
                 def login_again():
@@ -224,3 +241,81 @@ class SocketTests(TransactionTestCase):
         finally:
             await self.finish()
         self.assertEqual(await db(PresenceConnection.objects.count)(), 0)
+
+    def stall_history(self):
+        """Block the next chat history read until released, like a slow query."""
+        import threading
+        from unittest import mock
+        from gravewright.realtime import consumers
+        entered, release, original = threading.Event(), threading.Event(), consumers.chat.history
+
+        def slow(*args, **kwargs):
+            if not entered.is_set():
+                entered.set()
+                release.wait(10)
+            return original(*args, **kwargs)
+        self.addCleanup(release.set)
+        return mock.patch.object(consumers.chat, 'history', slow), entered, release
+
+    async def test_slow_socket_does_not_stall_other_players(self):
+        patch, entered, release = self.stall_history()
+        slow_socket, other = self.socket(self.gm), self.socket(self.player)
+        try:
+            with patch:
+                self.assertTrue((await slow_socket.connect(timeout=5))[0])
+                self.assertTrue(await asyncio.to_thread(entered.wait, 5))
+                # The GM's connection is stuck in a synchronous call; the player is not.
+                self.assertTrue((await other.connect(timeout=3))[0])
+                await self.event(other, 'chat.history')
+                release.set()
+                await self.event(slow_socket, 'chat.history')
+        finally:
+            release.set()
+            await self.finish()
+
+    async def test_disconnect_during_slow_command_removes_presence_promptly(self):
+        socket = self.socket(self.player)
+        patch, entered, release = self.stall_history()
+        try:
+            self.assertTrue((await socket.connect(timeout=5))[0])
+            await self.event(socket, 'chat.history')
+            with patch:
+                await socket.send_json_to({'type': 'chat.sync', 'payload': {}})
+                self.assertTrue(await asyncio.to_thread(entered.wait, 5))
+                await socket.disconnect(timeout=3); self.sockets.remove(socket)
+                self.assertFalse(release.is_set())
+                self.assertEqual(await db(PresenceConnection.objects.count)(), 0)
+        finally:
+            release.set()
+            await self.finish()
+
+    async def test_responsive_client_survives_slow_command(self):
+        socket = self.socket(self.player)
+        patch, entered, release = self.stall_history()
+        try:
+            self.assertTrue((await socket.connect(timeout=5))[0])
+            await self.event(socket, 'chat.history')
+            with patch:
+                await socket.send_json_to({'type': 'chat.sync', 'payload': {}})
+                self.assertTrue(await asyncio.to_thread(entered.wait, 5))
+                # Stall longer than the presence TTL (2s): pings must keep flowing
+                # (the browser drops a silent socket) and its pongs must count.
+                pings, deadline = 0, asyncio.get_running_loop().time() + 4
+                while asyncio.get_running_loop().time() < deadline:
+                    frame = await socket.receive_output(timeout=3)
+                    self.assertNotEqual(frame['type'], 'websocket.close', frame)
+                    if '"session.ping"' in frame.get('text', ''):
+                        pings += 1
+                        await socket.send_json_to({'type': 'session.pong', 'payload': {}})
+                self.assertGreater(pings, 10)
+                release.set()
+                for _ in range(200):
+                    frame = await socket.receive_output(timeout=3)
+                    self.assertNotEqual(frame['type'], 'websocket.close', frame)
+                    if '"chat.history"' in frame.get('text', ''):
+                        break
+                else:
+                    self.fail('The stalled command never completed')
+        finally:
+            release.set()
+            await self.finish()

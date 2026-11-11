@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/model/shader-validation.js
+// features/effects/model/shader-validation.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { PREAMBLE, USER_PREFIX, USER_SUFFIX } from "../../scene-layers/lib/shader-language.js";
 var ShaderDraftValidator = class {

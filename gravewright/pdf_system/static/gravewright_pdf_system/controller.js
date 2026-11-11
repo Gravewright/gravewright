@@ -1,4 +1,4 @@
-// gravewright/pdf_system/frontend/pdf-geometry.js
+// ../../pdf_system/frontend/pdf-geometry.js
 function fieldBounds(viewport, rect, offsetTop = 0) {
   const [x1, y1] = viewport.convertToViewportPoint(rect[0], rect[1]);
   const [x2, y2] = viewport.convertToViewportPoint(rect[2], rect[3]);

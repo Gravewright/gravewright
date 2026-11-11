@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/table-library/model/library-upload.js
+// features/table-library/model/library-upload.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 var IMAGE_ACCEPT = "image/png,image/jpeg,image/webp";
 var AUDIO_ACCEPT = "audio/ogg,audio/opus,audio/mpeg,audio/mp4,audio/wav,.ogg,.opus,.mp3,.m4a,.wav";

@@ -278,31 +278,43 @@ def movement(t, who, raw, start=None, limit=512, walls=None):
     return end
 
 
-@transaction.atomic
 def command(campaign, user, action, raw, request_id):
-    """Persist changes once; receipt replays rebuild the current visible token state."""
-    Campaign.objects.select_for_update().get(pk=campaign)
-    who = member(campaign, user)
-    from gravewright.journals.services import writable
-    writable(who)
+    """Replay without a write lock and project acknowledgements after the write commits."""
     if not isinstance(raw, dict):
         raise maps.MapError("Invalid token command.")
-    scene = maps.scene(raw.get("mapId"), who)
     request_id = identifier(request_id)
     previous = Receipt.objects.filter(
         campaign_id=campaign, user_id=user, request_id=request_id
     ).first()
+    result = previous.result if previous else _write_command(campaign, user, action, raw, request_id)
+    # Refresh authorization after commit: notification callbacks or another writer
+    # can have changed grants or token visibility since the command was applied.
+    who = member(campaign, user)
+    from gravewright.journals.services import writable
+    writable(who)
+    scene = maps.scene(raw.get("mapId"), who)
+    visible = rows(scene, who)
+    visible_ids = {token["id"] for token in visible}
+    return {
+        "tokens": visible,
+        "createdIds": [value for value in result.get("createdIds", []) if value in visible_ids],
+        **teleport_metadata(visible, result.get("teleports")),
+    }
+
+
+@transaction.atomic
+def _write_command(campaign, user, action, raw, request_id):
+    """Keep command authorization, automation and the second receipt check atomic."""
+    Campaign.objects.select_for_update().get(pk=campaign)
+    who = member(campaign, user)
+    from gravewright.journals.services import writable
+    writable(who)
+    scene = maps.scene(raw.get("mapId"), who)
+    previous = Receipt.objects.filter(
+        campaign_id=campaign, user_id=user, request_id=request_id
+    ).first()
     if previous:
-        visible = rows(scene, who)
-        return {
-            "tokens": visible,
-            "createdIds": [
-                i
-                for i in previous.result.get("createdIds", [])
-                if i in {t["id"] for t in visible}
-            ],
-            **teleport_metadata(visible, previous.result.get("teleports")),
-        }
+        return previous.result
     created = []
     presence_changes = []
 
@@ -469,17 +481,20 @@ def command(campaign, user, action, raw, request_id):
         # Filter metadata is configuration, so establish presence without events.
         from gravewright.maps.regions import rebaseline
         rebaseline(scene)
-    visible = rows(scene, who)
-    teleports = [{"id": row["id"], "version": row["version"]}
-                 for row in visible if row["id"] in world.teleported]
-    receipt_result = {"createdIds": created, **teleport_metadata(visible, teleports)}
-    result = {"tokens": visible, **receipt_result}
+    teleports = []
+    if world.teleported:
+        moved = scene.tokens.filter(pk__in=world.teleported)
+        if who.role != "gm":
+            moved = moved.filter(hidden=False)
+        teleports = [{"id": str(pk), "version": version}
+                     for pk, version in moved.values_list("pk", "version")]
+    receipt_result = {"createdIds": created, **({"teleports": teleports} if teleports else {})}
     Receipt.objects.create(
         campaign_id=campaign, user_id=user, request_id=request_id, result=receipt_result
     )
     from gravewright.realtime.dispatch import changed
-    changed(campaign,user,'tokens',action,request_id,{"mapId": str(scene.pk), **result})
-    return result
+    changed(campaign,user,'tokens',action,request_id,{"mapId": str(scene.pk), **receipt_result})
+    return receipt_result
 
 
 def preview(campaign, user, map_id, positions, previous):

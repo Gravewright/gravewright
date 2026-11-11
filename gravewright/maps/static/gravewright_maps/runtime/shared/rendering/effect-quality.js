@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/shared/rendering/effect-quality.js
+// shared/rendering/effect-quality.js
 var EFFECT_QUALITY = {
   performance: { fps: 15, lightFps: 8, particles: 0.25, particleLimit: 300, lightMap: 256, shaderDetail: 1, shaders: true },
   balanced: { fps: 30, lightFps: 15, particles: 0.5, particleLimit: 600, lightMap: 512, shaderDetail: 3, shaders: true },

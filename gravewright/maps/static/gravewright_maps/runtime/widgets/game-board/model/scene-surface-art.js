@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/scene-surface-art.js
+// widgets/game-board/model/scene-surface-art.js
 import { surfaceMaterial } from "../../../features/images/model/surface-material.js";
 import { surfaceGroupsLayout, surfaceGroupCanvas } from "../../../features/images/model/surface-group.js";
 function geometry(row) {

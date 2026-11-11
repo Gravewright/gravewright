@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/model/image-components.js
+// features/images/model/image-components.js
 var kinds = { lights: "light", particles: "particle", shaders: "shader" };
 function imageComponentKeys(image) {
   return Object.entries(image.torch?.components ?? {}).flatMap(([kind, component]) => kinds[kind] && typeof component?.id === "string" ? [`${kinds[kind]}:${component.id}`] : []);

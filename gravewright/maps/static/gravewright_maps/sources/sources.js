@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/shared/config/i18n/text.js
+// shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
 function notifyTextChange() {
   for (const listener of listeners)

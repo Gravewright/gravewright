@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/measurement/ui/MeasurementWorkspace.native.js
+// features/measurement/ui/MeasurementWorkspace.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { dragMeasure, measurePath, summary, unitsPerPixel } from "../model/measurement.js";
 import { widget } from "../../../native/widget.js";

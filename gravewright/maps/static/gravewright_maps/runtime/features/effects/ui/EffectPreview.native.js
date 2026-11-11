@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/ui/EffectPreview.native.js
+// features/effects/ui/EffectPreview.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { renderingPreferences } from "/static/gravewright_maps/render-profile.js";
 import { effectQuality } from "../../../shared/rendering/effect-quality.js";

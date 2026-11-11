@@ -95,7 +95,7 @@ class SceneUpdatePriorityTests(TransactionTestCase):
             (b"host", b"testserver"), (b"origin", b"http://testserver"),
             (b"cookie", f"{settings.SESSION_COOKIE_NAME}={self.sessions[self.player.pk]}".encode())])
         refreshing, resume = asyncio.Event(), asyncio.Event()
-        original = TableConsumer.room_resources
+        original = TableConsumer.deliver_resource
 
         async def next_event(*kinds):
             for _ in range(30):
@@ -104,11 +104,11 @@ class SceneUpdatePriorityTests(TransactionTestCase):
                     return message
             self.fail(f"Missing socket event: {kinds}")
 
-        async def refresh(consumer, event):
-            if event.get("module") == "audio":
+        async def refresh(consumer, area):
+            if area == "audio":
                 refreshing.set()
                 await resume.wait()
-            await original(consumer, event)
+            await original(consumer, area)
 
         try:
             self.assertTrue((await socket.connect(timeout=5))[0])
@@ -119,12 +119,17 @@ class SceneUpdatePriorityTests(TransactionTestCase):
             await socket.send_json_to({"type": "resources.sync", "payload": {
                 "module": "audio", "sceneId": str(self.scene.pk)}})
             await next_event("resources.state")
-            with patch.object(TableConsumer, "room_resources", refresh):
+            arrival = await db(SceneObject.objects.create)(scene=self.scene, kind="images",
+                                                           data={"name": "Arrival", "layer": "image-layer"})
+            with patch.object(TableConsumer, "deliver_resource", refresh):
                 await db(changed)(self.campaign.pk, self.gm.pk, "maps", "objects", uuid.uuid4())
                 await asyncio.wait_for(refreshing.wait(), timeout=3)
                 message = await next_event("maps.layers", "api.changed")
                 self.assertEqual(message["type"], "maps.layers")
-                self.assertEqual([row["id"] for row in message["payload"]["images"]], [str(self.visible.pk)])
+                # Only the new object travels: a delta of this socket's previous layers.
+                self.assertTrue(message["payload"]["delta"])
+                self.assertEqual([row["id"] for row in message["payload"]["upserts"]["images"]], [str(arrival.pk)])
+                self.assertNotIn(str(self.hidden.pk), str(message))
                 resume.set()
                 await next_event("resources.state")
         finally:
@@ -167,12 +172,10 @@ class SceneUpdatePriorityTests(TransactionTestCase):
                 with transaction.atomic():
                     changed(self.campaign.pk, self.gm.pk, resource, action, uuid.uuid4())
                     send.assert_not_called()
-                events = [call.args[1] for call in send.call_args_list]
-                expected = [{"type": "room.map_layers", "refresh_audio": False}]
-                if resource == "actors":
-                    expected.append({"type": "room.actors"})
-                expected.append({"type": "room.tokens", **({"refresh_combat": False}
-                                                            if resource == "tokens" else {})})
-                self.assertEqual(events[:len(expected)], expected)
-                if resource == "actors":
-                    self.assertIn({"type": "room.resources", "module": "combat"}, events)
+                [event] = [call.args[1] for call in send.call_args_list]
+                # The board comes first; dependent resources (audio, combat) come last.
+                self.assertEqual(event["type"], "room.changes")
+                self.assertEqual(event["refresh"][:2], ["maps.layers", "tokens"])
+                resources = [name for name in event["refresh"] if name.startswith("resources:")]
+                self.assertEqual(event["refresh"][-len(resources):], resources)
+                self.assertEqual("resources:combat" in resources, resource == "actors")

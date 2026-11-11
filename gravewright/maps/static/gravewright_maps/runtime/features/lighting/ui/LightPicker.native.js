@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/lighting/ui/LightPicker.native.js
+// features/lighting/ui/LightPicker.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { renderingPreferences } from "/static/gravewright_maps/render-profile.js";
 import { effectQuality } from "../../../shared/rendering/effect-quality.js";

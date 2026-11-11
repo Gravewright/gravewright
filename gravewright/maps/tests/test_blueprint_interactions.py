@@ -144,7 +144,8 @@ class BlueprintInteractionTests(TestCase):
         self.quest.refresh_from_db()
         self.assertEqual((self.quest.data["status"], self.quest.version), ("available", 1))
         self.assertFalse(JournalReceipt.objects.filter(campaign=self.campaign).exists())
-        self.assertFalse(any(call.args[1]["type"] in ("room.automation_presentation", "room.journals")
+        self.assertFalse(any(call.args[1]["type"] == "room.automation_presentation"
+                             or "journals" in call.args[1].get("refresh", ())
                              for call in send.call_args_list))
 
     def test_rehearsal_reports_quest_prediction_and_discards_status_and_prompt(self):

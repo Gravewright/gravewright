@@ -21,6 +21,8 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | [Map Builder](en/map-builder.md) | First project, Tiles/Painting, finished-map backgrounds, layers, saving, Smart Objects and scene updates |
 | [Universal VTT importer/exporter](en/universal-vtt.md) | Import workflows, native maps/walls/doors/lights, warnings and error recovery |
 | [Smart Objects direction](en/smart-objects-direction.md) | Delivered node-editor stages, element capabilities, references and proposed extensions |
+| [Realtime direction](en/realtime-direction.md) | Approved stages for socket lanes, recoverable contention, one envelope per commit, changed-only delivery and presence |
+| [Procedural dungeons direction](en/procedural-dungeons-direction.md) | Proposed generator for Map Builder dungeons with Smart Object locks, keys and hazards |
 | [Architecture](en/architecture.md) | Request flow, persistence, authorization and realtime |
 | [Code map](en/code-map.md) | What each domain does and where to make changes |
 | [Development](en/development.md) | Contributor workflow, source conventions and contracts |

@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/ui/EffectEditor.native.js
+// features/effects/ui/EffectEditor.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { vMovableResizable } from "../../../shared/lib/dom/movable-resizable.js";
 import { shaderPresets } from "../../scene-layers/lib/shader-presets.js";

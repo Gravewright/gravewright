@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/selection/model/objects.js
+// features/selection/model/objects.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { bounds as drawingBounds, hit as hitDrawing } from "../../drawing/model/drawing.js";
 import { imageComponentKeys } from "../../images/model/image-components.js";
