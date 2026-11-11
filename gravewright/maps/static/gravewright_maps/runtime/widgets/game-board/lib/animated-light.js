@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/lib/animated-light.js
+// widgets/game-board/lib/animated-light.js
 import { Container, Sprite, Texture } from "/static/gravewright_maps/vendor/pixi.js";
 import { lightAnimation, lightAnimationPhase, lightFalloff } from "../../../features/lighting/model/light-profiles.js";
 var LightTexturePool = class {

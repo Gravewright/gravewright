@@ -1,4 +1,5 @@
 import { openDetachedWindow } from './window-controls.js';
+import {createCommandRecovery, createProjectionState} from './realtime-state.js';
 let chatMapId = null;
 let streamRegion, streamGeneration = 0;
 const resourceCommands=new Map();let actorsSubscribed=!!document.getElementById('actors-panel'),tokenMapId=null;
@@ -23,6 +24,17 @@ let mapLayerId;
 let journalsSubscribed = !!document.getElementById('journals-panel');
 let socket, retryTimer, watchdog, popup, popupTimer, retry = 500, stopping = false, joined = false, pending, lastReceived = 0;
 
+// Only commands that end in an acknowledgement or an error have a deadline and
+// `busy` retries; replies such as `table.search` answer with their own type.
+const RECOVERABLE = new Set(['resources.command', 'actors.command', 'tokens.command',
+  'maps.command', 'journals.command', 'dice.roll', 'chat.say']);
+const projections = createProjectionState();
+const recovery = createCommandRecovery({send, fail: () => {
+  joined = false;
+  recovery.clear();
+  socket?.close(4000, 'command deadline');
+}});
+
 function status(presence) {
   mergePatch({_presence: presence});
   if (presence !== 'seated') {
@@ -33,6 +45,7 @@ function status(presence) {
 function send(type, payload = {}) {
   if (!joined || socket?.readyState !== WebSocket.OPEN) return false;
   socket.send(JSON.stringify({type, payload: {tableId, ...payload}}));
+  if (RECOVERABLE.has(type)) recovery.sent(type, payload);
   return true;
 }
 function renderMessages(entries) {
@@ -71,9 +84,21 @@ function renderMessages(entries) {
 function receive(event) {
   let message;
   try { message = JSON.parse(event.data); } catch { return; }
-  const {type, payload = {}} = message;
+  const {type} = message;
+  let payload = message.payload || {};
   if (payload.tableId && payload.tableId !== tableId) return;
   lastReceived = Date.now();
+  if (type === 'error' || type.endsWith('.error')) {
+    if (['busy', 'roll_in_progress'].includes(payload.code) && recovery.retry(payload.requestId)) return;
+    recovery.complete(payload.requestId || (type === 'error' ? pending?.requestId : undefined));
+  } else if (type.endsWith('.ack')) recovery.complete(payload.requestId);
+  const complete = projections.receive(type, payload);
+  if (!complete) {
+    if (type === 'tokens.state') send('tokens.sync', {mapId: payload.mapId});
+    else send('maps.layers', {mapId: payload.sceneId});
+    return;
+  }
+  payload = complete;
   window.dispatchEvent(new CustomEvent('gravewright:api-event', { detail: { type, payload: { ...payload, tableId } } }));
   if (type === 'table.joined') {
     joined = true;
@@ -99,8 +124,6 @@ function receive(event) {
     for (const roll of rolls.values()) send('dice.roll', roll.payload);
   } else if (type === 'session.ping') {
     send('session.pong');
-    if (pending) send('chat.say', pending);
-    for (const roll of rolls.values()) send('dice.roll', roll.payload);
   } else if (type === 'table.presence') {
     mergePatch({_onlineCount: payload.members.length});
     if (roster && typeof payload.html === 'string') roster.innerHTML = payload.html;
@@ -187,6 +210,8 @@ function receive(event) {
 function connect() {
   if (stopping) return;
   clearTimeout(retryTimer);
+  recovery.clear();
+  projections.clear();
   status('connecting');
   joined = false;
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -197,6 +222,8 @@ function connect() {
   current.addEventListener('error', () => {}); // close owns retry and status.
   current.addEventListener('close', event => {
     if (socket !== current) return;
+    recovery.clear();
+    projections.clear();
     joined = false;
     status('offline');
       window.dispatchEvent(new Event('gravewright:disconnected'));
@@ -205,6 +232,7 @@ function connect() {
       retryTimer = setTimeout(connect, retry);
       retry = Math.min(retry * 2, 10000);
     } else if (!stopping) {
+      pending = undefined;
       clearContent();
       mergePatch({_chatPending: false, _chatError: 'You no longer have access to this table.'});
       for (const roll of rolls.values()) roll.reject(new Error('You no longer have access to this table.'));
@@ -327,6 +355,8 @@ document.addEventListener('click', event => {
 });
 window.addEventListener('pagehide', () => {
   stopping = true;
+  recovery.clear();
+  projections.clear();
   clearTimeout(retryTimer); clearInterval(watchdog); clearInterval(popupTimer);
   socket?.close(1000, 'left table'); popup?.close();
 });

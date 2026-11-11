@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/model/surface-material.js
+// features/images/model/surface-material.js
 function surfaceMaterial(surface, material, mask) {
   const width = mask.width, height = mask.height;
   if (!surface || !["floor", "wall"].includes(surface.kind) || width * height > 16777216 || width < 1 || height < 1 || ![surface.cellSize, surface.left, surface.top].every(Number.isFinite) || surface.cellSize < 16 || surface.cellSize > 256) throw new TypeError("Invalid dynamic surface.");

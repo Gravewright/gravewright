@@ -214,7 +214,7 @@ class ProgressClueTests(TestCase):
                 created = self.command('create', {'name': 'PRIVATE_CLUE', 'gmNotes': 'PRIVATE_NOTES'}, request_id=request_id)
                 self.assertFalse(send.called or changes)
             self.assertEqual(send.call_count, 1)
-            self.assertEqual(send.call_args.args[1], {'type': 'room.resources', 'module': 'clues'})
+            self.assertEqual({key: value for key, value in send.call_args.args[1].items() if key != 'revision'}, {'type': 'room.changes', 'resource': 'clues', 'action': 'create', 'refresh': ['resources:clues']})
             self.assertNotIn('PRIVATE', str(send.call_args))
             self.assertEqual((len(changes), changes[0][0], changes[0][1].request_id), (1, 'clues', request_id))
             send.reset_mock()

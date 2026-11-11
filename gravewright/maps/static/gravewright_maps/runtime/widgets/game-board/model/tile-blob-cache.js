@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/tile-blob-cache.js
+// widgets/game-board/model/tile-blob-cache.js
 import { promoted, discarded } from "./prefetch-metrics.js";
 var TileBlobCache = class {
   limit;

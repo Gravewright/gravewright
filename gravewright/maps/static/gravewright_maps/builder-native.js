@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/native/builder-preview.js
+// native/builder-preview.js
 import { createPixiApplication } from "./runtime/widgets/game-board/lib/pixi-application.js";
 import { PixiBoardRenderer } from "./runtime/widgets/game-board/lib/pixi-board-renderer.js";
 import { SceneLayers } from "./runtime/widgets/game-board/lib/scene-layers.js";

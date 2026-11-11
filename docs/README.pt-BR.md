@@ -21,6 +21,8 @@ Inglês é o idioma principal da documentação. Cada guia tem uma versão corre
 | [Map Builder](pt-BR/map-builder.md) | Primeiro projeto, Tiles/Pintura, fundo de mapa pronto, camadas, salvamento, Objetos Inteligentes e atualização de cenas |
 | [Importador/exportador Universal VTT](pt-BR/universal-vtt.md) | Fluxos de importação, mapas/paredes/portas/luzes nativos, avisos e recuperação de erros |
 | [Direção dos Objetos Inteligentes](pt-BR/smart-objects-direction.md) | Etapas entregues do editor de nós, capacidades dos elementos, referências e extensões propostas |
+| [Direção do tempo real](pt-BR/realtime-direction.md) | Etapas aprovadas para faixas do socket, contenção recuperável, um envelope por commit, envio só do que mudou e presença |
+| [Direção das masmorras procedurais](pt-BR/procedural-dungeons-direction.md) | Gerador proposto de masmorras no Map Builder, com fechaduras, chaves e perigos feitos de Objetos Inteligentes |
 | [Arquitetura](pt-BR/architecture.md) | Requisições, persistência, autorização e tempo real |
 | [Mapa do código](pt-BR/code-map.md) | Responsabilidade de cada domínio e onde alterar |
 | [Desenvolvimento](pt-BR/development.md) | Fluxo de contribuição, convenções e contratos |

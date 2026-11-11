@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/ui/lever-controls.js
+// features/images/ui/lever-controls.js
 import { createInteractiveImageHitTest, interactiveImageKind, canInteractWithImage } from "../model/lever-interaction.js";
 import { text as gwText, onTextChange } from "../../../shared/config/i18n/text.js";
 import { imageInWorkspace } from "../model/image-layer.js";

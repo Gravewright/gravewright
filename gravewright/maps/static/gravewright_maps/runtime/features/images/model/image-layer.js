@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/model/image-layer.js
+// features/images/model/image-layer.js
 function isGMImage(image) {
   return image.empty === true || ["gm", "gm-image-layer"].includes(image.layer);
 }

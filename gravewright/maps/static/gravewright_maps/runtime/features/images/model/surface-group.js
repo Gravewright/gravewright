@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/model/surface-group.js
+// features/images/model/surface-group.js
 function surfaceGroupBounds(rows, width, height) {
   const points = rows.flatMap((row) => {
     const w = row.natural_width * row.scale / 2, h = row.natural_height * row.scale / 2;

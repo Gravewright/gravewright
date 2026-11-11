@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/model/lever-interaction.js
+// features/images/model/lever-interaction.js
 import { isGMImage as privateLayer, imageInWorkspace } from "./image-layer.js";
 function interactiveImageKind(image) {
   if (["off", "on"].includes(image.torch?.state) && typeof image.torch.lit === "boolean") return "torch";

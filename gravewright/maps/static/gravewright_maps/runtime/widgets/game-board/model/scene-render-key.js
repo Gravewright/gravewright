@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/scene-render-key.js
+// widgets/game-board/model/scene-render-key.js
 var SceneRenderKey = class {
   #parts = /* @__PURE__ */ new WeakMap();
   #imageSources = /* @__PURE__ */ new WeakMap();

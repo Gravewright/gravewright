@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/model/shader-source.js
+// features/effects/model/shader-source.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 function normalizeShaderSource(value) {
   const lines = value.replace(/\r\n?/g, "\n").trim().split("\n");

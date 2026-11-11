@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/asset-reference-pool.js
+// widgets/game-board/model/asset-reference-pool.js
 var AssetReferencePool = class {
   load;
   unload;

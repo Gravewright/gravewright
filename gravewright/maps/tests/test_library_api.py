@@ -216,8 +216,8 @@ class LibraryApiTests(TestCase):
             self.assertEqual((actor.sheet_version, token.sheet_version), (actor_revision + 1, token_revision + 1))
             self.assertEqual(actor.data["notes"], "Preserve authored notes")
             self.assertEqual(token.snapshot["notes"], "Preserve authored notes")
-            self.assertIn("room.actors", [call.args[1]["type"] for call in send.call_args_list])
-            self.assertIn("room.tokens", [call.args[1]["type"] for call in send.call_args_list])
+            refreshed = {name for call in send.call_args_list for name in call.args[1].get("refresh", ())}
+            self.assertLessEqual({"actors", "tokens"}, refreshed)
             send.reset_mock()
             with self.captureOnCommitCallbacks(execute=True):
                 self.assertEqual(self.command("delete", {"assetId": asset_id}, request_id=rid), result)

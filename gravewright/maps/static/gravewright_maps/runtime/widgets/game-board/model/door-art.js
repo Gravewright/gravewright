@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/door-art.js
+// widgets/game-board/model/door-art.js
 function doorArt(wall) {
   if (wall.kind !== "door") return;
   const appearance = wall.blueprintAppearance;

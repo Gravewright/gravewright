@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/ui/EffectPicker.native.js
+// features/effects/ui/EffectPicker.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { shaderPresets } from "../../scene-layers/lib/shader-presets.js";
 import { effectLabels } from "../model/legacy-labels.js";

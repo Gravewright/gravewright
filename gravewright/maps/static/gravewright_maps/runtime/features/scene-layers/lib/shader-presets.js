@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/scene-layers/lib/shader-presets.js
+// features/scene-layers/lib/shader-presets.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 var shaderPresets = [
   {

@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/native/builder-catalog.js
+// native/builder-catalog.js
 import { lightPresets } from "./runtime/features/lighting/model/light-profiles.js";
 import { PARTICLE_DEFAULTS } from "./runtime/features/effects/model/particle-profiles.js";
 import { effectLabels } from "./runtime/features/effects/model/legacy-labels.js";

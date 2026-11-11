@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/table-library/ui/AssetUploadLibrary.native.js
+// features/table-library/ui/AssetUploadLibrary.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { ResourceScope } from "../../../shared/lifecycle/scope.js";
 import DirectoryContextMenu from "../../../shared/ui/directory/DirectoryContextMenu.native.js";

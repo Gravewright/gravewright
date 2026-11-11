@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/board-input.js
+// widgets/game-board/model/board-input.js
 var LONG_PRESS_MS = 700;
 var MOVE_THRESHOLD = 10;
 var MIN_SCALE = 0.35;

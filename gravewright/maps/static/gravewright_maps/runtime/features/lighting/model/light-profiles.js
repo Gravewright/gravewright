@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/lighting/model/light-profiles.js
+// features/lighting/model/light-profiles.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 var lightPresets = [
   { id: "torch", get name() {

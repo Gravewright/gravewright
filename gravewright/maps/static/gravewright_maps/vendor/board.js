@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/ui/board.js
+// widgets/game-board/ui/board.js
 import { observed, prefetchSnapshot } from "../runtime/widgets/game-board/model/prefetch-metrics.js";
 import { tileBlobCache } from "../runtime/widgets/game-board/model/tile-blob-cache.js";
 import { pingShapes, PING_DURATION } from "../runtime/widgets/game-board/model/map-ping.js";

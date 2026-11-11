@@ -44,8 +44,36 @@ flowchart TD
 - `gravewright/realtime/consumers.py` cuida do transporte, inscrições e estado
   temporário da conexão. Chama serviços síncronos com `database_sync_to_async`; a
   avaliação de dados usa `asyncio.to_thread` para o trabalho mais custoso.
+  Cada socket executa comandos, inscrições e entregas em ordem na sua própria
+  thread: os comandos de uma conexão continuam ordenados e uma consulta lenta não
+  trava os demais jogadores. Amostras em que só o valor mais novo importa (cursor,
+  viewport e arrasto de token, enviadas pelo próprio socket ou repassadas de
+  outro) rodam numa segunda faixa com thread própria: uma amostra mais nova
+  substitui outra ainda não processada, e cada stream de arrasto mantém o seu fim
+  ou cancelamento. Pongs renovam o lease de presença numa thread do pool. Um leitor
+  admite os frames pela hora de chegada (tamanho, limite do cursor e taxa de
+  comandos), então frames que esperaram atrás de um comando lento não são tomados
+  por rajada; mais de 256 frames esperando fecham o socket com o código 4429. Os
+  manipuladores registram um aviso sem payload ao atingir
+  `GRAVEWRIGHT_REALTIME_SLOW_MS` (veja [Configuração](configuration.md)). Pings e
+  sinais de vida não esperam o banco, e uma desconexão abandona manipuladores
+  pendentes para que a limpeza de presença termine dentro do limite de
+  encerramento do Daphne.
 - `gravewright/realtime/dispatch.py` agenda invalidações de recursos, entrega de
-  chat e sinais para extensões Python após o commit.
+  chat e sinais para extensões Python após o commit. Cada commit vira um único
+  evento `room.changes` com a lista de projeções a atualizar (`dispatch.refreshes`):
+  o socket autoriza uma vez, entrega cada projeção uma vez (tabuleiro primeiro,
+  recursos dependentes por último) e envia `api.changed` uma vez por domínio.
+  Reprodução de áudio, itens e compêndios atualizam só o próprio recurso; combate,
+  cartas e as demais mudanças de áudio também atualizam as camadas do mapa, que os
+  exibem; importações de compêndio atualizam tudo o que um arquivo pode alterar. A
+  suíte `gravewright.realtime.tests.test_dispatch_dependencies` compara projeções
+  reais antes e depois dos comandos para manter essa tabela completa. Assim, os
+  módulos só recebem avisos `api.changed` dos domínios que um commit pode alterar.
+
+Este guia descreve o transporte atual. A
+[direção do tempo real](realtime-direction.md) aprovada registra as mudanças
+planejadas e a situação de cada etapa.
 
 O banco padrão é SQLite com `transaction_mode='IMMEDIATE'`. Os serviços expressam a
 serialização com transações atômicas e bloqueios de campanha ou vínculo. SQLite não
@@ -55,7 +83,12 @@ concorrência. Alterar os limites dessas transações muda o comportamento.
 A configuração padrão de produção exige uma camada Channels com Redis. A camada em memória
 serve para um único processo de desenvolvimento e para o [executor local](windows-runner.md);
 não entrega eventos entre processos. Redis transporta eventos; conteúdo, sessões e registros de presença ficam
-no banco. Consulte [Configuração](configuration.md).
+no banco. Consulte [Configuração](configuration.md). Cada socket mantém um lease de
+presença (`PresenceConnection`, válido por `GRAVEWRIGHT_PRESENCE_TTL`). Um pong só o
+renova na segunda metade da validade, então a maioria dos pongs não grava nada; a
+renovação recria o lease se a limpeza de outro socket o removeu enquanto a renovação
+atrasava. A manutenção do heartbeat remove leases vencidos (deixados por workers que
+caíram) no máximo uma vez a cada meio TTL em cada processo, lendo antes de apagar.
 
 A verificação de origem WebSocket usa `GRAVEWRIGHT_PUBLIC_ORIGIN` quando configurada
 e exige que Host da requisição e Origin do navegador correspondam ao esquema,
@@ -104,7 +137,18 @@ A autorização WebSocket também relê a sessão no banco, o backend de autenti
 configurado e o hash de autenticação de sessão do usuário. Verifica vínculos ao
 receber comandos, nos manipuladores de entrega e durante heartbeats. Remover um
 participante, expirar um link de streamer ou invalidar uma sessão afeta conexões
-existentes conforme essas verificações voltam a ocorrer.
+existentes conforme essas verificações voltam a ocorrer. Um socket pode reutilizar a
+última verificação bem-sucedida por até dois segundos (`AUTHORIZATION_TTL` em
+`consumers.py`), nunca além da expiração da sessão ou do link de streamer. Logout,
+exclusão da sessão, troca de senha, remoção ou mudança de papel do participante,
+desativação do usuário, mudanças no link de streamer e exclusão da campanha invalidam
+esse cache antes do próximo frame: após o commit, avançam uma época do processo e
+enviam `room.access` aos grupos da campanha e do usuário afetados, para que sockets em
+outros processos revalidem na hora (`gravewright/realtime/access.py` e `signals.py`).
+Código que altere essas linhas sem sinais de modelo, como `QuerySet.update`, precisa
+chamar `access.revoke`; edições feitas direto no banco são percebidas quando o
+resultado em cache expira. Os comandos de escrita continuam autorizados pelos seus
+serviços. Veja a [etapa 6 da direção do tempo real](realtime-direction.md#etapa-6-autorização-do-transporte-em-cache).
 
 Streamers têm acesso somente de leitura. O consumidor permite um conjunto limitado
 de mensagens de sincronização, busca, viewport e heartbeat; os pontos de escrita
@@ -148,6 +192,17 @@ A maioria dos comandos persistentes de recursos da mesa segue esta sequência:
 A ordem exata e a repetição variam por domínio; siga o serviço responsável. Uploads
 e operações administrativas nem sempre utilizam esse protocolo de recibos.
 
+O trabalho que não precisa da reserva de escrita fica fora dela. Leituras de
+compêndio verificam vínculo e permissões atuais sem abrir `BEGIN IMMEDIATE`, e não
+criam recibo nem notificação. Importações de compêndio leem e validam primeiro os
+arquivos e as artes, depois conferem de novo a revisão da entrada dentro da
+transação e falham com `conflict` se ela mudou. Comandos de token procuram o recibo
+antes de pegar o lock (e de novo dentro dele), gravam na transação só os IDs criados
+e os marcadores de teleporte, e montam os tokens visíveis da confirmação depois do
+commit; as automações de região continuam sendo confirmadas junto com o movimento.
+As operações originais do SDK 1.0 continuam dentro de uma transação porque toda
+chamada renova o lease de montagem.
+
 | Registro de identidade | Usado por | Comportamento da repetição |
 | --- | --- | --- |
 | `maps.Receipt` | Mapas, atores, tokens, itens, combate, cartas, áudio e compêndios | Compartilham `(campaign, user, request_id)`. A maioria retorna o resultado salvo; tokens recompõem o estado visível e filtram os IDs criados anteriormente. |
@@ -159,6 +214,20 @@ repetir o mesmo comando. Não reutilize, por exemplo, o UUID de um comando de at
 um comando de áudio: ambos compartilham a tabela de recibos. Em geral, os recibos não
 comparam a ação ou o conteúdo repetido com o original.
 
+Quando o SQLite informa um lock (`database is locked`) enquanto o socket trata um
+comando, o consumidor responde no canal de erro desse comando com o código `busy` e o
+mesmo ID de requisição, e o socket continua aberto. O navegador mantém o comando
+pendente e reenvia em silêncio o mesmo payload após 1, 2, 4 e depois a cada 8
+segundos; o recibo torna a retentativa segura. Uma rolagem cuja conclusão encontra um
+lock libera a reserva, e a retentativa rola de novo; o resultado revertido nunca saiu
+do servidor. Inscrições, buscas e atualizações do lobby que encontram lock são
+repetidas na próxima manutenção do heartbeat, entregas voltam para a fila do mesmo
+jeito, e amostras substituídas por uma mais nova são descartadas. Os demais erros de
+banco continuam fechando o socket. Cada comando também tem prazo de 45 segundos,
+acima do timeout de 30 segundos do SQLite: ao expirar, o navegador fecha o socket e
+reconecta, reenviando os comandos pendentes com os IDs originais. Pings nunca
+reenviam mensagens de chat ou rolagens pendentes; só a reconexão faz isso.
+
 Identidade da requisição e revisão do recurso resolvem problemas distintos. O UUID
 evita duplicação; campos como `version`, `sheetVersion` e `expectedVersion` detectam
 edições com estado desatualizado. Um conflito exige atualizar os dados e escolher
@@ -167,7 +236,19 @@ explicitamente uma nova edição, não apenas trocar o número da versão.
 `transaction.on_commit()` evita notificações sobre alterações revertidas. O despacho
 usa callbacks robustos, mas não oferece uma fila durável: uma alteração confirmada
 pode permanecer mesmo se sua notificação falhar. Clientes devem sincronizar novamente
-pelos endpoints ou inscrições de estado. Manipuladores Python de `resource_changed`
+pelos endpoints ou inscrições de estado. Cada envelope de atualização leva uma
+revisão por campanha, incrementada na transação que faz o commit
+(`realtime.CampaignRevision`). Um socket que percebe uma lacuna, por exemplo porque
+uma fila cheia do channel layer descartou um envelope, atualiza todas as projeções
+em que está inscrito; um envelope atrasado ou repetido é ignorado. Cada socket também
+guarda as projeções que enviou por último: uma projeção sem mudança não envia nada,
+e tokens e camadas do mapa enviam frames `delta` (`upserts`, `removes`, `order`,
+`unset`) calculados a partir da projeção completa do próprio destinatário, então
+nunca levam dados que essa projeção não levaria. A primeira projeção após uma
+inscrição, troca de cena ou reconexão é enviada inteira. Um `resources.sync` de um
+módulo da mesa reinicia só as projeções desse módulo, então a rajada que inscreve
+todos os módulos não faz os envelopes seguintes reenviarem os outros.
+Manipuladores Python de `resource_changed`
 são callbacks confiáveis dentro do processo; não são tarefas duráveis entre processos
 nem uma sandbox para código não confiável.
 
@@ -335,11 +416,11 @@ entrada; integrações usam os wrappers públicos ou `api.resources`.
 
 | Domínio | Responsabilidade e restrição relevante |
 | --- | --- |
-| Itens | Documentos versionados com permissões por usuário. A implementação PDF nativa atualmente não retorna tipos de item; a criação comum fica indisponível até que essa capacidade seja implementada. |
+| Itens | Documentos versionados com permissões por usuário. Jogadores podem criar itens e se tornam donos deles; pastas, duplicação, compartilhamento e exclusão continuam exclusivos do mestre. A implementação PDF nativa atualmente não retorna tipos de item; a criação comum fica indisponível até que essa capacidade seja implementada. |
 | Combate | Encontro da cena, iniciativa, turno atual e histórico limitado. Mudanças de ordem preservam a identidade do combatente; a progressão pode avançar efeitos nos documentos dos atores. |
 | Cartas | Definições reutilizáveis e instâncias mutáveis; zonas de compra, mão, cena e descarte, propriedade e visibilidade. O controle do mestre não revela automaticamente a face oculta de outro jogador. |
 | Áudio | Uploads, playlists, reprodução e trilhas sonoras. O estado calcula posições pelo horário do servidor e ganho espacial pelos tokens controlados e paredes acústicas. A entrega HTTP do arquivo tem autorização própria. |
-| Compêndios | Pacotes da campanha e acesso ao catálogo nativo. Arquivos portáteis capturam um grafo permitido de dependências e importam documentos e arquivos para uma campanha de sistema compatível. |
+| Compêndios | Pacotes da campanha e acesso ao catálogo nativo. Arquivos portáteis capturam um grafo permitido de dependências e importam documentos e arquivos para uma campanha de sistema compatível. Pacotes nativos de itens e magias ficam legíveis para jogadores até o mestre ocultá-los; pacotes de atores, diários, cenas e cartas e pacotes da campanha ficam ocultos até serem compartilhados. Só o mestre importa. |
 
 O auxiliar declarativo de fórmulas em `combat/formula_engine.py` é distinto da
 gramática de dados do chat. A iniciativa atual chama `dice.engine.evaluate`; alterar

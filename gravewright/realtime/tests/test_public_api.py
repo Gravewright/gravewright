@@ -37,7 +37,13 @@ class PublicApiSocketTests(TransactionTestCase):
             visible = await self.event(gm, 'actors.state',
                                        lambda value: 'Private extension actor' in str(value))
             self.assertIn('Private extension actor', str(visible))
-            hidden = await self.event(player, 'actors.state')
-            self.assertNotIn('Private extension actor', str(hidden))
+            # The player's projection did not change, so nothing is sent to it.
+            for _ in range(20):
+                if await player.receive_nothing(timeout=.05, interval=.01):
+                    continue
+                frame = await player.receive_json_from(timeout=1)
+                if frame['type'] == 'session.ping':
+                    await player.send_json_to({'type': 'session.pong'})
+                self.assertNotIn('Private extension actor', str(frame))
         finally:
             await self.finish()

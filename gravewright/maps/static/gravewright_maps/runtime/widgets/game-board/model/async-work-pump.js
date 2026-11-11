@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/async-work-pump.js
+// widgets/game-board/model/async-work-pump.js
 var AsyncWorkPump = class {
   hasWork;
   drain;

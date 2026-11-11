@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/ui/shader-prompt-dialog.js
+// features/effects/ui/shader-prompt-dialog.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import { normalizeShaderSource, shaderSource } from "../model/shader-source.js";
 import { shaderPrompt } from "../model/shader-prompt.js";

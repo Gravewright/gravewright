@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/table-library/ui/ContentDirectory.native.js
+// features/table-library/ui/ContentDirectory.native.js
 import { openPermissions } from "/static/gravewright_table/permissions.js";
 
 // shared/config/i18n/text.js

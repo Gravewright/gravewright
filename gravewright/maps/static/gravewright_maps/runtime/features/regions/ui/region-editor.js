@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/regions/ui/region-editor.js
+// features/regions/ui/region-editor.js
 import { openFormModal } from "/static/gravewright_table/form-modal.js";
 import { text as t } from "../../../shared/config/i18n/text.js";
 import { normalizeRegionFilters, regionFilterDispositions } from "../model/regions.js";

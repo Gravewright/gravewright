@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/stable-region-heartbeat.js
+// widgets/game-board/model/stable-region-heartbeat.js
 var StableRegionHeartbeat = class {
   same;
   emit;

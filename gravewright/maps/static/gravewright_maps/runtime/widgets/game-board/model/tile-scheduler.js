@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/tile-scheduler.js
+// widgets/game-board/model/tile-scheduler.js
 var PRIORITY = { immediate: 0, high: 1, normal: 2, low: 3, background: 4 };
 var PROMOTE_AFTER_MS = 500;
 var MAX_AGED_PRIORITY = PRIORITY.high;

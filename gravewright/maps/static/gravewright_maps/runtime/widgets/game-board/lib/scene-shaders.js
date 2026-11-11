@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/lib/scene-shaders.js
+// widgets/game-board/lib/scene-shaders.js
 import { Container, GlProgram, Graphics, Mesh, MeshGeometry, Shader, Texture, UniformGroup } from "/static/gravewright_maps/vendor/pixi.js";
 import { PREAMBLE, MESH_VERTEX, USER_PREFIX, USER_SUFFIX } from "../../../features/scene-layers/lib/shader-language.js";
 import { shaderPresets } from "../../../features/scene-layers/lib/shader-presets.js";

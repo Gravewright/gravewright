@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/selection/model/selection-commands.js
+// features/selection/model/selection-commands.js
 import { transformedPoint } from "./objects.js";
 import { canMoveImageToGame } from "../../images/model/image-layer.js";
 async function applySelection(api, tokens, container, block, map, cell, state, objects, action, center, dx = 0, dy = 0, angle = 0, origin = { x: 0, y: 0 }) {

@@ -69,3 +69,30 @@ test('card uploads retain public permission errors and caller cancellation', asy
  await assert.rejects(host.call('card.asset.upload',payload,{signal:cancellation.signal}),{code:'cancelled'});
  await life.close();
 });
+
+test('unscoped mounts post rolls and chat to the scene the user is viewing', async t => {
+ const previous = {window: globalThis.window, document: globalThis.document};
+ t.after(() => { globalThis.window = previous.window; globalThis.document = previous.document; });
+ globalThis.window = Object.assign(new EventTarget(), {gravewrightMaps: {current: {id: 'viewed-scene'}}});
+ globalThis.document = {querySelector: selector => selector === '#table-workspace' ? {dataset: {tableId: 'table'}} : null};
+ const bridge = new BrowserBridge('table'), life = new Lifetime(), sent = [];
+ bridge.http = {post: async (path, payload) => { if (path.endsWith('/api')) sent.push(payload); return {value: {}}; }};
+ const unscoped = bridge.api({moduleId: 'example.test', mountId: 'sheet', moduleSetRevision: 'revision'}, life);
+ await unscoped.dice.roll('1d20', {label: 'Check', visibility: 'public'});
+ await unscoped.chat.send({text: 'hello'});
+ await unscoped.dice.roll('1d20', {mapId: 'explicit-scene'});
+ await unscoped.actors.state();
+ const scoped = bridge.api({moduleId: 'example.test', mountId: 'token', moduleSetRevision: 'revision', sceneId: 'token-scene'}, life);
+ await scoped.dice.roll('1d20');
+ assert.deepEqual(sent.map(call => [call.domain, call.payload.sceneId, call.payload.mapId, call.sceneId]), [
+  ['dice', 'viewed-scene', 'viewed-scene', undefined],
+  ['chat', 'viewed-scene', 'viewed-scene', undefined],
+  ['dice', undefined, 'explicit-scene', undefined],
+  ['actors', undefined, undefined, undefined],
+  ['dice', undefined, undefined, 'token-scene'],
+ ]);
+ globalThis.document = {querySelector: () => ({dataset: {tableId: 'another-table'}})};
+ await unscoped.dice.roll('1d20');
+ assert.equal(sent.at(-1).payload.sceneId, undefined);
+ await life.close();
+});

@@ -55,6 +55,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `WS_MAX_MESSAGE_MB` | `0.0625` | Limite da aplicação por mensagem WebSocket em MB (1 MB = 1024 * 1024 bytes) |
 | `WS_COMMANDS_PER_SECOND` | `20` | Taxa de comandos WebSocket por conexão |
 | `WS_BURST_COMMANDS` | `40` | Capacidade de rajada de comandos WebSocket |
+| `GRAVEWRIGHT_REALTIME_SLOW_MS` | `500` | Registra um aviso em `gravewright.realtime.metrics` quando a espera na fila mais a execução de um manipulador do socket chega a esse número de milissegundos, com contagens de SQL, frames e bytes, mas sem payloads nem conteúdo dos usuários; erros de lock do SQLite sempre são registrados; `0` desativa o aviso de lentidão; valores negativos são rejeitados |
 | `APP_DEBUG` | `false` | Diagnóstico da aplicação/renderizador; independente de DJANGO_DEBUG |
 | `COMMAND_PALETTE_ENABLED` | `true` | Ativa paleta de comandos da mesa |
 | `LOBBY_READY_CHECK_ENABLED` | `true` | Ativa controles de prontidão do lobby |

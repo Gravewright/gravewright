@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/images/model/image-transform.js
+// features/images/model/image-transform.js
 function resizeImage(image, corner, start, point) {
   const angle = image.rotation * Math.PI / 180;
   const cos = Math.cos(angle), sin = Math.sin(angle);

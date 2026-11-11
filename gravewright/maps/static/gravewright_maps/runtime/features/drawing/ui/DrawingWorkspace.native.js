@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/drawing/ui/DrawingWorkspace.native.js
+// features/drawing/ui/DrawingWorkspace.native.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import DirectoryContextMenu from "../../../shared/ui/directory/DirectoryContextMenu.native.js";
 import { bounds, hit, path, translated } from "../model/drawing.js";

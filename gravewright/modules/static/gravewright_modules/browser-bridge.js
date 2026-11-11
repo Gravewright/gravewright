@@ -107,12 +107,27 @@ class BrowserBridge {
       }
     }, options?.signal) };
   }
+  /**
+   * Chat posts from a mount without a scene (for example a sheet opened from the
+   * actor directory) belong to the scene the user is viewing, as in tableApi.
+   * Otherwise the server falls back to the broadcast scene and the roll is
+   * hidden from a GM viewing another scene. The server still checks visibility.
+   */
+  viewedScene(identity, domain, method, payload) {
+    if (!(domain === 'dice' && method === 'roll' || domain === 'chat' && method === 'send')) return payload;
+    if (identity.sceneId || !payload || typeof payload !== 'object' || Array.isArray(payload) ||
+        Object.hasOwn(payload, 'sceneId') || Object.hasOwn(payload, 'mapId')) return payload;
+    const workspace = globalThis.document?.querySelector('#table-workspace');
+    const current = workspace?.dataset.tableId === this.tableId ? globalThis.window?.gravewrightMaps?.current?.id : undefined;
+    return current ? { ...payload, sceneId: current, mapId: current } : payload;
+  }
   api(identity, life, ui) {
     const call = (domain, method, payload, options) => life.wait(async signal => {
       await this.ensure(identity, life);
       life.check();
       return this.request(this.root(identity.moduleId) + '/api', {
-        domain, method, payload, requestId: options.requestId ?? crypto.randomUUID(),
+        domain, method, payload: this.viewedScene(identity, domain, method, payload),
+        requestId: options.requestId ?? crypto.randomUUID(),
         mountId: identity.mountId, moduleSetRevision: identity.moduleSetRevision,
         ...(identity.sceneId ? { sceneId: identity.sceneId } : {}),
       }, signal, options);

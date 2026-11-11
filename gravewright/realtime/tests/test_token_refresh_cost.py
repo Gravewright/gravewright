@@ -46,29 +46,32 @@ class TokenRefreshDispatchTests(TestCase):
         return [call.args[1] for call in send.call_args_list]
 
     def test_moves_and_teleports_defer_duplicate_audio_and_omit_unchanged_actors(self):
+        # One envelope per commit: the board first, audio once, no actor or combat refresh.
         for action in ("move", "teleport"):
             with self.subTest(action=action):
                 marker = {"id": str(uuid.uuid4()), "version": 3}
                 scene = str(uuid.uuid4())
                 result = {"mapId": scene, "teleports": [marker]} if action == "teleport" else None
                 events = self.notifications("tokens", action, result)
-                self.assertEqual(events, [{"type": "room.map_layers", "refresh_audio": False},
-                    {"type": "room.tokens", "refresh_combat": False, **({"mapId": scene, "teleports": [marker]}
-                                              if action == "teleport" else {})}])
+                self.assertEqual(events, [{"type": "room.changes", "resource": "tokens", "action": action,
+                    "refresh": ["maps.layers", "tokens", "resources:audio"],
+                    **({"mapId": scene, "teleports": [marker]} if action == "teleport" else {})}])
 
     def test_other_token_and_actor_commands_keep_actor_and_combat_notifications(self):
         for resource, action in (("actors", "actor.permissions"), ("actors", "sheet.save"),
                                  ("tokens", "place"), ("tokens", "remove"),
                                  ("tokens", "configure"), ("tokens", "condition-add")):
             with self.subTest(resource=resource, action=action):
-                events = self.notifications(resource, action)
-                self.assertEqual(events[:3], [{"type": "room.map_layers", "refresh_audio": False},
-                                             {"type": "room.actors"}, {"type": "room.tokens"}])
-                if resource == "actors" or action != "place":
-                    self.assertIn({"type": "room.resources", "module": "combat"}, events)
+                [event] = self.notifications(resource, action)
+                self.assertEqual(event["type"], "room.changes")
+                self.assertEqual(event["refresh"][:3], ["maps.layers", "tokens", "actors"])
+                self.assertEqual(event["refresh"].count("resources:audio"), 1)
+                self.assertIn("resources:combat", event["refresh"])
 
     def test_map_only_changes_keep_their_independent_audio_refresh(self):
-        self.assertEqual(self.notifications("maps", "objects"), [{"type": "room.map_layers"}])
+        self.assertEqual(self.notifications("maps", "objects"), [{"type": "room.changes", "resource": "maps",
+                                                                   "action": "objects",
+                                                                   "refresh": ["maps.layers", "resources:audio"]}])
 
 
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
@@ -101,7 +104,8 @@ class NativePresenceRefreshTests(TestCase):
         self.door_object.refresh_from_db()
         self.assertEqual(self.door_object.data["door_state"], "open")
         self.assertEqual([call.args[1]["type"] for call in send.call_args_list],
-                         ["room.automation", "room.map_layers", "room.tokens"])
+                         ["room.automation", "room.changes"])
+        self.assertEqual(send.call_args_list[1].args[1]["refresh"], ["maps.layers", "tokens", "resources:audio"])
         notify.assert_called_once()
         change = notify.call_args.kwargs["change"]
         self.assertEqual((change.resource, change.action, change.request_id), ("tokens", "move", rid))

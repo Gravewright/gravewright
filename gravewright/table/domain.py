@@ -54,7 +54,6 @@ def state(campaign_id, user_id, name, scene_id=None, preview_token_id=None):
     return module(name).state(who, scene_id)
 
 
-@transaction.atomic
 def command(campaign_id, user_id, name, action, data, request_id):
     """Serialize a resource command and record its retry result before notification."""
     if name == 'compendiums' and action == 'read':
@@ -65,6 +64,24 @@ def command(campaign_id, user_id, name, action, data, request_id):
             raise MapError('Invalid command.')
         identifier(request_id)
         return module(name).command(who, action, data) or {}
+    prepared = None
+    if name == 'compendiums' and action == 'import':
+        who = member(campaign_id, user_id)
+        from gravewright.journals.services import writable
+        writable(who)
+        if not isinstance(data, dict):
+            raise MapError('Invalid command.')
+        rid = identifier(request_id)
+        previous = Receipt.objects.filter(campaign_id=campaign_id, user_id=user_id, request_id=rid).first()
+        if previous:
+            return previous.result
+        prepared = module(name).prepare_import(who, data)
+    return _write_command(campaign_id, user_id, name, action, data, request_id, prepared)
+
+
+@transaction.atomic
+def _write_command(campaign_id, user_id, name, action, data, request_id, prepared=None):
+    """Recheck live permissions and receipts after acquiring the write lock."""
     Campaign.objects.select_for_update().get(pk=campaign_id)
     who = member(campaign_id, user_id)
     from gravewright.journals.services import writable
@@ -82,7 +99,9 @@ def command(campaign_id, user_id, name, action, data, request_id):
         if name == 'mindmaps':
             return module(name).replay_result(who, previous.result)
         return previous.result
-    result = module(name).command(who, action, data) or {}
+    result = (module(name).command(who, action, data, prepared=prepared)
+              if name == 'compendiums' and action == 'import'
+              else module(name).command(who, action, data)) or {}
     receipt_model.objects.create(campaign_id=campaign_id,user_id=user_id,request_id=rid,result=result)
     from gravewright.realtime.dispatch import changed
     changed(campaign_id,user_id,name,action,rid,result)

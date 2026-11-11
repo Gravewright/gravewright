@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/scene-layers/lib/shader-language.js
+// features/scene-layers/lib/shader-language.js
 var PREAMBLE = `#version 300 es
 precision highp float;
 

@@ -229,7 +229,9 @@ class MindMapTests(TestCase):
             with self.captureOnCommitCallbacks(execute=True):
                 first = self.command('create', payload, rid=rid)
                 send.assert_not_called()
-            send.assert_called_once_with(self.campaign.pk, {'type': 'room.resources', 'module': 'mindmaps'})
+            send.assert_called_once()
+            self.assertEqual(send.call_args.args[0], self.campaign.pk)
+            self.assertEqual({key: value for key, value in send.call_args.args[1].items() if key != 'revision'}, {'type': 'room.changes', 'resource': 'mindmaps', 'action': 'create', 'refresh': ['resources:mindmaps']})
             self.command('create', payload, rid=rid)
             self.assertEqual(send.call_count, 1)
         self.assertEqual(first['version'], 1)

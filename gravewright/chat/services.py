@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from django import forms
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -24,16 +24,21 @@ class MessageForm(forms.Form):
     request_id = forms.UUIDField()
 
 
+def message_recipients(message):
+    """Recipients with their users; history prefetches them for every message at once."""
+    cached = getattr(message, "_prefetched_objects_cache", {}).get("recipients")
+    if cached is not None:
+        return list(cached)
+    return list(message.recipients.select_related("user").order_by("pk"))
+
+
 def public_message(message):
     """Serialize stored content; callers must still enforce scene and audience access."""
     if message.deleted:
         return {'id': str(message.pk), 'tableId': str(message.campaign_id), 'deleted': True, 'audience': []}
+    recipients = message_recipients(message) if message.visibility != "public" else []
     targets = (
-        list(
-            message.recipients.exclude(user_id=message.author_id).values_list(
-                "user__name", flat=True
-            )
-        )
+        [row.user.name for row in recipients if row.user_id != message.author_id]
         if message.visibility == "whisper"
         else []
     )
@@ -48,9 +53,7 @@ def public_message(message):
         "sceneId": str(message.scene_id) if message.scene_id else None,
         "blockId": str(message.scene.block_id) if message.scene_id else None,
         "visibility": message.visibility,
-        "audience": [
-            str(pk) for pk in message.recipients.values_list("user_id", flat=True)
-        ]
+        "audience": [str(row.user_id) for row in recipients]
         if message.visibility != "public"
         else None,
         "roll": message.roll,
@@ -76,6 +79,7 @@ def history(campaign_id, user_id, map_id=None):
     scene = scene_for(who, map_id)
     rows = list(
         Message.objects.select_related("scene")
+        .prefetch_related(Prefetch("recipients", queryset=Recipient.objects.select_related("user").order_by("pk")))
         .filter(campaign_id=campaign_id, deleted=False)
         .filter(Q(scene=scene) | Q(scene__isnull=True))
         .filter(Q(visibility="public") | Q(recipients__user_id=user_id))

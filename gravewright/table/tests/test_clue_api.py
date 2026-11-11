@@ -31,7 +31,7 @@ class ClueFrontendTests(TestCase):
         self.assertEqual(first.status_code, 200, first.content)
         clue = first.json()['value']['clue']
         self.assertIsNone(clue['sceneId'])
-        self.assertEqual(send.call_args.args[1], {'type': 'room.resources', 'module': 'clues'})
+        self.assertEqual({key: value for key, value in send.call_args.args[1].items() if key != 'revision'}, {'type': 'room.changes', 'resource': 'clues', 'action': 'create', 'refresh': ['resources:clues']})
         self.assertEqual(self.call('create', payload, request_id).json(), first.json())
         self.assertEqual(ProgressClue.objects.count(), 1)
         revealed = self.call('reveal', {'id': clue['id'], 'version': 1})
@@ -110,7 +110,8 @@ class ClueFrontendTests(TestCase):
         self.assertEqual(ClueReceipt.objects.filter(request_id=request_id).count(), 1)
         Membership.objects.filter(campaign=self.campaign, user=self.gm).update(role='player')
         responses = [self.call('create', payload, request_id)]
-        for domain, method, data in (('items', 'create', {'name': 'Other', 'type': 'unused'}),
+        # Players may create items, but item folders remain GM-only.
+        for domain, method, data in (('items', 'createFolder', {'name': 'Other'}),
                                      ('clocks', 'create', {'name': 'Other'})):
             responses.append(self.client.post(f'/api/tables/{self.campaign.pk}/api', {
                 'domain': domain, 'method': method, 'payload': data, 'requestId': str(request_id),

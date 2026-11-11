@@ -22,6 +22,9 @@ from playwright.sync_api import expect, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT_VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+BUNDLED_NOTES = (ROOT / "docs" / "releases" / f"{PROJECT_VERSION}.md").read_text(encoding="utf-8")
+BUNDLED_TITLE = next(line.removeprefix("# ").strip() for line in BUNDLED_NOTES.splitlines() if line.startswith("# "))
+BUNDLED_SECTION = next(line.removeprefix("## ").strip() for line in BUNDLED_NOTES.splitlines() if line.startswith("## "))
 OUTPUT = ROOT / "test-results" / "release-presentation"
 UPDATES = "/inside?section=administration&tab=updates"
 PASSWORD = "release-presentation-test-password"
@@ -168,16 +171,18 @@ def main():
                     assert actual["status"] == "unchecked", actual
                     assert actual["installedRelease"]["source"] == "bundled", actual
                     assert actual["currentVersion"] == PROJECT_VERSION, actual
-                    assert actual["installedRelease"]["name"] == f"Gravewright {PROJECT_VERSION} — Alpha", actual
-                    assert len(actual["installedRelease"]["notes"]) > 4000
-                    assert "## Português (Brasil)" in actual["installedRelease"]["notes"]
+                    # Release prose and title suffixes vary. Verify the complete
+                    # checked-in document; the long bilingual fixture below
+                    # independently covers truncation and language selection.
+                    assert actual["installedRelease"]["name"] == BUNDLED_TITLE, actual
+                    assert actual["installedRelease"]["notes"] == BUNDLED_NOTES
                     page.goto(base + UPDATES)
                     root = page.locator("[data-content=updates]")
                     expect(root).to_be_visible()
                     expect(root.locator("[data-installed-release-name]")).to_have_text(actual["installedRelease"]["name"])
                     expect(root.locator("[data-release-notes-name]")).to_contain_text(actual["installedRelease"]["name"])
                     expect(root.locator("[data-release-notes]")).to_be_visible()
-                    expect(root.locator("[data-release-notes] h2").first).to_have_text("Changes")
+                    expect(root.locator("[data-release-notes] h2").first).to_have_text(BUNDLED_SECTION)
                     expect(root.locator("[data-release-notes]")).not_to_contain_text("Português (Brasil)")
                     expect(root.locator("[name=channel], [data-form=channel], [data-channel-risk]")).to_have_count(0)
                     expect(root.locator(".administration__install")).to_be_hidden()
@@ -194,7 +199,7 @@ def main():
                     expect(root.locator("[data-update-summary]")).to_contain_text("Up to date")
                     expect(root.locator(".administration__install")).to_be_hidden()
                     expect(root.locator("[data-action=check-updates]")).to_be_enabled()
-                    expect(root.locator("[data-release-notes] h2").first).to_have_text("Changes")
+                    expect(root.locator("[data-release-notes] h2").first).to_have_text(BUNDLED_SECTION)
                     report.append("current check keeps installed notes and hides unnecessary install controls")
 
                     # The page locale is set before module initialization, as if

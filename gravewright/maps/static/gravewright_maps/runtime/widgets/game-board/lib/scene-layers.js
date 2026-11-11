@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/lib/scene-layers.js
+// widgets/game-board/lib/scene-layers.js
 import { transformedPoint } from "../../../features/selection/model/objects.js";
 import { arrowHead } from "../../../features/drawing/model/drawing.js";
 import { Container, Graphics, Sprite, Texture, Text } from "/static/gravewright_maps/vendor/pixi.js";

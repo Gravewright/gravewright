@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/visibility-jobs.js
+// widgets/game-board/model/visibility-jobs.js
 import { createVisibilityContext, visibilityPolygon } from "./visibility-polygon.js";
 function visionPolygons(sources, radius, walls, context = createVisibilityContext(walls)) {
   return sources.map((source) => {

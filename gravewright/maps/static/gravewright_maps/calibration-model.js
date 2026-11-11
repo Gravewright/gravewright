@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/calibration.js
+// calibration.js
 var gwText = (text) => text;
 var median = (values) => {
   const sorted = [...values].sort((a, b) => a - b), middle = Math.floor(sorted.length / 2);

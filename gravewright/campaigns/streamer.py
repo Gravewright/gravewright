@@ -41,7 +41,11 @@ def issue(user,campaign_id):
 def revoke(user,campaign_id):
     campaign=get_campaign(user,campaign_id,manage=True)
     Campaign.objects.select_for_update().get(pk=campaign.pk)
+    guests=list(StreamerLink.objects.filter(campaign=campaign,revoked_at=None).values_list('guest_id',flat=True))
     StreamerLink.objects.filter(campaign=campaign,revoked_at=None).update(revoked_at=timezone.now())
+    # QuerySet.update sends no model signal: invalidate cached socket access explicitly.
+    from gravewright.realtime.access import revoke as revoke_access
+    revoke_access(campaign.pk,guests)
     Membership.objects.filter(campaign=campaign,role='streamer').delete()
     from asgiref.sync import async_to_sync
     from channels.layers import get_channel_layer

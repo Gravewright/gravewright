@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/effects/model/legacy-labels.js
+// features/effects/model/legacy-labels.js
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 var effectLabels = {
   get "lighting.shaders.whole_scene"() {

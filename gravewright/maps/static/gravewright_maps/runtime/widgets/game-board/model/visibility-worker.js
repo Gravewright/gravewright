@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/model/visibility-worker.js
+// widgets/game-board/model/visibility-worker.js
 import { createVisibilityContext } from "./visibility-polygon.js";
 import { visionPolygons } from "./visibility-jobs.js";
 var walls = [];

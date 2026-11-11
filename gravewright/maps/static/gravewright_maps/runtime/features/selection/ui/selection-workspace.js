@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/features/selection/ui/selection-workspace.js
+// features/selection/ui/selection-workspace.js
 import { openFormModal, modalText } from "/static/gravewright_table/form-modal.js";
 import { sceneObjects, hit, corners, centerOf, rotationCenter, transformedPoint } from "../model/objects.js";
 import { applySelection, transformMeasures } from "../model/selection-commands.js";

@@ -1,4 +1,4 @@
-// gravewright/maps/frontend/widgets/game-board/lib/pixi-board-renderer.js
+// widgets/game-board/lib/pixi-board-renderer.js
 import { tileBlobCache } from "../model/tile-blob-cache.js";
 import "/static/gravewright_maps/vendor/pixi.js";
 import { Assets, Container, Graphics, Sprite, Text, Texture } from "/static/gravewright_maps/vendor/pixi.js";
