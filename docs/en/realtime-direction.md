@@ -78,6 +78,10 @@ introduced in stage 2.
 | 5 | Changed-only delivery | Delivered; the conditional shared projection cache was not built |
 | 6 | Cached transport authorization | Delivered (start condition met: authorization was 25–50% of the queries on cursor, drag and pong paths) |
 | 7 | Presence without per-pong writes | Delivered |
+| 8 | Background load found in a replayed session | Delivered |
+| 9 | SQLite write-ahead log | Delivered (owner decision, 2026-11-15) |
+| 10 | Deliveries on their own lane | Delivered (owner decision, 2026-11-15) |
+| 11 | Work repeated for every sample and scene change | Delivered (2026-11-15); scene answers follow the stage 6 rule |
 
 ### Stage 0: baseline and instrumentation
 
@@ -206,11 +210,165 @@ Acceptance: each invalidation closes the socket on the next frame, even within t
 Acceptance: presence survives a command that runs longer than the TTL, and each
 renewal window causes at most one write.
 
+### Stage 8: background load found in a replayed session
+
+On 2026-11-15 a GM and three players replayed a real 0.3.5 session with real browsers,
+on a copy of that campaign and the Runner profile, at the command rates of its
+receipts. No lock errors occurred. Each `room.changes` delivery cost about 60 SQL
+statements and 0.4 s per recipient, and GM scene activations made every client
+resubscribe at once, which produced multi-second queues. Most database work did not
+come from play:
+
+- every installed-module call rewrote its mount lease (about 106 writes per minute
+  with four clients, more than all game writes together);
+- the mind map workspace reloaded over HTTP after every socket frame, including other
+  users' cursors (250–310 reads per minute);
+- the SDK HTTP client read a new CSRF token before every write;
+- the GM board renews its viewport every second, and each GM camera sample
+  (`room.gm_sample`) waited on every recipient's command lane (700–800 s per hour).
+
+Changes:
+
+- Module calls extend a mount lease only during the second half of its 30 minutes.
+- The mind map workspace ignores frames that carry no table state: liveness,
+  pointer, drag and camera samples and prefetch hints.
+- The SDK HTTP client reuses one CSRF token per client and reads it again once when
+  the server refuses it (`invalid_csrf_token`); the refusal precedes the view, so the
+  repeated request cannot repeat its effect.
+- GM camera samples use the peer sample lane, with one latest-value slot per GM.
+- While a socket's work waits, the channel reader keeps at most one queued
+  `room.presence` and one `room.lobby`, and folds a `room.changes` envelope into the
+  queued one right before it when their revisions are consecutive. The folded
+  envelope refreshes the union in delivery order and carries `first_revision`, so a
+  lost envelope still triggers a full refresh. Envelopes with teleports are not folded.
+- A presence renewal counts its half TTL from when it began, so a renewal that waited
+  for SQLite no longer pushes the next one past the lease expiry.
+
+Merging the scene subscriptions each client sends after an activation was not done:
+each `resources.sync` ran in about 22 ms and waited about 0.4 s (p95 2.4 s) behind
+other work, so fewer frames would not remove that work.
+
+Acceptance: a GM sample reaches a recipient whose command is blocked and only each
+GM's newest sample waits; repeated presence reads run once; consecutive envelopes are
+delivered once with the union of their projections, while gaps still refresh
+everything; a fresh lease is read without a write.
+
+### Stage 9: SQLite write-ahead log
+
+- `DATABASE_JOURNAL_MODE` selects the journal on every connection; `wal` is the
+  default and `delete` keeps the rollback journal for a database on a network folder.
+  With WAL a writer commits while readers keep their snapshot, so deliveries, samples
+  and presence reads no longer wait for each commit. Writers still take turns.
+- The database's `-wal` and `-shm` files belong to it. The updater already protects
+  them, backs up through SQLite's backup API (which includes the log) and removes them
+  before restoring a database file. The test runner removes sidecars left by an
+  interrupted run before creating the test database, because SQLite replays a `-wal`
+  file into any database of that name.
+- Synchronous mode stays at SQLite's default, so a commit is durable when it returns.
+
+Acceptance: connections report `wal`; a writer commits while a reader holds an open
+read transaction (the same commit waits under `delete`); managed update, failure
+restoration and rollback keep the database consistent.
+
+Measured in the stage 8 replay with scene changes (one 20-minute session per journal,
+both with the delivery lane of stage 10): WAL lowered the 99th percentile of SQL time
+per statement from 12.2 to 8.2 ms and the 95th percentile of sheet-save round trips
+from 1.6 s to 0.4 s. Most remaining time is Python work, not SQL.
+
+### Stage 10: deliveries on their own lane
+
+- Server events (`room.changes` and the other channel events) wait in a delivery queue
+  handled by a third per-socket task with its own synchronous thread. Commands and
+  subscriptions keep their order on the command lane and no longer wait behind
+  deliveries; the delivery lane starts after connect, so earlier events wait in order.
+- Commands and deliveries both refresh projections. Each projection is read and sent
+  under its own lock (tokens, layers, actors, journals, the scene list with chat
+  history, each table resource, the lobby), and a subscription changes its state under
+  the same lock. Sends of one projection therefore follow the order of their reads,
+  and a refresh of the previous subscription never arrives after, or as the base of a
+  delta for, the new one. Different projections proceed in parallel.
+- A command's acknowledgement may now arrive after the projection its commit
+  refreshed, as it already could for another user's command.
+- Coalescing and folding (stage 8) apply to the delivery queue.
+
+Acceptance: a command is acknowledged while a delivery is blocked; a subscription
+change waits for an in-flight refresh of the same projection and its state is the last
+one sent; repeated presence reads run once and consecutive envelopes fold while
+deliveries wait.
+
+Measured in the same replay without scene changes, with WAL and this lane against
+stage 8 alone: commands over one second fell from 8 to 2 per hour and the slowest
+command from 1.8 s to 1.1 s, and deliveries stopped queueing (95th percentile 1 ms).
+Each `room.changes` delivery took longer, about 760 ms on average instead of 540 ms:
+the extra thread per socket competes for the interpreter lock, and the time inside the
+thread outside SQL and CPU grew from about 180 to 290 ms. The sessions with scene
+changes separate the two effects: the lane alone raised the average delivery from 520
+to 611 ms, and WAL brought it back to 560 ms. With scene changes, the resubscription bursts still
+queued 2–3 s on the command lane: they are the client's own subscription frames.
+Reducing the Python work per projection is the next step; if it does not remove this
+cost, the lane should be revisited.
+
+### Stage 11: work repeated for every sample and scene change
+
+A profile of the stage 10 replay with scene changes, by synchronous CPU per operation,
+showed that projections were not the main cost: relaying cursors used 65% of it (each
+sample resolved the member and scene in the database, once for the sender and once
+for every recipient), GM camera samples and viewports another 21%, and `room.changes`
+8%. Every scene change also resent each client's item and compendium directories,
+which do not depend on the scene (about 340 KB per client), and every scene list
+refresh resent the whole chat history (about 84 KB), usually unchanged.
+
+- Samples reuse the answer to "may this member see this scene" (relayed cursors, the
+  sender's pointer identity, GM camera samples and the tile drain) for at most the
+  stage 6 window, while the access epoch is unchanged and until the socket receives
+  its next server event other than samples, presence and lobby reads. Changes are
+  announced after commit, so an answer read before an announcement is never stored
+  after it; a refused read drops every answer. A socket's own viewport always reads
+  the database. Rows changed directly in the database without an event reach samples
+  when the answer expires, as cached authorization does.
+- The table subscribes items and compendiums without a scene, so a scene change
+  resubscribes only combat, cards, audio, clocks and clues.
+- A token or layer subscription change no longer recomputes audio and combat, whose
+  inputs it does not change; extensions still receive the same `api.changed` hints.
+- Chat history travels like other projections: an unchanged history is not sent
+  again, a live message (`chat.message`, `chat.ack`) makes the next one whole, and
+  `chat.sync` always receives it. Deltas were not added: in the replay, histories that
+  changed between refreshes totalled 0.18 MB, while scope changes need the whole list.
+- Live messages are sent under the chat history's lock. Since stage 10 a history read
+  on one lane could reach the browser after a message sent from the other lane, and
+  the browser then replaced its list without that message.
+- Whole projections keep only their canonical text, so the previous one is not
+  serialized again for each comparison.
+- A frame sent between Daphne's closing handshake and the disconnect event is
+  dropped instead of failing its lane.
+
+Acceptance: a cursor relay reads each scene once, a scene announcement stops it at
+once and an access change in the process reads again; subscription changes do not
+recompute audio or combat; an unchanged history is not sent, and neither a live
+message nor an acknowledgement reaches the browser before an older history.
+
+Measured in the same replay with scene changes, with WAL and the delivery lane,
+against stage 10 (one 20-minute session each): synchronous server CPU fell from 326 to
+114 s and process CPU from 553 to 304 s (median 0.41 to 0.17 cores); the cursor relay
+went from 212 to 26 s and GM camera samples from 36 to 12 s. Browsers received
+15.6 MB instead of 26.7 MB: compendium directories 1.7 MB instead of 10.3 MB and chat
+history 3.1 MB instead of 5.9 MB. Commands over one second fell from 197 to 95 per hour
+and their 95th-percentile wait from 1.9 to 1.1 s; a token move reached the other players
+in 0.49 s at the 95th percentile instead of 1.36 s, a GM activation was acknowledged in
+1.4 s instead of 3.9 s, and pointers reached peers in 6 ms instead of 32 ms at the
+median. Sheet saves were slower at the 95th percentile (0.9 s instead of 0.4 s; earlier
+runs ranged from 0.4 to 1.6 s).
+
+Each `room.changes` delivery still takes about 540 ms on average: an envelope reaches
+every socket at once, and each delivery uses about 74 ms of CPU, so the recipients'
+threads take turns for the interpreter lock (263 ms outside SQL for 74 ms of CPU). The
+cost per projection multiplied by the number of recipients is now the remaining lever;
+the delivery lane stays, because commands no longer wait behind it.
+
 ## Outside this direction
 
-- Replacing SQLite or enabling WAL. This is evaluated only after these stages, with
-  portability, backup and concurrency tests; the measurement above shows that WAL
-  alone does not remove writer serialization.
+- Replacing SQLite. WAL lets readers proceed during a commit but does not remove
+  writer serialization (see the measurement above and stage 9).
 - Broadcasting unfiltered state and hiding it in the browser.
 - Keeping sessions or presence only in process memory, which would break deployments
   with several workers on Redis.

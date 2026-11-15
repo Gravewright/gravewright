@@ -40,7 +40,7 @@ uv run --locked python manage.py makemigrations --check --dry-run
 uv run --locked python manage.py test config gravewright --noinput
 ```
 
-O executor usa explicitamente `data/test-gravewright.sqlite3`, em arquivo, para testar locks do SQLite. `--noinput` autoriza substituir esse banco de testes caso já exista. Não aponte para dados importantes nem execute suítes simultâneas no mesmo caminho. Alterar `GRAVEWRIGHT_DATABASE` não altera o nome explícito desse banco de testes. Testes que escrevem arquivos geralmente criam armazenamento temporário; use `GRAVEWRIGHT_MEDIA_ROOT` descartável como proteção adicional ao executar a suíte inteira.
+O executor usa explicitamente `data/test-gravewright.sqlite3`, em arquivo, para testar locks do SQLite, no modo de journal configurado (WAL por padrão). `--noinput` autoriza substituir esse banco de testes caso já exista; o executor do projeto (`config.testing.TestRunner`) então também remove seus arquivos `-wal`/`-shm`, e os remove sempre que o arquivo do banco não existir, para que o log de uma execução interrompida não se junte ao banco novo. `config.test_database` verifica o modo de journal e que um escritor confirma enquanto um leitor mantém um snapshot. Não aponte para dados importantes nem execute suítes simultâneas no mesmo caminho. Alterar `GRAVEWRIGHT_DATABASE` não altera o nome explícito desse banco de testes. Testes que escrevem arquivos geralmente criam armazenamento temporário; use `GRAVEWRIGHT_MEDIA_ROOT` descartável como proteção adicional ao executar a suíte inteira.
 
 Exemplos focados:
 
@@ -298,13 +298,18 @@ notificações, estabilidade da projeção de atores, áudio independente e revo
 de acesso durante a entrega.
 
 As suítes do transporte de tempo real em `gravewright/realtime/tests/` também cobrem
-a recuperação de lock (`test_database_busy`), as faixas separadas do socket
-(`test_socket_lanes`), um envelope por commit (`test_dispatch_envelope`) e sua tabela
+a recuperação de lock (`test_database_busy`), as faixas separadas do socket,
+incluindo as amostras de câmera do mestre, comandos que não esperam atrás de
+entregas, a trava por projeção entre uma mudança de inscrição e uma atualização em
+andamento e as invalidações juntadas na fila (`test_socket_lanes`), um envelope por
+commit (`test_dispatch_envelope`) e sua tabela
 de dependências (`test_dispatch_dependencies`, que compara as projeções de cada
 usuário antes e depois de comandos reais; defina `GRAVEWRIGHT_PRINT_DEPENDENCIES=1`
 para listar o que mudou), o envio só do que mudou e as revisões dos envelopes
-(`test_projection_diff`), a autorização em cache (`test_authorization_cache`), os
-leases de presença (`test_presence_leases`), o registro de manipuladores lentos sem
+(`test_projection_diff`), a autorização em cache (`test_authorization_cache`), as
+respostas de cena reaproveitadas pelas amostras, o histórico de chat inalterado, a
+ordem do chat entre as faixas e as mudanças de inscrição que não recalculam projeções
+dependentes (`test_sample_work`), os leases de presença (`test_presence_leases`), o registro de manipuladores lentos sem
 payload (`test_instrumentation` e `test_metrics`) e os orçamentos de notificação por
 destinatário (`test_refresh_budget`). Defina `GRAVEWRIGHT_REALTIME_BENCHMARK_OUTPUT`
 com um arquivo JSON explícito dentro da instalação para registrar 20 repetições por
@@ -315,6 +320,11 @@ observações. As fronteiras transacionais são cobertas por
 histórico do chat por `gravewright.chat.tests.test_history_queries`.
 `tests/table/realtime.test.mjs` executa `realtime.js` com um relógio virtual para
 verificar retentativas `busy`, prazos de comando e a aplicação de deltas.
+`tests/table/mindmap-workspace.test.mjs` verifica que frames de ponteiro, arrasto,
+câmera e presença não recarregam os mapas mentais, e
+`tests/modules/http-client.test.mjs` cobre o reaproveitamento do token CSRF e sua
+única renovação depois de uma recusa. `gravewright.modules.tests` verifica que
+chamadas de módulo só gravam o lease da montagem na segunda metade da validade.
 
 No Linux, o Playwright pode precisar de bibliotecas do sistema; `uv run --locked playwright install --with-deps chromium` também as instala e pode exigir privilégios administrativos. Os cenários iniciam servidores próprios em portas temporárias e criam dados fictícios. A maioria usa configurações de desenvolvimento e grava diagnósticos em `test-results/`; os cenários HTTPS e do executor usam configurações específicas descritas abaixo. Execute em sequência: vários compartilham `test-results/migration-closure/`.
 

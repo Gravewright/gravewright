@@ -43,12 +43,18 @@ flowchart TD
 - `gravewright/realtime/consumers.py` handles transport, subscriptions and transient
   connection state. It invokes synchronous services through
   `database_sync_to_async`; expensive dice evaluation uses `asyncio.to_thread`.
-  Each socket runs commands, subscriptions and deliveries in order on its own
-  thread, so commands from one connection stay ordered while a slow query cannot
-  stall other players. Samples where only the newest value matters (cursor,
-  viewport and token drag, whether sent by this socket or relayed from another)
-  run in a second lane with a thread of its own: a newer sample replaces an
-  unprocessed one, and each drag stream keeps its own end or cancel. Pongs renew
+  Each socket runs commands and subscriptions in order on its own thread, so
+  commands from one connection stay ordered while a slow query cannot stall other
+  players. Server deliveries run in order on a second lane with a thread of its
+  own, so commands never wait behind them; each projection is read and sent under
+  its own lock, which keeps a refresh and a subscription change of the same
+  projection in order. Samples where only the newest value matters (cursor,
+  viewport and token drag, whether sent by this socket or relayed from another,
+  and the GM camera samples that guide prefetch) run in a third lane with a
+  thread of its own: a newer sample replaces an unprocessed one, and each drag
+  stream keeps its own end or cancel. While deliveries wait, repeated presence
+  and lobby reads collapse into the queued one, and consecutive commit envelopes
+  fold into one delivery of their combined projections. Pongs renew
   the presence lease on a pool thread. A reader admits frames by their arrival
   time (size, cursor throttle and command rate), so frames that waited behind a
   slow command are not mistaken for a burst; more than 256 waiting frames close
@@ -146,6 +152,17 @@ and `signals.py`). Code that changes those rows without model signals, such as
 noticed when the cached result expires. Write commands are still authorized by their
 services. See [stage 6 of the realtime direction](realtime-direction.md#stage-6-cached-transport-authorization).
 
+Samples reuse the answer to "may this member see this scene" under the same rule
+(`SceneStreamMixin.scene_answer` in `scene_stream.py`): relayed cursors, the sender's
+pointer identity, GM camera samples and the tile drain reuse an answer for at most
+`AUTHORIZATION_TTL`, while the access epoch is unchanged and until the socket receives
+its next server event other than samples, presence and lobby reads. Scene changes are
+announced after commit, so an answer read before the announcement is never stored
+after it, and a refused read drops every answer. A socket's own viewport always reads
+the database, so a change of access shows there at once and refreshes the reused
+answer. Scene rows changed directly in the database without an event reach samples
+when the answer expires.
+
 Streamer access is read-only. The socket consumer permits a limited set of sync,
 search, viewport and heartbeat messages; write boundaries also reject streamers.
 Client-side controls are a convenience, not the permission boundary.
@@ -171,7 +188,8 @@ generation and private navigation do not publish a scene.
 
 Map pointer activity is ephemeral. `maps.cursor` accepts bounded scene positions
 from players and GMs; the server supplies identity and the saved identification
-color. Delivery rechecks the recipient's scene access and current subscription.
+color. Delivery rechecks the recipient's scene access (reusing a recent answer, see
+[Identity and authorization](#identity-and-authorization)) and current subscription.
 Pointer traffic has its own sampling limit and cannot exhaust the command budget.
 Leaving or disconnecting publishes a clear event; no cursor position enters the
 campaign database, receipts or archives.
@@ -381,6 +399,12 @@ then filters visibility and recipients. Supported message commands include whisp
 GM messages and emotes. Moderation removes content while retaining message identity
 so a retry cannot recreate removed messages. Card chat attachments capture immutable
 public faces instead of referencing a later-mutated deck.
+
+The browser adds live messages (`chat.message`, `chat.ack`) to the last history it
+received. A socket therefore sends history again only when it differs from the last
+one it sent and no live message went out since; `chat.sync` always receives it whole.
+Live messages are sent under the chat history's projection lock, so a history read
+before a message committed never reaches the browser after that message.
 
 Dice use `dice/engine.py` and the native Python grammar: parse, compile/validate,
 then execute a bounded plan. Compilation consumes no randomness. The persistence

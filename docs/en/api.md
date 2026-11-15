@@ -444,7 +444,7 @@ comparison before submitting another restore; replacing its expected version
 without reviewing it would discard another GM's edits. History/trash reads and
 writes recheck current campaign GM membership, including receipt retries.
 
-Owner-only operations and campaign management remain checked on the server. These methods use session cookies and acquire a CSRF token before writes. They do not provide an API-key authentication scheme. Account/admin payloads are defined by the corresponding app views and tests; never place credentials in module source.
+Owner-only operations and campaign management remain checked on the server. These methods use session cookies and send a CSRF token with writes; each client reads the token once, reuses it, and reads it again once when the server refuses it. They do not provide an API-key authentication scheme. Account/admin payloads are defined by the corresponding app views and tests; never place credentials in module source.
 
 The Inside header uses owner-only `POST /api/admin/updates/notification` with an empty JSON body and the normal CSRF token. Its compact response includes `status`, `available`, installed/available versions and labels, `channel`, `checkedAt` and the internal Updates URL. It reuses the 24-hour discovery cache; concurrent stale checks return `checking` while one request refreshes metadata. It does not start installation or expose release artifacts or internal errors.
 
@@ -465,7 +465,7 @@ table.presence       table.lobbyChanged   clocks.changed   clues.changed
 mindmaps.changed
 ```
 
-Collection change subscriptions perform an authorized HTTP read initially, on matching socket invalidations, and on reconnect. Concurrent invalidations are coalesced; they do not carry every intermediate mutation. Actor/token/map/journal callbacks receive the projected state plus table/scene identity; item/combat/card/audio/compendium/clock/clue/mindmap callbacks receive `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presence, and lobby callbacks forward matching socket payloads rather than automatically reading an initial snapshot. Read their initial state separately as needed.
+Collection change subscriptions perform an authorized HTTP read initially, on matching socket invalidations, and on reconnect. Concurrent invalidations are coalesced; they do not carry every intermediate mutation. Actor/token/map/journal callbacks receive the projected state plus table/scene identity; item/combat/card/audio/compendium/clock/clue/mindmap callbacks receive `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presence, and lobby callbacks forward matching socket payloads rather than automatically reading an initial snapshot. Read their initial state separately as needed. `chat.changed` carries the complete visible history when it differs from the last one the socket sent, after a chat scope change and after a live message; a scene refresh that leaves it unchanged sends nothing.
 
 Subscriptions use the current page's socket event source. A `forTable` handle on `/inside`, or one targeting another table, can make HTTP requests but does not create a socket for that table. Do not assume it receives ongoing changes. Callbacks should be synchronous; start async work explicitly with error handling. The older mount-level `events` interface has different names and delivery caveats documented in the [module guide](modules.md#assets-persistence-and-events).
 
@@ -595,7 +595,7 @@ Register receivers once in your explicitly installed app's `AppConfig.ready()`. 
 
 ## Transport and maintenance
 
-The host browser domain endpoint is `POST /api/tables/<table_id>/api`; installed modules use `POST /api/tables/<table_id>/modules/<module_id>/api`. Both receive `{domain, method, payload, requestId?}` and return `{value}`. Module calls also carry `mountId`, `moduleSetRevision`, and optional `sceneId`; the bridge acquires a lease before calling. Binary domain methods use the respective `/files` suffix, with JSON metadata in multipart `metadata` and the file in `file`; download calls return bytes. The older schema API uses the same module prefix with `/call` and a `{name, payload, ...context}` envelope. These URLs describe the implementation for maintainers; module code should use its provided APIs.
+The host browser domain endpoint is `POST /api/tables/<table_id>/api`; installed modules use `POST /api/tables/<table_id>/modules/<module_id>/api`. Both receive `{domain, method, payload, requestId?}` and return `{value}`. Module calls also carry `mountId`, `moduleSetRevision`, and optional `sceneId`; the bridge acquires a lease before calling. A call extends its 30-minute lease only during the lease's second half, so ordinary calls perform no write. Binary domain methods use the respective `/files` suffix, with JSON metadata in multipart `metadata` and the file in `file`; download calls return bytes. The older schema API uses the same module prefix with `/call` and a `{name, payload, ...context}` envelope. These URLs describe the implementation for maintainers; module code should use its provided APIs.
 
 After changing the domain method registry, run:
 

@@ -8,6 +8,7 @@ from unittest.mock import patch
 import uuid
 
 from channels.db import database_sync_to_async as db
+from channels.layers import get_channel_layer
 from django.conf import settings
 from django.test import Client, TransactionTestCase, override_settings
 from django.utils import timezone
@@ -17,7 +18,7 @@ from gravewright.actors.models import Actor
 from gravewright.campaigns.models import Membership, StreamerLink
 from gravewright.maps import cursors
 from gravewright.maps.models import Broadcast, Scene
-from gravewright.realtime import consumers, services
+from gravewright.realtime import consumers, dispatch, services
 from gravewright.realtime.consumers import TableConsumer
 from gravewright.realtime.models import PresenceConnection
 from gravewright.realtime.tests import test_sockets as sockets
@@ -182,7 +183,7 @@ class SocketLaneTests(TransactionTestCase):
         try:
             player = await self.joined(self.player, ('maps.layers', 'maps.layers'))
             gm = await self.joined(self.gm, ('maps.layers', 'maps.layers'))
-            with patch.object(cursors, 'project', side_effect=self.gate.wrap(cursors.project)):
+            with patch.object(cursors, 'identity', side_effect=self.gate.wrap(cursors.identity)):
                 await gm.send_json_to(self.cursor(10))
                 self.assertTrue(await self.gate.wait())
                 for x in (20, 30, 40, 50):
@@ -192,7 +193,8 @@ class SocketLaneTests(TransactionTestCase):
                 await asyncio.sleep(.1)
                 self.gate.opened.set()
                 frames = await self.collect(player, 1, {'maps.cursor'})
-            self.assertEqual([call[1]['position']['x'] for call in self.gate.calls], [10, 50])
+            # Only the first sample read its scene; the newest one reused that answer.
+            self.assertEqual(len(self.gate.calls), 1)
             self.assertEqual([frame['payload']['position']['x'] for frame in frames], [10, 50])
         finally:
             await self.finish()
@@ -212,6 +214,193 @@ class SocketLaneTests(TransactionTestCase):
                 frames = await self.collect(player, 1, {'token.drag'})
             self.assertEqual([(f['payload']['stream'], f['payload']['phase']) for f in frames],
                              [(first, 'update'), (first, 'end'), (second, 'update')])
+        finally:
+            await self.finish()
+
+    async def gm_sample(self, generation):
+        """Publish a GM camera sample to the table group, as the GM's socket does."""
+        await get_channel_layer().group_send(f'table.{self.campaign.pk.hex}', {
+            'type': 'room.gm_sample', 'user_id': str(self.gm.pk), 'version': self.scene.version,
+            'signals': {}, 'region': {'mapId': str(self.scene.pk), 'lod': 0, 'firstColumn': 0, 'firstRow': 0,
+                                      'lastColumn': 0, 'lastRow': 0, 'generation': generation}})
+
+    async def test_gm_samples_reach_a_busy_recipient(self):
+        seen = []
+
+        async def sample(consumer, event):
+            seen.append((consumer.user_id, event['region']['generation']))
+        try:
+            player = await self.joined(self.player)
+            with patch('gravewright.maps.services.command', side_effect=self.gate.wrap(lambda *a: {})), \
+                    patch.object(TableConsumer, 'room_gm_sample', sample):
+                await player.send_json_to(self.command('maps.command'))
+                self.assertTrue(await self.gate.wait())
+                await self.gm_sample(1)
+                for _ in range(100):
+                    if (self.player.pk, 1) in seen:
+                        break
+                    await asyncio.sleep(.02)
+                self.assertIn((self.player.pk, 1), seen)
+                self.assertFalse(self.gate.opened.is_set())
+                self.gate.opened.set()
+                await self.event(player, 'maps.ack')
+        finally:
+            await self.finish()
+
+    async def test_only_the_newest_gm_sample_waits(self):
+        seen, entered, opened = [], asyncio.Event(), asyncio.Event()
+
+        async def sample(consumer, event):
+            seen.append(event['region']['generation'])
+            if len(seen) == 1:
+                entered.set()
+                await opened.wait()
+        try:
+            player = await self.joined(self.player)
+            with patch.object(TableConsumer, 'room_gm_sample', sample):
+                await self.gm_sample(1)
+                await asyncio.wait_for(entered.wait(), 3)
+                for generation in (2, 3, 4):
+                    await self.gm_sample(generation)
+                await asyncio.sleep(.1)
+                opened.set()
+                await self.collect(player, .3, set())
+            self.assertEqual(seen, [1, 4])
+        finally:
+            await self.finish()
+
+    async def publish(self, event):
+        await get_channel_layer().group_send(f'table.{self.campaign.pk.hex}', event)
+
+    async def changes(self, revision, *refresh, **extra):
+        await self.publish({'type': 'room.changes', 'resource': 'tokens', 'action': 'move',
+                            'refresh': list(refresh), 'revision': revision, **extra})
+
+    async def while_deliveries_blocked(self, socket, publish):
+        """Queue channel events behind a delivery that waits, then let them run."""
+        entered, opened = asyncio.Event(), asyncio.Event()
+
+        async def blocker(consumer, event):
+            entered.set()
+            await opened.wait()
+        with patch.object(TableConsumer, 'room_automation', blocker):
+            await self.publish({'type': 'room.automation', 'sceneId': str(self.scene.pk)})
+            await asyncio.wait_for(entered.wait(), 3)
+            await publish()
+            await asyncio.sleep(.1)
+            opened.set()
+            await self.collect(socket, .3, set())
+
+    async def test_commands_do_not_wait_behind_deliveries(self):
+        entered, opened = asyncio.Event(), asyncio.Event()
+
+        async def blocker(consumer, event):
+            entered.set()
+            await opened.wait()
+        try:
+            player = await self.joined(self.player)
+            with patch.object(TableConsumer, 'room_automation', blocker), \
+                    patch('gravewright.maps.services.command', side_effect=lambda *a: {}):
+                await self.publish({'type': 'room.automation', 'sceneId': str(self.scene.pk)})
+                await asyncio.wait_for(entered.wait(), 3)
+                await player.send_json_to(self.command('maps.command'))
+                await self.event(player, 'maps.ack')
+                self.assertFalse(opened.is_set())
+                opened.set()
+        finally:
+            await self.finish()
+
+    async def test_a_subscription_change_waits_for_a_refresh_of_the_same_projection(self):
+        """A delivery still reading the previous map is sent before the new map's state.
+
+        Commands and deliveries run on separate lanes; the projection lock keeps a slow
+        refresh of the old subscription from arriving after (or as a delta onto) the
+        state of the new one.
+        """
+        other = await db(Scene.objects.create)(campaign=self.campaign, name='Cellar', width=512, height=512,
+                                                visibility='players')
+        real = token_services.state
+        try:
+            gm = await self.joined(self.gm, ('tokens.sync', 'tokens.state'))
+            with patch('gravewright.tokens.services.state', side_effect=self.gate.wrap(real)):
+                await self.changes(1, 'tokens')
+                self.assertTrue(await self.gate.wait())  # the delivery reads the first map
+                await gm.send_json_to({'type': 'tokens.sync', 'payload': {'mapId': str(other.pk)}})
+                early = await self.collect(gm, .3, {'tokens.state'})
+                self.assertEqual(early, [], 'the subscription waits for the refresh in progress')
+                self.gate.opened.set()
+                frames = await self.collect(gm, .6, {'tokens.state'})
+            self.assertTrue(frames)
+            self.assertEqual(frames[-1]['payload']['mapId'], str(other.pk))
+            self.assertNotIn('delta', frames[-1]['payload'])
+            first = [index for index, frame in enumerate(frames) if frame['payload']['mapId'] == str(other.pk)][0]
+            self.assertTrue(all(frame['payload']['mapId'] == str(other.pk) for frame in frames[first:]))
+        finally:
+            await self.finish()
+
+    async def test_queued_commit_envelopes_fold_into_one_delivery(self):
+        deliveries = []
+
+        async def deliver(consumer, refresh, event):
+            deliveries.append((list(refresh), event['revision']))
+
+        async def publish():
+            await self.changes(1, 'tokens')
+            await self.changes(2, 'actors', 'tokens')
+            await self.changes(3, 'maps.layers')
+            # Not consecutive: kept apart, and its gap still refreshes every projection.
+            await self.changes(5, 'journals')
+        try:
+            player = await self.joined(self.player)
+            with patch.object(TableConsumer, 'deliver_changes', deliver):
+                await self.while_deliveries_blocked(player, publish)
+            self.assertEqual(deliveries, [(['maps.layers', 'tokens', 'actors'], 3),
+                                          (list(dispatch.PROJECTIONS), 5)])
+        finally:
+            await self.finish()
+
+    async def test_envelopes_with_teleports_are_not_folded(self):
+        deliveries = []
+
+        async def deliver(consumer, refresh, event):
+            deliveries.append((list(refresh), event['revision'], bool(event.get('teleports'))))
+
+        async def publish():
+            await self.changes(1, 'tokens', mapId=str(self.scene.pk),
+                               teleports=[{'id': str(self.token.pk), 'version': 1}])
+            await self.changes(2, 'tokens')
+        try:
+            player = await self.joined(self.player)
+            with patch.object(TableConsumer, 'deliver_changes', deliver):
+                await self.while_deliveries_blocked(player, publish)
+            self.assertEqual(deliveries, [(['tokens'], 1, True), (['tokens'], 2, False)])
+        finally:
+            await self.finish()
+
+    async def test_queued_presence_reads_are_coalesced(self):
+        reads = []
+
+        async def presence(consumer, event):
+            reads.append('presence')
+
+        async def lobby(consumer, event):
+            reads.append('lobby')
+
+        async def publish():
+            for _ in range(5):
+                await self.publish({'type': 'room.presence'})
+                await self.publish({'type': 'room.lobby'})
+        try:
+            player = await self.joined(self.player)
+            # The socket's own arrival publishes presence; let the delivery lane read it first.
+            await self.collect(player, .3, set())
+            with patch.object(TableConsumer, 'room_presence', presence), \
+                    patch.object(TableConsumer, 'room_lobby', lobby):
+                await self.while_deliveries_blocked(player, publish)
+                # Once the queued copy ran, a new change is read again.
+                await self.publish({'type': 'room.presence'})
+                await self.collect(player, .3, set())
+            self.assertEqual(reads, ['presence', 'lobby', 'presence'])
         finally:
             await self.finish()
 
@@ -325,7 +514,7 @@ class SocketLaneTests(TransactionTestCase):
             await self.joined(self.player, ('maps.layers', 'maps.layers'))
             gm = await self.joined(self.gm, ('maps.layers', 'maps.layers'))
             with patch('gravewright.tokens.services.command', side_effect=commands.wrap(lambda *a: ACK)), \
-                    patch.object(cursors, 'project', side_effect=samples.wrap(cursors.project)):
+                    patch.object(cursors, 'identity', side_effect=samples.wrap(cursors.identity)):
                 await gm.send_json_to(self.command())
                 self.assertTrue(await commands.wait())
                 await gm.send_json_to(self.cursor(30))
@@ -382,7 +571,7 @@ class SocketLaneTests(TransactionTestCase):
     async def test_disconnect_with_blocked_ephemeral_work_cleans_up(self):
         await self.joined(self.player, ('maps.layers', 'maps.layers'))
         gm = await self.joined(self.gm, ('maps.layers', 'maps.layers'))
-        with patch.object(cursors, 'project', side_effect=self.gate.wrap(cursors.project)):
+        with patch.object(cursors, 'identity', side_effect=self.gate.wrap(cursors.identity)):
             await gm.send_json_to(self.cursor(30))
             self.assertTrue(await self.gate.wait())
             leases = await db(PresenceConnection.objects.count)()

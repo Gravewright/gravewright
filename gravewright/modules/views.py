@@ -37,6 +37,10 @@ from scripts.gravewright_runner import (
     install_default_marketplace,
 )
 
+# A mount lease lasts this long. Calls extend it only during its second half, so a
+# lease in use never expires while ordinary calls cost no write.
+CONTEXT_LEASE = timedelta(minutes=30)
+
 
 def module_directory():
     return str(settings.GRAVEWRIGHT_MODULES_ROOT or Path(settings.MEDIA_ROOT) / 'modules')
@@ -517,15 +521,17 @@ def identity(request, table_id, module_id, data, *, check=True):
     )
     if check:
         lease = query.first()
+        now = timezone.now()
         if (
             not lease
             or lease.closed
-            or lease.expires_at <= timezone.now()
+            or lease.expires_at <= now
             or lease.revision != data["moduleSetRevision"]
             or lease.scene_id != scene
         ):
             raise ModuleFailure("stale_context")
-        query.update(expires_at=timezone.now() + timedelta(minutes=30))
+        if lease.expires_at - now < CONTEXT_LEASE / 2:
+            query.update(expires_at=now + CONTEXT_LEASE)
     return engine, query, scene
 
 
@@ -567,7 +573,7 @@ def context(request, table_id, module_id):
             defaults={
                 "revision": data["moduleSetRevision"],
                 "scene_id": scene,
-                "expires_at": timezone.now() + timedelta(minutes=30),
+                "expires_at": timezone.now() + CONTEXT_LEASE,
             },
         )
     return JsonResponse({"ok": True})

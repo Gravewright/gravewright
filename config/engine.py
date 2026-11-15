@@ -62,4 +62,9 @@ def configure():
     values['APP_NAME'] = os.environ.get('APP_NAME', 'Gravewright').strip() or 'Gravewright'
     values['DEFAULT_LOCALE'] = os.environ.get('DEFAULT_LOCALE', 'en').strip() or 'en'
     values['DATABASE_ECHO'] = env_bool('DATABASE_ECHO', False)
+    # WAL lets readers proceed while a writer commits. It needs a local filesystem:
+    # use `delete` (the rollback journal) for a database on a network folder.
+    values['DATABASE_JOURNAL_MODE'] = os.environ.get('DATABASE_JOURNAL_MODE', 'wal').strip().lower() or 'wal'
+    if values['DATABASE_JOURNAL_MODE'] not in ('wal', 'delete'):
+        raise ValueError('DATABASE_JOURNAL_MODE must be wal or delete.')
     return values

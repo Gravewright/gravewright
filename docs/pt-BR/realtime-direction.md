@@ -83,6 +83,10 @@ tarefa de presença criada na etapa 2.
 | 5 | Envio só do que mudou | Entregue; o cache condicional de projeção compartilhado não foi construído |
 | 6 | Autorização do transporte em cache | Entregue (condição de início cumprida: a autorização era 25–50% das consultas nos caminhos de cursor, arrasto e pong) |
 | 7 | Presença sem escrita a cada pong | Entregue |
+| 8 | Carga de fundo encontrada numa sessão reproduzida | Entregue |
+| 9 | Log de escrita antecipada (WAL) do SQLite | Entregue (decisão do dono, 2026-11-15) |
+| 10 | Entregas numa faixa própria | Entregue (decisão do dono, 2026-11-15) |
+| 11 | Trabalho repetido a cada amostra e troca de cena | Entregue (2026-11-15); as respostas de cena seguem a regra da etapa 6 |
 
 ### Etapa 0: base e instrumentação
 
@@ -220,11 +224,181 @@ Aceite: cada invalidação fecha o socket no frame seguinte, mesmo dentro da jan
 Aceite: a presença sobrevive a um comando mais longo que o TTL, e cada janela de
 renovação causa no máximo uma escrita.
 
+### Etapa 8: carga de fundo encontrada numa sessão reproduzida
+
+Em 2026-11-15, um mestre e três jogadores reproduziram uma sessão real da 0.3.5 com
+navegadores reais, numa cópia daquela campanha e no perfil do Runner, no ritmo de
+comandos dos seus recibos. Não houve erro de trava. Cada entrega de `room.changes`
+custou cerca de 60 consultas SQL e 0,4 s por destinatário, e as ativações de cena pelo
+mestre fizeram todos os clientes reassinarem ao mesmo tempo, o que gerou filas de
+vários segundos. A maior parte do trabalho no banco não vinha do jogo:
+
+- cada chamada de módulo instalado regravava o lease da montagem (cerca de 106
+  escritas por minuto com quatro clientes, mais que todas as escritas do jogo juntas);
+- o espaço de mapas mentais relia por HTTP a cada frame do socket, inclusive cursores
+  de outros usuários (250–310 leituras por minuto);
+- o cliente HTTP do SDK buscava um token CSRF novo antes de cada escrita;
+- o tabuleiro do mestre renova o viewport a cada segundo, e cada amostra de câmera do
+  mestre (`room.gm_sample`) esperava na faixa de comandos de cada destinatário
+  (700–800 s por hora).
+
+Mudanças:
+
+- Chamadas de módulo só estendem o lease da montagem na segunda metade dos seus 30
+  minutos.
+- O espaço de mapas mentais ignora frames que não carregam estado da mesa: presença,
+  amostras de ponteiro, arrasto e câmera e dicas de pré-carga.
+- O cliente HTTP do SDK reaproveita um token CSRF por cliente e o busca de novo uma
+  vez quando o servidor o recusa (`invalid_csrf_token`); a recusa acontece antes da
+  view, então repetir a requisição não repete o efeito.
+- As amostras de câmera do mestre usam a faixa de amostras de outros participantes,
+  com um slot de valor mais recente por mestre.
+- Enquanto o trabalho de um socket espera, o leitor do channel mantém no máximo um
+  `room.presence` e um `room.lobby` na fila e junta um envelope `room.changes` ao que
+  está logo antes dele na fila quando as revisões são consecutivas. O envelope
+  juntado atualiza a união das projeções na ordem de entrega e leva `first_revision`,
+  então um envelope perdido ainda provoca a atualização completa. Envelopes com
+  teleportes não são juntados.
+- A renovação de presença conta o meio TTL a partir de quando começou, então uma
+  renovação que esperou o SQLite não empurra mais a próxima para depois do vencimento
+  do lease.
+
+Juntar as inscrições de cena que cada cliente envia depois de uma ativação não foi
+feito: cada `resources.sync` executava em cerca de 22 ms e esperava cerca de 0,4 s
+(p95 de 2,4 s) atrás de outro trabalho, então menos frames não removeriam esse trabalho.
+
+Aceite: uma amostra do mestre chega a um destinatário com comando bloqueado e só a
+amostra mais recente de cada mestre espera; leituras de presença repetidas rodam uma
+vez; envelopes consecutivos são entregues uma vez com a união das projeções, enquanto
+lacunas ainda atualizam tudo; um lease recente é lido sem escrita.
+
+### Etapa 9: log de escrita antecipada (WAL) do SQLite
+
+- `DATABASE_JOURNAL_MODE` escolhe o journal em cada conexão; `wal` é o padrão e
+  `delete` mantém o journal de rollback para um banco numa pasta de rede. Com WAL um
+  escritor confirma enquanto os leitores mantêm seu snapshot, então entregas, amostras
+  e leituras de presença deixam de esperar cada commit. Os escritores continuam se
+  revezando.
+- Os arquivos `-wal` e `-shm` do banco fazem parte dele. O atualizador já os protege,
+  faz backup pela API de backup do SQLite (que inclui o log) e os remove antes de
+  restaurar um arquivo de banco. O executor de testes remove arquivos auxiliares
+  deixados por uma execução interrompida antes de criar o banco de teste, porque o
+  SQLite aplica um `-wal` a qualquer banco com aquele nome.
+- O modo síncrono continua no padrão do SQLite, então um commit é durável quando
+  retorna.
+
+Aceite: as conexões informam `wal`; um escritor confirma enquanto um leitor mantém uma
+transação de leitura aberta (o mesmo commit espera com `delete`); a atualização
+gerenciada, a restauração após falha e o rollback mantêm o banco consistente.
+
+Medido na reprodução da etapa 8 com troca de cena (uma sessão de 20 minutos por
+journal, as duas com a faixa de entregas da etapa 10): o WAL baixou o percentil 99 do
+tempo de SQL por consulta de 12,2 para 8,2 ms e o percentil 95 da ida e volta ao salvar
+ficha de 1,6 s para 0,4 s. A maior parte do tempo restante é trabalho em Python, não
+SQL.
+
+### Etapa 10: entregas numa faixa própria
+
+- Eventos do servidor (`room.changes` e os demais eventos do channel) esperam numa
+  fila de entregas tratada por uma terceira tarefa por socket, com thread síncrona
+  própria. Comandos e inscrições mantêm sua ordem na faixa de comandos e não esperam
+  mais atrás de entregas; a faixa de entregas começa depois do connect, então eventos
+  anteriores esperam em ordem.
+- Comandos e entregas atualizam projeções. Cada projeção é lida e enviada sob uma
+  trava própria (tokens, camadas, atores, diários, a lista de cenas com o histórico do
+  chat, cada recurso da mesa, o lobby), e uma inscrição muda seu estado sob a mesma
+  trava. Os envios de uma projeção seguem então a ordem das leituras, e uma atualização
+  da inscrição anterior nunca chega depois da nova nem vira base de um delta para ela.
+  Projeções diferentes seguem em paralelo.
+- A confirmação de um comando pode chegar depois da projeção que seu commit atualizou,
+  como já podia acontecer com o comando de outro usuário.
+- O agrupamento e a junção (etapa 8) valem para a fila de entregas.
+
+Aceite: um comando é confirmado enquanto uma entrega está bloqueada; uma mudança de
+inscrição espera a atualização em andamento da mesma projeção e seu estado é o último
+enviado; leituras de presença repetidas rodam uma vez e envelopes consecutivos se
+juntam enquanto as entregas esperam.
+
+Medido na mesma reprodução sem troca de cena, com o WAL e esta faixa contra a etapa 8
+sozinha: comandos acima de um segundo caíram de 8 para 2 por hora e o comando mais
+lento de 1,8 s para 1,1 s, e as entregas deixaram de fazer fila (percentil 95 de 1 ms).
+Cada entrega de `room.changes` ficou mais demorada, cerca de 760 ms em média em vez de
+540 ms: a thread a mais por socket disputa o lock do interpretador, e o tempo dentro da
+thread fora do SQL e da CPU subiu de cerca de 180 para 290 ms. As sessões com troca de
+cena separam os dois efeitos: só a faixa elevou a entrega média de 520 para 611 ms, e o
+WAL a trouxe de volta para 560 ms. Com troca de cena, as rajadas de
+reinscrição ainda esperaram 2–3 s na faixa de comandos: são os frames de inscrição do
+próprio cliente. Reduzir o trabalho em Python por projeção é o próximo passo; se isso
+não eliminar esse custo, a faixa deve ser revista.
+
+### Etapa 11: trabalho repetido a cada amostra e troca de cena
+
+Um perfil da reprodução da etapa 10 com troca de cena, pela CPU síncrona de cada
+operação, mostrou que as projeções não eram o custo principal: o repasse de cursores
+usava 65% dela (cada amostra resolvia membro e cena no banco, uma vez para quem envia
+e uma para cada destinatário), as amostras de câmera do mestre e os viewports outros
+21%, e `room.changes` 8%. Toda troca de cena também reenviava os diretórios de itens e
+compêndios de cada cliente, que não dependem da cena (cerca de 340 KB por cliente), e
+toda atualização da lista de cenas reenviava o histórico de chat inteiro (cerca de
+84 KB), quase sempre inalterado.
+
+- As amostras reaproveitam a resposta a "este membro pode ver esta cena" (cursores
+  repassados, a identidade do ponteiro de quem envia, as amostras de câmera do mestre e
+  a drenagem de tiles) por no máximo a janela da etapa 6, enquanto a época de acesso
+  não muda e até o socket receber o próximo evento do servidor que não seja amostra,
+  presença ou leitura do lobby. As mudanças são anunciadas após o commit, então uma
+  resposta lida antes de um anúncio nunca é guardada depois dele; uma leitura recusada
+  descarta todas as respostas. O viewport do próprio socket sempre lê o banco. Linhas
+  alteradas direto no banco, sem evento, chegam às amostras quando a resposta expira,
+  como na autorização em cache.
+- A mesa inscreve itens e compêndios sem cena, então uma troca de cena reinscreve só
+  combate, cartas, áudio, relógios e pistas.
+- Uma mudança de inscrição de tokens ou de camadas não recalcula mais áudio e combate,
+  cujas entradas ela não altera; as extensões continuam recebendo os mesmos avisos
+  `api.changed`.
+- O histórico de chat segue como as outras projeções: um histórico inalterado não é
+  reenviado, uma mensagem ao vivo (`chat.message`, `chat.ack`) torna o próximo
+  completo, e `chat.sync` sempre o recebe. Não foram criados deltas: na reprodução, os
+  históricos que mudaram entre atualizações somaram 0,18 MB, enquanto as trocas de
+  escopo precisam da lista inteira.
+- As mensagens ao vivo saem sob a trava do histórico de chat. Desde a etapa 10, um
+  histórico lido numa faixa podia chegar ao navegador depois de uma mensagem enviada
+  pela outra, e o navegador então trocava sua lista por uma sem essa mensagem.
+- As projeções inteiras guardam só o texto canônico, então a anterior não é
+  serializada de novo a cada comparação.
+- Um frame enviado entre o handshake de fechamento do Daphne e o evento de desconexão
+  é descartado, em vez de derrubar a sua faixa.
+
+Aceite: um repasse de cursor lê cada cena uma vez, um anúncio de cena o interrompe na
+hora e uma mudança de acesso no processo faz ler de novo; mudanças de inscrição não
+recalculam áudio nem combate; um histórico inalterado não é enviado, e nem uma
+mensagem ao vivo nem uma confirmação chegam ao navegador antes de um histórico mais
+antigo.
+
+Medido na mesma reprodução com troca de cena, com o WAL e a faixa de entregas, contra a
+etapa 10 (uma sessão de 20 minutos cada): a CPU síncrona do servidor caiu de 326 para
+114 s e a CPU do processo de 553 para 304 s (mediana de 0,41 para 0,17 núcleo); o
+repasse de cursores passou de 212 para 26 s e as amostras de câmera do mestre de 36
+para 12 s. Os navegadores receberam 15,6 MB em vez de 26,7 MB: diretórios de compêndios
+1,7 MB em vez de 10,3 MB e histórico de chat 3,1 MB em vez de 5,9 MB. Os comandos acima
+de um segundo caíram de 197 para 95 por hora e o percentil 95 da espera de 1,9 para
+1,1 s; um movimento de token chegou aos outros jogadores em 0,49 s no percentil 95 em
+vez de 1,36 s, uma ativação do mestre foi confirmada em 1,4 s em vez de 3,9 s, e os
+ponteiros chegaram aos outros em 6 ms em vez de 32 ms na mediana. Salvar a ficha ficou
+mais lento no percentil 95 (0,9 s em vez de 0,4 s; rodadas anteriores variaram de 0,4 a
+1,6 s).
+
+Cada entrega de `room.changes` ainda leva cerca de 540 ms em média: um envelope chega a
+todos os sockets ao mesmo tempo, e cada entrega usa cerca de 74 ms de CPU, então as
+threads dos destinatários se revezam no lock do interpretador (263 ms fora do SQL para
+74 ms de CPU). O custo por projeção multiplicado pelo número de destinatários é agora a
+alavanca que resta; a faixa de entregas fica, porque os comandos não esperam mais atrás
+dela.
+
 ## Fora desta direção
 
-- Substituir o SQLite ou ativar o WAL. Isso só será avaliado depois destas etapas, com
-  testes de portabilidade, backup e concorrência; a medição acima mostra que o WAL
-  sozinho não elimina a serialização entre escritores.
+- Substituir o SQLite. O WAL deixa os leitores seguirem durante um commit, mas não
+  elimina a serialização entre escritores (veja a medição acima e a etapa 9).
 - Transmitir estado sem filtro e escondê-lo no navegador.
 - Manter sessões ou presença só na memória do processo, o que quebraria implantações
   com vários workers sobre Redis.

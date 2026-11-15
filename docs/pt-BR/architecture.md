@@ -44,13 +44,19 @@ flowchart TD
 - `gravewright/realtime/consumers.py` cuida do transporte, inscrições e estado
   temporário da conexão. Chama serviços síncronos com `database_sync_to_async`; a
   avaliação de dados usa `asyncio.to_thread` para o trabalho mais custoso.
-  Cada socket executa comandos, inscrições e entregas em ordem na sua própria
-  thread: os comandos de uma conexão continuam ordenados e uma consulta lenta não
-  trava os demais jogadores. Amostras em que só o valor mais novo importa (cursor,
+  Cada socket executa comandos e inscrições em ordem na sua própria thread: os
+  comandos de uma conexão continuam ordenados e uma consulta lenta não trava os
+  demais jogadores. As entregas do servidor rodam em ordem numa segunda faixa, com
+  thread própria, então os comandos nunca esperam atrás delas; cada projeção é lida
+  e enviada sob uma trava própria, o que mantém em ordem a atualização e a mudança
+  de inscrição de uma mesma projeção. Amostras em que só o valor mais novo importa (cursor,
   viewport e arrasto de token, enviadas pelo próprio socket ou repassadas de
-  outro) rodam numa segunda faixa com thread própria: uma amostra mais nova
-  substitui outra ainda não processada, e cada stream de arrasto mantém o seu fim
-  ou cancelamento. Pongs renovam o lease de presença numa thread do pool. Um leitor
+  outro, e as amostras de câmera do mestre que guiam a pré-carga) rodam numa
+  terceira faixa com thread própria: uma amostra mais nova substitui outra ainda
+  não processada, e cada stream de arrasto mantém o seu fim ou cancelamento.
+  Enquanto as entregas esperam, leituras repetidas de presença e lobby se juntam à
+  que já está na fila, e envelopes de commit consecutivos viram uma só entrega com
+  as projeções combinadas. Pongs renovam o lease de presença numa thread do pool. Um leitor
   admite os frames pela hora de chegada (tamanho, limite do cursor e taxa de
   comandos), então frames que esperaram atrás de um comando lento não são tomados
   por rajada; mais de 256 frames esperando fecham o socket com o código 4429. Os
@@ -150,6 +156,18 @@ chamar `access.revoke`; edições feitas direto no banco são percebidas quando 
 resultado em cache expira. Os comandos de escrita continuam autorizados pelos seus
 serviços. Veja a [etapa 6 da direção do tempo real](realtime-direction.md#etapa-6-autorização-do-transporte-em-cache).
 
+As amostras reaproveitam a resposta a "este membro pode ver esta cena" pela mesma
+regra (`SceneStreamMixin.scene_answer` em `scene_stream.py`): cursores repassados, a
+identidade do ponteiro de quem envia, as amostras de câmera do mestre e a drenagem de
+tiles reaproveitam uma resposta por no máximo `AUTHORIZATION_TTL`, enquanto a época de
+acesso não muda e até o socket receber o próximo evento do servidor que não seja
+amostra, presença ou leitura do lobby. Mudanças de cena são anunciadas após o commit,
+então uma resposta lida antes do anúncio nunca é guardada depois dele, e uma leitura
+recusada descarta todas as respostas. O viewport do próprio socket sempre lê o banco,
+então uma mudança de acesso aparece ali na hora e renova a resposta reaproveitada.
+Linhas de cena alteradas direto no banco, sem evento, chegam às amostras quando a
+resposta expira.
+
 Streamers têm acesso somente de leitura. O consumidor permite um conjunto limitado
 de mensagens de sincronização, busca, viewport e heartbeat; os pontos de escrita
 também os rejeitam. Controles no navegador são conveniências, não a autorização.
@@ -176,6 +194,7 @@ e navegar em particular não publicam a cena.
 A atividade de ponteiros é transitória. `maps.cursor` aceita posições limitadas
 à cena de jogadores e mestres; o servidor fornece a identidade e a cor de
 identificação salva. A entrega verifica novamente o acesso do destinatário à cena
+(reaproveitando uma resposta recente, veja [Identidade e autorização](#identidade-e-autorização))
 e sua assinatura atual. O tráfego de ponteiros possui limite próprio e não consome
 o orçamento de comandos. Sair ou desconectar envia um evento de remoção; posições
 de cursores não entram no banco da campanha, em recibos ou em arquivos exportados.
@@ -396,6 +415,13 @@ filtrando visibilidade e destinatários. Há comandos para sussurros, mensagens 
 mestre e ações narrativas. A moderação remove o conteúdo e mantém a identidade da
 mensagem, evitando que uma repetição a recrie. Anexos de cartas no chat capturam
 faces públicas imutáveis, em vez de apontar para um baralho que pode mudar depois.
+
+O navegador acrescenta as mensagens ao vivo (`chat.message`, `chat.ack`) ao último
+histórico que recebeu. Por isso, um socket só envia o histórico de novo quando ele
+difere do último enviado e nenhuma mensagem ao vivo saiu desde então; `chat.sync`
+sempre o recebe inteiro. As mensagens ao vivo saem sob a trava da projeção do
+histórico, então um histórico lido antes do commit de uma mensagem nunca chega ao
+navegador depois dela.
 
 Os dados usam `dice/engine.py` e a gramática Python nativa: análise, compilação e
 validação, seguidas da execução de um plano limitado. A compilação não consome

@@ -40,7 +40,7 @@ uv run --locked python manage.py makemigrations --check --dry-run
 uv run --locked python manage.py test config gravewright --noinput
 ```
 
-The runner uses the explicit file-backed `data/test-gravewright.sqlite3` database to exercise SQLite locking. `--noinput` authorizes replacing that test database if it already exists. Do not point it at valuable data or run parallel suites against the same path. Changing `GRAVEWRIGHT_DATABASE` does not change this explicit test database name. Media-writing tests generally create temporary storage; use a disposable `GRAVEWRIGHT_MEDIA_ROOT` for an extra boundary when running the full suite.
+The runner uses the explicit file-backed `data/test-gravewright.sqlite3` database to exercise SQLite locking, in the configured journal mode (WAL by default). `--noinput` authorizes replacing that test database if it already exists; the project runner (`config.testing.TestRunner`) then also removes its `-wal`/`-shm` files, and removes them whenever the database file is missing, so an interrupted run's log cannot attach to the new database. `config.test_database` checks the journal mode and that a writer commits while a reader holds a snapshot. Do not point it at valuable data or run parallel suites against the same path. Changing `GRAVEWRIGHT_DATABASE` does not change this explicit test database name. Media-writing tests generally create temporary storage; use a disposable `GRAVEWRIGHT_MEDIA_ROOT` for an extra boundary when running the full suite.
 
 Focused examples:
 
@@ -289,12 +289,17 @@ isolated fixture for before/after comparisons. The Django
 cost, actor projection stability, independent audio updates and live revocation.
 
 The realtime transport suites under `gravewright/realtime/tests/` also cover lock
-recovery (`test_database_busy`), separate socket lanes (`test_socket_lanes`), one
+recovery (`test_database_busy`), separate socket lanes, including GM camera samples,
+commands that do not wait behind deliveries, the per-projection lock between a
+subscription change and an in-flight refresh, and folded queued invalidations
+(`test_socket_lanes`), one
 envelope per commit (`test_dispatch_envelope`) and its dependency table
 (`test_dispatch_dependencies`, which compares every user's projections before and
 after real commands; set `GRAVEWRIGHT_PRINT_DEPENDENCIES=1` to print what changed),
 changed-only delivery and envelope revisions (`test_projection_diff`), cached
-authorization (`test_authorization_cache`), presence leases
+authorization (`test_authorization_cache`), reused scene answers for samples,
+unchanged chat history, chat ordering across lanes and subscription changes that do
+not recompute dependent projections (`test_sample_work`), presence leases
 (`test_presence_leases`), payload-free slow-handler logging (`test_instrumentation`
 and `test_metrics`) and per-recipient notification budgets (`test_refresh_budget`).
 Set `GRAVEWRIGHT_REALTIME_BENCHMARK_OUTPUT` to an explicit installation-local JSON
@@ -304,7 +309,11 @@ deliveries; timings are observations. Transaction boundaries are covered by
 `gravewright.tokens.test_transaction_boundaries`, and chat history query counts by
 `gravewright.chat.tests.test_history_queries`. `tests/table/realtime.test.mjs` runs
 `realtime.js` with a virtual clock to check `busy` retries, command deadlines and
-delta merging.
+delta merging. `tests/table/mindmap-workspace.test.mjs` checks that pointer, drag,
+camera and liveness frames do not reload mind maps, and
+`tests/modules/http-client.test.mjs` covers CSRF token reuse and its single renewal
+after a refusal. `gravewright.modules.tests` checks that module calls write their
+mount lease only during its second half.
 
 On Linux, Playwright may need system browser libraries; `uv run --locked playwright install --with-deps chromium` also installs those and can require administrator privileges. Scenarios launch their own servers on temporary ports and seed synthetic data. Most use development settings and write diagnostics under `test-results/`; the HTTPS and runner scenarios use dedicated settings described below. Run scenarios sequentially: several share `test-results/migration-closure/`.
 

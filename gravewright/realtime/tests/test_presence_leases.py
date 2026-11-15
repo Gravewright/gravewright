@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import threading
+import time
 from unittest.mock import patch
 import uuid
 
@@ -68,6 +69,32 @@ class PresenceLeaseTests(TransactionTestCase):
                 await socket.send_json_to({'type': 'session.pong'})
                 await asyncio.sleep(.3)
             self.assertEqual(len(calls), 1)
+        finally:
+            await self.finish()
+
+    async def test_a_slow_renewal_does_not_postpone_the_next_one(self):
+        """The next renewal is due half a TTL after the previous one began.
+
+        Counting from its end let a renewal that waited for SQLite push the next one past
+        the lease expiry, so other sockets' cleanup removed a live player.
+        """
+        calls = []
+        real = services.renew
+
+        def slow(*args, **kwargs):
+            calls.append(args)
+            if len(calls) == 1:
+                time.sleep(.8)
+            return real(*args, **kwargs)
+        try:
+            socket = await self.joined(self.player)
+            with patch.object(services, 'renew', side_effect=slow):
+                await asyncio.sleep(1.1)  # past half of the 2-second test lease
+                await socket.send_json_to({'type': 'session.pong'})
+                await asyncio.sleep(1.2)  # the first renewal began 1.2 s ago and took 0.8 s
+                await socket.send_json_to({'type': 'session.pong'})
+                await asyncio.sleep(.3)
+            self.assertEqual(len(calls), 2)
         finally:
             await self.finish()
 

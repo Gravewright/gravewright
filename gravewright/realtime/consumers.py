@@ -2,8 +2,9 @@
 
 Synchronous domain work runs through database_sync_to_async on a thread owned by
 each connection, so one slow player cannot stall the table or another socket's
-cleanup. Samples (cursor, viewport, drag) use a second per-connection thread and pongs
-renew presence on a pool thread, so neither waits behind commands. Commits arrive as
+cleanup. Server deliveries use a second per-connection thread, so commands never
+wait behind them; samples (cursor, viewport, drag, and the GM camera samples that
+guide prefetch) use a third, and pongs renew presence on a pool thread. Commits arrive as
 one refresh envelope; each socket sends only projections that changed for it. Each
 connection keeps subscription and preview state, while durable mutations remain in
 domain services."""
@@ -36,6 +37,11 @@ from gravewright.tokens import services as tokens
 from . import access, dispatch, metrics, projections, services
 from .errors import database_busy
 from .scene_stream import SceneStreamMixin
+
+try:  # Daphne's WebSocket transport
+    from autobahn.exception import Disconnected as TransportClosed
+except ImportError:  # other servers report a closed socket through websocket.disconnect only
+    TransportClosed = ()
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +80,17 @@ BUSY_MESSAGE = 'The table is busy. Retrying.'
 # thread, so they never wait behind commands. A newer sample replaces an unprocessed
 # one with the same key; drag streams have one key each, so an end or cancel is never
 # replaced by another stream's update. Slots run in order of their latest arrival.
+# Peer samples include the GM camera samples (room.gm_sample): the GM's board renews
+# its viewport every second, so on the command lane they queued ahead of commands.
 EPHEMERAL_TYPES = frozenset({'maps.cursor', 'scene.viewport', 'scene.viewport.stop', 'token.drag'})
-PEER_EPHEMERAL_EVENTS = frozenset({'room.map_cursor', 'room.token_drag'})
+PEER_EPHEMERAL_EVENTS = frozenset({'room.map_cursor', 'room.token_drag', 'room.gm_sample'})
 EPHEMERAL_SLOTS = 8
 PEER_SLOTS = 512
 # Ordered frames waiting for the command lane; a client beyond this is closed (4429).
 INBOX_LIMIT = 256
+# Payload-free "read this again" events: one queued copy already reads the newest state
+# when it runs, so further copies are dropped until it is dequeued.
+COALESCED_EVENTS = frozenset({'room.presence', 'room.lobby'})
 
 # A socket may reuse its last successful authorization for this many seconds (approved
 # by the project owner on 2026-11-09), never beyond the session or streamer-link expiry
@@ -101,6 +112,9 @@ def abandoned(task):
 class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
     """A socket is bound to one authenticated campaign for its entire lifetime."""
 
+    # Samples reuse a scene answer under the same rule as an authorization.
+    scene_answer_ttl = AUTHORIZATION_TTL
+
     async def __call__(self, scope, receive, send):
         """Give the socket its own synchronous thread, as Django does per HTTP request.
 
@@ -108,11 +122,16 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         so its own commands stay ordered while other sockets keep running.
 
         This replaces Channels' dispatch loop, which reads the next client or
-        channel-layer message only after the current handler returns. Two readers
-        feed one ordered queue instead: the client reader admits frames by their
-        arrival time and notices a disconnect immediately, and both readers move
-        samples and pongs to their own lanes (see EPHEMERAL_TYPES and
-        presence_lane) without waiting for the handler in progress.
+        channel-layer message only after the current handler returns. The client
+        reader admits frames by their arrival time into this ordered command queue
+        and notices a disconnect immediately. The channel reader queues server
+        events for the delivery lane, which has a thread of its own, so commands
+        never wait behind deliveries (see delivery_lane). Both readers move samples
+        and pongs to their own lanes (see EPHEMERAL_TYPES and presence_lane). While
+        deliveries wait, the channel reader folds repeated invalidations into the
+        copy that is already queued (see COALESCED_EVENTS and merge_changes). Every
+        other server event drops the scene answers that samples reuse as soon as it
+        arrives (see SceneStreamMixin.scene_answer).
         """
         self.scope = scope
         self.channel_layer = get_channel_layer(self.channel_layer_alias)
@@ -123,9 +142,18 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         self.socket_closed = asyncio.Event()
         self.inbox = inbox = asyncio.Queue()
         self.queued_frames = 0
+        # Server events wait here until connect finishes and the delivery lane starts.
+        self.deliveries = asyncio.Queue()
         self.slots = {}
         self.slots_ready = asyncio.Event()
         self.presence_due = asyncio.Event()
+        # The most recently queued delivery while it is still waiting, and the
+        # coalesced event types with a copy waiting.
+        self.last_queued = None
+        self.pending_reads = set()
+        # Commands and deliveries both read and refresh projections: each projection is
+        # computed and sent under its own lock (see projection).
+        self.projection_locks = {}
 
         async def read_client():
             while True:
@@ -152,10 +180,21 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         async def read_channel():
             while True:
                 event = await self.channel_receive()
-                if event.get("type") in PEER_EPHEMERAL_EVENTS:
+                kind = event.get("type")
+                if kind not in PEER_EPHEMERAL_EVENTS and kind not in COALESCED_EVENTS:
+                    # Any other event may announce a scene or access change: samples
+                    # read their scene again (see SceneStreamMixin.scene_answer).
+                    self.forget_scenes()
+                if kind in PEER_EPHEMERAL_EVENTS:
                     self.queue_peer_sample(event)
+                elif kind in COALESCED_EVENTS and kind in self.pending_reads:
+                    continue
+                elif kind == "room.changes" and self.merge_changes(event):
+                    continue
                 else:
-                    await inbox.put(event)
+                    if kind in COALESCED_EVENTS:
+                        self.pending_reads.add(kind)
+                    await self.enqueue_delivery(event)
 
         async def guarded(reader):
             # A failing reader (for example a lost Redis connection) still ends the
@@ -305,10 +344,76 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         self.slots_ready.set()
         return True
 
+    async def enqueue_delivery(self, event):
+        self.last_queued = event
+        await self.deliveries.put(event)
+
+    def projection(self, name):
+        """The lock under which this socket computes and sends one projection.
+
+        Commands (subscriptions) and the delivery lane both refresh projections. Holding
+        the lock from the read to the send keeps sends of one projection in the order
+        of their reads, so a slower, older read never follows a newer one or becomes
+        the base of a delta; a subscription change made under it cannot interleave
+        with a refresh of the previous subscription. Different projections still
+        proceed in parallel.
+        """
+        if not hasattr(self, "projection_locks"):
+            self.projection_locks = {}
+        lock = self.projection_locks.get(name)
+        if lock is None:
+            lock = self.projection_locks[name] = asyncio.Lock()
+        return lock
+
+    async def delivery_lane(self):
+        """Handle server events in order on a synchronous thread of their own.
+
+        The task starts in an empty context, so this ThreadSensitiveContext gets a
+        thread of its own: deliveries no longer hold up the commands behind them.
+        """
+        try:
+            async with ThreadSensitiveContext():
+                while not self.socket_closed.is_set():
+                    event = await self.deliveries.get()
+                    # Nothing awaits between taking an event and these updates, so the
+                    # reader never folds an event into one that is already running.
+                    if event is self.last_queued:
+                        self.last_queued = None
+                    self.pending_reads.discard(event.get("type"))
+                    await self.dispatch(event)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Delivery lane failed for campaign %s", self.campaign_id)
+            await self.close(code=1011)
+
+    def merge_changes(self, event):
+        """Fold a commit envelope into the queued one right before it; True when folded.
+
+        Only consecutive revisions with no other server event queued between them are
+        folded, so a lost envelope still shows as a gap. The merged envelope
+        refreshes the union of projections in delivery order and records its first
+        revision for gap detection (see room_changes). Envelopes carrying teleports
+        stay separate: their markers belong to one movement.
+        """
+        queued = self.last_queued
+        if (queued is None or queued.get("type") != "room.changes"
+                or queued.get("teleports") or event.get("teleports")
+                or type(queued.get("revision")) is not int or type(event.get("revision")) is not int
+                or event["revision"] != queued["revision"] + 1):
+            return False
+        names = [*queued.get("refresh", ()), *event.get("refresh", ())]
+        order = {name: index for index, name in enumerate(dispatch.PROJECTIONS)}
+        queued["refresh"] = sorted(dict.fromkeys(names), key=lambda name: order.get(name, len(order)))
+        queued.setdefault("first_revision", queued["revision"])
+        queued["revision"] = event["revision"]
+        return True
+
     def queue_peer_sample(self, event):
         payload = event.get("payload") or {}
         stream = payload.get("stream") if event["type"] == "room.token_drag" else None
-        key = ("peer", event["type"], event.get("sender"), stream)
+        # GM camera samples name their GM instead of a sending channel: one slot per GM.
+        key = ("peer", event["type"], event.get("sender") or event.get("user_id"), stream)
         self.slots.pop(key, None)
         peers = [slot for slot in self.slots if slot[0] == "peer"]
         if len(peers) >= PEER_SLOTS:
@@ -368,6 +473,9 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                 cached = self.authorization_cached()
                 if cached and monotonic() < getattr(self, "lease_renew_after", 0):
                     continue  # Fresh lease and authorization: a pong costs no query.
+                # A lease expires TTL after its renewal began, so the next renewal is due
+                # half a TTL after that moment, however long this one waits for SQLite.
+                started = monotonic()
                 with metrics.handler("presence"):
                     epoch = access.epoch()
                     try:
@@ -383,7 +491,7 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                     return
                 if not cached:
                     self.remember_authorization(member, valid_until, epoch)
-                self.lease_renew_after = monotonic() + settings.GRAVEWRIGHT_PRESENCE_TTL / 2
+                self.lease_renew_after = started + settings.GRAVEWRIGHT_PRESENCE_TTL / 2
                 if expired:
                     await self.publish_presence()
         except asyncio.CancelledError:
@@ -400,6 +508,9 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             loop.create_task(self.ephemeral_lane(), name="gravewright-ephemeral",
                              context=contextvars.Context()),
             loop.create_task(self.presence_lane(), name="gravewright-presence"),
+            # Started after connect: events that arrived meanwhile wait in order.
+            loop.create_task(self.delivery_lane(), name="gravewright-delivery",
+                             context=contextvars.Context()),
         ]
 
     async def websocket_receive(self, message):
@@ -450,15 +561,17 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         # Access changes reach every socket of this user, in any process.
         await self.channel_layer.group_add(access.user_group(self.user_id), self.channel_name)
         self.joined_group = True
+        arriving = monotonic()
         self.connection_id = await db(services.arrive)(self.member)
-        # Leases are renewed during the second half of their lifetime only.
-        self.lease_renew_after = monotonic() + settings.GRAVEWRIGHT_PRESENCE_TTL / 2
+        # Leases are renewed during the second half of their lifetime only, counted from
+        # when the lease was requested rather than from when SQLite granted it.
+        self.lease_renew_after = arriving + settings.GRAVEWRIGHT_PRESENCE_TTL / 2
         await self.accept()
         await self.emit(
             "table.joined", {"tableId": str(self.campaign_id), "role": self.member.role}
         )
-        await self.emit(
-            "chat.history",
+        await self.emit_projection(
+            "chat.history", None,
             {
                 "tableId": str(self.campaign_id),
                 "messages": await db(chat.history)(self.campaign_id, self.user_id),
@@ -471,7 +584,12 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
     async def emit(self, kind, payload):
         text = json.dumps({"type": kind, "payload": payload})
         metrics.frame(text)
-        await self.send(text_data=text)
+        try:
+            await self.send(text_data=text)
+        except TransportClosed:
+            # Daphne refuses sends between the closing handshake and the disconnect
+            # event that follows it. The socket is gone: drop the frame, not the lane.
+            pass
 
     async def emit_projection(self, kind, key, payload):
         """Send only what this socket does not have yet.
@@ -483,13 +601,16 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         if not hasattr(self, "sent_projections"):
             self.sent_projections = {}
         previous = self.sent_projections.get((kind, key))
-        self.sent_projections[(kind, key)] = payload
-        if previous is None:
-            return await self.emit(kind, payload)
         if kind in projections.DELTA_KEYS:
-            frame = projections.delta(kind, previous, payload)
+            # Deltas compare field by field, so they keep the projection itself.
+            self.sent_projections[(kind, key)] = payload
+            frame = payload if previous is None else projections.delta(kind, previous, payload)
         else:
-            frame = None if projections.canonical(previous) == projections.canonical(payload) else payload
+            # Whole projections keep only their canonical text: the previous one is
+            # never serialized again.
+            text = projections.canonical(payload)
+            self.sent_projections[(kind, key)] = text
+            frame = None if text == previous else payload
         if frame is not None:
             await self.emit(kind, frame)
 
@@ -616,12 +737,15 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             try:
                 domain.module(area)
                 if kind=='resources.sync':
-                    # Only this module asked for complete state; the others keep theirs.
-                    # All of its scenes are dropped, so scenes the socket left are freed.
-                    self.forget_projections('resources.state', match=lambda key: key[0] == area)
-                    if not hasattr(self,'table_modules'):self.table_modules={}
-                    self.table_modules[area]=payload.get('sceneId')
-                    if area=='audio':self.audio_preview_token=payload.get('previewTokenId')
+                    # A subscription changes under the projection's lock, so a delivery
+                    # of the previous subscription never interleaves with it.
+                    async with self.projection('resources:'+area):
+                        # Only this module asked for complete state; the others keep theirs.
+                        # All of its scenes are dropped, so scenes the socket left are freed.
+                        self.forget_projections('resources.state', match=lambda key: key[0] == area)
+                        if not hasattr(self,'table_modules'):self.table_modules={}
+                        self.table_modules[area]=payload.get('sceneId')
+                        if area=='audio':self.audio_preview_token=payload.get('previewTokenId')
                     await self.room_resources({'module':area})
                 else:
                     result=await db(domain.command)(self.campaign_id,self.user_id,area,payload.get('action'),payload.get('data'),request_id)
@@ -638,7 +762,7 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                     await db(table_services.update_lobby)(self.campaign_id, self.user_id, payload)
                 else:
                     self.lobby_subscribed = True
-                    await self.room_lobby({})
+                    await self.room_lobby({})  # Takes the lobby projection lock.
             except (journals.JournalError, maps.MapError) as error:
                 await self.emit('table.tool_error', {'requestId': payload.get('requestId'), 'tool': kind, 'code': error.code, 'message': str(error)})
         elif kind == "chat.say":
@@ -658,17 +782,24 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                     },
                 )
                 return
-            await self.emit("chat.ack", {"requestId": request_id, "message": entry})
+            async with self.projection("maps"):  # Ordered with chat history (live_message).
+                await self.live_message("chat.ack", {"requestId": request_id, "message": entry})
         elif kind == "actors.sync":
-            self.forget_projections("actors.state")
-            self.actors_subscribed = True
+            async with self.projection("actors"):
+                self.forget_projections("actors.state")
+                self.actors_subscribed = True
             await self.room_actors({})
         elif kind == "tokens.sync":
-            self.forget_projections("tokens.state")
-            await self.end_drag("cancel")
-            self.token_map_id = payload.get("mapId")
-            self.seen_drag = {}
-            await self.room_tokens({})
+            async with self.projection("tokens"):
+                self.forget_projections("tokens.state")
+                await self.end_drag("cancel")
+                self.token_map_id = payload.get("mapId")
+                self.seen_drag = {}
+            # Audio and combat do not depend on the token subscription: recomputing
+            # them here only repeated work (their own resources.sync delivers them).
+            await self.room_tokens({"refresh_audio": False, "refresh_combat": False})
+            await self.api_changed("audio")
+            await self.api_changed("combat")
         elif kind in ("actors.command", "tokens.command"):
             await self.resource_command(kind.split(".")[0], payload)
         elif kind == "token.drag":
@@ -691,20 +822,24 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         elif kind == 'maps.cursor':
             await self.map_cursor(payload)
         elif kind == "maps.layers":
-            self.forget_projections("maps.layers")
-            if payload.get('mapId') != getattr(self, 'map_layer_id', None):
-                await self.hide_cursor()
-            self.map_layer_id = payload.get("mapId")
-            await self.room_map_layers({})
+            async with self.projection("maps.layers"):
+                self.forget_projections("maps.layers")
+                if payload.get('mapId') != getattr(self, 'map_layer_id', None):
+                    await self.hide_cursor()
+                self.map_layer_id = payload.get("mapId")
+            await self.room_map_layers({"refresh_audio": False})
+            await self.api_changed("audio")
         elif kind == "maps.sync":
-            self.forget_projections("maps.state")
-            self.maps_subscribed = True
+            async with self.projection("maps"):
+                self.forget_projections("maps.state")
+                self.maps_subscribed = True
             await self.room_maps({})
         elif kind == "maps.command":
             await self.map_command(payload)
         elif kind == "journals.sync":
-            self.forget_projections("journals.state")
-            self.journals_subscribed = True
+            async with self.projection("journals"):
+                self.forget_projections("journals.state")
+                self.journals_subscribed = True
             await self.room_journals({})
         elif kind == "journals.command":
             await self.journal_command(payload)
@@ -720,22 +855,43 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             except AuthError as error:
                 await self.emit('error', {'code': error.code})
         elif kind == "chat.sync":
-            self.chat_map_id = payload.get("mapId")
-            await self.chat_history()
+            # Chat history follows the scene list (see deliver_maps) and shares its lock.
+            async with self.projection("maps"):
+                # The client asked for complete history, as other subscriptions do.
+                self.forget_projections("chat.history")
+                self.chat_map_id = payload.get("mapId")
+                await self.chat_history()
         else:
             await self.emit("error", {"code": "unknown_command"})
 
     async def chat_history(self):
+        """Send the visible history unless this socket already shows exactly it.
+
+        The browser adds live messages to the last history it received (chat.message,
+        chat.ack), so the remembered history stands for the browser's list only until
+        this socket sends one of those (see live_message).
+        """
         try:
-            await self.emit(
-                "chat.history",
+            await self.emit_projection(
+                "chat.history", None,
                 {
                     "tableId": str(self.campaign_id),
                     "messages": await db(chat.history)(self.campaign_id, self.user_id, getattr(self, "chat_map_id", None)),
                 },
             )
         except AuthError as error:
+            self.forget_projections("chat.history")
             await self.emit("chat.history", {"tableId": str(self.campaign_id), "messages": []})
+
+    async def live_message(self, kind, payload):
+        """Send chat.message or chat.ack; the next history is then sent whole.
+
+        Callers hold the chat history's lock ("maps"): a history read before this
+        message committed must not reach the browser after it, or the browser would
+        replace its list without the message.
+        """
+        self.forget_projections("chat.history")
+        await self.emit(kind, payload)
 
     async def resource_command(self, area, payload):
         request_id = payload.get("requestId")
@@ -793,10 +949,12 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         """
         refresh = [name for name in event.get("refresh", ()) if isinstance(name, str)]
         revision, last = event.get("revision"), getattr(self, "revision", None)
+        # A folded envelope covers first_revision..revision (see merge_changes).
+        first = event.get("first_revision", revision)
         if type(revision) is int and last is not None:
             if revision <= last:
                 return  # Late or repeated: a newer envelope already delivered current state.
-            if revision > last + 1:
+            if type(first) is not int or first > last + 1:
                 # The channel layer dropped an envelope: refresh every projection.
                 # Unchanged projections send nothing (see emit_projection).
                 refresh = list(dispatch.PROJECTIONS)
@@ -815,22 +973,30 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                     if not await self.authorized():
                         return
                     checked = True
-                await self.deliver_resource(name.split(":", 1)[1])
+                async with self.projection(name):
+                    await self.deliver_resource(name.split(":", 1)[1])
             elif name == "maps.layers":
-                await self.deliver_map_layers()
+                async with self.projection(name):
+                    await self.deliver_map_layers()
             elif name == "tokens":
-                await self.deliver_tokens(event)
+                async with self.projection(name):
+                    await self.deliver_tokens(event)
             elif name == "actors":
-                await self.deliver_actors()
+                async with self.projection(name):
+                    await self.deliver_actors()
             elif name == "journals":
-                await self.deliver_journals()
+                async with self.projection(name):
+                    await self.deliver_journals()
             elif name == "maps":
-                await self.deliver_maps(chat="chat.history" in refresh)
+                async with self.projection("maps"):
+                    await self.deliver_maps(chat="chat.history" in refresh)
             elif name == "chat.history" and "maps" not in refresh:
-                await self.chat_history()
+                async with self.projection("maps"):
+                    await self.chat_history()
 
     async def room_actors(self, event):
-        await self.deliver_actors(self.api_changed, recheck=True)
+        async with self.projection("actors"):
+            await self.deliver_actors(self.api_changed, recheck=True)
 
     async def deliver_actors(self, notify=None, recheck=False):
         await (notify or self.notify_api)('actors')
@@ -848,7 +1014,8 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         # Dependent refreshes still perform their own live authorization check.
         if not await self.authorized():
             return
-        await self.deliver_tokens(event, self.api_changed)
+        async with self.projection("tokens"):
+            await self.deliver_tokens(event, self.api_changed)
         if event.get('refresh_audio', True):
             await self.room_resources({'module':'audio'})
         if event.get('refresh_combat', True):
@@ -979,9 +1146,12 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             return
         if payload.get('mapId') != getattr(self, 'map_layer_id', None):
             return
+        from gravewright.maps import cursors
+        map_id = payload.get('mapId')
         try:
-            from gravewright.maps.cursors import project
-            packet = await db(project)(self.member, payload)
+            identity = await self.scene_answer(
+                ('cursor', map_id), functools.partial(cursors.identity, self.member, map_id))
+            packet = cursors.place(identity, payload.get('position'))
         except maps.MapError, journals.JournalError:
             await self.hide_cursor()
             return
@@ -1000,7 +1170,7 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         if not await self.authorized():
             return
         try:
-            await db(maps.scene)(packet['mapId'], self.member)
+            await self.visible_scene(self.user_id, packet['mapId'])
         except maps.MapError, journals.JournalError:
             return
         await self.emit('maps.cursor', packet)
@@ -1050,7 +1220,8 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         # Deliver committed scene changes before dependent resource refreshes.
         if not await self.authorized():
             return
-        await self.deliver_map_layers(self.api_changed)
+        async with self.projection("maps.layers"):
+            await self.deliver_map_layers(self.api_changed)
         if event.get('refresh_audio', True):
             await self.room_resources({'module':'audio'})
 
@@ -1073,7 +1244,8 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
 
     async def room_maps(self, event):
         if await self.authorized():
-            await self.deliver_maps(chat=True, notify=self.api_changed, recheck=True)
+            async with self.projection("maps"):
+                await self.deliver_maps(chat=True, notify=self.api_changed, recheck=True)
 
     async def deliver_maps(self, chat, notify=None, recheck=False):
         # Scene access may have changed: drop a pointer or tile stream that the
@@ -1138,7 +1310,8 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         await self.emit('handout.presented', {'ticket': issued, 'requestId': event['request_id'], 'resource_type': 'journal'})
 
     async def room_journals(self, event):
-        await self.deliver_journals(self.api_changed, recheck=True)
+        async with self.projection("journals"):
+            await self.deliver_journals(self.api_changed, recheck=True)
 
     async def deliver_journals(self, notify=None, recheck=False):
         await (notify or self.notify_api)('journals')
@@ -1216,7 +1389,8 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         await self.channel_layer.group_send(self.group, {"type": "room.lobby"})
 
     async def room_resources(self,event):
-        await self.deliver_resource(event.get('module'), self.api_changed, recheck=True)
+        async with self.projection('resources:%s' % event.get('module')):
+            await self.deliver_resource(event.get('module'), self.api_changed, recheck=True)
 
     async def deliver_resource(self, area, notify=None, recheck=False):
         from gravewright.table import domain
@@ -1233,7 +1407,8 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
     async def room_lobby(self, event):
         if getattr(self, 'lobby_subscribed', False) and settings.LOBBY_READY_CHECK_ENABLED and await self.authorized():
             from gravewright.table.services import lobby
-            await self.emit('lobby.state', await db(lobby)(self.campaign_id, self.user_id))
+            async with self.projection('lobby'):
+                await self.emit('lobby.state', await db(lobby)(self.campaign_id, self.user_id))
 
     async def room_automation(self, event):
         # Blueprint runs are GM diagnostics; other roles never learn that one ran.
@@ -1268,15 +1443,18 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             if entry.get('deleted') or not await db(Message.objects.filter(pk=entry['id'], campaign_id=self.campaign_id, deleted=False).exists)():
                 return
             if not await db(readable)(self.campaign_id, self.user_id, entry.get('sceneId')): return
-            selected = getattr(self, 'chat_map_id', None)
-            if selected and entry.get('sceneId') and selected != entry['sceneId']: return
             audience = event.get("audience", entry.get('audience'))
-            if audience is None or str(self.user_id) in audience:
-                await self.emit("chat.message", event["message"])
+            if audience is not None and str(self.user_id) not in audience:
+                return
+            async with self.projection("maps"):  # chat.sync changes the scope under it
+                selected = getattr(self, 'chat_map_id', None)
+                if selected and entry.get('sceneId') and selected != entry['sceneId']: return
+                await self.live_message("chat.message", event["message"])
 
     async def room_chat_refresh(self, event):
         if await self.authorized():
-            await self.chat_history()
+            async with self.projection("maps"):
+                await self.chat_history()
 
     async def heartbeat(self):
         """Ping on a fixed cadence; database upkeep never delays the ping.

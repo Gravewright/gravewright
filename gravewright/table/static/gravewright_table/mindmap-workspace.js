@@ -4,6 +4,11 @@ import { afterContentReady } from './content-state.js';
 import { mountModal } from './modal.js';
 import { mountMindmaps } from './mindmaps.js';
 
+// Frames that carry no table state: liveness, pointer, drag and camera samples and their
+// prefetch hints. Peers send them several times per second, so reloading on each one
+// turned every cursor movement into a mind map read.
+const TRANSIENT_FRAMES = new Set(['table.presence', 'table.ping', 'session.ping', 'maps.cursor', 'maps.ping',
+  'token.drag', 'scene.viewport.ready', 'scene.viewport.error', 'scene.gm_prefetch.hint']);
 const workspace = document.querySelector('#table-workspace'), toggle = workspace?.querySelector('[data-mindmaps-open]');
 if (toggle && workspace.dataset.management !== 'true') {
   const scope = new AbortController(), { signal } = scope, translator = createTranslator(), t = key => translator.t(key);
@@ -51,7 +56,7 @@ if (toggle && workspace.dataset.management !== 'true') {
   for (const event of ['gravewright:journals', 'gravewright:actors.state', 'gravewright:ownership-changed']) window.addEventListener(event, schedule, { signal });
   for (const event of ['gravewright:maps', 'gravewright:map-layers', 'gravewright:tokens', 'gravewright:module-scene']) window.addEventListener(event, schedule, { signal });
   window.addEventListener('gravewright:api-event', ({ detail }) => {
-    if (!['table.presence', 'table.ping'].includes(detail?.type)) schedule();
+    if (!TRANSIENT_FRAMES.has(detail?.type)) schedule();
   }, { signal });
   window.addEventListener('gravewright:connected', () => { window.gravewrightRealtime?.subscribeModule('mindmaps', null); void refresh(); }, { signal });
   const offLocale = translator.onChange(() => { toggle.setAttribute('aria-label', t('Mind maps')); toggle.title = t('Mind maps'); });

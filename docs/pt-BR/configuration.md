@@ -52,6 +52,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `TRUSTED_PROXIES` | vazio | IPs/CIDRs de proxies, separados por vírgula, confiáveis para IP encaminhado e esquemas ASGI HTTP/WebSocket; vazio ignora cabeçalhos de encaminhamento |
 | `DATABASE_POOL_TIMEOUT` | `30` | Espera por lock SQLite em segundos; não é tamanho de pool |
 | `DATABASE_ECHO` | `false` | Configura log debug de django.db.backends; captura efetiva também depende do cursor debug do Django |
+| `DATABASE_JOURNAL_MODE` | `wal` | Journal do SQLite: `wal` deixa leitores seguirem enquanto um escritor confirma e mantém arquivos `-wal`/`-shm` ao lado do banco; `delete` (journal de rollback) é para banco numa pasta de rede |
 | `WS_MAX_MESSAGE_MB` | `0.0625` | Limite da aplicação por mensagem WebSocket em MB (1 MB = 1024 * 1024 bytes) |
 | `WS_COMMANDS_PER_SECOND` | `20` | Taxa de comandos WebSocket por conexão |
 | `WS_BURST_COMMANDS` | `40` | Capacidade de rajada de comandos WebSocket |

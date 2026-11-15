@@ -10,6 +10,9 @@ import { createTranslator } from '/static/gravewright_modules/i18n.js';
 const root=document.querySelector('#table-workspace'),table=root?.dataset.tableId,gm=root?.dataset.role==='gm',states={items:initialContent('items')},windows=new Map();let scene=window.gravewrightMaps?.current?.id||null;
 const typeTranslator=createTranslator(root?.dataset.systemId||'gravewright');
 const modules=['items','combat','compendiums'],pending={};
+// Items and compendiums are the same on every scene: subscribe them without one, so a
+// scene change resubscribes (and receives again) only the scene's combat.
+const subscribedScene=name=>name==='combat'?scene:null;
 const itemFolderKey=`gravewright.directory.${table}.items`;
 let closedItemFolders=new Set(),itemMenu,itemMenuReturn,itemDirectoryProjection;
 try{closedItemFolders=new Set(JSON.parse(localStorage.getItem(itemFolderKey)||'[]'));}catch{}
@@ -193,11 +196,11 @@ typeTranslator.onChange(()=>{
   select.replaceChildren(...alphabeticalEntries(select.options,option=>option.textContent));select.value=value;
  }
 });
-document.addEventListener('click',e=>{const toggle=e.target.closest('[data-native-directory-toggle]');if(toggle){const name=toggle.dataset.nativeDirectoryToggle==='content'?'compendiums':toggle.dataset.nativeDirectoryToggle;const target=panel(name);if(target.hasAttribute('data-window-minimized')){restoreWindow(target);target.hidden=false;}else target.hidden=!target.hidden;window.gravewrightRealtime.subscribeModule(name,scene);void refresh(name).catch(e=>notify(name,e));}});
+document.addEventListener('click',e=>{const toggle=e.target.closest('[data-native-directory-toggle]');if(toggle){const name=toggle.dataset.nativeDirectoryToggle==='content'?'compendiums':toggle.dataset.nativeDirectoryToggle;const target=panel(name);if(target.hasAttribute('data-window-minimized')){restoreWindow(target);target.hidden=false;}else target.hidden=!target.hidden;window.gravewrightRealtime.subscribeModule(name,subscribedScene(name));void refresh(name).catch(e=>notify(name,e));}});
 window.addEventListener('gravewright:resources',({detail})=>{if(modules.includes(detail.module)&&(detail.module!=='combat'||(detail.sceneId??null)===(scene??null))){states[detail.module]=detail.state;render(detail.module);}});
 restoreContent('items', () => render('items'));
-window.addEventListener('gravewright:connected',()=>{for(const name of modules)window.gravewrightRealtime.subscribeModule(name,scene);});
-window.addEventListener('gravewright:module-scene',()=>{const next=window.gravewrightMaps?.current?.id||null;if(next===scene)return;scene=next;states.combat={active:false,round:0,turn:0,combatants:[],version:0};render('combat');for(const name of modules)window.gravewrightRealtime?.subscribeModule(name,scene);});
+window.addEventListener('gravewright:connected',()=>{for(const name of modules)window.gravewrightRealtime.subscribeModule(name,subscribedScene(name));});
+window.addEventListener('gravewright:module-scene',()=>{const next=window.gravewrightMaps?.current?.id||null;if(next===scene)return;scene=next;states.combat={active:false,round:0,turn:0,combatants:[],version:0};render('combat');window.gravewrightRealtime?.subscribeModule('combat',scene);});
 window.addEventListener('gravewright:search-open',({detail})=>{if(detail.type==='item')void refresh('items').then(()=>{const item=states.items.items.find(i=>i.id===detail.id);if(item)itemSheet(item);});if(detail.type==='compendium'){panel('compendiums').hidden=false;void refresh('compendiums');}});
 const combat=panel('combat');
 function combatantIdentity(id){const entry=states.combat?.combatants.find(row=>row.id===id);return entry?.token_id?{tokenId:entry.token_id}:{actorId:entry?.actor_id};}

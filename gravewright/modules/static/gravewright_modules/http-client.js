@@ -33,9 +33,8 @@ class HttpClient {
    */
   async upload(path, form, onProgress, options = {}) {
     const signal = options.signal ?? this.scopeSignal?.();
-    const csrf = await this.#csrf(signal);
-    return this.#send({ method: "POST", path: backendPath(path), headers: csrf, body: form, onProgress, signal,
-      ...(options.timeoutMs === undefined ? {} : timing(options)) });
+    return this.#withToken(signal, (csrf) => this.#send({ method: "POST", path: backendPath(path), headers: csrf, body: form, onProgress, signal,
+      ...(options.timeoutMs === undefined ? {} : timing(options)) }));
   }
   /** Download authenticated bytes without routing them through JSON decoding. */
   async download(path, options = {}) {
@@ -56,22 +55,40 @@ class HttpClient {
     options.onProgress?.({ loaded: blob.size, total: blob.size });
     return { blob, name, contentType: blob.type, size: blob.size };
   }
-  /** Every state change carries a fresh CSRF token; the server refuses the ones that do not. */
+  /** Every state change carries the CSRF token; the server refuses the ones that do not. */
   async #guarded(method, path, body, options = {}) {
     const signal = options.signal ?? this.scopeSignal?.();
-    const csrf = await this.#csrf(signal);
-    return this.#send({
+    return this.#withToken(signal, (csrf) => this.#send({
       method,
       signal,
       path: backendPath(path),
       headers: body === void 0 ? csrf : { ...csrf, "content-type": "application/json" },
       body: body === void 0 ? void 0 : JSON.stringify(body),
       ...timing(options)
-    });
+    }));
+  }
+  /**
+   * One token serves every state change of this client: it stays valid until the session
+   * rotates its CSRF secret (sign-in or sign-out). A refused token is read again once; the
+   * refusal happens before the view runs, so repeating the request cannot repeat its effect.
+   */
+  #token;
+  async #withToken(signal, send) {
+    try {
+      return await send(await this.#csrf(signal));
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 403 || error.code !== "invalid_csrf_token") throw error;
+      this.#token = void 0;
+      return send(await this.#csrf(signal));
+    }
   }
   async #csrf(signal) {
-    const { token, header } = await this.#send({ method: "GET", path: configuredPath("gravewright-csrf-url", "/__gravewright/csrf"), timeoutMs: TIMEOUT_MS, signal });
-    return { [header]: token };
+    if (!this.#token) {
+      // Only a completed read is kept, so one caller's cancellation never reaches another.
+      const { token, header } = await this.#send({ method: "GET", path: configuredPath("gravewright-csrf-url", "/__gravewright/csrf"), timeoutMs: TIMEOUT_MS, signal });
+      this.#token = { [header]: token };
+    }
+    return { ...this.#token };
   }
   async #send(request) {
     request.signal?.throwIfAborted();

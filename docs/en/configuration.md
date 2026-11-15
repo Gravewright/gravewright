@@ -52,6 +52,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `TRUSTED_PROXIES` | empty | Comma-separated proxy IPs/CIDRs trusted for forwarded client IPs and ASGI HTTP/WebSocket schemes; empty ignores forwarding headers |
 | `DATABASE_POOL_TIMEOUT` | `30` | SQLite lock wait in seconds; this is not a connection pool size |
 | `DATABASE_ECHO` | `false` | Configure django.db.backends debug logging; actual SQL capture also follows Django's debug cursor behavior |
+| `DATABASE_JOURNAL_MODE` | `wal` | SQLite journal: `wal` lets readers proceed while a writer commits and keeps `-wal`/`-shm` files beside the database; `delete` (rollback journal) is for a database on a network folder |
 | `WS_MAX_MESSAGE_MB` | `0.0625` | Application limit per WebSocket message in MB (1 MB = 1024 * 1024 bytes) |
 | `WS_COMMANDS_PER_SECOND` | `20` | WebSocket command rate per connection |
 | `WS_BURST_COMMANDS` | `40` | WebSocket command burst capacity |

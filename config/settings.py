@@ -162,11 +162,16 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': (':memory:' if os.environ.get('GRAVEWRIGHT_DATABASE') == ':memory:'
                  else env_path('GRAVEWRIGHT_DATABASE', 'data/gravewright.sqlite3')),
-        'OPTIONS': {'timeout': DATABASE_POOL_TIMEOUT, 'transaction_mode': 'IMMEDIATE'},
+        # Every connection selects the journal mode; SQLite keeps WAL in the file, so
+        # the -wal and -shm files beside it belong to the database (see deployment.md).
+        'OPTIONS': {'timeout': DATABASE_POOL_TIMEOUT, 'transaction_mode': 'IMMEDIATE',
+                    'init_command': f'PRAGMA journal_mode={DATABASE_JOURNAL_MODE.upper()}'},
         # File-backed SQLite exercises the same locking as development.
         'TEST': {'NAME': BASE_DIR / 'data' / 'test-gravewright.sqlite3'},
     }
 }
+# Removes WAL files left by an interrupted test run before the test database is created.
+TEST_RUNNER = 'config.testing.TestRunner'
 
 
 # Password validation

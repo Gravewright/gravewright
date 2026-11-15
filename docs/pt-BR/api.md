@@ -452,7 +452,7 @@ de restaurar; substituir a versão esperada sem revisão descartaria edições d
 outro mestre. Leituras e escritas de histórico/lixeira verificam novamente o
 vínculo atual de mestre, inclusive ao repetir recibos.
 
-Permissões de proprietário e gerenciamento da campanha continuam verificadas no servidor. Os métodos usam cookies de sessão e obtêm token CSRF antes de escrever. Não há autenticação por chave de API nessa interface. Views e testes dos apps definem os payloads; não coloque credenciais no código de módulos.
+Permissões de proprietário e gerenciamento da campanha continuam verificadas no servidor. Os métodos usam cookies de sessão e enviam o token CSRF nas escritas; cada cliente lê o token uma vez, o reaproveita e o lê de novo uma vez quando o servidor o recusa. Não há autenticação por chave de API nessa interface. Views e testes dos apps definem os payloads; não coloque credenciais no código de módulos.
 
 O cabeçalho da biblioteca usa `POST /api/admin/updates/notification`, exclusivo do proprietário, com JSON vazio e o token CSRF normal. A resposta compacta inclui `status`, `available`, versões instalada/disponível e seus rótulos, `channel`, `checkedAt` e a URL interna de Atualizações. Ela reaproveita o cache de consulta por 24 horas; consultas simultâneas com cache expirado recebem `checking` enquanto uma requisição atualiza os metadados. A rota não inicia instalação nem expõe artefatos da release ou erros internos.
 
@@ -473,7 +473,7 @@ table.presence       table.lobbyChanged   clocks.changed   clues.changed
 mindmaps.changed
 ```
 
-Assinaturas de mudanças em coleções fazem leitura HTTP autorizada inicialmente, após invalidações correspondentes do socket e na reconexão. Invalidações concorrentes são agrupadas; não representam todas as mutações intermediárias. Callbacks de ator/token/mapa/documento recebem o estado projetado e a identidade da mesa/cena; callbacks de item/combate/cartas/áudio/compêndio/relógio/pista/mapa mental recebem `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presença e sala de espera encaminham payloads do socket sem ler automaticamente o estado inicial. Consulte esse estado separadamente quando necessário.
+Assinaturas de mudanças em coleções fazem leitura HTTP autorizada inicialmente, após invalidações correspondentes do socket e na reconexão. Invalidações concorrentes são agrupadas; não representam todas as mutações intermediárias. Callbacks de ator/token/mapa/documento recebem o estado projetado e a identidade da mesa/cena; callbacks de item/combate/cartas/áudio/compêndio/relógio/pista/mapa mental recebem `{module, state, tableId, sceneId?}`. `chat.changed`, `chat.message`, presença e sala de espera encaminham payloads do socket sem ler automaticamente o estado inicial. Consulte esse estado separadamente quando necessário. `chat.changed` traz o histórico visível completo quando ele difere do último que o socket enviou, após uma troca de escopo do chat e após uma mensagem ao vivo; uma atualização de cena que não o altera não envia nada.
 
 Assinaturas usam o socket da página atual. Uma API criada com `forTable` em `/inside`, ou apontando para outra mesa, faz requisições HTTP, mas não cria socket para essa mesa. Não presuma atualizações contínuas. Callbacks devem ser síncronos; inicie tarefas assíncronas explicitamente com tratamento de erro. O `events` antigo do bloco usa outros nomes e possui ressalvas descritas no [guia de módulos](modules.md#arquivos-persistência-e-eventos).
 
@@ -603,7 +603,7 @@ Registre receivers uma vez em `AppConfig.ready()` de seu app explicitamente inst
 
 ## Transporte e manutenção
 
-O endpoint de domínio do host é `POST /api/tables/<table_id>/api`; módulos instalados usam `POST /api/tables/<table_id>/modules/<module_id>/api`. Recebem `{domain, method, payload, requestId?}` e retornam `{value}`. Módulos também enviam `mountId`, `moduleSetRevision` e `sceneId` opcional; a ponte abre o lease antes. Métodos binários usam o sufixo `/files` correspondente, com metadados JSON no campo multipart `metadata` e o arquivo em `file`; downloads retornam bytes. O SDK antigo usa o mesmo prefixo do módulo com `/call` e envelope `{name, payload, ...context}`. As URLs descrevem a implementação para mantenedores; módulos devem usar as APIs fornecidas.
+O endpoint de domínio do host é `POST /api/tables/<table_id>/api`; módulos instalados usam `POST /api/tables/<table_id>/modules/<module_id>/api`. Recebem `{domain, method, payload, requestId?}` e retornam `{value}`. Módulos também enviam `mountId`, `moduleSetRevision` e `sceneId` opcional; a ponte abre o lease antes. Uma chamada só estende o lease de 30 minutos na segunda metade da validade, então chamadas comuns não fazem escrita. Métodos binários usam o sufixo `/files` correspondente, com metadados JSON no campo multipart `metadata` e o arquivo em `file`; downloads retornam bytes. O SDK antigo usa o mesmo prefixo do módulo com `/call` e envelope `{name, payload, ...context}`. As URLs descrevem a implementação para mantenedores; módulos devem usar as APIs fornecidas.
 
 Depois de alterar o registro de métodos:
 

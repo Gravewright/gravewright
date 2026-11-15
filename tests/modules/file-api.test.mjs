@@ -303,8 +303,11 @@ test('HttpClient.upload fourth options bind CSRF and upload to the requested sig
   assert.equal(requests[1].headers[csrf.header], csrf.token);
   assert.equal(requests[1].timeoutMs, 4321);
   await client.upload('/api/upload', form);
-  assert.equal(requests[3].signal, scope.signal);
-  assert.equal(Object.hasOwn(requests[3], 'timeoutMs'), false);
+  // The second upload reuses the client's token instead of reading it again.
+  assert.equal(requests.length, 3);
+  assert.equal(requests[2].headers[csrf.header], csrf.token);
+  assert.equal(requests[2].signal, scope.signal);
+  assert.equal(Object.hasOwn(requests[2], 'timeoutMs'), false);
 });
 
 test('HTTP errors retain stable codes and the server display message for JSON and file reads', async t => {

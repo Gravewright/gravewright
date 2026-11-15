@@ -6,13 +6,18 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from datetime import timedelta
+
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from django.db import connection
 from django.test import TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 
 from gravewright.accounts.models import User
 from gravewright.campaigns.models import Campaign, Membership
 
-from .models import Package
+from .models import ContextLease, Package
 from .packages import ModuleFailure, ModulePackages, canonical
 
 
@@ -211,6 +216,43 @@ class ModuleTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 409)
+
+    def test_calls_extend_the_lease_only_in_its_second_half(self):
+        state = self.activate()
+        base = f"/api/tables/{self.campaign.pk}/modules/example.test"
+        identity = {"mountId": "lease-mount", "moduleSetRevision": state["moduleSetRevision"]}
+        self.client.post(base + "/context", {"action": "open", **identity},
+                         content_type="application/json")
+        lease = ContextLease.objects.get(mount="lease-mount")
+        opened = lease.expires_at
+
+        def call():
+            with CaptureQueriesContext(connection) as queries:
+                response = self.client.post(
+                    base + "/call", {**identity, "name": "actor.list", "payload": {}},
+                    content_type="application/json")
+            writes = [q["sql"] for q in queries.captured_queries
+                      if q["sql"].startswith("UPDATE") and ContextLease._meta.db_table in q["sql"]]
+            return response, writes
+
+        response, writes = call()
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(writes, [])
+        lease.refresh_from_db()
+        self.assertEqual(lease.expires_at, opened)
+
+        ContextLease.objects.filter(pk=lease.pk).update(expires_at=timezone.now() + timedelta(minutes=10))
+        before = timezone.now()
+        response, writes = call()
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(writes), 1)
+        lease.refresh_from_db()
+        self.assertGreaterEqual(lease.expires_at, before + timedelta(minutes=30))
+
+        ContextLease.objects.filter(pk=lease.pk).update(expires_at=timezone.now() - timedelta(seconds=1))
+        response, writes = call()
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(writes, [])
 
     def test_player_cannot_configure_or_write_table_storage(self):
         state = self.activate()

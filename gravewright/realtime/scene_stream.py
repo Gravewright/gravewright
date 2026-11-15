@@ -5,6 +5,7 @@ not a second copy of the raster or of the scene's private object layers.
 """
 
 import asyncio
+import functools
 import json
 import logging
 import math
@@ -18,13 +19,19 @@ from gravewright.maps import services as maps
 from gravewright.maps.render_priority import RenderPriority
 from gravewright.maps.render_scheduler import RenderPriorityScheduler, SchedulerBudget
 
+from . import access
 from .gm_guided_prefetch import GmGuidedPrefetchBroker
 from .metrics import database_sync_to_async as db
 
 
-def resolve(campaign_id, user_id, payload):
+def scene_for(campaign_id, user_id, map_id):
+    """``(scene, member)`` when this member may see the scene; raises otherwise."""
     who = maps.member(campaign_id, user_id)
-    row = maps.scene(payload.get("mapId"), who)
+    return maps.scene(map_id, who), who
+
+
+def viewport(row, payload):
+    """Validate a viewport on ``row``: ``(region, columns, rows)``. No database access."""
     fields = ("lod", "firstColumn", "firstRow", "lastColumn", "lastRow", "generation")
     if any(type(payload.get(k)) is not int or payload[k] < 0 for k in fields):
         raise maps.MapError("Invalid viewport.")
@@ -37,13 +44,7 @@ def resolve(campaign_id, user_id, payload):
         raise maps.MapError("Viewport outside scene.")
     if x1 - x0 + 1 > settings.SCENE_VIEWPORT_MAX_WIDTH_CHUNKS or y1 - y0 + 1 > settings.SCENE_VIEWPORT_MAX_HEIGHT_CHUNKS or (x1 - x0 + 1) * (y1 - y0 + 1) > settings.SCENE_VIEWPORT_MAX_AREA_CHUNKS:
         raise maps.MapError("Viewport too large.")
-    return (
-        row,
-        who,
-        {k: payload[k] for k in fields} | {"mapId": str(row.pk)},
-        columns,
-        rows,
-    )
+    return {k: payload[k] for k in fields} | {"mapId": str(row.pk)}, columns, rows
 
 
 def base_region(region):
@@ -60,7 +61,63 @@ logger = logging.getLogger(__name__)
 
 
 class SceneStreamMixin:
+    # Scene answers reused by samples (see scene_answer). TableConsumer sets the TTL
+    # to its authorization TTL: both follow the same rule.
+    scene_answer_ttl = 2.0
+    scene_answer_limit = 32
+
+    def forget_scenes(self):
+        """Drop every reused scene answer; a read still running will not be stored."""
+        self.scene_generation = getattr(self, "scene_generation", 0) + 1
+        self.scene_answers = {}
+
+    async def scene_answer(self, key, read):
+        """``read()`` on the database thread, or a recent answer for ``key``.
+
+        Cursor, camera and tile samples arrive many times per second and each one
+        resolved the member and scene again. An answer is reused for at most
+        ``scene_answer_ttl`` seconds, while this process's access epoch is unchanged
+        and until the socket receives its next server event (TableConsumer.__call__
+        calls forget_scenes): changes are announced after commit, so an answer read
+        before an announcement is never stored after it. A refused read drops every
+        answer. The socket's own viewport always reads (see scene_viewport).
+        """
+        answers = getattr(self, "scene_answers", None)
+        if answers is None:
+            answers = self.scene_answers = {}
+        try:
+            entry = answers.get(key)
+        except TypeError:  # an unhashable identifier from a client is never reused
+            return await db(read)()
+        epoch, generation, now = access.epoch(), getattr(self, "scene_generation", 0), monotonic()
+        if entry is not None and entry[0] == epoch and now < entry[1]:
+            return entry[2]
+        try:
+            value = await db(read)()
+        except (maps.MapError, JournalError):
+            self.forget_scenes()
+            raise
+        self.remember_scene_answer(key, value, epoch, generation, now)
+        return value
+
+    def remember_scene_answer(self, key, value, epoch, generation, read_at):
+        """Store an answer whose read began at ``read_at`` under ``epoch``/``generation``."""
+        if epoch != access.epoch() or generation != getattr(self, "scene_generation", 0):
+            return
+        answers = getattr(self, "scene_answers", None)
+        if answers is None:
+            answers = self.scene_answers = {}
+        if key not in answers and len(answers) >= self.scene_answer_limit:
+            answers.clear()
+        answers[key] = (epoch, read_at + self.scene_answer_ttl, value)
+
+    def visible_scene(self, user_id, map_id):
+        """Awaitable ``(scene, member)`` for a member who may see ``map_id``."""
+        return self.scene_answer(("scene", str(user_id), map_id),
+                                 functools.partial(scene_for, self.campaign_id, user_id, map_id))
+
     def init_stream(self):
+        self.scene_generation, self.scene_answers = 0, {}
         self.render_scheduler = RenderPriorityScheduler()
         self.stream_region = None
         self.stream_task = None
@@ -87,10 +144,18 @@ class SceneStreamMixin:
             self.stream_task = None
 
     async def scene_viewport(self, payload):
+        # The socket's own viewport always reads the database, so a change of access
+        # shows here at once; its answer refreshes the one samples reuse.
+        epoch, generation, read_at = access.epoch(), getattr(self, "scene_generation", 0), monotonic()
         try:
-            row, who, region, columns, rows = await db(resolve)(
-                self.campaign_id, self.user_id, payload
-            )
+            try:
+                row, who = await db(scene_for)(self.campaign_id, self.user_id, payload.get("mapId"))
+            except (maps.MapError, JournalError):
+                self.forget_scenes()
+                raise
+            self.remember_scene_answer(("scene", str(self.user_id), str(row.pk)),
+                                       (row, who), epoch, generation, read_at)
+            region, columns, rows = viewport(row, payload)
             signals = {
                 k: payload.get(k, 0)
                 for k in ("camera_speed", "camera_deceleration", "interaction_count")
@@ -189,6 +254,12 @@ class SceneStreamMixin:
             )
 
     async def room_gm_sample(self, event):
+        """Turn a GM camera sample into prefetch hints for this recipient.
+
+        Runs on the socket's sample lane, next to its own viewport samples: only each
+        GM's newest sample waits there, never behind commands, and the drain task it
+        starts runs on that lane's thread.
+        """
         region = self.stream_region
         sample = event["region"]
         if (
@@ -200,13 +271,11 @@ class SceneStreamMixin:
         if not await self.authorized() or self.member.role == "gm":
             return
         try:
-            row, _, _, columns, rows = await db(resolve)(
-                self.campaign_id, self.user_id, region
-            )
+            row, _ = await self.visible_scene(self.user_id, region["mapId"])
+            _, columns, rows = viewport(row, region)
             # Recheck sender too: queued samples must not survive a role revocation.
-            _, sender, _, _, _ = await db(resolve)(
-                self.campaign_id, event["user_id"], sample
-            )
+            seen, sender = await self.visible_scene(event["user_id"], sample["mapId"])
+            viewport(seen, sample)
             if sender.role != "gm" or event["version"] != row.version:
                 return
         except maps.MapError, JournalError, ValueError, TypeError:
@@ -279,9 +348,8 @@ class SceneStreamMixin:
                     self.render_scheduler.clear()
                     return
                 try:
-                    row, _, _, _, _ = await db(resolve)(
-                        self.campaign_id, self.user_id, region
-                    )
+                    row, _ = await self.visible_scene(self.user_id, region["mapId"])
+                    viewport(row, region)
                 except maps.MapError, JournalError, ValueError, TypeError:
                     self.render_scheduler.clear()
                     return

@@ -45,6 +45,7 @@ class TokenTeleportTests(TransactionTestCase):
         recipient.notify_api = partial(TableConsumer.notify_api, recipient)
         recipient.emit_projection = partial(TableConsumer.emit_projection, recipient)
         recipient.forget_projections = partial(TableConsumer.forget_projections, recipient)
+        recipient.projection = partial(TableConsumer.projection, recipient)
         return recipient
 
     def marker(self, token, **values):
