@@ -253,12 +253,17 @@ revision, incremented in the committing transaction (`realtime.CampaignRevision`
 A socket that sees a gap, for example because a full channel queue dropped an
 envelope, refreshes every projection it subscribes to; a late or repeated envelope
 is ignored. Each socket also remembers the projections it last sent: an unchanged
-projection sends nothing, and tokens and map layers send `delta` frames
+projection sends nothing, and tokens, map layers and audio send `delta` frames
 (`upserts`, `removes`, `order`, `unset`) computed from the recipient's own complete
-projection, so they never carry data that projection would not. The first
+projection, so they never carry data that projection would not. An audio delta
+is nested inside `resources.state.state`; the browser reconstructs
+complete native and SDK payloads before dispatching events. The first
 projection after a subscription, scene change or reconnection is sent whole. A
 `resources.sync` for one table module resets only that module's projections, so the
 burst that subscribes every module does not make later envelopes resend the others.
+Heavy projection reads share a configurable per-event-loop concurrency limit;
+per-projection locks still preserve read/send order. Presence, samples, writes and
+socket sends do not consume those permits. See [Realtime direction](realtime-direction.md).
 Python `resource_changed` handlers are
 trusted in-process callbacks; they are neither cross-process durable jobs nor an
 untrusted-code sandbox.

@@ -51,20 +51,20 @@ Os documentos da gramática de dados são mantidos junto à implementação. Os 
 
 ## Identificadores da versão
 
-A versão atual do projeto é **0.3.6**. Os manifests da aplicação e a release usam estes identificadores, seguindo os formatos exigidos por cada ferramenta:
+A versão atual do projeto é **0.3.7**. Os manifests da aplicação e a release usam estes identificadores, seguindo os formatos exigidos por cada ferramenta:
 
 | Local | Identificador |
 | --- | --- |
-| Nome público completo | `Gravewright 0.3.6 — Alpha` |
-| Versão da aplicação e do Runner | `0.3.6` |
-| Projeto Python e `uv.lock` | `0.3.6` |
-| Pacote frontend, package lock e API de atualização | `0.3.6` |
-| Tag da release | `v0.3.6` |
-| Artefato do código-fonte | `Gravewright-0.3.6-django.zip` |
+| Nome público completo | `Gravewright 0.3.7 — Alpha` |
+| Versão da aplicação e do Runner | `0.3.7` |
+| Projeto Python e `uv.lock` | `0.3.7` |
+| Pacote frontend, package lock e API de atualização | `0.3.7` |
+| Tag da release | `v0.3.7` |
+| Artefato do código-fonte | `Gravewright-0.3.7-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
 
-A versão `0.3.6` segue a convenção `stable` de descoberta para identificadores numéricos; o projeto permanece em Alpha. Administração mostra o nome completo da versão, sem seletor de canal. Preferências de canal existentes e compatibilidade da API são preservadas. A versão `0.3.6` é maior que `0.3.2`, mas menor que a antiga `3.0.1`, numerada incorretamente. Instalações que informam `3.0.1` precisam de instalação ou migração manual após backup conjunto de código, configuração, banco e mídias; confira primeiro a compatibilidade do esquema em uma cópia descartável. Não execute código antigo contra um banco mais novo para forçar uma redução de versão. Preserve as notas históricas como histórico. Veja as [notas da 0.3.6](../releases/0.3.6.md) e o [guia de atualização](upgrading.md) para mudanças e migrações necessárias.
+A versão `0.3.7` segue a convenção `stable` de descoberta para identificadores numéricos; o projeto permanece em Alpha. Administração mostra o nome completo da versão, sem seletor de canal. Preferências de canal existentes e compatibilidade da API são preservadas. A versão `0.3.7` é maior que `0.3.2`, mas menor que a antiga `3.0.1`, numerada incorretamente. Instalações que informam `3.0.1` precisam de instalação ou migração manual após backup conjunto de código, configuração, banco e mídias; confira primeiro a compatibilidade do esquema em uma cópia descartável. Não execute código antigo contra um banco mais novo para forçar uma redução de versão. Preserve as notas históricas como histórico. Veja as [notas da 0.3.7](../releases/0.3.7.md) e o [guia de atualização](upgrading.md) para mudanças e migrações necessárias.
 
 O SDK permanece em `1.0.0`; o registro aditivo do frontend do navegador tem
 versão própria em `gravewright/modules/contracts/frontend.json`. Os novos

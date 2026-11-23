@@ -4,7 +4,7 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **0.3.6**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, relógios de progresso e pistas, mapas mentais colaborativos, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **0.3.7**, uma prévia alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, relógios de progresso e pistas, mapas mentais colaborativos, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
 ## Preparação da campanha e jogo
 
@@ -30,9 +30,9 @@ Comece pelo [guia do Map Builder](docs/pt-BR/map-builder.md) para criar um proje
 de mapa editável ou colocar elementos interativos sobre uma imagem de mapa pronto.
 O [guia do Universal VTT](docs/pt-BR/universal-vtt.md) explica como importar
 arquivos `.uvtt`, `.dd2vtt` e `.df2vtt` como cenas nativas, exportar cenas e conferir
-os limites do formato. As [notas da 0.3.6](docs/releases/0.3.6.md) apresentam
-entrega independente de atualizações em tempo real, menos leituras repetidas de
-cenas e recursos e modo WAL do SQLite para leitores e escritores concorrentes.
+os limites do formato. As [notas da 0.3.7](docs/releases/0.3.7.md) apresentam
+atualizações mais rápidas de cartas, combate, tokens e áudio, mensagens menores
+em tempo real e um limite de leituras simultâneas das projeções.
 
 Extraia o projeto completo para uma pasta gravável, execute o instalador do seu sistema operacional e depois use o Runner gerado. O instalador prepara ferramentas, dependências, frontend e configurações; o Runner inicia a aplicação já preparada.
 
@@ -42,7 +42,7 @@ Extraia o projeto completo para uma pasta gravável, execute o instalador do seu
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/pt-BR/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/pt-BR/macos-runner.md) |
 
-A distribuição do código inclui os instaladores das três plataformas. Os identificadores da release são **`v0.3.6`** e **`Gravewright-0.3.6-django.zip`**, com o arquivo SHA-256 correspondente. Instalações gerenciadas podem consultar o repositório configurado em **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env`, dados configurados e extensões locais antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração, dados e extensões e execute novamente o instalador da plataforma. Veja [atualização e recuperação](docs/pt-BR/upgrading.md) e as [instruções da release](docs/releases/0.3.6.md#download-e-atualização). Esta versão não acrescenta migrações em relação à 0.3.5; use o fluxo normal do instalador ao atualizar instalações mais antigas.
+A distribuição do código inclui os instaladores das três plataformas. Os identificadores da release são **`v0.3.7`** e **`Gravewright-0.3.7-django.zip`**, com o arquivo SHA-256 correspondente. Instalações gerenciadas podem consultar o repositório configurado em **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env`, dados configurados e extensões locais antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração, dados e extensões e execute novamente o instalador da plataforma. Veja [atualização e recuperação](docs/pt-BR/upgrading.md) e as [instruções da release](docs/releases/0.3.7.md#download-e-atualização). Esta versão não acrescenta migrações em relação à 0.3.6; use o fluxo normal do instalador ao atualizar instalações mais antigas.
 
 Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
 

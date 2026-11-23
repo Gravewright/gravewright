@@ -395,6 +395,97 @@ threads dos destinatários se revezam no lock do interpretador (263 ms fora do S
 alavanca que resta; a faixa de entregas fica, porque os comandos não esperam mais atrás
 dela.
 
+### Etapa 12: custo das projeções por destinatário
+
+- As camadas leem somente as cartas da cena. As contagens dos baralhos da biblioteca
+  usam uma consulta agregada; as camadas deixam de montar primeiro a biblioteca e a
+  mão do destinatário.
+- O combate resolve tokens, atores e imagens em lotes, preservando a visibilidade
+  por destinatário, os atores de fallback e a ordem do encontro.
+- A prévia de arraste carrega somente os tokens pedidos. O navegador pula testes
+  de interseção com paredes quando o destino do token é sua posição atual.
+- Aplicar um delta no navegador faz uma cópia profunda privada em vez de duas. Os
+  consumidores continuam recebendo snapshots completos e mutáveis; alterá-los não
+  corrompe a próxima atualização. Isso não preserva a identidade dos objetos internos
+  entre atualizações.
+- O áudio espacial calcula cada ouvinte uma vez, carrega paredes somente para um raio
+  audível e pula raios cujo ganho máximo possível não melhora o resultado. Fontes
+  desativadas, silenciadas ou fora de alcance não calculam oclusão.
+- O áudio envia deltas do estado interno em vez de repetir catálogos inalterados.
+  Reprodução, fades e hora do servidor continuam atuais. O navegador reconstrói o
+  estado completo antes dos eventos nativos e do SDK; a ressincronização preserva cena
+  e prévia atuais. Mudar a inscrição descarta sua base anterior. Os catálogos continuam
+  vindo do banco; a redução é no transporte e na serialização canônica repetida.
+- Uma autorização vencida é conferida mesmo com presença ainda válida, mas não grava
+  nem adia essa presença. As renovações efetivas mantêm a cadência de meio TTL.
+
+Medições locais sintéticas antes/depois, aplicando e testando cada alteração em
+sequência na mesma máquina (medianas; tempos não são critérios dos testes):
+
+| Operação e cenário | Antes | Depois |
+| --- | ---: | ---: |
+| Entrega de mudança de token a um jogador, 10 baralhos | 25,91 ms / 54 SQL | 19,50 ms / 28 SQL |
+| Mesma entrega, 20 combatentes, após a mudança das cartas | 42,85 ms / 69 SQL | 25,86 ms / 31 SQL |
+| Prévia de um token pelo jogador numa cena com 1.000 tokens | 47,58 ms / 1.000 tokens carregados | 3,33 ms / 1 token carregado |
+| Modelo do navegador, 100 tokens imóveis e 1.000 paredes | 100.000 testes de parede | 0 testes de parede |
+| Aplicação de delta, 1.000 imagens, 1.000 paredes e 100 tokens | 6,12 ms | 2,88 ms |
+| Estado de áudio do jogador, 12 ouvintes, 60 fontes e 500 paredes | 153,32 ms | 9,37 ms |
+| Serialização de áudio GM após a mudança espacial, 500 faixas e 40 playlists | 2,44 ms / 198.303 bytes | 1,78 ms / 317 bytes |
+| Pong com autorização vencida e presença ainda válida | 7,07 ms / 3 SQL / 1 escrita | 2,19 ms / 2 SQL / 0 escritas |
+
+Os testes de entrega e arraste usaram 25 amostras após aquecimento, presença usou 30,
+áudio usou 10 e JavaScript usou nove lotes após aquecimento. As medições de entrega
+cobrem o handler de um destinatário no servidor, não a ida e volta de um comando.
+As medições JavaScript usam Node e não medem FPS no navegador. Os bytes de áudio são
+o tamanho dos frames codificados, sem overhead de rede. Esses cenários não estabelecem
+ganhos para uma sessão real inteira.
+
+As regressões verificam crescimento de consultas, cartas e combatentes privados,
+fallback de atores, autorização/revisões/paredes no arraste, bases privadas dos deltas,
+equivalência do ganho de áudio, fim de faixas e fades, mudanças de papel,
+ressincronização e expiração da presença.
+
+### Etapa 13: limite de leituras simultâneas das projeções
+
+`GRAVEWRIGHT_REALTIME_PROJECTION_CONCURRENCY` permite, por padrão, duas leituras
+pesadas por vez em cada event loop ASGI, compartilhadas pelos seus sockets. Zero
+desativa esse controle. O limite cobre camadas da cena, tokens, áudio e combate.
+As travas por projeção continuam ordenando inscrições, leituras e envios; a vaga
+compartilhada cobre a leitura, não o envio pelo socket, comandos, renovação de
+presença ou amostras.
+
+A autorização é conferida depois de obter a vaga e novamente antes de entregar o
+resultado. Uma espera cancelada não inicia a leitura. Se uma leitura síncrona já
+começou, conserva sua vaga até terminar mesmo que o destinatário pare de esperar;
+falhas abandonadas são observadas. Os limitadores pertencem ao seu event loop e não
+retêm loops de teste encerrados. Outros workers têm limites próprios. O agrupamento
+das entregas continua funcionando; este não é um limite para todos os eventos na fila.
+
+O protótipo comparou limites de zero, um, dois e quatro com 1, 5 e 10 clientes ASGI
+e repetiu a matriz em ordem inversa. Dois preservaram a maior parte do ganho e
+permitem outra leitura ao lado de uma demorada. A implementação final foi medida
+separadamente com sua configuração em zero e dois, com 20 atualizações após dois
+aquecimentos por cenário:
+
+| Clientes conectados | Entrega p95, desativado | Entrega p95, limite 2 | CPU mediana do lote, desativado → limite 2 |
+| --- | ---: | ---: | ---: |
+| 1 | 58,10 ms | 53,33 ms | 43,45 → 40,88 ms |
+| 5 | 369,92 ms | 279,24 ms | 563,21 → 315,05 ms |
+| 10 | 1.082,46 ms | 524,78 ms | 2.007,47 → 610,05 ms |
+
+O cenário contém 100 tokens, 102 imagens, 10 baralhos e 20 combatentes, com um mestre
+e os demais clientes como jogadores. O tempo de entrega inclui fila, espera pela
+vaga, cálculo das projeções e emissão pelo transporte ASGI em memória; exclui rede
+real e renderização no navegador. Um `chat.sync` e uma renovação de presença
+concorrentes, com 10 clientes, tiveram p95 de 86,24 → 32,44 ms e 58,16 → 17,48 ms,
+respectivamente. O benefício principal aparece sob concorrência; a diferença com
+um único cliente é pequena.
+
+Repetir a comparação da implementação final em ordem inversa confirmou o ganho:
+com 10 clientes, o p95 de entrega foi 1.248,92 ms sem limite e 508,53 ms com duas
+vagas. Com um cliente, a mediana de entrega ficou essencialmente igual
+(35,98 contra 36,46 ms).
+
 ## Fora desta direção
 
 - Substituir o SQLite. O WAL deixa os leitores seguirem durante um commit, mas não

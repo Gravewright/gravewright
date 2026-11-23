@@ -95,30 +95,53 @@ def control_effects(target, controls):
     return changed
 
 
+def spatial_state(target, who, preview_token_id=None):
+    """Project gains without tracing rays that cannot improve the listener's gain."""
+    cell, ox, oy, _, _ = geometry(target)
+    candidates = Token.objects.filter(scene=target).select_related('actor')
+    if who.role == 'gm':
+        candidates = candidates.filter(pk=identifier(preview_token_id)) if preview_token_id else candidates.none()
+    objects = list(SceneObject.objects.filter(scene=target, kind='spatialSounds'))
+    listeners = []
+    if any(obj.data['enabled'] and obj.data['gain'] > 0 for obj in objects):
+        for token in candidates:
+            if control(token, who):
+                half_size = token_data(token)['token']['size'] / 2
+                listeners.append((ox + (token.grid_x + half_size) * cell,
+                                  oy + (token.grid_y + half_size) * cell, token.elevation))
+    walls = None
+    sources = []
+    for obj in objects:
+        data = deepcopy(obj.data)
+        gain = 0
+        if data['enabled'] and data['gain'] > 0:
+            radius = data['radius'] * cell / max(.0001, target.settings.get('measureValue', 1))
+            for x, y, z in listeners:
+                distance = math.hypot(x - data['x'], y - data['y'])
+                normalized = max(0, min(1, 1 - distance / max(radius, .01)))
+                mode = data.get('falloff', 'smooth')
+                falloff = ((1 if distance <= radius else 0) if mode == 'constant' else
+                           normalized if mode == 'linear' else normalized * normalized * (3 - 2 * normalized))
+                # Walls can only reduce this upper bound. It also excludes rays
+                # outside the source's range while preserving constant falloff's edge.
+                if falloff * data['gain'] <= gain:
+                    continue
+                acoustic = 1
+                if data.get('occlusion'):
+                    if walls is None:
+                        walls = list(SceneObject.objects.filter(scene=target, kind='walls').values_list('data', flat=True))
+                    acoustic = sound_attenuation(walls=walls, origin=(data['x'], data['y'], 0), target=(x, y, z))
+                gain = max(gain, falloff * acoustic * data['gain'])
+        sources.append({**data, 'id': str(obj.pk), 'version': obj.version, 'effectiveGain': gain})
+    return sources
+
+
 def state(who,scene_id=None,preview_token_id=None):
     now=time.time();playback={};revision=0;sources=[]
     if scene_id:
         target=scene(scene_id,who);session=Playback.objects.filter(scene=target).first()
         if session:playback=deepcopy(session.data);revision=session.version
-        cell,ox,oy,_,_=geometry(target)
-        candidates=Token.objects.filter(scene=target).select_related('actor')
-        if who.role=='gm':
-            candidates=candidates.filter(pk=identifier(preview_token_id)) if preview_token_id else candidates.none()
-        listeners=[(ox+(t.grid_x+token_data(t)['token']['size']/2)*cell,oy+(t.grid_y+token_data(t)['token']['size']/2)*cell,t.elevation) for t in candidates if control(t,who)]
-        walls=list(SceneObject.objects.filter(scene=target,kind='walls').values_list('data',flat=True))
-        for obj in SceneObject.objects.filter(scene=target,kind='spatialSounds'):
-            data=deepcopy(obj.data);gain=0
-            if listeners:
-                radius=data['radius']*cell/max(.0001,target.settings.get('measureValue',1))
-                for x,y,z in listeners:
-                    distance=math.hypot(x-data['x'],y-data['y'])
-                    normalized=max(0,min(1,1-distance/max(radius,.01)))
-                    mode=data.get('falloff','smooth')
-                    falloff=(1 if distance<=radius else 0) if mode=='constant' else normalized if mode=='linear' else normalized*normalized*(3-2*normalized)
-                    acoustic=sound_attenuation(walls=walls,origin=(data['x'],data['y'],0),target=(x,y,z)) if data.get('occlusion') else 1
-                    candidate=falloff*acoustic*data['gain']
-                    gain=max(gain,candidate)
-            sources.append({**data,'id':str(obj.pk),'version':obj.version,'effectiveGain':gain if data['enabled'] else 0})
+        sources=spatial_state(target,who,preview_token_id)
     from .soundtrack import snapshot
     score=snapshot(playback.get('score'),now)
     ids={r['asset']['id'] for r in score['playbacks']}

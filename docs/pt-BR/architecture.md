@@ -261,12 +261,18 @@ revisão por campanha, incrementada na transação que faz o commit
 uma fila cheia do channel layer descartou um envelope, atualiza todas as projeções
 em que está inscrito; um envelope atrasado ou repetido é ignorado. Cada socket também
 guarda as projeções que enviou por último: uma projeção sem mudança não envia nada,
-e tokens e camadas do mapa enviam frames `delta` (`upserts`, `removes`, `order`,
+e tokens, camadas do mapa e áudio enviam frames `delta` (`upserts`, `removes`, `order`,
 `unset`) calculados a partir da projeção completa do próprio destinatário, então
-nunca levam dados que essa projeção não levaria. A primeira projeção após uma
+nunca levam dados que essa projeção não levaria. O delta de áudio fica dentro de
+`resources.state.state`; o navegador reconstrói payloads completos para a interface
+nativa e o SDK antes de disparar eventos. A primeira projeção após uma
 inscrição, troca de cena ou reconexão é enviada inteira. Um `resources.sync` de um
 módulo da mesa reinicia só as projeções desse módulo, então a rajada que inscreve
 todos os módulos não faz os envelopes seguintes reenviarem os outros.
+Leituras pesadas de projeção compartilham um limite configurável de concorrência
+por event loop; as travas por projeção ainda preservam a ordem de leitura/envio.
+Presença, amostras, escritas e envios não consomem essas vagas. Veja a
+[Direção de tempo real](realtime-direction.md).
 Manipuladores Python de `resource_changed`
 são callbacks confiáveis dentro do processo; não são tarefas duráveis entre processos
 nem uma sandbox para código não confiável.

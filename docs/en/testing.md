@@ -315,6 +315,23 @@ camera and liveness frames do not reload mind maps, and
 after a refusal. `gravewright.modules.tests` checks that module calls write their
 mount lease only during its second half.
 
+Projection scaling regressions use `gravewright.cards.tests`,
+`gravewright.combat.test_projection_cost`, `gravewright.tokens.test_preview` and
+`gravewright.audio.test_spatial_projection`. They check bounded queries/materialized
+tokens, recipient filtering and spatial gain equivalence without timing assertions.
+`gravewright.realtime.tests.test_audio_projection` checks audio deltas, private
+catalog removal, playback clocks, endings and fades; `test_presence_authorization`
+checks authorization expiry independently of lease renewal. The JavaScript realtime
+suite also checks mutation isolation, complete audio events, missing-base recovery
+and scene/preview changes. The [realtime direction](realtime-direction.md) records
+the separate before/after measurements and their scope.
+
+`gravewright.realtime.tests.test_projection_reads` covers shared admission limits,
+authorization after waiting and before delivery, cancelled waiters, synchronous
+reads that retain their permit after cancellation, observed failures, independent
+event loops and subscription ordering. Its socket scenario disconnects a client
+during a blocked read and checks lease cleanup and the next client's admission.
+
 On Linux, Playwright may need system browser libraries; `uv run --locked playwright install --with-deps chromium` also installs those and can require administrator privileges. Scenarios launch their own servers on temporary ports and seed synthetic data. Most use development settings and write diagnostics under `test-results/`; the HTTPS and runner scenarios use dedicated settings described below. Run scenarios sequentially: several share `test-results/migration-closure/`.
 
 `tests/e2e/compendium_server.py --fixture <new-empty-directory>` starts a

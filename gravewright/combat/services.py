@@ -110,13 +110,21 @@ def state(who, scene_id=None):
     rows=[]
     next_index=next(((row.turn+offset)%len(row.combatants) for offset in range(1,len(row.combatants))
                      if not row.combatants[(row.turn+offset)%len(row.combatants)].get('defeated')),None)
-    for entry in row.combatants:
-        token=Token.objects.filter(pk=entry.get('tokenId'),scene=target).select_related('actor').prefetch_related('actor__assets').first() if entry.get('tokenId') else None
-        actor=token.actor if token else Actor.objects.filter(pk=entry.get('actorId'),campaign_id=who.campaign_id).prefetch_related('assets').first()
+    # Read each participant and its images once per projection, including tokens
+    # sharing an actor. Recipient filtering below remains independent of this batch.
+    token_ids = [entry['tokenId'] for entry in row.combatants if entry.get('tokenId')]
+    token_rows = {token.pk: token for token in Token.objects.filter(pk__in=token_ids, scene=target)
+                  .select_related('actor').prefetch_related('actor__assets')}
+    participants = [(entry, token_rows.get(uuid.UUID(str(entry['tokenId']))) if entry.get('tokenId') else None)
+                    for entry in row.combatants]
+    actor_ids = [entry['actorId'] for entry, token in participants if token is None and entry.get('actorId')]
+    actor_rows = {actor.pk: actor for actor in Actor.objects.filter(pk__in=actor_ids, campaign_id=who.campaign_id)
+                  .prefetch_related('assets')}
+    for index, (entry, token) in enumerate(participants):
+        actor = token.actor if token else actor_rows.get(uuid.UUID(str(entry['actorId']))) if entry.get('actorId') else None
         if not actor:continue
         if who.role!='gm' and (entry.get('hidden') or (token.hidden if token else not actors.access(actor,who))):continue
         data=tokens.presentation(token) if token else {}
-        index=row.combatants.index(entry)
         controlled=tokens.control(token,who) if token else actors.access(actor,who,True)
         source_bars=(data if token else actor.data).get('bars',{})
         bars=source_bars.get('bar_1',{}) if isinstance(source_bars,dict) else {}

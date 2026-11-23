@@ -95,6 +95,9 @@ function receive(event) {
   const complete = projections.receive(type, payload);
   if (!complete) {
     if (type === 'tokens.state') send('tokens.sync', {mapId: payload.mapId});
+    else if (type === 'resources.state') send('resources.sync', {
+      module: payload.module, ...(tableSubscriptions.get(payload.module) || {sceneId: payload.sceneId}),
+    });
     else send('maps.layers', {mapId: payload.sceneId});
     return;
   }
@@ -253,7 +256,13 @@ function connect() {
 }
 window.gravewrightRealtime = {
   initialContent,
-  subscribeModule(module,sceneId=null,previewTokenId=null){const subscription={sceneId,previewTokenId},previous=tableSubscriptions.get(module);if(previous?.sceneId===sceneId&&previous?.previewTokenId===previewTokenId)return;tableSubscriptions.set(module,subscription);if(contentReady())send('resources.sync',{module,...subscription});},
+  subscribeModule(module,sceneId=null,previewTokenId=null){
+    const subscription={sceneId,previewTokenId},previous=tableSubscriptions.get(module);
+    if(previous?.sceneId===sceneId&&previous?.previewTokenId===previewTokenId)return;
+    tableSubscriptions.set(module,subscription);
+    projections.forgetResource(module);
+    if(contentReady())send('resources.sync',{module,...subscription});
+  },
   moduleCommand(module,action,data={}){
     if(getPath('_presence')!=='seated')return Promise.reject(new Error('Connect before saving.'));
     const requestId=crypto.randomUUID(),payload={module,action,data,requestId};

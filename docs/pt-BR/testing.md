@@ -326,6 +326,24 @@ câmera e presença não recarregam os mapas mentais, e
 única renovação depois de uma recusa. `gravewright.modules.tests` verifica que
 chamadas de módulo só gravam o lease da montagem na segunda metade da validade.
 
+As regressões de escala das projeções usam `gravewright.cards.tests`,
+`gravewright.combat.test_projection_cost`, `gravewright.tokens.test_preview` e
+`gravewright.audio.test_spatial_projection`. Verificam limites de consultas/tokens
+carregados, filtragem por destinatário e equivalência do ganho espacial, sem afirmar
+limites de tempo. `gravewright.realtime.tests.test_audio_projection` verifica deltas
+de áudio, remoção de catálogos privados, relógios de reprodução, fim e fades;
+`test_presence_authorization` verifica a expiração da autorização independentemente
+da renovação da presença. A suíte JavaScript de tempo real também verifica isolamento
+contra mutações, eventos completos de áudio, recuperação sem base e mudanças de
+cena/prévia. A [direção de tempo real](realtime-direction.md) registra as medições
+separadas de antes/depois e seu escopo.
+
+`gravewright.realtime.tests.test_projection_reads` cobre limites compartilhados,
+autorização após a espera e antes da entrega, esperas canceladas, leituras síncronas
+que conservam a vaga após cancelamento, falhas observadas, event loops independentes
+e ordem das inscrições. Seu cenário de socket desconecta um cliente durante uma
+leitura bloqueada e verifica a limpeza da presença e a entrada do próximo cliente.
+
 No Linux, o Playwright pode precisar de bibliotecas do sistema; `uv run --locked playwright install --with-deps chromium` também as instala e pode exigir privilégios administrativos. Os cenários iniciam servidores próprios em portas temporárias e criam dados fictícios. A maioria usa configurações de desenvolvimento e grava diagnósticos em `test-results/`; os cenários HTTPS e do executor usam configurações específicas descritas abaixo. Execute em sequência: vários compartilham `test-results/migration-closure/`.
 
 `tests/e2e/compendium_server.py --fixture <diretório-novo-vazio>` inicia uma

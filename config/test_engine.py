@@ -7,6 +7,19 @@ from gravewright.accounts.client_ip import client_ip
 
 
 class EngineConfigurationTests(SimpleTestCase):
+    def test_projection_concurrency_defaults_to_two_and_can_be_disabled(self):
+        name = 'GRAVEWRIGHT_REALTIME_PROJECTION_CONCURRENCY'
+        with patch.dict(os.environ):
+            os.environ.pop(name, None)
+            self.assertEqual(configure()[name], 2)
+        for value in ('0', '1', '4'):
+            with self.subTest(value=value), patch.dict(os.environ, {name: value}):
+                self.assertEqual(configure()[name], int(value))
+        for value in ('-1', 'invalid', '1.5'):
+            with self.subTest(value=value), patch.dict(os.environ, {name: value}):
+                with self.assertRaises(ValueError):
+                    configure()
+
     def test_invalid_limits_fail_at_startup(self):
         for name in ('WS_MAX_MESSAGE_BYTES', 'JOURNAL_IMAGE_MAX_BYTES', 'MAP_MAX_TILE_COUNT', 'CAMPAIGN_SNAPSHOT_RETENTION'):
             with self.subTest(name=name), patch.dict(os.environ, {name: '0'}):

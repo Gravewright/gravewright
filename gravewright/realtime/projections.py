@@ -40,13 +40,20 @@ def merged_order(previous_ids, upserted_ids, removed_ids):
     return kept + [key for key in upserted_ids if key not in known]
 
 
-def delta(kind, previous, current):
-    """The frame turning ``previous`` into ``current``, or None when they are equal."""
+def delta(kind, previous, current, *, identity=None, previous_fields=None, current_fields=None):
+    """The frame turning ``previous`` into ``current``, or None when they are equal.
+
+    Optional canonical field texts let large catalogs reuse their last comparison
+    without changing JSON equality or the rows used to construct the delta.
+    """
     upserts, removes, order, metadata = {}, {}, {}, {}
     unset = sorted(set(previous) - set(current))
     for field, value in current.items():
-        if field in previous and canonical(previous[field]) == canonical(value):
-            continue
+        if field in previous:
+            old_text = previous_fields[field] if previous_fields is not None else canonical(previous[field])
+            new_text = current_fields[field] if current_fields is not None else canonical(value)
+            if old_text == new_text:
+                continue
         old_rows = rows_by_id(previous.get(field)) if field in previous else None
         new_rows = rows_by_id(value)
         if old_rows is None or new_rows is None:
@@ -63,7 +70,7 @@ def delta(kind, previous, current):
             order[field] = list(new_rows)
     if not (upserts or removes or order or metadata or unset):
         return None
-    identity = DELTA_KEYS[kind]
+    identity = identity or DELTA_KEYS[kind]
     frame = {"delta": True, identity: current[identity], **metadata}
     for name, value in (("upserts", upserts), ("removes", removes), ("order", order), ("unset", unset)):
         if value:

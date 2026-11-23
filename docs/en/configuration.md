@@ -57,6 +57,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `WS_COMMANDS_PER_SECOND` | `20` | WebSocket command rate per connection |
 | `WS_BURST_COMMANDS` | `40` | WebSocket command burst capacity |
 | `GRAVEWRIGHT_REALTIME_SLOW_MS` | `500` | Logs a `gravewright.realtime.metrics` warning when one socket handler's queue wait plus run time reaches this many milliseconds, with SQL, frame and byte counts but no payloads or user content; SQLite lock errors are always logged; `0` disables the slow-handler warning; negative values are rejected |
+| `GRAVEWRIGHT_REALTIME_PROJECTION_CONCURRENCY` | `2` | Maximum concurrent heavy projection reads (scene layers, tokens, audio and combat) per ASGI event loop, shared by its sockets; keeps presence, samples, writes and socket sends outside the limit; `0` disables the limit; negative values are rejected. Separate worker processes have separate limits |
 | `APP_DEBUG` | `false` | Application/table renderer diagnostics; independent of DJANGO_DEBUG |
 | `COMMAND_PALETTE_ENABLED` | `true` | Enable the table command palette |
 | `LOBBY_READY_CHECK_ENABLED` | `true` | Enable lobby readiness controls |

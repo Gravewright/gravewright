@@ -57,6 +57,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `WS_COMMANDS_PER_SECOND` | `20` | Taxa de comandos WebSocket por conexão |
 | `WS_BURST_COMMANDS` | `40` | Capacidade de rajada de comandos WebSocket |
 | `GRAVEWRIGHT_REALTIME_SLOW_MS` | `500` | Registra um aviso em `gravewright.realtime.metrics` quando a espera na fila mais a execução de um manipulador do socket chega a esse número de milissegundos, com contagens de SQL, frames e bytes, mas sem payloads nem conteúdo dos usuários; erros de lock do SQLite sempre são registrados; `0` desativa o aviso de lentidão; valores negativos são rejeitados |
+| `GRAVEWRIGHT_REALTIME_PROJECTION_CONCURRENCY` | `2` | Máximo de leituras pesadas de projeção simultâneas (camadas da cena, tokens, áudio e combate) por event loop ASGI, compartilhado pelos seus sockets; presença, amostras, escritas e envios ficam fora do limite; `0` desativa o limite; valores negativos são rejeitados. Processos de workers distintos têm limites separados |
 | `APP_DEBUG` | `false` | Diagnóstico da aplicação/renderizador; independente de DJANGO_DEBUG |
 | `COMMAND_PALETTE_ENABLED` | `true` | Ativa paleta de comandos da mesa |
 | `LOBBY_READY_CHECK_ENABLED` | `true` | Ativa controles de prontidão do lobby |

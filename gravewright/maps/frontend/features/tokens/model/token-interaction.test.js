@@ -13,3 +13,7 @@ assert.equal(movementBlocked(token, { gridX: 2, gridY: 0 }, [{ ...wall, movement
 assert.equal(movementBlocked(token, { gridX: 2, gridY: 0 }, [{ ...wall, kind: 'door', door_state: 'open' }], 70), false);
 assert.equal(movementBlocked({ ...token, elevation: 4 }, { gridX: 2, gridY: 0 }, [{ ...wall, vertical_bottom: 0, vertical_top: 3 }], 70), false);
 assert.equal(movementBlocked(token, { gridX: 0, gridY: 1 }, [wall], 70), false);
+assert.equal(movementBlocked(token, { gridX: 0, gridY: 0 }, [{
+    get movement_behavior() { throw new Error('A stationary token must not inspect walls.'); },
+}], 70), false);
+assert.equal(movementBlocked(token, { gridX: 2, gridY: 0 }, [{ ...wall, kind: 'door', door_state: 'closed' }], 70), true);

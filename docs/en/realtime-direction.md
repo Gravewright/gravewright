@@ -365,6 +365,91 @@ threads take turns for the interpreter lock (263 ms outside SQL for 74 ms of CPU
 cost per projection multiplied by the number of recipients is now the remaining lever;
 the delivery lane stays, because commands no longer wait behind it.
 
+### Stage 12: recipient projection costs
+
+- Scene layers read only the scene's cards. Library deck counts use one aggregate
+  query; layers no longer build the library and the recipient's hand first.
+- Combat resolves tokens, actors and artwork in batches, preserving recipient
+  visibility, fallback actors and encounter order.
+- Drag previews load only the requested tokens. The browser skips wall intersection
+  tests when a token's destination equals its current position.
+- Applying a browser delta makes one private deep copy instead of two. Consumers
+  still receive complete mutable snapshots; changing them cannot corrupt the next
+  update. This does not preserve nested object identities between updates.
+- Spatial audio computes each listener once, loads walls only for an audible ray,
+  and skips rays whose maximum possible gain cannot improve the result. Disabled,
+  muted and out-of-range sources do not perform occlusion work.
+- Audio sends nested state deltas instead of repeating unchanged catalogs. Playback,
+  fades and server time remain current. The browser reconstructs complete state before
+  native and SDK events; resynchronization preserves the current scene and preview.
+  A subscription change discards its old base. Catalogs still come from the database;
+  only their transport and repeated canonical serialization are reduced.
+- An expired authorization is checked even while the presence lease is fresh, but
+  does not write or postpone that lease. Actual renewals retain their half-TTL cadence.
+
+Local synthetic before/after measurements, applying and testing each change in
+sequence on the same machine (medians; timings are not test thresholds):
+
+| Operation and fixture | Before | After |
+| --- | ---: | ---: |
+| Token-change delivery to a player, 10 decks | 25.91 ms / 54 SQL | 19.50 ms / 28 SQL |
+| Same delivery, 20 combatants, after the card change | 42.85 ms / 69 SQL | 25.86 ms / 31 SQL |
+| Player preview of one token in a 1,000-token scene | 47.58 ms / 1,000 tokens loaded | 3.33 ms / 1 token loaded |
+| Browser model, 100 stationary tokens and 1,000 walls | 100,000 wall checks | 0 wall checks |
+| Applying a delta, 1,000 images, 1,000 walls and 100 tokens | 6.12 ms | 2.88 ms |
+| Player audio state, 12 listeners, 60 sources and 500 walls | 153.32 ms | 9.37 ms |
+| GM audio serialization after the spatial change, 500 tracks and 40 playlists | 2.44 ms / 198,303 bytes | 1.78 ms / 317 bytes |
+| Pong with expired authorization and a fresh lease | 7.07 ms / 3 SQL / 1 write | 2.19 ms / 2 SQL / 0 writes |
+
+The delivery and drag probes used 25 samples after warmup, presence used 30, audio
+used 10, and JavaScript used nine batches after warmup. Delivery measurements cover
+one recipient's server handler, not a command round trip. JavaScript measurements
+use Node and do not measure browser FPS. Audio bytes are encoded frame sizes without
+network overhead. These fixtures do not establish gains for an entire live session.
+
+Regression coverage checks query growth, private cards and combatants, actor fallback,
+drag authorization/revisions/walls, immutable private delta bases, audio gain equivalence,
+track endings and fades, role changes, resynchronization and presence expiry.
+
+### Stage 13: bounded concurrent projection reads
+
+`GRAVEWRIGHT_REALTIME_PROJECTION_CONCURRENCY` defaults to two heavy reads at a time
+per ASGI event loop, shared across its sockets. Zero disables admission control.
+The limit covers scene layers, tokens, audio and combat. Existing per-projection
+locks still order subscription changes, reads and sends; the shared permit covers
+the read, not socket sends, commands, presence renewal or samples.
+
+Authorization is checked after admission and again before delivering the result.
+A cancelled waiter never starts its read. If a synchronous read already started,
+it keeps its permit until completion even after its recipient stops waiting;
+abandoned failures are observed. Gates are local to their event loop and do not
+retain closed test loops. Other workers have their own limits. Existing delivery
+coalescing remains in place; this is not a bound on all queued server events.
+
+The prototype compared limits of zero, one, two and four with 1, 5 and 10 ASGI
+clients, then repeated the matrix in reverse order. Two retained most of the gain
+while allowing another read to proceed alongside a slow one. The final implementation
+was measured separately with its setting at zero and two, with 20 refreshes after
+two warmups per case:
+
+| Connected clients | Delivery p95, disabled | Delivery p95, limit 2 | Median batch CPU, disabled → limit 2 |
+| --- | ---: | ---: | ---: |
+| 1 | 58.10 ms | 53.33 ms | 43.45 → 40.88 ms |
+| 5 | 369.92 ms | 279.24 ms | 563.21 → 315.05 ms |
+| 10 | 1,082.46 ms | 524.78 ms | 2,007.47 → 610.05 ms |
+
+The fixture contains 100 tokens, 102 images, 10 decks and 20 combatants, with one
+GM and the remaining clients as players. Delivery time includes queueing, admission,
+projection work and emission through the in-memory ASGI transport; it excludes a
+real network and browser rendering. A concurrent `chat.sync` and presence renewal
+with 10 clients had p95 times of 86.24 → 32.44 ms and 58.16 → 17.48 ms respectively.
+The main benefit is under contention; the single-client difference is small.
+
+Repeating the final implementation comparison in reverse order confirmed the gain:
+with 10 clients, delivery p95 was 1,248.92 ms without the limit and 508.53 ms with
+two permits. With one client, median delivery was effectively unchanged
+(35.98 versus 36.46 ms).
+
 ## Outside this direction
 
 - Replacing SQLite. WAL lets readers proceed during a commit but does not remove

@@ -34,7 +34,7 @@ from gravewright.journals import services as journals
 from gravewright.maps import services as maps
 from gravewright.tokens import services as tokens
 
-from . import access, dispatch, metrics, projections, services
+from . import access, dispatch, metrics, projection_reads, projections, services
 from .errors import database_busy
 from .scene_stream import SceneStreamMixin
 
@@ -365,6 +365,21 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             lock = self.projection_locks[name] = asyncio.Lock()
         return lock
 
+    async def read_projection(self, read, *args):
+        """Admit an expensive read while its caller keeps the projection lock.
+
+        A wait must not extend cached transport authorization. The second check
+        also prevents sending a projection after access was revoked during its read.
+        """
+        async def allowed():
+            closed = getattr(self, "socket_closed", None)
+            return not (closed and closed.is_set()) and await self.authorized()
+
+        value = await projection_reads.read(functools.partial(db(read), *args), allowed)
+        if value is projection_reads.DENIED or not await allowed():
+            return projection_reads.DENIED
+        return value
+
     async def delivery_lane(self):
         """Handle server events in order on a synchronous thread of their own.
 
@@ -456,13 +471,12 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                 # A newer sample replaces this one; it is not replayed.
                 metrics.database_busy()
 
-    def renew_lease(self, revalidate=True):
-        if not revalidate:
-            return self.member, None, services.renew(self.connection_id, self.member.pk)
-        member, valid_until = services.authorization(self.session_key, self.campaign_id, self.user_id)
+    def renew_lease(self, revalidate=True, renew=True):
+        member, valid_until = (services.authorization(self.session_key, self.campaign_id, self.user_id)
+                               if revalidate else (self.member, None))
         if member is None:
             return None, None, False
-        return member, valid_until, services.renew(self.connection_id, member.pk)
+        return member, valid_until, services.renew(self.connection_id, member.pk) if renew else False
 
     async def presence_lane(self):
         """Renew the lease after pongs on a pool thread, never behind commands or samples."""
@@ -471,16 +485,17 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                 await self.presence_due.wait()
                 self.presence_due.clear()
                 cached = self.authorization_cached()
-                if cached and monotonic() < getattr(self, "lease_renew_after", 0):
+                started = monotonic()
+                renew = started >= getattr(self, "lease_renew_after", 0)
+                if cached and not renew:
                     continue  # Fresh lease and authorization: a pong costs no query.
                 # A lease expires TTL after its renewal began, so the next renewal is due
                 # half a TTL after that moment, however long this one waits for SQLite.
-                started = monotonic()
                 with metrics.handler("presence"):
                     epoch = access.epoch()
                     try:
                         member, valid_until, expired = await db(
-                            self.renew_lease, thread_sensitive=False)(revalidate=not cached)
+                            self.renew_lease, thread_sensitive=False)(revalidate=not cached, renew=renew)
                     except OperationalError as error:
                         if not database_busy(error):
                             raise
@@ -491,7 +506,10 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
                     return
                 if not cached:
                     self.remember_authorization(member, valid_until, epoch)
-                self.lease_renew_after = started + settings.GRAVEWRIGHT_PRESENCE_TTL / 2
+                # Authorization has a shorter lifetime than the presence lease.
+                # Rechecking it must neither write nor postpone the next renewal.
+                if renew:
+                    self.lease_renew_after = started + settings.GRAVEWRIGHT_PRESENCE_TTL / 2
                 if expired:
                     await self.publish_presence()
         except asyncio.CancelledError:
@@ -594,14 +612,26 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
     async def emit_projection(self, kind, key, payload):
         """Send only what this socket does not have yet.
 
-        An identical projection sends nothing. Tokens and map layers send a delta
-        computed from the recipient's own complete projection; the first projection
-        after a subscription, scene change or resynchronization is sent whole.
+        An identical projection sends nothing. Tokens, map layers and audio send
+        deltas computed from the recipient's own complete projection; the first
+        projection after a subscription, scene change or resync is sent whole.
         """
         if not hasattr(self, "sent_projections"):
             self.sent_projections = {}
         previous = self.sent_projections.get((kind, key))
-        if kind in projections.DELTA_KEYS:
+        if kind == 'resources.state' and payload.get('module') == 'audio':
+            # Keep clocks and playback current without resending stable catalogs.
+            # The browser merges the nested state before native or SDK delivery.
+            state = payload['state']
+            fields = {field: projections.canonical(value) for field, value in state.items()}
+            self.sent_projections[(kind, key)] = (state, fields)
+            frame = payload
+            if previous is not None:
+                old_state, old_fields = previous
+                changes = projections.delta(kind, old_state, state, identity='sceneId',
+                                            previous_fields=old_fields, current_fields=fields)
+                frame = {**payload, 'state': changes} if changes else None
+        elif kind in projections.DELTA_KEYS:
             # Deltas compare field by field, so they keep the projection itself.
             self.sent_projections[(kind, key)] = payload
             frame = payload if previous is None else projections.delta(kind, previous, payload)
@@ -1024,13 +1054,17 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
     async def deliver_tokens(self, event, notify=None):
         if getattr(self, "token_map_id", None):
             try:
-                projection = await db(tokens.state)(
-                    self.campaign_id, self.user_id, self.token_map_id
+                projection = await self.read_projection(
+                    tokens.state, self.campaign_id, self.user_id, self.token_map_id
                 )
+                if projection is projection_reads.DENIED:
+                    return
                 if event.get("mapId") == projection["mapId"]:
                     projection.update(tokens.teleport_metadata(projection["tokens"], event.get("teleports")))
                 await self.emit_projection("tokens.state", projection["mapId"], projection)
             except maps.MapError, journals.JournalError:
+                if not await self.authorized():
+                    return
                 self.forget_projections("tokens.state")
                 await self.emit("tokens.state", {"mapId": self.token_map_id, "tokens": []})
                 self.token_map_id = None
@@ -1235,7 +1269,9 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
 
         if getattr(self, "map_layer_id", None):
             try:
-                state = await db(read)()
+                state = await self.read_projection(read)
+                if state is projection_reads.DENIED:
+                    return
                 await self.emit_projection("maps.layers", state["sceneId"], state)
             except maps.MapError, journals.JournalError:
                 self.forget_projections("maps.layers")
@@ -1398,9 +1434,15 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
         if area not in getattr(self,'table_modules',{}) or (recheck and not await self.authorized()):return
         scene_id=self.table_modules[area]
         try:
-            value=await db(domain.state)(self.campaign_id,self.user_id,area,scene_id,getattr(self,'audio_preview_token',None))
+            args=(self.campaign_id,self.user_id,area,scene_id,getattr(self,'audio_preview_token',None))
+            value=(await self.read_projection(domain.state,*args) if area in ('audio','combat')
+                   else await db(domain.state)(*args))
+            if value is projection_reads.DENIED:
+                return
             await self.emit_projection('resources.state',(area,scene_id),{'module':area,'sceneId':scene_id,'state':value})
         except (maps.MapError,journals.JournalError):
+            if area in ('audio','combat') and not await self.authorized():
+                return
             self.forget_projections('resources.state',(area,scene_id))
             await self.emit('resources.state',{'module':area,'sceneId':scene_id,'state':{},'unavailable':True})
 

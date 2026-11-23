@@ -276,6 +276,132 @@ test('maps.layers deltas apply the server order', () => {
   assert.deepEqual(detailOf(events, 'gravewright:map-layers').at(-1).images.map(row => row.id), ['c', 'b', 'a']);
 });
 
+test('audio deltas dispatch full catalogs and current playback to native and SDK consumers', () => {
+  const {latest, events} = table();
+  const socket = latest();
+  const initial = {sceneId: 's', tracks: [{id: 'a', name: 'First'}, {id: 'b', name: 'Second'}],
+    playlists: [{id: 'p', tracks: [{soundId: 'a'}]}], spatialSounds: [],
+    serverTime: 100, score: {state: 'stopped', serverTime: 100}, playback: {ambient: []}};
+  socket.receive('resources.state', {module: 'audio', sceneId: 's', state: initial});
+  socket.receive('resources.state', {module: 'audio', sceneId: 's', state: {
+    sceneId: 's', delta: true, serverTime: 101, score: {state: 'stopped', serverTime: 101},
+    upserts: {tracks: [{id: 'b', name: 'Renamed'}]}, removes: {tracks: ['a'], playlists: ['p']},
+  }});
+  const expected = {module: 'audio', sceneId: 's', state: {...initial, tracks: [{id: 'b', name: 'Renamed'}],
+    playlists: [], serverTime: 101, score: {state: 'stopped', serverTime: 101}}};
+  assert.deepEqual(detailOf(events, 'gravewright:resources').at(-1), expected);
+  const sdk = detailOf(events, 'gravewright:api-event').filter(detail => detail.type === 'resources.state').at(-1);
+  assert.deepEqual(sdk.payload, {...expected, tableId: 'table'});
+});
+
+test('audio deltas isolate catalogs by scene and from mutable event consumers', () => {
+  const {createProjectionState} = runInNewContext(`${stateSource}\n({createProjectionState})`, {structuredClone});
+  const state = createProjectionState();
+  const input = {module: 'audio', sceneId: 'a', state: {sceneId: 'a', tracks: [{id: 'one', name: 'Original'}]}};
+  const first = state.receive('resources.state', input);
+  input.state.tracks[0].name = 'Mutated input';
+  first.state.tracks.push({id: 'untrusted'});
+  state.receive('resources.state', {module: 'items', sceneId: 'a', state: {tracks: [{id: 'wrong module'}]}});
+  state.receive('resources.state', {module: 'audio', sceneId: 'b', state: {sceneId: 'b', tracks: [{id: 'two'}]}});
+  const second = state.receive('resources.state', {module: 'audio', sceneId: 'a', state: {
+    delta: true, sceneId: 'a', serverTime: 101,
+  }});
+  assert.deepEqual(plain(second.state.tracks), [{id: 'one', name: 'Original'}]);
+  second.state.tracks[0].name = 'Mutated retained row';
+  const third = state.receive('resources.state', {module: 'audio', sceneId: 'a', state: {
+    delta: true, sceneId: 'a', serverTime: 102,
+  }});
+  assert.deepEqual(plain(third.state.tracks), [{id: 'one', name: 'Original'}]);
+  state.receive('resources.state', {module: 'audio', sceneId: 'a', state: {}, unavailable: true});
+  assert.equal(state.receive('resources.state', {module: 'audio', sceneId: 'a', state: {delta: true, sceneId: 'a'}}), null);
+  state.clear();
+  assert.equal(state.receive('resources.state', {module: 'audio', sceneId: 'b', state: {delta: true, sceneId: 'b'}}), null);
+});
+
+test('an audio delta without its base resubscribes with the selected preview listener', () => {
+  const {api, latest, events} = table();
+  api.subscribeModule('audio', 's', 'preview-token');
+  const socket = latest();
+  socket.receive('resources.state', {module: 'audio', sceneId: 's', state: {delta: true, sceneId: 's', serverTime: 101}});
+  assert.deepEqual(plain(sent(socket, 'resources.sync').at(-1).payload), {
+    tableId: 'table', module: 'audio', sceneId: 's', previewTokenId: 'preview-token',
+  });
+  assert.equal(detailOf(events, 'gravewright:resources').length, 0);
+});
+
+test('changing the audio scene or preview discards its old delta base', () => {
+  const {api, latest, events} = table();
+  const socket = latest();
+  const full = sceneId => ({module: 'audio', sceneId, state: {sceneId, tracks: [{id: 'sound'}]}});
+  const delta = sceneId => ({module: 'audio', sceneId, state: {sceneId, delta: true, serverTime: 101}});
+  api.subscribeModule('audio', 'a', 'first');
+  socket.receive('resources.state', full('a'));
+  // Resubscribing an unchanged selection keeps its current base.
+  api.subscribeModule('audio', 'a', 'first');
+  socket.receive('resources.state', delta('a'));
+  assert.equal(detailOf(events, 'gravewright:resources').length, 2);
+  api.subscribeModule('audio', 'a', 'second');
+  socket.receive('resources.state', delta('a'));
+  assert.equal(detailOf(events, 'gravewright:resources').length, 2);
+  assert.equal(sent(socket, 'resources.sync').at(-1).payload.previewTokenId, 'second');
+  socket.receive('resources.state', full('a'));
+  api.subscribeModule('audio', 'b', 'third');
+  socket.receive('resources.state', delta('a'));
+  assert.deepEqual(plain(sent(socket, 'resources.sync').at(-1).payload), {
+    tableId: 'table', module: 'audio', sceneId: 'b', previewTokenId: 'third',
+  });
+  assert.equal(detailOf(events, 'gravewright:resources').length, 3);
+  socket.receive('resources.state', full('b'));
+  socket.receive('resources.state', delta('b'));
+  assert.equal(detailOf(events, 'gravewright:resources').length, 5);
+});
+
+test('mutable projection inputs and delivered branches cannot corrupt later deltas', () => {
+  const {createProjectionState} = runInNewContext(`${stateSource}\n({createProjectionState})`, {structuredClone});
+  const state = createProjectionState();
+  const initial = {sceneId: 's', images: [{id: 'a', art: {color: 'red'}}, {id: 'b', art: {color: 'blue'}}],
+    walls: [{id: 'wall', channels: {movement: true}}], camera: {zoom: 1}};
+  const first = state.receive('maps.layers', initial);
+  initial.images[0].art.color = 'external input mutation';
+  first.walls[0].channels.movement = false;
+  first.walls.push({id: 'external wall'});
+  const patch = {sceneId: 's', delta: true, upserts: {images: [{id: 'b', art: {color: 'green'}}]},
+    marker: {name: 'server marker'}, unset: ['camera']};
+  const second = state.receive('maps.layers', patch);
+  assert.deepEqual(plain(second), {sceneId: 's',
+    images: [{id: 'a', art: {color: 'red'}}, {id: 'b', art: {color: 'green'}}],
+    walls: [{id: 'wall', channels: {movement: true}}], marker: {name: 'server marker'}});
+
+  // All branches remain ordinary mutable data for native and SDK consumers.
+  patch.upserts.images[0].art.color = 'mutated upsert';
+  patch.marker.name = 'mutated metadata';
+  second.images[0].art.color = 'mutated retained row';
+  second.images.push({id: 'external image'});
+  second.walls[0].channels.movement = false;
+  second.walls.push({id: 'another external wall'});
+  const third = state.receive('maps.layers', {sceneId: 's', delta: true,
+    upserts: {images: [{id: 'c', art: {color: 'yellow'}}]}, removes: {images: ['a']},
+    order: {images: ['c', 'b']}});
+  assert.deepEqual(plain(third), {sceneId: 's',
+    images: [{id: 'c', art: {color: 'yellow'}}, {id: 'b', art: {color: 'green'}}],
+    walls: [{id: 'wall', channels: {movement: true}}], marker: {name: 'server marker'}});
+});
+
+test('applying a delta preserves previously delivered snapshots', () => {
+  const {createProjectionState} = runInNewContext(`${stateSource}\n({createProjectionState})`, {structuredClone});
+  const state = createProjectionState();
+  const original = {mapId: 'm', tokens: [{id: 'a', gridX: 1}, {id: 'b', gridX: 2}],
+    teleports: [{id: 'b', version: 2}]};
+  const first = state.receive('tokens.state', structuredClone(original));
+  const second = state.receive('tokens.state', {mapId: 'm', delta: true,
+    upserts: {tokens: [{id: 'b', gridX: 8}]}, removes: {tokens: ['a']}, unset: ['teleports']});
+  assert.deepEqual(plain(first), original);
+  assert.deepEqual(plain(second), {mapId: 'm', tokens: [{id: 'b', gridX: 8}]});
+  second.tokens[0].gridX = 99;
+  assert.deepEqual(plain(state.receive('tokens.state', {mapId: 'm', delta: true})),
+    {mapId: 'm', tokens: [{id: 'b', gridX: 8}]});
+});
+
 test('a delta without its base state requests a full projection', () => {
   const {latest, events} = table();
   const socket = latest();

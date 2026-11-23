@@ -10,6 +10,8 @@ function position(token, delta, cell, width, height, grid) {
   return { gridX: Math.max(0, Math.min(Math.max(0, width / cell - token.cells), grid ? Math.round(token.gridX + delta.x / cell) : token.gridX + delta.x / cell)), gridY: Math.max(0, Math.min(Math.max(0, height / cell - (token.heightCells ?? token.cells)), grid ? Math.round(token.gridY + delta.y / cell) : token.gridY + delta.y / cell)) };
 }
 function movementBlocked(token, to, walls, cell) {
+  if (token.gridX === to.gridX && token.gridY === to.gridY)
+    return false;
   const a = { x: (token.gridX + token.cells / 2) * cell, y: (token.gridY + (token.heightCells ?? token.cells) / 2) * cell }, b = { x: (to.gridX + token.cells / 2) * cell, y: (to.gridY + (token.heightCells ?? token.cells) / 2) * cell }, rx = b.x - a.x, ry = b.y - a.y;
   return walls.some((w) => {
     if (w.movement_behavior === "pass" || w.kind === "door" && w.door_state === "open" || w.vertical_bottom != null && (token.elevation ?? 0) < w.vertical_bottom || w.vertical_top != null && (token.elevation ?? 0) > w.vertical_top)

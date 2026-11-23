@@ -361,9 +361,9 @@ def layer_state(scene, who):
         if result['lighting']['mode'] == 'dynamic':
             result['lighting']['mode'] = 'none'
             result['lighting']['darkness'] = 0
-    from gravewright.cards.services import state as card_state
+    from gravewright.cards.services import scene_cards
     from gravewright.combat.services import state as combat_state
-    cards = card_state(who,str(scene.pk))['cards']
+    cards = scene_cards(scene, who)
     result['cards'] = [{**c,'can_manage':c['canControl'],'card':{**c,'src':c['frontUrl'] if c['face_state']=='face_up' else c['backUrl']}} for c in cards]
     result['combat'] = combat_state(who,str(scene.pk))
     from gravewright.audio.services import soundscape_state

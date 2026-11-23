@@ -503,20 +503,21 @@ def preview(campaign, user, map_id, positions, previous):
     scene = maps.scene(map_id, who)
     if not isinstance(positions, list) or not 1 <= len(positions) <= 100:
         raise maps.MapError("Invalid drag preview.")
-    result = []
-    seen = set()
-    available = {str(t.pk): t for t in scene.tokens.select_related("actor")}
-    walls = list(scene.elements.filter(kind="walls")) if who.role != "gm" else []
-    for p in positions:
-        if not isinstance(p, dict):
+    requested = []
+    for position in positions:
+        if not isinstance(position, dict):
             raise maps.MapError("Invalid drag preview.")
-        t = available.get(str(identifier(p.get("id"))))
+        requested.append(identifier(position.get("id")))
+    if len(set(requested)) != len(requested):
+        raise maps.MapError("Invalid drag scope.")
+    result = []
+    available = {t.pk: t for t in scene.tokens.filter(pk__in=requested).select_related("actor")}
+    walls = list(scene.elements.filter(kind="walls")) if who.role != "gm" else []
+    for token_id, p in zip(requested, positions):
+        t = available.get(token_id)
         if t is None or (t.hidden and who.role != "gm"):
             raise maps.MapError("Token not available.")
         t.scene = scene
-        if t.scene_id != scene.pk or t.pk in seen:
-            raise maps.MapError("Invalid drag scope.")
-        seen.add(t.pk)
         x, y = movement(t, who, p, previous.get(str(t.pk)), 16, walls)
         result.append({"id": str(t.pk), "gridX": x, "gridY": y, "version": t.version})
     return result

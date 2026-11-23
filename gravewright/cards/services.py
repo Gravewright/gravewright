@@ -5,6 +5,7 @@ its front. Public entry points provide the campaign transaction and retry bounda
 
 import secrets
 from django.conf import settings
+from django.db.models import Count, Q
 from gravewright.campaigns.models import Membership
 from gravewright.maps.services import scene
 from gravewright.table.domain import manage, identifier, version, title, boolean, number, MapError
@@ -21,15 +22,24 @@ def card_data(row, who):
         x=row.x,y=row.y,rotation=row.rotation,scale=row.scale,z_index=row.z_index,version=row.version,canControl=who.role=='gm' or row.owner_id==who.user_id)
 
 
+def scene_cards(target, who):
+    """Project cards on an already authorized scene, without loading the library or hand."""
+    rows = Card.objects.filter(deck__campaign_id=who.campaign_id, zone='scene', scene=target).select_related('deck')
+    return [card_data(card, who) for card in rows]
+
+
 def state(who,scene_id=None):
     from gravewright.table.ownership import resource_allows
-    decks=Deck.objects.filter(campaign_id=who.campaign_id).order_by('name')
+    decks=Deck.objects.filter(campaign_id=who.campaign_id).annotate(
+        draw_count=Count('cards', filter=Q(cards__zone='draw')),
+        discard_count=Count('cards', filter=Q(cards__zone='discard')),
+    ).order_by('name')
     rows=Card.objects.filter(deck__campaign_id=who.campaign_id).select_related('deck')
     table=[]
     if scene_id:
         target=scene(scene_id,who)
-        table=[card_data(c,who) for c in rows.filter(zone='scene',scene=target)]
-    return dict(decks=[dict(id=str(d.pk),name=d.name,version=d.version,draw_count=d.cards.filter(zone='draw').count(),discard_count=d.cards.filter(zone='discard').count()) for d in decks if resource_allows(who,'cards',d,default='read')],
+        table=scene_cards(target,who)
+    return dict(decks=[dict(id=str(d.pk),name=d.name,version=d.version,draw_count=d.draw_count,discard_count=d.discard_count) for d in decks if resource_allows(who,'cards',d,default='read')],
         hand=[card_data(c,who) for c in rows.filter(zone='hand',owner_id=who.user_id)],cards=table,isGM=who.role=='gm')
 
 

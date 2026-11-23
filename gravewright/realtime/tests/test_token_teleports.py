@@ -42,6 +42,7 @@ class TokenTeleportTests(TransactionTestCase):
             token_map_id=str(self.scene.pk), authorized=AsyncMock(return_value=True), emit=AsyncMock(),
             api_changed=AsyncMock(), room_resources=AsyncMock())
         recipient.deliver_tokens = partial(TableConsumer.deliver_tokens, recipient)
+        recipient.read_projection = partial(TableConsumer.read_projection, recipient)
         recipient.notify_api = partial(TableConsumer.notify_api, recipient)
         recipient.emit_projection = partial(TableConsumer.emit_projection, recipient)
         recipient.forget_projections = partial(TableConsumer.forget_projections, recipient)

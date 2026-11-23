@@ -35,35 +35,53 @@ export function createCommandRecovery({send, fail, schedule = setTimeout, cancel
 
 export function createProjectionState() {
   const states = new Map();
+  function merge(key, payload) {
+    if (!payload.delta) {
+      states.set(key, structuredClone(payload));
+      return payload;
+    }
+    const previous = states.get(key);
+    if (!previous) return null;
+    const {delta, upserts = {}, removes = {}, order = {}, unset = [], ...metadata} = payload;
+    // The merge replaces collection arrays and top-level fields; it never edits
+    // cached rows. Keep one private copy before exposing the complete result.
+    const result = {...previous, ...metadata};
+    for (const field of unset) delete result[field];
+    for (const field of new Set([...Object.keys(upserts), ...Object.keys(removes), ...Object.keys(order)])) {
+      const rows = new Map((previous[field] || []).map(row => [String(row.id), row]));
+      for (const id of removes[field] || []) rows.delete(String(id));
+      for (const row of upserts[field] || []) rows.set(String(row.id), row);
+      if (order[field]) {
+        const ids = order[field].map(String);
+        if (ids.length !== rows.size || new Set(ids).size !== rows.size || ids.some(id => !rows.has(id))) {
+          states.delete(key);
+          return null;
+        }
+        result[field] = ids.map(id => rows.get(id));
+      } else result[field] = [...rows.values()];
+    }
+    states.set(key, structuredClone(result));
+    return result;
+  }
   return {
     clear() { states.clear(); },
+    forgetResource(module) {
+      for (const key of states.keys()) {
+        if (key.startsWith(`resources.state:${module}:`)) states.delete(key);
+      }
+    },
     receive(type, payload) {
+      if (type === 'resources.state' && payload.module === 'audio') {
+        const key = `${type}:audio:${payload.sceneId}`;
+        if (payload.unavailable) {
+          states.delete(key);
+          return payload;
+        }
+        const state = merge(key, payload.state);
+        return state ? {...payload, state} : null;
+      }
       if (!['tokens.state', 'maps.layers'].includes(type)) return payload;
-      const key = `${type}:${type === 'tokens.state' ? payload.mapId : payload.sceneId}`;
-      if (!payload.delta) {
-        states.set(key, structuredClone(payload));
-        return payload;
-      }
-      const previous = states.get(key);
-      if (!previous) return null;
-      const {delta, upserts = {}, removes = {}, order = {}, unset = [], ...metadata} = payload;
-      const result = {...structuredClone(previous), ...metadata};
-      for (const field of unset) delete result[field];
-      for (const field of new Set([...Object.keys(upserts), ...Object.keys(removes), ...Object.keys(order)])) {
-        const rows = new Map((previous[field] || []).map(row => [String(row.id), row]));
-        for (const id of removes[field] || []) rows.delete(String(id));
-        for (const row of upserts[field] || []) rows.set(String(row.id), row);
-        if (order[field]) {
-          const ids = order[field].map(String);
-          if (ids.length !== rows.size || new Set(ids).size !== rows.size || ids.some(id => !rows.has(id))) {
-            states.delete(key);
-            return null;
-          }
-          result[field] = ids.map(id => rows.get(id));
-        } else result[field] = [...rows.values()];
-      }
-      states.set(key, structuredClone(result));
-      return result;
+      return merge(`${type}:${type === 'tokens.state' ? payload.mapId : payload.sceneId}`, payload);
     },
   };
 }
