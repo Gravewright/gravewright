@@ -2798,5 +2798,19 @@
   "Measurement unit": "Unidad de medida",
   "Group": "Grupo",
   "No group": "Sin grupo",
-  "Image scale": "Escala de la imagen"
+  "Image scale": "Escala de la imagen",
+  "Customize the dock": "Personalizar el dock",
+  "Choose which tools and panels appear, and their order. Saved for your profile and this table on this device.": "Elige qué herramientas y paneles aparecen y en qué orden. Se guarda para tu perfil y esta mesa en este dispositivo.",
+  "Hidden controls keep their keyboard shortcuts. Settings always remain available from the table logo.": "Los controles ocultos conservan sus atajos. La configuración sigue disponible desde el logotipo de la mesa.",
+  "Restore dock defaults": "Restaurar dock predeterminado",
+  "Could not load or save dock preferences on this device.": "No se pudieron cargar o guardar las preferencias del dock en este dispositivo.",
+  "Dock": "Dock",
+  "Panels menu": "Menú de paneles",
+  "Shown": "Visible",
+  "Move {action} up": "Mover {action} hacia arriba",
+  "Move {action} down": "Mover {action} hacia abajo",
+  "All panels are hidden or pinned to the dock. Customize them in Settings.": "Todos los paneles están ocultos o fijados al dock. Personalízalos en Configuración.",
+  "Shared measurements": "Mediciones compartidas",
+  "Clear my drawings": "Borrar mis dibujos",
+  "Folder permissions": "Permisos de la carpeta"
 }

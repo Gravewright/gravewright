@@ -49,11 +49,12 @@ async function applySelection(api, tokens, container, block, map, cell, state, o
   }
   if (drawings.length && ["transform", "delete"].includes(action)) {
     const ids = new Set(drawings.map((d) => d.id));
+    // Each drawing has its own revision, so peers drawing elsewhere do not conflict.
+    const rows = (state.drawings?.rows ?? []).filter((d) => ids.has(d.id));
     try {
-      await command("drawings", "replace", { expected_version: state.drawings?.version ?? 0, rows: (state.drawings?.rows ?? []).filter((d) => action !== "delete" || !ids.has(d.id)).map((d) => {
-        if (!ids.has(d.id)) return d;
+      await command("drawings", "patch", action === "delete" ? { removed: rows.map((d) => ({ id: d.id, expected_version: d.version ?? 1 })) } : { upserts: rows.map(({ version, canEdit, owner, ...d }) => {
         const a = d.points[0], next = point(a);
-        return { ...d, points: d.points.map((p) => ({ x: p.x + next.x - a.x, y: p.y + next.y - a.y })), rotation: (d.rotation ?? 0) + angle };
+        return { ...d, points: d.points.map((p) => ({ x: p.x + next.x - a.x, y: p.y + next.y - a.y })), rotation: (d.rotation ?? 0) + angle, expected_version: version ?? 1 };
       }) });
       done.push(...drawings.map((d) => d.key));
     } catch {

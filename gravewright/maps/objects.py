@@ -285,9 +285,7 @@ def layer_state(scene, who):
             "combat_id": "",
         },
         "audio": [],
-        "drawings": deepcopy(env.drawings)
-        if env and env.drawings
-        else {"version": 0, "rows": []},
+        "drawings": {"version": 0, "rows": []},
         "lighting": {
             "mode": "none",
             "darkness": 1,
@@ -325,11 +323,6 @@ def layer_state(scene, who):
                 r["lever"] = {"state": r["lever"]["state"]}
             if isinstance(r.get("torch"), dict):
                 r["torch"] = {"state": r["torch"]["state"], "lit": r["torch"]["lit"]}
-        result["drawings"]["rows"] = [
-            r
-            for r in result["drawings"].get("rows", [])
-            if r.get("audience") == "campaign"
-        ]
         # Geometry remains necessary for visibility clipping. Secret and invisible
         # barriers have no interactive door handles until the GM reveals them.
         for w in result["walls"]:
@@ -345,7 +338,11 @@ def layer_state(scene, who):
     from .regions import projection as region_projection
     result['zones'] = [{**region_projection(z),'sceneId':str(scene.pk)} for z in result['zones']
                        if zone_visible(z,who) and (who.role == 'gm' or 'region' not in z)]
-    result['markers'] = [{**r,'canEdit':who.role=='gm' or r.get('owner')==str(who.user_id)} for r in result['markers']]
+    from .markers import visible as visible_markers
+    result['markers'] = visible_markers(result['markers'], who)
+    from .drawings import document as drawing_document, visible as visible_drawings
+    drawing_version, drawing_rows = drawing_document(env)
+    result['drawings'] = {'version': drawing_version, 'rows': visible_drawings(deepcopy(drawing_rows), who)}
     from .journal_pins import visible as visible_pins
     result['journalPins'] = visible_pins(result['journalPins'], who)
     result['capabilities'] = {
@@ -403,9 +400,18 @@ def apply(scene, who, area, action, p):
         if action != 'set':raise MapError('Unknown soundscape command.')
         return set_soundscape(scene, who, p)
     if area == "markers":
+        if action == 'patch':
+            from .markers import patch
+            return patch(scene, who, env, p)
         if action != "replace":raise MapError("Unknown marker command.")
         from .markers import replace
         return replace(scene,who,env,p)
+    if area == "drawings" and action == "patch":
+        from .drawings import patch as drawing_patch
+        result = drawing_patch(env, who, p)
+        env.version += 1
+        env.save()
+        return result
     if area == "images" and action == "interact":
         return interact_lever(scene, who, p)
     if area == "images" and action == "torch-light":

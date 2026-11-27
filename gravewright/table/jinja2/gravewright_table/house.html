@@ -6,6 +6,13 @@
 <div data-shortcut-list></div>
 </section>
 <div class="house-menu__preferences" data-show="$_houseSection==='preferences'" style="display:none">
+<section class="house-menu__preference-group dock-preferences" data-dock-settings>
+<header><strong>{{ tr('Customize the dock') }}</strong><p>{{ tr('Choose which tools and panels appear, and their order. Saved for your profile and this table on this device.') }}</p></header>
+<p>{{ tr('Hidden controls keep their keyboard shortcuts. Settings always remain available from the table logo.') }}</p>
+<button type="button" data-dock-reset>{{ tr('Restore dock defaults') }}</button>
+<p role="alert" data-dock-settings-error hidden>{{ tr('Could not load or save dock preferences on this device.') }}</p>
+<div data-dock-settings-list></div>
+</section>
 <header><strong>{{ house.rendering.title }}</strong><p>{{ house.rendering.description }}</p></header>
 <div class="house-menu__profiles" role="radiogroup" aria-label="{{ house.rendering.title }}">
 {% for profile in ['performance','balanced','quality'] %}

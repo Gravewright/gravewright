@@ -299,22 +299,37 @@ def _command(campaign_id, user_id, action, payload, rid):
         who = member(campaign_id, user_id)
         from gravewright.journals.services import writable
         writable(who)
+        # Shared measurements and drawings authorize each row in their own module.
+        shared_patch = action == 'objects' and payload.get('action') == 'patch' and payload.get('area') in ('markers', 'drawings')
         if not (
             action == "objects"
-            and (payload.get("area") == "markers" or payload.get("area") == "walls" and payload.get("action") == "door"
+            and (payload.get("area") == "markers" or shared_patch
+                 or payload.get("area") == "walls" and payload.get("action") == "door"
                  or payload.get("area") == "images" and payload.get("action") in ("interact", "torch-light"))
         ):
             manage(who)
         receipt = Receipt.objects.filter(
             campaign_id=campaign_id, user_id=user_id, request_id=rid
         ).first()
+        if shared_patch:
+            # Results are recipient-specific; receipts keep only a payload digest
+            # and a retry returns the caller's current projection.
+            from . import drawings, markers
+            rows = markers if payload['area'] == 'markers' else drawings
+            patch_scene = scene(payload.get('mapId'), who)
+            patch_receipt = rows.receipt(payload)
         if receipt:
+            if shared_patch:
+                if receipt.result != patch_receipt:
+                    raise MapError('The request identifier belongs to another operation.', 'conflict')
+                return rows.replay(patch_scene, who)
             return receipt.result
         from .blueprint_delays import automation_request
         with automation_request(rid):
             result = apply(who, action, payload)
         Receipt.objects.create(
-            campaign_id=campaign_id, user_id=user_id, request_id=rid, result=result
+            campaign_id=campaign_id, user_id=user_id, request_id=rid,
+            result=patch_receipt if shared_patch else result
         )
         from gravewright.realtime.dispatch import changed
         changed(campaign_id,user_id,'maps',action,rid,result)

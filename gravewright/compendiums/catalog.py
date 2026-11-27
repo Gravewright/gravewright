@@ -8,7 +8,7 @@ from django.conf import settings
 from gravewright.table.domain import MapError, manage, title, document, number
 from .models import ContentAccess
 
-# Like Foundry's default pack ownership, players observe item and spell reference
+# By default, players observe item and spell reference
 # packs until the GM hides them. Actor, journal, scene and card packs can hold
 # adventure spoilers, so they stay hidden until the GM shares them.
 PLAYER_VISIBLE_PACKS = {'item_pack', 'spell_pack'}
@@ -159,12 +159,48 @@ def available(who, pack_id=None):
             yield rid,base,collection,pack
 
 
+def _folder(collection):
+    """Installed collections were validated on install; legacy roots were not."""
+    from .content import folder_path
+    try:
+        return folder_path(collection)
+    except ValueError:
+        return []
+
+
+def folder_id(path):
+    """Opaque, URL-safe key for one directory folder, shared by every collection on that path."""
+    return 'native-folder:' + str(uuid.uuid5(uuid.NAMESPACE_URL, 'compendium-folder/' + json.dumps(path, ensure_ascii=False)))
+
+
+def folder_packs(who, key):
+    """The folder path for ``key`` and the available packs beneath it, subfolders included."""
+    path, rows = None, []
+    for record in available(who):
+        folder = _folder(record[2])
+        for size in range(1, len(folder) + 1):
+            if folder_id(folder[:size]) == key:
+                path = folder[:size]
+                rows.append(record)
+                break
+    return path, rows
+
+
 def summaries(who):
-    return [dict(id=rid,name=f"{collection.get('name',base.name)} / {pack.get('label',pack.get('name',pack.get('id')))}",
+    rows=[]
+    for rid,base,collection,pack in available(who):
+        label=str(pack.get('label',pack.get('name',pack.get('id'))))
+        row=dict(id=rid,name=f"{collection.get('name',base.name)} / {label}",
                  shared=who.role!='gm',locked=True,version=1,systemId=who.campaign.system,
                  entries=[dict(id=str(e.get('id')),name=str(e.get('name',e.get('title','Imported'))),kind=KINDS[pack['type']],type=str(e.get('type','')),version=1)
                           for e in pack.get('entries',[]) if isinstance(e,dict)])
-            for rid,base,collection,pack in available(who)]
+        folder=_folder(collection)
+        if folder:
+            # The folder path names the collection, so the directory shows the label alone.
+            # folderIds address each enclosing folder for GM permissions.
+            row.update(folder=folder,folderIds=[folder_id(folder[:size]) for size in range(1,len(folder)+1)],label=label)
+        rows.append(row)
+    return rows
 
 
 def read_ids(payload):

@@ -235,3 +235,28 @@
 .house-menu__preference-group>button{justify-self:start}
 .house-menu__preference-group[hidden]{display:none}
 .house-menu__preferences [role=alert]{color:var(--danger-text, #ffaaaa)}
+
+.game-dock [data-dock-user-hidden], .game-dock [data-dock-empty],
+.game-dock h2:has(+ [data-dock-empty]) { display: none !important; }
+.game-dock { max-width: calc(100vw - 24px); }
+.game-dock__row { flex-wrap: wrap; }
+.game-dock__primary { flex-shrink: 1; }
+.game-dock__empty { margin: var(--space-0); padding: var(--space-2); color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.dock-preferences { padding-top: var(--space-0); border-top: 0; }
+.dock-preferences button, .dock-preferences select { min-height: 32px; padding: var(--space-1) var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-field, #151a20); color: var(--text); font: inherit; font-size: 12px; }
+.dock-preferences button { cursor: pointer; }
+.dock-preferences button:hover { border-color: var(--accent); }
+.dock-preferences button:disabled { cursor: default; opacity: .4; }
+.dock-preferences button:focus-visible, .dock-preferences select:focus-visible, .dock-preference-group summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.dock-preference-group { min-width: 0; padding: var(--space-2) var(--space-0); border-bottom: 1px solid var(--border); }
+.dock-preference-group summary { padding: var(--space-1) var(--space-0); color: var(--text-bright); font-size: 14px; cursor: pointer; }
+.dock-preference-group ol { display: grid; gap: var(--space-2); padding: var(--space-2) var(--space-0); margin: var(--space-0); list-style: none; }
+.dock-preference-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, 140px) auto; align-items: center; gap: var(--space-2); font-size: 12px; }
+.dock-preference-row label { overflow-wrap: anywhere; }
+.dock-preference-row select { width: 100%; min-width: 0; }
+.dock-preference-move { display: flex; gap: var(--space-1); }
+.dock-preference-move button { width: 32px; padding: var(--space-1); }
+@media (max-width: 600px) {
+    .dock-preference-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .dock-preference-row label { grid-column: 1 / -1; }
+}

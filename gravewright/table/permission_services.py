@@ -9,6 +9,17 @@ from . import ownership as access
 from .models import DocumentAccess
 
 
+def _native_pack(who, record):
+    """Permission view of one installed or legacy native pack from ``catalog.available``."""
+    from types import SimpleNamespace
+    from gravewright.compendiums.catalog import collection_key
+    key, base, collection, pack = record
+    explicit = DocumentAccess.objects.filter(campaign_id=who.campaign_id, kind='compendiums', resource_id=key).first()
+    # ContentAccess rows use the same collection key as catalog reads and the legacy permissions command.
+    return SimpleNamespace(pk=key, name=pack.get('label', pack.get('name', str(pack.get('id')))), version=explicit.version if explicit else 1,
+                           shared=False, native=True, collection=collection_key(base, collection), pack=str(pack.get('id')), pack_type=pack.get('type'))
+
+
 def resolve(who, kind, key):
     from gravewright.actors.models import Actor, Folder as ActorFolder
     from gravewright.items.models import Item, Folder as ItemFolder
@@ -26,15 +37,19 @@ def resolve(who, kind, key):
             raise JournalError('Document not found.', 'not_found')
         return 'actors', token.actor, None
     if kind == 'compendiums' and key.startswith('native:'):
-        from types import SimpleNamespace
         from gravewright.compendiums.catalog import available
         found = next((r for r in available(who) if r[0] == key), None)
         if not found:
             raise JournalError('Document not found.', 'not_found')
-        _, base, collection, pack = found
-        explicit = DocumentAccess.objects.filter(campaign_id=who.campaign_id,kind=kind,resource_id=key).first()
-        return kind, SimpleNamespace(pk=key, name=pack.get('label', pack.get('name', str(pack.get('id')))), version=explicit.version if explicit else 1,
-                                     shared=False, native=True, collection=base.name, pack=str(pack.get('id')), pack_type=pack.get('type')), None
+        return kind, _native_pack(who, found), None
+    if kind == 'compendium-folders':
+        from types import SimpleNamespace
+        from gravewright.compendiums.catalog import folder_packs
+        path, records = folder_packs(who, key)
+        if not records:
+            raise JournalError('Document not found.', 'not_found')
+        # Declared folders exist only through their packs; read collections once for all of them.
+        return kind, SimpleNamespace(pk=key, name=path[-1], packs=[_native_pack(who, record) for record in records]), None
     if kind == 'pages':
         parts = key.split(':', 1)
         if len(parts) != 2:
@@ -53,6 +68,9 @@ def resolve(who, kind, key):
 
 
 def children(kind, row):
+    if kind == 'compendium-folders':
+        # Unlike document folders, a compendium folder covers the packs in its subfolders.
+        return row.packs
     from gravewright.actors.models import Actor
     from gravewright.items.models import Item
     from gravewright.journals.models import Journal
@@ -67,7 +85,10 @@ def snapshot(who, kind, row, section=None):
     choices = list(access.LEVELS) if kind in {'actors', 'items', 'journals', 'actor-folders', 'item-folders', 'journal-folders'} else ['none', 'read']
     policy = DocumentAccess.objects.filter(campaign_id=who.campaign_id, kind=kind, resource_id=key).first()
     if bulk:
-        revision = hashlib.sha256(json.dumps([(str(c.pk), c.version) for c in children(kind, row)]).encode()).hexdigest()
+        # Native packs may change through role defaults without a document version.
+        rows = [(str(c.pk), c.version, snapshot(who, 'compendiums', c)['permissions'] if kind == 'compendium-folders' else None)
+                for c in children(kind, row)]
+        revision = hashlib.sha256(json.dumps(rows if kind == 'compendium-folders' else [r[:2] for r in rows], sort_keys=True).encode()).hexdigest()
         grants = {'default': 'unchanged'}
     elif kind in {'actors', 'items'}:
         grants, revision = {'default': 'none', **row.permissions}, row.version
@@ -88,7 +109,7 @@ def snapshot(who, kind, row, section=None):
     members = [{'id': str(m.user_id), 'name': m.user.name, 'role': m.role} for m in Membership.objects.filter(campaign_id=who.campaign_id, user__is_active=True).select_related('user').order_by('user__name', 'user_id')]
     return {'kind': kind, 'id': key, 'title': section['title'] if section else getattr(row, 'name', getattr(row, 'title', getattr(row, 'label', ''))),
             'version': revision, 'permissions': grants, 'levels': choices, 'members': members, 'bulk': bulk,
-            'roles': kind == 'compendiums', 'gmOnlyPage': bool(section and section['audience'] == 'gm')}
+            'roles': kind in {'compendiums', 'compendium-folders'}, 'gmOnlyPage': bool(section and section['audience'] == 'gm')}
 
 
 def store(who, kind, row, grants, key=None):
@@ -154,7 +175,8 @@ def command(campaign_id, user_id, kind, resource_id, payload, request_id):
         reset = payload.get('reset', [])
         if not isinstance(reset, list) or len(reset) > 1000 or any(not isinstance(k, str) or k not in grants or k == 'default' for k in reset):
             raise JournalError('Invalid resource permissions.')
-        target_kind = {'actor-folders': 'actors', 'item-folders': 'items', 'journal-folders': 'journals', 'scene-folders': 'scenes'}[kind]
+        target_kind = {'actor-folders': 'actors', 'item-folders': 'items', 'journal-folders': 'journals', 'scene-folders': 'scenes',
+                       'compendium-folders': 'compendiums'}[kind]
         for child in children(kind, row):
             existing = snapshot(who, target_kind, child)['permissions']
             for k, value in grants.items():
@@ -169,7 +191,8 @@ def command(campaign_id, user_id, kind, resource_id, payload, request_id):
         store(who, kind, row, grants, current['id'])
     from gravewright.realtime.dispatch import changed
     resource = {"actor-folders": "actors", "item-folders": "items", "journal-folders": "journals",
-                "scene-folders": "maps", "scenes": "maps", "pages": "journals"}.get(kind, kind)
+                "scene-folders": "maps", "scenes": "maps", "pages": "journals",
+                "compendium-folders": "compendiums"}.get(kind, kind)
     current = snapshot(who, kind, row, section)
     Receipt.objects.create(campaign_id=campaign_id, user_id=user_id, request_id=rid, result=current)
     changed(campaign_id, user_id, resource, "permissions", rid, current)

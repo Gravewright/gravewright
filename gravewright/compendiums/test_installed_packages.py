@@ -136,7 +136,7 @@ class InstalledCompendiumTests(TestCase):
     def test_item_packs_default_to_player_read_and_explicit_denial(self):
         pack = self.pack()
         payload = {"packId": pack["id"], "id": self.entry_id("2014", "weapon")}
-        # Like Foundry's default ownership, players observe item packs; streamers do not.
+        # By default, players observe item packs; streamers do not.
         self.assertEqual(len(self.state(self.player)["packs"]), 4)
         self.assertEqual(self.state(self.streamer)["packs"], [])
         self.assertEqual(self.command("read", payload, self.player)["type"], "weapon")
@@ -303,6 +303,95 @@ class InstalledCompendiumTests(TestCase):
             with self.subTest(path=path):
                 with self.assertRaises(ModuleFailure):
                     self.install("0.2.0", content_path=path)
+
+    def use_folders(self):
+        collections = {}
+        for edition in ("2014", "2024"):
+            collections[edition] = self.collection(edition)
+            collections[edition]["folder"] = [" Example SRD ", f"Edition {edition}"]
+        self.install("0.2.0", collections=collections)
+        selected = ModuleSet.objects.get(campaign=self.campaign)
+        host().configure(self.campaign.pk, {SYSTEM: "0.2.0"}, {}, selected.revision)
+        return self.state()["packs"]
+
+    def test_declared_folders_group_packs_without_changing_ids_names_or_grants(self):
+        before = {pack["name"]: pack["id"] for pack in self.state()["packs"]}
+        self.assertFalse(any("folder" in pack or "label" in pack for pack in self.state()["packs"]))
+        hidden = self.pack("2024", spells=True)
+        self.command("permissions", {"packId": hidden["id"], "level": "none"})
+        packs = self.use_folders()
+        self.assertEqual({pack["name"]: pack["id"] for pack in packs}, before)
+        for pack in packs:
+            edition = "2014" if "2014" in pack["name"] else "2024"
+            self.assertEqual(pack["folder"], ["Example SRD", f"Edition {edition}"])
+            self.assertEqual(pack["label"], pack["name"].rsplit(" / ", 1)[1])
+        self.assertEqual(len({pack["folderIds"][0] for pack in packs}), 1, "Collections on one path share its folder.")
+        self.assertEqual(len({pack["folderIds"][1] for pack in packs}), 2)
+        visible = self.state(self.player)["packs"]
+        self.assertEqual(len(visible), 3, "Folders must not change existing read grants.")
+        self.assertNotIn(hidden["id"], {pack["id"] for pack in visible})
+        self.assertEqual(self.state(self.streamer)["packs"], [])
+
+    def test_folder_permissions_apply_to_every_pack_beneath_it(self):
+        from gravewright.journals.services import JournalError
+        from gravewright.table import permission_services as permissions
+        packs = self.use_folders()
+        root = packs[0]["folderIds"][0]
+        editions = {pack["folder"][1]: pack["folderIds"][1] for pack in packs}
+
+        def save(key, grants, reset=()):
+            current = permissions.state(self.campaign.pk, self.gm.pk, "compendium-folders", key)
+            return permissions.command(self.campaign.pk, self.gm.pk, "compendium-folders", key,
+                                       {"version": current["version"], "permissions": grants, "reset": list(reset)}, uuid.uuid4())
+
+        current = permissions.state(self.campaign.pk, self.gm.pk, "compendium-folders", root)
+        self.assertEqual((current["title"], current["bulk"], current["roles"], current["levels"]), ("Example SRD", True, True, ["none", "read"]))
+        # Access set through the legacy role command survives roles left unchanged.
+        hidden = self.pack("2024", spells=True)
+        self.command("permissions", {"packId": hidden["id"], "level": "none"})
+        save(root, {"default": "unchanged", "player": "unchanged", "streamer": "read"})
+        self.assertEqual({pack["id"] for pack in self.state(self.player)["packs"]}, {pack["id"] for pack in packs} - {hidden["id"]})
+        self.assertEqual(len(self.state(self.streamer)["packs"]), 4)
+        save(root, {"default": "unchanged", "player": "none", "streamer": "unchanged"})
+        self.assertEqual(self.state(self.player)["packs"], [])
+        save(editions["Edition 2014"], {"default": "unchanged", "player": "read", "streamer": "unchanged"})
+        self.assertEqual({pack["name"] for pack in self.state(self.player)["packs"]}, {pack["name"] for pack in packs if "2014" in pack["name"]})
+        # Resetting a role makes it follow "All players" again.
+        save(root, {"default": "none", "player": "unchanged", "streamer": "unchanged"}, reset=["player", "streamer"])
+        self.assertEqual((self.state(self.player)["packs"], self.state(self.streamer)["packs"]), ([], []))
+        self.assertFalse(Item.objects.exists())
+
+        stale = permissions.state(self.campaign.pk, self.gm.pk, "compendium-folders", root)
+        self.command("permissions", {"packId": packs[0]["id"], "level": "read"})
+        with self.assertRaises(JournalError) as conflict:
+            permissions.command(self.campaign.pk, self.gm.pk, "compendium-folders", root,
+                                {"version": stale["version"], "permissions": {"default": "read"}}, uuid.uuid4())
+        self.assertEqual(conflict.exception.code, "conflict")
+        for user, key, code in ((self.player, root, "forbidden"), (self.gm, "native-folder:" + str(uuid.uuid4()), "not_found"),
+                                (self.gm, packs[0]["id"], "not_found")):
+            with self.subTest(code=code), self.assertRaises(JournalError) as denied:
+                permissions.state(self.campaign.pk, user.pk, "compendium-folders", key)
+            self.assertEqual(denied.exception.code, code)
+
+    def test_install_rejects_malformed_folders(self):
+        for folder in ("Example SRD", [], [""], ["   "], [1], [["Nested"]], ["a" * 121], ["A", "B", "C", "D", "E"]):
+            value = self.collection("2014")
+            value["folder"] = folder
+            with self.subTest(folder=folder), self.assertRaises(ModuleFailure):
+                self.install("0.2.0", collections={"2014": value})
+        self.assertFalse(Package.objects.filter(module_id=SYSTEM, version="0.2.0").exists())
+
+    def test_legacy_collections_ignore_malformed_folders(self):
+        root = self.directory / "legacy-content"
+        for name, folder in (("valid", ["Shared library"]), ("malformed", "Shared library")):
+            (root / name).mkdir(parents=True)
+            (root / name / "index.json").write_text(json.dumps({
+                "name": name, "campaigns": [str(self.campaign.pk)], "folder": folder,
+                "packs": [{"id": name, "label": "Notes", "type": "journal_pack", "entries": []}],
+            }), encoding="utf-8")
+        packs = {pack["name"]: pack for pack in self.state()["packs"]}
+        self.assertEqual((packs["valid / Notes"]["folder"], packs["valid / Notes"]["label"]), (["Shared library"], "Notes"))
+        self.assertNotIn("folder", packs["malformed / Notes"])
 
     def test_install_rejects_malformed_collections_and_invalid_entries(self):
         wrong_shape = {"name": "Broken", "packs": "wrong-shape"}

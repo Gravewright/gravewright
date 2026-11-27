@@ -32,7 +32,9 @@ export async function openPermissions(kind, id, {onSave, nested = false} = {}) {
   const close = dialog.querySelector('[data-close]');
   close.setAttribute('aria-label', text('Close', 'Fechar'));
   close.onclick = () => { if (!save.disabled) dialog.close(); };
-  dialog.querySelector('[data-hint]').textContent = data.bulk
+  dialog.querySelector('[data-hint]').textContent = data.kind === 'compendium-folders'
+    ? text('Apply access to every compendium in this folder, including its subfolders.', 'Aplicar acesso a todos os compêndios desta pasta, incluindo suas subpastas.')
+    : data.bulk
     ? text('Apply access to documents directly inside this folder. Subfolders are excluded.', 'Aplicar acesso aos documentos desta pasta. O conteúdo de subpastas não será alterado.')
     : data.roles ? text('Configure access for each table role.', 'Configure o acesso de cada função na mesa.')
     : text('Choose the default access and exceptions for each player.', 'Escolha o acesso padrão e as exceções de cada jogador.');
@@ -65,7 +67,7 @@ export async function openPermissions(kind, id, {onSave, nested = false} = {}) {
   row('default', text('All players', 'Todos os jogadores'), choices, data.permissions.default);
   if (data.roles) {
     for (const [key, en, br] of [['player', 'Player', 'Jogador'], ['streamer', 'Streamer', 'Transmissão']])
-      row(key, text(en, br), ['default', ...choices], data.permissions[key] ?? 'default');
+      row(key, text(en, br), ['default', ...choices], data.permissions[key] ?? (data.bulk ? 'unchanged' : 'default'));
   } else for (const m of data.members) {
     row(m.id, m.name, ['default', ...choices.filter(v => m.role !== 'streamer' || v !== 'owner')], data.permissions[m.id] ?? (data.bulk ? 'unchanged' : 'default'), m.role === 'gm');
   }

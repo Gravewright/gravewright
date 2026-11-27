@@ -39,7 +39,7 @@ Every domain below has `state(payload = {}, options)` and the listed command met
 | `maps` | `update`, `move`, `delete`, `activate`, `navigate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder`, `exportUniversalVtt` |
 | `journals` | `resources`, `resolve`, `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset`, `setPrerequisites`, `restoreRevision`, `restoreDeleted`, `purgeDeleted` |
 | `items` | `create`, `update`, `delete`, `duplicate`, `setPermissions`, `createFolder`, `updateFolder`, `deleteFolder` |
-| `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
+| `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `rollInitiativeBatch`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
 | `clocks` | `create`, `update`, `advance`, `reset`, `delete` |
 | `clues` | `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
 | `mindmaps` | `read`, `resources`, `resolve`, `create`, `update`, `node`, `delete` |
@@ -71,6 +71,68 @@ Additional forms:
 | `table.lobby(options)` / `table.updateLobby(payload, options)` | Read/change native lobby state |
 
 `combat.stop` ends the encounter and clears its participants, initiative, turn and round history. Actors and scene tokens are preserved; add participants again before starting another encounter.
+
+`combat.rollInitiativeBatch(payload, options)` atomically rolls package-prepared
+expressions, updates initiative, and publishes grouped chat results. It is GM-only
+and uses the native dice grammar; RPG-specific preparation stays in the package.
+Detect `typeof api.combat.rollInitiativeBatch === "function"` before choosing this
+path on hosts with older method catalogs.
+
+```js
+const result = await api.combat.rollInitiativeBatch({
+  sceneId,
+  version: combat.version,
+  selectFirst: true,
+  label: "Initiative",
+  entries: [{
+    tokenId,
+    expression: "2d20kh1+(3)",
+    visibility: "public",
+    source: {
+      actorVersion: sheet.version,
+      sheetVersion: sheet.sheetVersion,
+      tokenVersion: token.version
+    }
+  }]
+}, {requestId, signal});
+```
+
+Supply 1–64 unique current participants. Each entry has exactly one `tokenId` or
+`actorId`, a concrete expression of 1–512 characters, optional `visibility`
+(`public` by default, or `gm`), and `source`. Actor and sheet revisions are always
+required; token revision is required only for token participants. For independent
+tokens, `actorVersion` still comes from the actor metadata and `sheetVersion`
+comes from the token sheet. A linked token uses the actor sheet revision.
+The host checks every source and the encounter revision before drawing any dice.
+A stale source or encounter rejects the whole request with `conflict`.
+
+Results must be finite numbers between −1,000,000 and 1,000,000. The batch is
+limited to 128 KiB of input, 4,096 compiled nodes, 1,024 initial dice, 2,048 generated
+dice facts and 1 MiB of serialized dice results; individual grammar limits also
+apply. The optional `label` is plain text up to 48 characters, defaulting to
+`Initiative`. There is no client-provided result, random source or recipient list.
+
+The host sorts once with stable ties and increments the encounter revision once.
+By default the current participant is preserved. `selectFirst: true` selects the
+first participant only if combat is already active; it does not start combat,
+advance a round, or tick conditions/effects. Round, encounter identity and history
+are preserved. Hidden participants/tokens and direct actors with restricted
+ownership force GM visibility. Results are stored
+in at most two messages, one per audience, consuming one chat allowance per
+message. Each `roll.batch` entry supplies its own `expression`, `label` and native
+`result`; existing homogeneous dice batches remain supported.
+
+The return value is the current authorized combat projection plus
+`batch: {requestId, version, replayed, results, messageIds}`. Each result identifies
+the token or actor and includes `initiative` and `messageId`. `batch.version` is
+the revision accepted by this operation; the top-level `version` describes the
+current projection and can be newer on replay. A dedicated private receipt binds
+the UUID to its original payload and scene. Replaying requires current GM access,
+returns the original outcomes and current projection, and does not roll, consume
+quota or publish again. Reusing the UUID with a different payload is rejected.
+All persistent outcomes commit together, or all roll back. A retry after a lost
+response must keep the same UUID and payload; do not switch to individual rolls
+or allocate a new UUID unless an explicit rejection proves no batch committed.
 
 The six combat transition helpers (`nextTurn`, `previousTurn`, `nextRound`, `previousRound`, `start`, `stop`) also fetch the current version if omitted. Explicit versions make concurrent editing intentional:
 
@@ -123,9 +185,12 @@ and expected revisions. Their payloads use these public names:
 | `ownership.update` | `{kind, id, version, permissions, reset?}`; preserves the native bulk-folder/page rules |
 
 Ownership kinds are `actors`, `items`, `journals`, `scenes`, `cards`,
-`compendiums`, `tokens`, `pages`, and the four `actor-folders`, `item-folders`,
-`journal-folders`, `scene-folders` groups. A page ID is `journalUUID:sectionId`;
-bulk folder revisions are opaque strings. No new-domain method silently replaces
+`compendiums`, `tokens`, `pages`, and the `actor-folders`, `item-folders`,
+`journal-folders`, `scene-folders` and `compendium-folders` groups. A page ID is
+`journalUUID:sectionId`; a compendium folder ID is one of a pack's `folderIds`.
+Document folder groups change only documents directly inside the folder, while a
+compendium folder changes every pack beneath it, subfolders included. Bulk folder
+revisions are opaque strings. No new-domain method silently replaces
 a supplied revision. Builder updates also verify their generated scene against
 an authoritative mounted scene. Rehearsals retain native rollback semantics.
 

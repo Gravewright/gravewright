@@ -1080,14 +1080,54 @@ Smart Objects enviados pelo usuário, áreas circulares, valores autorais e fall
 Somente destinatários autorizados na mesma cena recebem as posições. Streamers
 apenas recebem ponteiros, e a camada GM não transmite o movimento do mouse.
 
+**Configurações da mesa → Preferências → Personalizar a dock** controla a ordem
+das ferramentas em cada camada e dos painéis na dock e no menu de painéis.
+Ferramentas podem aparecer ou ficar ocultas; painéis podem ser fixados na dock,
+colocados no menu ou ocultados. As mudanças são imediatas e ficam salvas por
+perfil e campanha neste dispositivo em `gravewright.dock.<perfil>.<campanha>`,
+com sincronização entre abas. Restaurar a dock padrão redefine esse layout sem
+alterar os atalhos. Controles ocultos mantêm seus atalhos; permissões, capacidades
+nativas e a camada ativa continuam sendo respeitadas. O logotipo da mesa sempre
+abre as configurações. Falhas de armazenamento preservam o último layout salvo
+e exibem um erro. Apenas controles renderizados para o papel do usuário podem
+ser personalizados; controles indisponíveis de pacotes continuam indisponíveis.
+`table/dock-preferences.js` move os controles existentes preservando suas ações
+e libera observadores e listeners com a página. Seu modelo valida os IDs salvos
+contra a dock atual, permitindo que controles novos usem seus padrões.
+
 O dock da mesa oferece desenho pelo Mini Paint (`Desenhar`, atalho `B`).
 Retângulos e elipses pertencem a esse editor; não há ferramenta Formas separada
 nem atalho `T`. Os marcadores de área compartilhados existentes continuam
-visíveis, com os dados salvos e as APIs públicas compatíveis. `Medir` continua
-oferecendo medidas locais da cena. Ative **Título** para editar um rótulo na
-própria marcação, acima das dimensões. Cada título acompanha a medição ao mover
-e ampliar o mapa e permanece visível ao fechar a ferramenta. Títulos seguem o
-mesmo ciclo local das medições: não são transmitidos nem salvos na campanha.
+visíveis, com os dados salvos e as APIs públicas compatíveis. `Medir` compartilha
+medições concluídas e títulos com quem tem acesso à cena e os salva na campanha.
+Jogadores editam suas próprias medições; GMs podem editar todas. Medições criadas
+na aba GM são omitidas das projeções dos jogadores e streamers. Streamers recebem
+alterações públicas sem permissão de edição. Ative **Título** para editar um rótulo
+acima das dimensões; ele acompanha movimento e zoom e permanece ao fechar a
+ferramenta. Cada marcador tem sua revisão, evitando sobrescrever alterações de
+outros participantes. Conflitos atualizam a cena e exibem erro sem forçar a gravação.
+
+O Mini Paint segue as mesmas regras para todos os participantes, exceto streamers.
+Desenhos feitos na aba Jogo chegam a todos que veem a cena; desenhos de um GM na
+aba GM ficam só com os GMs. O servidor registra o autor e a revisão de cada
+desenho: jogadores apagam, movem, alteram o estilo e limpam apenas os próprios
+desenhos (**Limpar meus desenhos**), enquanto GMs editam todos e **Limpar camada**
+remove todos os desenhos da aba ativa. O Mini Paint e a seleção do GM enviam só os
+desenhos alterados (`drawings` `patch`), permitindo desenhar ao mesmo tempo. Desfazer
+e refazer restauram apenas os desenhos do próprio autor. Desenhos de outros
+participantes recebidos durante um gesto aparecem quando ele termina. O comando
+`drawings` `replace`, exclusivo do GM, continua disponível para quem substitui o
+documento inteiro e preserva autores e revisões. Desenhos salvos antes da 0.3.8 não
+têm autor registrado e só GMs podem editá-los.
+
+Ações da dock que alteram dados compartilhados usam as projeções existentes do
+servidor: desenhos, tokens, imagens, paredes e portas, iluminação, efeitos, cartas
+e áudio. O domínio responsável filtra conteúdo privado do GM. Selecionar ferramenta,
+mover a câmera, abrir diretórios ou a mão privada e personalizar a dock continuam
+sendo ações pessoais da interface. `tests/e2e/dock_broadcast.py` verifica clientes
+GM, jogador e streamer conectados, incluindo medições e desenhos privados.
+`tests/e2e/shared_drawings.py` verifica quatro jogadores, um GM e um streamer
+compartilhando medições e desenhos.
 
 `maps/frontend/` separa modelos de entidades, modelos/UI de funcionalidades, utilitários e widget do tabuleiro. O widget coordena renderização, entrada, agendamento/cache/pré-carregamento de tiles, camadas nativas, polígonos de visão, luzes e shaders. As funcionalidades incluem paredes, tokens, desenhos, medidas, efeitos e seleção. Testes de algoritmos ficam ao lado dos modelos e são empacotados por `maps/scripts/test_models.cjs` para o executor de testes do Node.
 
@@ -1257,7 +1297,7 @@ A seleção da cena respeita a aba ativa: Jogo seleciona tokens de jogo e cartas
 
 A barra superior usa F1–F8 na ordem visual: Jogo, Mestre, Imagens, Som, Efeitos, Paredes, Iluminação e Editar Cena. Esses atalhos globais aparecem nas configurações e podem ser alterados. F5 seleciona Efeitos em vez de recarregar quando a mesa aceita atalhos; Ctrl+R continua disponível para recarregar. Ações ocultas ou indisponíveis não são acionadas, e digitar ou usar um modal não troca de aba.
 
-A barra inferior separa as ferramentas da camada atual dos botões com nome de Chat, Personagens e Combate. O botão Painéis reúne os diretórios de cenas e conteúdo, busca, configurações e ferramentas da campanha. Os controles e atalhos originais são preservados: os atalhos funcionam com o menu fechado, e controles indisponíveis continuam indisponíveis. Escape devolve o foco ao botão Painéis; clicar fora ou mover o foco para fora fecha o menu. Em telas estreitas, a barra usa duas linhas e a lista de painéis permite rolagem.
+A barra inferior separa, por padrão, as ferramentas da camada atual dos botões com nome de Chat, Personagens e Combate. O botão Painéis lista os diretórios de cenas e conteúdo, busca, configurações e ferramentas da campanha. As preferências pessoais permitem ordenar, ocultar ou fixar esses controles. As ações e os atalhos originais são preservados: os atalhos funcionam com o menu fechado, e controles indisponíveis continuam indisponíveis. Escape devolve o foco ao botão Painéis; clicar fora ou mover o foco para fora fecha o menu. Em telas estreitas, os controles fixados ocupam linhas adicionais e a lista de painéis permite rolagem.
 
 O cabeçalho do chat separa as ações próprias dos controles padrão de Restaurar disposição, Minimizar/Restaurar e Fechar. O botão de minimizar participa do contrato compartilhado de janelas, evitando a duplicação do controle. Em telas estreitas, o cabeçalho fica abaixo da barra superior; o chat destacado mantém Limpar histórico para o GM e Fechar.
 

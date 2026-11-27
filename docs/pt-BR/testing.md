@@ -90,6 +90,28 @@ de imagens, reutilização de recursos, isolamento de mesas e limpeza após falh
 
 ## Cenários no navegador
 
+`tests/e2e/dock_customization.py` verifica as configurações pessoais da dock da
+mesa: ordem de ferramentas e painéis, fixação, ocultação sem perder atalhos,
+ações reais dos painéis, restauração dos padrões, persistência ao recarregar e
+entre abas, falhas de armazenamento, isolamento de perfis e papéis e idiomas
+inglês/português/espanhol em 1440, 390 e 320px. Usa a fixture descartável do
+Map Builder e aceita `--output` e `--browser-executable`; escolha um diretório
+de saída novo. O teste `dock-preferences-model.test.mjs`, junto ao código,
+também cobre preferências malformadas, entradas indisponíveis, controles novos
+e chaves de armazenamento por perfil/campanha.
+
+`tests/e2e/shared_drawings.py` conecta um GM, quatro jogadores e um streamer à
+mesma fixture do Map Builder. Verifica que a medição de área e os desenhos de um
+jogador chegam a todos os outros clientes, que medições e desenhos da aba GM ficam
+fora do estado e dos frames de socket de jogadores e streamers, que jogadores não
+apagam desenhos alheios, que desenhos simultâneos são todos mantidos, que desfazer
+e **Limpar meus desenhos** afetam só as linhas do autor, que GMs apagam desenhos de
+jogadores e o painel Mini Paint do jogador em 390px. Aceita `--output` e
+`--browser-executable`; use um diretório de saída novo.
+`gravewright.maps.tests.test_drawings` cobre as regras do servidor e
+`maps/frontend/shared/lib/shared-rows.test.js` cobre o mecanismo de linhas
+compartilhadas usado por medições e desenhos.
+
 `uv run --locked python tests/e2e/door_rotation_anchor.py` verifica a escolha do
 pivô da porta, rotação, desfazer, imagem ao abrir/fechar, editor compartilhado de
 paredes e configurações salvas em inglês, português e espanhol, em larguras de

@@ -1013,14 +1013,53 @@ controls, uploaded Smart Objects, circular areas, authored values and fallback.
 Only authorized viewers of the same scene receive positions. Streamers receive
 pointers without sending them, and the GM layer does not publish mouse movement.
 
+**Table settings → Preferences → Customize the dock** controls tool order within
+each layer and panel order in the dock and Panels menu. Tools can be shown or
+hidden; panels can be pinned to the dock, placed in the menu, or hidden. Changes
+apply immediately and persist per profile and campaign on this device under
+`gravewright.dock.<profile>.<campaign>`, synchronizing across tabs. Restore dock
+defaults resets this layout without changing keyboard mappings. Hidden controls
+retain their shortcuts; native permission/capability flags and the active tool
+layer still apply. The table logo always opens settings. Storage failures keep
+the last saved layout and display an error. Only controls rendered for the user's
+role are customizable; unavailable package controls stay unavailable.
+`table/dock-preferences.js` moves existing controls, preserving their actions,
+and releases observers/listeners with the page. Its model normalizes saved IDs
+against the current dock, allowing new controls to use their defaults.
+
 The table dock provides drawing through Mini Paint (`Draw`, shortcut `B`).
 Rectangles and ellipses belong to that editor; there is no separate Shapes tool
 or `T` shortcut. Existing shared area markers remain visible, and their stored
-data and public APIs remain compatible. `Measure` continues to provide local
-scene measurements. Enable **Title** to edit a measurement label directly on the
-map, above its dimensions. Each title follows its measurement through movement
-and zoom and stays visible when the tool closes. Titles share the same local
-lifetime as measurements; they are not broadcast or saved to the campaign.
+data and public APIs remain compatible. `Measure` shares completed measurements
+and titles with authorized viewers of the scene and saves them with the campaign.
+Players can edit their own measurements; GMs can edit all measurements. Measurements
+created in the GM workspace are omitted from player and streamer projections.
+Streamers receive public scene changes with read-only access. Enable **Title** to
+edit a label above its dimensions; it follows movement and zoom and remains visible
+when the tool closes. Edits use each marker's revision, so changes to another
+participant's marker do not overwrite concurrent work. A conflict refreshes the
+scene and reports an error without forcing the write.
+
+Mini Paint follows the same rules for every participant except streamers. Drawings
+made on the Game layer reach everyone viewing the scene; a GM's drawings on the GM
+layer stay with GMs. The server records each drawing's author and revision: players
+erase, move, restyle and clear only their own drawings (**Clear my drawings**),
+while GMs edit every drawing and **Clear layer** removes all drawings of the active
+layer. Mini Paint and GM selection send only the drawings they changed
+(`drawings` `patch`), so participants can draw at the same time. Undo and redo
+restore only the author's own changed drawings. Drawings from peers that arrive
+during a gesture are shown when the gesture ends. The GM-only `drawings` `replace`
+command remains for whole-document callers and preserves authors and revisions.
+Drawings saved before 0.3.8 have no recorded author and only GMs can edit them.
+
+Dock actions that change shared scene data use the existing server projections:
+drawings, tokens, images, walls and doors, lighting, effects, cards and audio.
+Private GM content is filtered by the owning domain. Selecting a tool, panning,
+opening a directory or a private hand, and customizing the dock remain personal
+interface actions. `tests/e2e/dock_broadcast.py` checks connected GM, player and
+streamer recipients, including private measurements and drawings.
+`tests/e2e/shared_drawings.py` checks four players, a GM and a streamer sharing
+measurements and drawings.
 
 The `maps/frontend/` tree separates entity models, feature models/UI, shared utilities, and the game-board widget. The board widget coordinates rendering, input, tile scheduling/cache/prefetch, native layers, vision polygons, lighting and shaders. Feature code contains walls, tokens, drawings, measurements, effects, and selection. Algorithm tests live beside the relevant models and are bundled by `maps/scripts/test_models.cjs` for Node's test runner.
 
@@ -1180,7 +1219,7 @@ Scene selection follows the active workspace: Game selects game tokens and cards
 
 The menubar uses F1–F8 in visual order: Game, GM, Images, Sound, Effects, Walls, Lighting and Edit Scene. These global bindings are listed in shortcut settings and can be reassigned. F5 selects Effects instead of reloading while the table accepts shortcuts; Ctrl+R remains available to reload. Hidden or unavailable actions do not run, and typing or modal focus does not switch layers.
 
-The bottom dock separates current-layer tools from labeled Chat, Actors and Combat buttons. The Panels disclosure groups scene and content directories, search, settings and campaign tools. It retains the original controls and keyboard mappings: shortcuts work with the disclosure closed, while unavailable controls remain unavailable. Escape returns focus to the disclosure button; outside clicks and focus leaving the disclosure close it. Narrow screens use two rows and a scrollable panel list.
+The bottom dock separates current-layer tools from labeled Chat, Actors and Combat buttons by default. The Panels disclosure lists scene and content directories, search, settings and campaign tools. Personal preferences can reorder, hide or pin these controls. The original actions and keyboard mappings remain available: shortcuts work with the disclosure closed, while unavailable controls remain unavailable. Escape returns focus to the disclosure button; outside clicks and focus leaving the disclosure close it. Narrow screens wrap pinned controls into additional rows and keep the panel list scrollable.
 
 The chat titlebar groups chat-specific actions separately from the shared Reset layout, Minimize/Restore and Close controls. Its own minimize button participates in the shared window contract, preventing a duplicate control. The chat header stays below the menubar on narrow screens; detached chat retains Clear history for the GM and Close.
 

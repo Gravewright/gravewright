@@ -3,11 +3,13 @@ import { HttpClient } from '/static/gravewright_modules/http-client.js';
 import { conditionLayout } from '/static/gravewright_tokens/quick-controls.js';
 import { mountShortcuts } from './shortcuts.js';
 import { mountDockMenu } from './dock-menu.js';
+import { mountDockPreferences } from './dock-preferences.js';
 
 const table = document.querySelector('#table-workspace');
 if (table) {
     const stopShortcuts = mountShortcuts(table);
     const stopDockMenu = mountDockMenu(table);
+    const stopDockPreferences = mountDockPreferences(table);
     const http = new HttpClient();
     const observers = [];
     function whenVisible(root, load) {
@@ -113,7 +115,7 @@ if (table) {
     }
     window.addEventListener('pagehide', event => {
         if (!event.persisted) {
-            stop(); stopShortcuts(); stopDockMenu(); observers.forEach(observer => observer.disconnect());
+            stop(); stopShortcuts(); stopDockMenu(); stopDockPreferences(); observers.forEach(observer => observer.disconnect());
             window.removeEventListener('gravewright:condition-layout', showConditions);
             window.removeEventListener('storage', showConditions);
         }

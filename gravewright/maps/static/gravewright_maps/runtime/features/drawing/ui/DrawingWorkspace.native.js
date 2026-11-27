@@ -2,6 +2,7 @@
 import { text as gwText } from "../../../shared/config/i18n/text.js";
 import DirectoryContextMenu from "../../../shared/ui/directory/DirectoryContextMenu.native.js";
 import { bounds, hit, path, translated } from "../model/drawing.js";
+import { changedRows, createSharedRows } from "../../../shared/lib/shared-rows.js";
 import { widget } from "../../../native/widget.js";
 var PhCursor = "PhCursor";
 var PhPencilSimple = "PhPencilSimple";
@@ -17,7 +18,7 @@ var PhTrash = "PhTrash";
 var PhCopy = "PhCopy";
 var PhClipboard = "PhClipboard";
 var PhX = "PhX";
-var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "root", "class": "drawing-workspace" }, "bind": { "class": "({ 'drawing-workspace--busy': busy })" }, "events": [{ "event": "pointerdown", "code": "down;", "mods": [] }, { "event": "pointermove", "code": "move;", "mods": [] }, { "event": "pointerup", "code": "up;", "mods": [] }, { "event": "pointercancel", "code": "cancel;", "mods": [] }, { "event": "contextmenu", "code": "menu;", "mods": [] }], "children": [{ "tag": "g", "attrs": {}, "bind": { "transform": "(`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`)" }, "events": [], "children": [{ "tag": "g", "attrs": {}, "bind": { "key": "(row.id)", "opacity": "(row.opacity)", "transform": "(`rotate(${row.rotation ?? 0} ${row.points[0].x} ${row.points[0].y})`)" }, "events": [{ "event": "dblclick", "code": "edit($event, row);", "mods": [] }], "children": [{ "tag": "text", "attrs": { "dominant-baseline": "text-before-edge", "font-family": "sans-serif", "style": "white-space:pre" }, "bind": { "x": "(row.points[0].x)", "y": "(row.points[0].y)", "fill": "(row.color)", "font-size": "(row.fontSize)" }, "events": [], "children": [{ "value": "(row.text)" }], "when": "(row.kind === 'text')" }, { "tag": "path", "attrs": { "stroke-linecap": "round", "stroke-linejoin": "round" }, "bind": { "d": "(path(row))", "stroke": "(row.color)", "stroke-width": "(row.width)", "fill": "(['rect', 'ellipse'].includes(row.kind) ? row.fill : 'none')" }, "events": [], "children": [], "otherwise": true }, { "tag": "rect", "attrs": { "fill": "none", "stroke": "#e1b466" }, "bind": { "stroke-width": "(1 / viewport.scale)", "stroke-dasharray": "(`${5 / viewport.scale} ${3 / viewport.scale}`)" }, "events": [], "children": [], "when": "(selected.includes(row.id))", "spread": "(bounds(row))" }], "each": { "names": ["row"], "value": "(visible)" } }, { "tag": "rect", "attrs": { "fill": "#e1b46622", "stroke": "#e1b466" }, "bind": { "x": "(Math.min(marquee.a.x, marquee.b.x))", "y": "(Math.min(marquee.a.y, marquee.b.y))", "width": "(Math.abs(marquee.b.x - marquee.a.x))", "height": "(Math.abs(marquee.b.y - marquee.a.y))", "stroke-width": "(1 / viewport.scale)" }, "events": [], "children": [], "when": "(marquee)" }] }] }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "section", "attrs": { "class": "drawing-paint", "aria-label": "Mini Paint" }, "bind": {}, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "drawing-paint__header" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "PhPencilSimple", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "text": "Mini Paint " }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(audience === 'gm' ? gwText('GM only') : gwText('Table'))" }] }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": "(gwText('Close drawing'))", "title": "(gwText('Close drawing'))" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "fieldset", "attrs": { "class": "drawing-paint__body" }, "bind": { "disabled": "(busy)" }, "events": [], "children": [{ "tag": "div", "attrs": { "class": "drawing-paint__tools" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "key": "(item.id)", "title": "(item.label)", "aria-label": "(item.label)", "aria-pressed": "(tool === item.id)" }, "events": [{ "event": "click", "code": "choose(item.id);", "mods": [] }], "children": [{ "tag": "component", "attrs": { "weight": "duotone" }, "bind": { "is": "(item.icon)" }, "events": [], "children": [] }], "each": { "names": ["item"], "value": "(tools)" } }] }, { "tag": "div", "attrs": { "class": "drawing-paint__palette" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "key": "(swatch)", "style": "({ background: swatch })", "aria-label": "(gwText('Color {0}', swatch))", "aria-pressed": "(color === swatch)" }, "events": [{ "event": "click", "code": "color = swatch;", "mods": [] }], "children": [], "each": { "names": ["swatch"], "value": "(palette)" } }, { "tag": "label", "attrs": {}, "bind": { "title": "(gwText('Custom color'))" }, "events": [], "children": [{ "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(gwText('Stroke color'))" }, "events": [], "children": [], "model": { "path": "(color)", "mods": [] } }] }] }, { "tag": "div", "attrs": { "class": "drawing-paint__settings" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Stroke '))" }, { "tag": "input", "attrs": { "type": "range", "min": "1", "max": "64" }, "bind": {}, "events": [], "children": [], "model": { "path": "(width)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(width)" }, { "text": " px" }] }] }, { "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Opacity '))" }, { "tag": "input", "attrs": { "type": "range", "min": "0.05", "max": "1", "step": "0.05" }, "bind": {}, "events": [], "children": [], "model": { "path": "(opacity)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(Math.round(opacity * 100))" }, { "text": "%" }] }] }] }, { "tag": "div", "attrs": { "class": "drawing-paint__fill" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": {}, "events": [], "children": [], "model": { "path": "(filled)", "mods": [] } }, { "value": "(gwText('Fill shapes'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(gwText('Fill color'))", "disabled": "(!filled)" }, "events": [], "children": [], "model": { "path": "(fill)", "mods": [] } }] }, { "tag": "div", "attrs": { "class": "drawing-paint__text" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "maxlength": "1000" }, "bind": { "placeholder": "(gwText('Type and click the map'))", "aria-label": "(gwText('Drawing text'))" }, "events": [], "children": [], "model": { "path": "(text)", "mods": [] } }, { "tag": "input", "attrs": { "type": "number", "min": "8", "max": "144" }, "bind": { "aria-label": "(gwText('Text size'))" }, "events": [], "children": [], "model": { "path": "(fontSize)", "mods": ["number"] } }], "when": "(tool === 'text' || rows.some(r => selected.includes(r.id) && r.kind === 'text'))" }, { "tag": "button", "attrs": { "class": "drawing-paint__apply" }, "bind": {}, "events": [{ "event": "click", "code": "styleSelection;", "mods": [] }], "children": [{ "value": "(gwText('Apply style to selection ('))" }, { "value": "(selected.length)" }, { "text": ")" }], "when": "(selected.length)" }, { "tag": "div", "attrs": { "class": "drawing-paint__actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "disabled": "(!undo.length)", "title": "(gwText('Undo (Ctrl+Z)'))", "aria-label": "(gwText('Undo'))" }, "events": [{ "event": "click", "code": "history('undo');", "mods": [] }], "children": [{ "tag": "PhArrowCounterClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(!redo.length)", "title": "(gwText('Redo (Ctrl+Shift+Z)'))", "aria-label": "(gwText('Redo'))" }, "events": [{ "event": "click", "code": "history('redo');", "mods": [] }], "children": [{ "tag": "PhArrowClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(!selected.length)", "title": "(gwText('Copy selection'))", "aria-label": "(gwText('Copy selection'))" }, "events": [{ "event": "click", "code": "copy;", "mods": [] }], "children": [{ "tag": "PhCopy", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "title": "(gwText('Paste copy'))", "aria-label": "(gwText('Paste copy'))" }, "events": [{ "event": "click", "code": "paste;", "mods": [] }], "children": [{ "tag": "PhClipboard", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(!selected.length)", "title": "(gwText('Delete selection'))", "aria-label": "(gwText('Delete selection'))" }, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": { "class": "drawing-paint__clear" }, "bind": {}, "events": [{ "event": "click", "code": "clearConfirm ? save(rows.filter(r => !editable(r))) : clearConfirm = true;", "mods": [] }], "children": [{ "value": "(clearConfirm ? gwText('Confirm clearing') : gwText('Clear layer'))" }] }] }] }, { "tag": "p", "attrs": { "class": "drawing-paint__hint" }, "bind": { "role": "(error ? 'alert' : 'status')" }, "events": [], "children": [{ "value": "(error || (busy ? gwText('Saving\u2026') : tool === 'erase' ? gwText('Drag to erase entire strokes.') : tool === 'select' ? gwText('Drag to move or select. Shift adds to the selection.') : tool === 'text' ? gwText('Type text and click to place it.') : gwText('Drag to draw. Shift constrains shapes and angles.')))" }] }] }, { "tag": "DirectoryContextMenu", "attrs": {}, "bind": { "x": "(context.x)", "y": "(context.y)" }, "events": [{ "event": "close", "code": "context = undefined;", "mods": [] }], "children": [{ "tag": "button", "attrs": {}, "bind": {}, "events": [{ "event": "click", "code": "copy;", "mods": [] }], "children": [{ "tag": "PhCopy", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Copy'))" }] }, { "tag": "button", "attrs": {}, "bind": {}, "events": [{ "event": "click", "code": "paste;", "mods": [] }], "children": [{ "tag": "PhClipboard", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Paste'))" }] }, { "tag": "button", "attrs": {}, "bind": {}, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Delete selection'))" }] }], "when": "(context)" }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
+var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "root", "class": "drawing-workspace" }, "bind": { "class": "({ 'drawing-workspace--busy': busy })" }, "events": [{ "event": "pointerdown", "code": "down;", "mods": [] }, { "event": "pointermove", "code": "move;", "mods": [] }, { "event": "pointerup", "code": "up;", "mods": [] }, { "event": "pointercancel", "code": "cancel;", "mods": [] }, { "event": "contextmenu", "code": "menu;", "mods": [] }], "children": [{ "tag": "g", "attrs": {}, "bind": { "transform": "(`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`)" }, "events": [], "children": [{ "tag": "g", "attrs": {}, "bind": { "key": "(row.id)", "opacity": "(row.opacity)", "transform": "(`rotate(${row.rotation ?? 0} ${row.points[0].x} ${row.points[0].y})`)" }, "events": [{ "event": "dblclick", "code": "edit($event, row);", "mods": [] }], "children": [{ "tag": "text", "attrs": { "dominant-baseline": "text-before-edge", "font-family": "sans-serif", "style": "white-space:pre" }, "bind": { "x": "(row.points[0].x)", "y": "(row.points[0].y)", "fill": "(row.color)", "font-size": "(row.fontSize)" }, "events": [], "children": [{ "value": "(row.text)" }], "when": "(row.kind === 'text')" }, { "tag": "path", "attrs": { "stroke-linecap": "round", "stroke-linejoin": "round" }, "bind": { "d": "(path(row))", "stroke": "(row.color)", "stroke-width": "(row.width)", "fill": "(['rect', 'ellipse'].includes(row.kind) ? row.fill : 'none')" }, "events": [], "children": [], "otherwise": true }, { "tag": "rect", "attrs": { "fill": "none", "stroke": "#e1b466" }, "bind": { "stroke-width": "(1 / viewport.scale)", "stroke-dasharray": "(`${5 / viewport.scale} ${3 / viewport.scale}`)" }, "events": [], "children": [], "when": "(selected.includes(row.id))", "spread": "(bounds(row))" }], "each": { "names": ["row"], "value": "(visible)" } }, { "tag": "rect", "attrs": { "fill": "#e1b46622", "stroke": "#e1b466" }, "bind": { "x": "(Math.min(marquee.a.x, marquee.b.x))", "y": "(Math.min(marquee.a.y, marquee.b.y))", "width": "(Math.abs(marquee.b.x - marquee.a.x))", "height": "(Math.abs(marquee.b.y - marquee.a.y))", "stroke-width": "(1 / viewport.scale)" }, "events": [], "children": [], "when": "(marquee)" }] }] }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "section", "attrs": { "class": "drawing-paint", "aria-label": "Mini Paint" }, "bind": {}, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "drawing-paint__header" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "PhPencilSimple", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "text": "Mini Paint " }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(audience === 'gm' ? gwText('GM only') : gwText('Table'))" }] }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": "(gwText('Close drawing'))", "title": "(gwText('Close drawing'))" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "fieldset", "attrs": { "class": "drawing-paint__body" }, "bind": {}, "events": [], "children": [{ "tag": "div", "attrs": { "class": "drawing-paint__tools" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "key": "(item.id)", "title": "(item.label)", "aria-label": "(item.label)", "aria-pressed": "(tool === item.id)" }, "events": [{ "event": "click", "code": "choose(item.id);", "mods": [] }], "children": [{ "tag": "component", "attrs": { "weight": "duotone" }, "bind": { "is": "(item.icon)" }, "events": [], "children": [] }], "each": { "names": ["item"], "value": "(tools)" } }] }, { "tag": "div", "attrs": { "class": "drawing-paint__palette" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "key": "(swatch)", "style": "({ background: swatch })", "aria-label": "(gwText('Color {0}', swatch))", "aria-pressed": "(color === swatch)" }, "events": [{ "event": "click", "code": "color = swatch;", "mods": [] }], "children": [], "each": { "names": ["swatch"], "value": "(palette)" } }, { "tag": "label", "attrs": {}, "bind": { "title": "(gwText('Custom color'))" }, "events": [], "children": [{ "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(gwText('Stroke color'))" }, "events": [], "children": [], "model": { "path": "(color)", "mods": [] } }] }] }, { "tag": "div", "attrs": { "class": "drawing-paint__settings" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Stroke '))" }, { "tag": "input", "attrs": { "type": "range", "min": "1", "max": "64" }, "bind": {}, "events": [], "children": [], "model": { "path": "(width)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(width)" }, { "text": " px" }] }] }, { "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Opacity '))" }, { "tag": "input", "attrs": { "type": "range", "min": "0.05", "max": "1", "step": "0.05" }, "bind": {}, "events": [], "children": [], "model": { "path": "(opacity)", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(Math.round(opacity * 100))" }, { "text": "%" }] }] }] }, { "tag": "div", "attrs": { "class": "drawing-paint__fill" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": {}, "events": [], "children": [], "model": { "path": "(filled)", "mods": [] } }, { "value": "(gwText('Fill shapes'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": { "aria-label": "(gwText('Fill color'))", "disabled": "(!filled)" }, "events": [], "children": [], "model": { "path": "(fill)", "mods": [] } }] }, { "tag": "div", "attrs": { "class": "drawing-paint__text" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "maxlength": "1000" }, "bind": { "placeholder": "(gwText('Type and click the map'))", "aria-label": "(gwText('Drawing text'))" }, "events": [], "children": [], "model": { "path": "(text)", "mods": [] } }, { "tag": "input", "attrs": { "type": "number", "min": "8", "max": "144" }, "bind": { "aria-label": "(gwText('Text size'))" }, "events": [], "children": [], "model": { "path": "(fontSize)", "mods": ["number"] } }], "when": "(tool === 'text' || rows.some(r => selected.includes(r.id) && r.kind === 'text'))" }, { "tag": "button", "attrs": { "class": "drawing-paint__apply" }, "bind": {}, "events": [{ "event": "click", "code": "styleSelection;", "mods": [] }], "children": [{ "value": "(gwText('Apply style to selection ('))" }, { "value": "(selected.length)" }, { "text": ")" }], "when": "(selected.length)" }, { "tag": "div", "attrs": { "class": "drawing-paint__actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "disabled": "(!undo.length)", "title": "(gwText('Undo (Ctrl+Z)'))", "aria-label": "(gwText('Undo'))" }, "events": [{ "event": "click", "code": "history('undo');", "mods": [] }], "children": [{ "tag": "PhArrowCounterClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(!redo.length)", "title": "(gwText('Redo (Ctrl+Shift+Z)'))", "aria-label": "(gwText('Redo'))" }, "events": [{ "event": "click", "code": "history('redo');", "mods": [] }], "children": [{ "tag": "PhArrowClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(!selected.length)", "title": "(gwText('Copy selection'))", "aria-label": "(gwText('Copy selection'))" }, "events": [{ "event": "click", "code": "copy;", "mods": [] }], "children": [{ "tag": "PhCopy", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "title": "(gwText('Paste copy'))", "aria-label": "(gwText('Paste copy'))" }, "events": [{ "event": "click", "code": "paste;", "mods": [] }], "children": [{ "tag": "PhClipboard", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(!selected.length)", "title": "(gwText('Delete selection'))", "aria-label": "(gwText('Delete selection'))" }, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": { "class": "drawing-paint__clear" }, "bind": {}, "events": [{ "event": "click", "code": "clearConfirm ? save(rows.filter(r => !editable(r))) : clearConfirm = true;", "mods": [] }], "children": [{ "value": "(clearConfirm ? gwText('Confirm clearing') : gm ? gwText('Clear layer') : gwText('Clear my drawings'))" }] }] }] }, { "tag": "p", "attrs": { "class": "drawing-paint__hint" }, "bind": { "role": "(error ? 'alert' : 'status')" }, "events": [], "children": [{ "value": "(error || (busy ? gwText('Saving\u2026') : tool === 'erase' ? gwText('Drag to erase entire strokes.') : tool === 'select' ? gwText('Drag to move or select. Shift adds to the selection.') : tool === 'text' ? gwText('Type text and click to place it.') : gwText('Drag to draw. Shift constrains shapes and angles.')))" }] }] }, { "tag": "DirectoryContextMenu", "attrs": {}, "bind": { "x": "(context.x)", "y": "(context.y)" }, "events": [{ "event": "close", "code": "context = undefined;", "mods": [] }], "children": [{ "tag": "button", "attrs": {}, "bind": {}, "events": [{ "event": "click", "code": "copy;", "mods": [] }], "children": [{ "tag": "PhCopy", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Copy'))" }] }, { "tag": "button", "attrs": {}, "bind": {}, "events": [{ "event": "click", "code": "paste;", "mods": [] }], "children": [{ "tag": "PhClipboard", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Paste'))" }] }, { "tag": "button", "attrs": {}, "bind": {}, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Delete selection'))" }] }], "when": "(context)" }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const HttpClient = options.HttpClient;
   const BlockStateApi = class {
     command(_c, _b, a, b, p) {
@@ -56,7 +57,7 @@ var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": 
   }, icon: PhEraser }];
   const palette = ["#ffffff", "#171d23", "#e1b466", "#ef5350", "#ff9800", "#fdd835", "#66bb6a", "#26c6da", "#42a5f5", "#ab47bc"];
   const visible = computed(() => draft.value ? [...rows.value, draft.value] : rows.value);
-  const editable = (r) => r.audience === props.audience;
+  const editable = (r) => r.audience === props.audience && r.canEdit !== false;
   const copyRows = (list) => list.map((r) => ({ ...r, points: r.points.map((p) => ({ ...p })) }));
   function point(e) {
     const b = root.value.getBoundingClientRect();
@@ -71,64 +72,75 @@ var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": 
     drag = void 0;
     draft.value = void 0;
     marquee.value = void 0;
+    if (remote) {
+      const list = remote;
+      remote = void 0;
+      show(list);
+    }
   }
   function cancel() {
     if (drag)
       rows.value = drag.before;
     release();
   }
+  let remote;
+  function show(list) {
+    rows.value = list;
+    const ids = new Set(list.map((r) => r.id));
+    selected.value = selected.value.filter((id) => ids.has(id));
+  }
+  const shared = createSharedRows({
+    save: async (patch) => {
+      busy.value = true;
+      try {
+        return await api.command(props.containerId, props.blockId, "drawings", "patch", patch);
+      } finally {
+        if (!abort.signal.aborted)
+          busy.value = false;
+      }
+    },
+    refresh: async () => (await api.state()).drawings ?? { version: 0, rows: [] },
+    render: (list) => {
+      if (drag)
+        remote = list;
+      else
+        show(list);
+    },
+    error: () => {
+      if (abort.signal.aborted)
+        return;
+      error.value = gwText("Could not save. The scene will refresh; try again.");
+      undo.value = [];
+      redo.value = [];
+    }
+  });
   watch(() => props.document, (doc) => {
-    if (!doc || doc.version === version.value)
+    if (!doc)
       return;
-    cancel();
-    rows.value = copyRows(doc.rows);
-    version.value = doc.version;
-    undo.value = [];
-    redo.value = [];
-    selected.value = [];
+    version.value = doc.version ?? 0;
+    shared.update(copyRows(doc.rows ?? []), doc.version ?? 0);
   }, { immediate: true });
-  async function save(next, before = copyRows(rows.value), history2 = "normal") {
-    if (busy.value)
-      return;
-    busy.value = true;
+  function save(next, before = copyRows(rows.value), history2 = "normal") {
     error.value = "";
     context.value = void 0;
     clearConfirm.value = false;
-    try {
-      const result = await api.command(props.containerId, props.blockId, "drawings", "replace", { rows: next, expected_version: version.value });
-      if (abort.signal.aborted)
-        return;
-      rows.value = result.rows;
-      version.value = result.version;
-      if (history2 === "normal") {
-        undo.value = [...undo.value.slice(-29), before];
-        redo.value = [];
-      } else if (history2 === "undo") {
-        undo.value.pop();
-        redo.value.push(before);
-      } else {
-        redo.value.pop();
-        undo.value.push(before);
-      }
-      emit("refresh");
-    } catch {
-      if (!abort.signal.aborted) {
-        rows.value = before;
-        error.value = gwText("Could not save. The scene will refresh; try again.");
-        undo.value = [];
-        redo.value = [];
-        emit("refresh");
-      }
-    } finally {
-      if (!abort.signal.aborted)
-        busy.value = false;
+    const change = changedRows(before, next);
+    const allowed = new Set(change.undo.filter(([, row]) => !row || row.canEdit !== false).map(([id]) => id));
+    change.undo = change.undo.filter(([id]) => allowed.has(id));
+    change.redo = change.redo.filter(([id]) => allowed.has(id));
+    if (!change.redo.length)
+      return;
+    if (history2 === "normal") {
+      undo.value = [...undo.value.slice(-29), change];
+      redo.value = [];
     }
+    shared.apply(change.redo);
   }
   function create(p) {
     return { id: crypto.randomUUID(), kind: tool.value, audience: props.audience, points: [p], color: color.value, fill: filled.value ? fill.value : "none", width: width.value, opacity: opacity.value, fontSize: fontSize.value, text: text.value };
   }
   function down(e) {
-    if (e.button !== 0 || busy.value)
+    if (e.button !== 0)
       return;
     e.preventDefault();
     e.stopPropagation();
@@ -234,18 +246,25 @@ var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": 
   function paste() {
     if (!clipboard.length)
       return;
-    const added = clipboard.map((r) => ({ ...translated(r, 21, 21), id: crypto.randomUUID(), audience: props.audience }));
+    const added = clipboard.map(({ version: version2, canEdit, owner, ...r }) => ({ ...translated(r, 21, 21), id: crypto.randomUUID(), audience: props.audience }));
     void save([...rows.value, ...added]);
     selected.value = added.map((r) => r.id);
   }
   function history(direction) {
     cancel();
-    const list = direction === "undo" ? undo.value : redo.value;
-    const next = list.at(-1);
-    if (next) {
-      selected.value = [];
-      void save(copyRows(next), copyRows(rows.value), direction);
+    const entry = (direction === "undo" ? undo.value : redo.value).at(-1);
+    if (!entry)
+      return;
+    selected.value = [];
+    error.value = "";
+    if (direction === "undo") {
+      undo.value = undo.value.slice(0, -1);
+      redo.value = [...redo.value, entry];
+    } else {
+      redo.value = redo.value.slice(0, -1);
+      undo.value = [...undo.value, entry];
     }
+    shared.apply(direction === "undo" ? entry.undo : entry.redo);
   }
   function styleSelection() {
     void save(rows.value.map((r) => selected.value.includes(r.id) ? { ...r, color: color.value, fill: filled.value ? fill.value : "none", width: width.value, opacity: opacity.value, fontSize: fontSize.value, text: r.kind === "text" ? text.value : r.text } : r));
@@ -283,8 +302,6 @@ var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": 
       return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (busy.value)
-      return;
     if (e.key === "Escape") {
       if (drag)
         cancel();
@@ -310,8 +327,9 @@ var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": 
     window.addEventListener("blur", cancel);
   });
   onBeforeUnmount(() => {
-    abort.abort();
     cancel();
+    shared.destroy();
+    abort.abort();
     window.removeEventListener("keydown", key, true);
     window.removeEventListener("blur", cancel);
   });
@@ -322,7 +340,7 @@ var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": 
       edit(new MouseEvent("dblclick"), row);
     }
   } });
-  return { gwText, PhCursor, PhPencilSimple, PhLineSegment, PhArrowUpRight, PhRectangle, PhCircle, PhTextT, PhEraser, PhArrowCounterClockwise, PhArrowClockwise, PhTrash, PhCopy, PhClipboard, PhX, BlockStateApi, HttpClient, DirectoryContextMenu, bounds, hit, path, translated, root, tool, rows, version, selected, draft, marquee, color, fill, filled, width, opacity, fontSize, text, busy, error, clearConfirm, context, undo, redo, clipboard, drag, tools, palette, visible, editable, copyRows, point, pick, release, cancel, save, create, down, move, up, choose, remove, copy, paste, history, styleSelection, edit, menu, key, emit: options.emit };
+  return { gwText, PhCursor, PhPencilSimple, PhLineSegment, PhArrowUpRight, PhRectangle, PhCircle, PhTextT, PhEraser, PhArrowCounterClockwise, PhArrowClockwise, PhTrash, PhCopy, PhClipboard, PhX, BlockStateApi, HttpClient, DirectoryContextMenu, bounds, hit, path, translated, changedRows, createSharedRows, shared, show, root, tool, rows, version, selected, draft, marquee, color, fill, filled, width, opacity, fontSize, text, busy, error, clearConfirm, context, undo, redo, clipboard, drag, tools, palette, visible, editable, copyRows, point, pick, release, cancel, save, create, down, move, up, choose, remove, copy, paste, history, styleSelection, edit, menu, key, emit: options.emit };
 });
 export {
   DrawingWorkspace_native_default as default

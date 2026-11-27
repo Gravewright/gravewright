@@ -542,6 +542,27 @@ and must start with a letter or digit. Names and labels are limited to 120
 characters. Keep IDs and relative paths stable across updates so permissions
 and entry references remain stable.
 
+A collection may declare an optional `folder`: a list of one to four folder
+names, outermost first, each up to 120 characters. The native compendium panel
+shows the collection's packs inside those folders, closed by default; collections
+that share a path share the folders, and inside a folder each pack shows only its
+`label`. Searches and filters open folders that contain matches without changing
+the folders a member keeps open. A malformed `folder` rejects the installation.
+The folder is display metadata only: pack IDs, read grants, imports and the
+actor folders created on import do not change. Packs from such a collection also
+carry `folder`, `label` and `folderIds` in `api.compendiums.state()`; each
+`folderIds` entry is the opaque ID of the matching enclosing folder. GMs can set
+player and streamer access for a whole folder from its **⋯** button or through
+the `compendium-folders` ownership kind. That applies the grants to every pack
+beneath the folder, subfolders included, in one revisioned operation; roles left
+at **No change** keep each pack's current access. Hosts before 0.3.8
+ignore the field and list the packs without folders, so a package can declare it
+without requiring a newer host:
+
+```json
+"folder": ["Example system", "Core rules"]
+```
+
 Installation validates the declarations and files. The native compendium UI
 exposes them only in campaigns using that system's exact active, pinned,
 approved and non-revoked package version. Every read checks installed bytes

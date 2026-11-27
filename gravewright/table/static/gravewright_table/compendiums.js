@@ -2,6 +2,7 @@ import { gravewright } from '/static/gravewright_modules/frontend-api.js';
 import { mountModal } from './modal.js';
 import { modalText, openFormModal } from './form-modal.js';
 import { openPermissions } from './permissions.js';
+import { compendiumTree, folderPath } from './compendium-tree.js';
 
 const mime = 'application/x-gravewright-compendium';
 const targets = {actor:'#actors-panel',item:'#items-panel',journal:'#journals-panel',scene:'#maps-panel',deck:'.deck-upload'};
@@ -26,9 +27,9 @@ export function mountCompendiums(root, initial) {
   const campaign=document.getElementById('table-workspace').dataset.tableId;
   const gm=document.getElementById('table-workspace').dataset.role==='gm';
   let state=initial, query='', kind='', source='', busy=new Set(), dragged, highlighted;
-  // Players may drag items into sheets they own, as in Foundry; the sheet authorizes the drop.
+  // Players may drag items into sheets they own; the sheet authorizes the drop.
   const draggable=entryKind=>gm||entryKind==='item';
-  const opened=new Set(), container=node('section','gw-compendiums');
+  const opened=new Set(), openFolders=new Set(), container=node('section','gw-compendiums');
   const toolbar=node('div','gw-compendiums__toolbar'),filters=node('div','gw-compendiums__filters'),search=node('input'),type=node('select'),pack=node('select');
   search.type='search';
   const error=node('p','gw-compendiums__error');error.setAttribute('role','alert');error.hidden=true;
@@ -80,29 +81,53 @@ export function mountCompendiums(root, initial) {
       if(gm){const footer=node('footer');const add=button(text('Import','Importar'),async()=>{add.disabled=true;try{await importEntry(p.id,e.id);modal.close();}catch(cause){add.disabled=false;const alert=body.querySelector('[role=alert]')||node('p');alert.textContent=cause.message;alert.setAttribute('role','alert');body.append(alert);}});footer.append(add);modal.append(footer);}
     }catch(cause){if(modal.isConnected){body.replaceChildren(node('p','',cause.message));body.firstChild.setAttribute('role','alert');}}
   }
+  // Inside a folder the path already names the collection; show the pack's own label.
+  const packName=p=>folderPath(p).length?String(p.label||p.name):p.name;
+  function paintPack({pack:p,entries},parent,filtering){
+    const group=node('details','gw-compendiums__pack');group.open=filtering||opened.has(p.id);
+    group.dataset.compendiumPack=p.id;
+    group.ontoggle=()=>{if(group.open)opened.add(p.id);else opened.delete(p.id);};
+    const heading=node('summary');heading.append(node('span','gw-compendiums__pack-name',packName(p)),node('small','',entries.length));group.append(heading);
+    if(gm){const permissions=button('⋯',()=>openPermissions('compendiums',p.id));permissions.className='gw-compendiums__permissions';permissions.title=text('Permissions','Permissões');permissions.setAttribute('aria-label',text('Permissions','Permissões')+' '+p.name);group.append(permissions);}
+    if(!entries.length)group.append(node('p','gw-compendiums__empty',text('Empty package.','Pacote vazio.')));
+    for(const e of entries){
+      const row=node('div','gw-compendiums__entry');row.dataset.compendiumEntry=e.id;row.dataset.compendiumPack=p.id;row.dataset.compendiumKind=e.kind;row.draggable=draggable(e.kind)&&!busy.has(p.id+':'+e.id);
+      row.ondragstart=event=>{if(!row.draggable){event.preventDefault();return;}dragged={campaign,packId:p.id,id:e.id,kind:e.kind};event.dataTransfer.setData(mime,JSON.stringify(dragged));event.dataTransfer.effectAllowed='copy';};
+      row.ondragend=clearDrag;
+      const label=button(e.name,()=>preview(p,e));label.className='gw-compendiums__name';label.title=text('Preview','Prévia')+': '+e.name;
+      row.append(label,node('small','',nameOf(e.kind)));
+      if(gm){const add=button('↓',()=>importEntry(p.id,e.id));add.className='gw-compendiums__import';add.disabled=busy.has(p.id+':'+e.id);add.title=text('Import','Importar');add.setAttribute('aria-label',text('Import','Importar')+' '+e.name);row.append(add);}
+      group.append(row);
+    }
+    parent.append(group);
+  }
+  function paintBranch(branch,parent,filtering){
+    for(const folder of sorted([...branch.folders.values()],folder=>folder.name)){
+      // The wrapper keeps the permissions control visible while the folder is closed.
+      const wrapper=node('div','gw-compendiums__folder-group'),group=node('details','gw-compendiums__folder');group.open=filtering||openFolders.has(folder.id);
+      group.dataset.compendiumFolder=folder.id;
+      // Filters open matching folders without changing the folders kept open afterwards.
+      group.ontoggle=()=>{if(filtering)return;if(group.open)openFolders.add(folder.id);else openFolders.delete(folder.id);};
+      const heading=node('summary');heading.append(node('span','gw-compendiums__folder-name',folder.name),node('small','',folder.count));group.append(heading);
+      paintBranch(folder,group,filtering);
+      // Before the folder, so keyboard focus reaches it next to the folder's heading.
+      if(gm&&folder.accessId){const permissions=button('⋯',()=>openPermissions('compendium-folders',folder.accessId));permissions.className='gw-compendiums__permissions';permissions.title=text('Folder permissions','Permissões da pasta');permissions.setAttribute('aria-label',permissions.title+' '+folder.name);wrapper.append(permissions);}
+      wrapper.append(group);
+      parent.append(wrapper);
+    }
+    for(const row of sorted(branch.packs,row=>packName(row.pack)))paintPack(row,parent,filtering);
+  }
   function paint(){
     list.replaceChildren();
-    for(const p of sorted(state?.packs||[],p=>p.name)){
+    const needle=normalized(query),rows=[];
+    for(const p of state?.packs||[]){
       if(source&&source!==p.id)continue;
-      const entries=sorted(p.entries.filter(e=>(!kind||e.kind===kind)&&(!query||normalized(e.name+' '+p.name).includes(normalized(query)))),e=>e.name);
+      const scope=normalized(p.name+' '+folderPath(p).join(' '));
+      const entries=sorted(p.entries.filter(e=>(!kind||e.kind===kind)&&(!query||(normalized(e.name)+' '+scope).includes(needle))),e=>e.name);
       if(!entries.length&&(p.entries.length||query||kind))continue;
-      const group=node('details','gw-compendiums__pack');group.open=!!query||!!kind||!!source||opened.has(p.id);
-      group.dataset.compendiumPack=p.id;
-      group.ontoggle=()=>{if(group.open)opened.add(p.id);else opened.delete(p.id);};
-      const heading=node('summary');heading.append(node('span','gw-compendiums__pack-name',p.name),node('small','',entries.length));group.append(heading);
-      if(gm){const permissions=button('⋯',()=>openPermissions('compendiums',p.id));permissions.className='gw-compendiums__permissions';permissions.title=text('Permissions','Permissões');permissions.setAttribute('aria-label',text('Permissions','Permissões')+' '+p.name);group.append(permissions);}
-      if(!entries.length)group.append(node('p','gw-compendiums__empty',text('Empty package.','Pacote vazio.')));
-      for(const e of entries){
-        const row=node('div','gw-compendiums__entry');row.dataset.compendiumEntry=e.id;row.dataset.compendiumPack=p.id;row.dataset.compendiumKind=e.kind;row.draggable=draggable(e.kind)&&!busy.has(p.id+':'+e.id);
-        row.ondragstart=event=>{if(!row.draggable){event.preventDefault();return;}dragged={campaign,packId:p.id,id:e.id,kind:e.kind};event.dataTransfer.setData(mime,JSON.stringify(dragged));event.dataTransfer.effectAllowed='copy';};
-        row.ondragend=clearDrag;
-        const label=button(e.name,()=>preview(p,e));label.className='gw-compendiums__name';label.title=text('Preview','Prévia')+': '+e.name;
-        row.append(label,node('small','',nameOf(e.kind)));
-        if(gm){const add=button('↓',()=>importEntry(p.id,e.id));add.className='gw-compendiums__import';add.disabled=busy.has(p.id+':'+e.id);add.title=text('Import','Importar');add.setAttribute('aria-label',text('Import','Importar')+' '+e.name);row.append(add);}
-        group.append(row);
-      }
-      list.append(group);
+      rows.push({id:p.id,pack:p,entries});
     }
+    paintBranch(compendiumTree(rows),list,!!query||!!kind||!!source);
     if(!list.children.length)list.append(node('p','gw-compendiums__empty',text('No matching content.','Nenhum conteúdo encontrado.')));
   }
   function update(next,previous=pack.value){

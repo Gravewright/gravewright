@@ -56,6 +56,10 @@ def state(campaign_id, user_id, name, scene_id=None, preview_token_id=None):
 
 def command(campaign_id, user_id, name, action, data, request_id):
     """Serialize a resource command and record its retry result before notification."""
+    if name == 'combat' and action == 'roll-initiative-batch':
+        # This GM-only result has an isolated receipt and live replay checks.
+        from gravewright.combat.initiative_batch import execute
+        return execute(campaign_id, user_id, data, request_id)
     if name == 'compendiums' and action == 'read':
         # Reads must recheck live grants, including when a caller reuses a
         # request ID. They neither create write receipts nor invalidate state.

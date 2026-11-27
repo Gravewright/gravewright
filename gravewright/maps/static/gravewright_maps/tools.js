@@ -2,6 +2,7 @@
 import { createSelection } from "./runtime/features/selection/ui/selection-workspace.js";
 import Drawing from "./runtime/features/drawing/ui/DrawingWorkspace.native.js";
 import Measurement from "./runtime/features/measurement/ui/MeasurementWorkspace.native.js";
+import { createSharedMeasurements } from "./runtime/features/measurement/model/shared-measurements.js";
 import Images from "./runtime/features/images/ui/ImageWorkspace.native.js";
 import { previewBoardImage } from "./runtime/features/images/model/image-preview.js";
 import { createLeverControls } from "./runtime/features/images/ui/lever-controls.js";
@@ -46,18 +47,39 @@ function createTools(surface, board, map, gm, api, stateAPI) {
   }
   const common = { HttpClient, command: api.command, read: api.read };
   const base = () => ({ viewport: board.viewport(), containerId: map.containerId, blockId: map.blockId, cell: map.gridSize * map.imageScale, grid: map.gridVisible });
-  let measureRows = [], selection;
+  let measureRows = state.markers || [], selection, sharedMeasurements;
+  const measureError = document.createElement("p");
+  measureError.className = "selection-workspace__error";
+  measureError.hidden = true;
+  measureError.setAttribute("role", "alert");
+  surface.append(measureError);
   const levers = createLeverControls(surface, board, gm, api, stateAPI);
-  const measurement = Measurement(hosts.measurement, { ...common, props: { ...base(), active: false, maxRows: state.capabilities?.maxMeasurements, measureValue: map.measureValue, measureUnit: map.measureUnit }, emit(type, value) {
-    if (type === "change") measureRows = value;
+  const measurement = Measurement(hosts.measurement, { ...common, props: { ...base(), active: false, shared: true, rows: measureRows, maxRows: state.capabilities?.maxMarkers, measureValue: map.measureValue, measureUnit: map.measureUnit }, emit(type, value) {
+    if (type === "change") {
+      measureRows = value;
+      sharedMeasurements?.edit(value);
+    }
     if (type === "close") {
       stateAPI.mergePatch({ _tool: "select" });
       sync();
     }
   } });
-  const markerProps = () => ({ ...base(), active: false, shared: true, rows: state.markers || [], measureValue: map.measureValue, measureUnit: map.measureUnit });
-  const markers = Measurement(hosts.markers, { props: markerProps(), emit() {
-  } });
+  sharedMeasurements = createSharedMeasurements({
+    initial: measureRows,
+    save: (patch) => {
+      measureError.hidden = true;
+      return api.command("markers", "patch", patch);
+    },
+    refresh: api.read,
+    render: (rows) => {
+      measureRows = rows;
+      measurement.update({ rows });
+    },
+    error: (reason) => {
+      measureError.textContent = reason.message;
+      measureError.hidden = false;
+    }
+  });
   selection = createSelection(surface, board, map, gm, api, stateAPI, { rows: () => measureRows, replace: (rows) => measurement.call("replace", rows) });
   function sync() {
     if (closed || !board.viewport())
@@ -67,11 +89,12 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     levers.update(state);
     selection?.update(state);
     const measure = tool === "measure";
-    markers.update(markerProps());
-    measurement.update({ ...base(), active: tool === "measure", maxRows: state.capabilities?.maxMeasurements, measureValue: map.measureValue, measureUnit: map.measureUnit });
-    const draw = gm && tool === "draw" && ["game", "gm"].includes(layer);
+    const streamer = document.querySelector("#table-workspace")?.dataset.role === "streamer";
+    measurement.update({ ...base(), active: tool === "measure" && !streamer, audience: layer === "gm" ? "gm" : "campaign", maxRows: state.capabilities?.maxMarkers, measureValue: map.measureValue, measureUnit: map.measureUnit });
+    const drawLayer = layer || "game";
+    const draw = tool === "draw" && !streamer && (drawLayer === "game" || gm && drawLayer === "gm");
     if (draw && !drawing)
-      drawing = Drawing(hosts.drawing, { ...common, props: { ...base(), document: state.drawings, audience: layer === "gm" ? "gm" : "campaign" }, emit(type) {
+      drawing = Drawing(hosts.drawing, { ...common, props: { ...base(), gm, document: state.drawings, audience: drawLayer === "gm" ? "gm" : "campaign" }, emit(type) {
         if (type === "refresh")
           void api.read();
         if (type === "close") {
@@ -83,7 +106,7 @@ function createTools(surface, board, map, gm, api, stateAPI) {
       drawing.destroy();
       drawing = void 0;
     } else
-      drawing?.update({ ...base(), document: state.drawings, audience: layer === "gm" ? "gm" : "campaign" });
+      drawing?.update({ ...base(), gm, document: state.drawings, audience: drawLayer === "gm" ? "gm" : "campaign" });
     const compose = gm && layer === "composition" && !measure;
     const editableImages = state.images.filter((image) => imageInWorkspace(image, layer));
     if (compose && !images)
@@ -118,6 +141,7 @@ function createTools(surface, board, map, gm, api, stateAPI) {
   }
   function update(next) {
     state = next;
+    sharedMeasurements.update(state.markers || [], state.version);
     sync();
   }
   function openLibrary() {
@@ -208,6 +232,8 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     sync();
   }, destroy() {
     closed = true;
+    sharedMeasurements.destroy();
+    measureError.remove();
     regionEditor?.close(true);
     window.removeEventListener("gravewright:selection-edit", editSelection);
     levers.destroy();
@@ -216,7 +242,6 @@ function createTools(surface, board, map, gm, api, stateAPI) {
     images?.destroy();
     effects?.destroy();
     measurement.destroy();
-    markers.destroy();
     library?.destroy();
     if (libraryHost) {
       vMovableResizable.unmounted(libraryHost);

@@ -253,19 +253,10 @@ def apply(scene, who, env, area, action, p):
     if area == "drawings":
         if action != "replace":
             raise MapError("Invalid drawing command.")
-        old = env.drawings or {"version": 0, "rows": []}
-        if p.get("expected_version") != old["version"]:
-            raise MapError("Drawings changed. Refresh and try again.", "conflict")
-        rows = p.get("rows")
-        if not isinstance(rows, list) or len(rows) > 500:
-            raise MapError("Use up to 500 drawings.")
-        cleaned = [drawing(r) for r in rows]
-        if sum(len(r["points"]) for r in cleaned) > 50000:
-            raise MapError("Drawing point limit reached.")
-        if len({r["id"] for r in cleaned}) != len(cleaned):
-            raise MapError("Duplicate drawing identifier.")
-        env.drawings = {"version": old["version"] + 1, "rows": cleaned}
-        return deepcopy(env.drawings)
+        # Participants edit individual drawings through drawings.patch; this
+        # whole-document GM replacement keeps each row's author and revision.
+        from .drawings import replace
+        return replace(env, who, p)
     if area in ("particles", "shaders", "images"):
         key = {"particles": "emitter", "shaders": "shader", "images": "image"}[area]
         idkey = "placement_id" if area == "images" else key + "_id"

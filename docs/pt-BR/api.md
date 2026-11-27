@@ -39,7 +39,7 @@ Todo domínio abaixo possui `state(payload = {}, options)` e os métodos listado
 | `maps` | `update`, `move`, `delete`, `activate`, `navigate`, `updateObjects`, `createFolder`, `updateFolder`, `deleteFolder`, `exportUniversalVtt` |
 | `journals` | `resources`, `resolve`, `create`, `update`, `delete`, `move`, `setAccess`, `present`, `createFolder`, `updateFolder`, `moveFolder`, `deleteFolder`, `setStatus`, `setObjective`, `assignCharacters`, `createBoardQuest`, `addQuest`, `removeQuest`, `pinQuest`, `reorderQuests`, `roll`, `reset`, `setPrerequisites`, `restoreRevision`, `restoreDeleted`, `purgeDeleted` |
 | `items` | `create`, `update`, `delete`, `duplicate`, `setPermissions`, `createFolder`, `updateFolder`, `deleteFolder` |
-| `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
+| `combat` | `add`, `remove`, `configure`, `setInitiative`, `rollInitiative`, `rollInitiativeBatch`, `toggle`, `moveUp`, `moveDown`, `setTurn`, `nextRound`, `previousRound`, `start`, `stop`, `nextTurn`, `previousTurn` |
 | `clocks` | `create`, `update`, `advance`, `reset`, `delete` |
 | `clues` | `create`, `update`, `advance`, `reset`, `reveal`, `hide`, `delete` |
 | `mindmaps` | `read`, `resources`, `resolve`, `create`, `update`, `node`, `delete` |
@@ -71,6 +71,72 @@ Formas adicionais:
 | `table.lobby(options)` / `table.updateLobby(payload, options)` | Lê/altera a sala de espera nativa |
 
 `combat.stop` encerra o encontro e limpa os participantes, a iniciativa e o histórico de turnos e rodadas. Os atores e tokens da cena são preservados; adicione participantes novamente antes de iniciar outro encontro.
+
+`combat.rollInitiativeBatch(payload, options)` rola expressões preparadas pelo
+pacote, atualiza a iniciativa e publica resultados agrupados no chat atomicamente.
+É exclusivo do GM e usa a gramática nativa de dados; a preparação específica do
+RPG permanece no pacote. Detecte
+`typeof api.combat.rollInitiativeBatch === "function"` antes de escolher esse
+caminho em hosts com catálogos de métodos antigos.
+
+```js
+const result = await api.combat.rollInitiativeBatch({
+  sceneId,
+  version: combat.version,
+  selectFirst: true,
+  label: "Iniciativa",
+  entries: [{
+    tokenId,
+    expression: "2d20kh1+(3)",
+    visibility: "public",
+    source: {
+      actorVersion: sheet.version,
+      sheetVersion: sheet.sheetVersion,
+      tokenVersion: token.version
+    }
+  }]
+}, {requestId, signal});
+```
+
+Envie de 1 a 64 participantes atuais sem duplicações. Cada entrada contém
+exatamente um `tokenId` ou `actorId`, uma expressão concreta de 1 a 512 caracteres,
+`visibility` opcional (`public` por padrão, ou `gm`) e `source`. As revisões do
+ator e da ficha são obrigatórias; a revisão do token é obrigatória apenas para
+participantes token. Em tokens independentes, `actorVersion` ainda vem dos
+metadados do ator e `sheetVersion` vem da ficha do token. Um token vinculado usa
+a revisão da ficha do ator. O host verifica todas as fontes e a revisão do
+encontro antes de rolar qualquer dado. Fonte ou encontro desatualizado rejeita
+a requisição inteira com `conflict`.
+
+Os resultados devem ser números finitos entre −1.000.000 e 1.000.000. O lote
+aceita até 128 KiB de entrada, 4.096 nós compilados, 1.024 dados iniciais, 2.048
+fatos de dados gerados e 1 MiB de resultados serializados; os limites individuais
+da gramática também se aplicam. `label` é texto simples opcional de até 48
+caracteres, com padrão `Initiative`. O cliente não fornece resultados, fonte
+aleatória nem lista de destinatários.
+
+O host ordena uma vez com desempates estáveis e incrementa a revisão do encontro
+uma vez. Por padrão, preserva o participante atual. `selectFirst: true` seleciona
+o primeiro participante apenas se o combate já estiver ativo; não inicia combate,
+avança rodada nem aplica condições/efeitos. Rodada, identidade do encontro e
+histórico são preservados. Participantes/tokens ocultos e atores diretos com
+permissões restritas forçam visibilidade GM.
+Os resultados ficam em até duas mensagens, uma por audiência, consumindo uma
+unidade da quota de chat por mensagem. Cada entrada de `roll.batch` fornece sua
+própria `expression`, `label` e `result` nativo; lotes homogêneos anteriores
+continuam compatíveis.
+
+O retorno é a projeção atual autorizada do combate mais
+`batch: {requestId, version, replayed, results, messageIds}`. Cada resultado
+identifica o token ou ator e inclui `initiative` e `messageId`. `batch.version`
+é a revisão aceita pela operação; `version` no topo descreve a projeção atual e
+pode ser maior na repetição. Um recibo privado separado vincula o UUID ao payload
+e à cena originais. Repetir exige acesso GM atual, devolve os resultados originais
+e a projeção atual, sem novos dados, quota ou publicação. Reutilizar o UUID com
+outro payload é rejeitado. Todos os resultados persistentes são confirmados
+juntos, ou todos são desfeitos. Após perder uma resposta, mantenha o mesmo UUID
+e payload; não troque para rolagens individuais nem gere outro UUID sem uma
+rejeição explícita que comprove que nenhum lote foi confirmado.
 
 Os seis atalhos de transição de combate (`nextTurn`, `previousTurn`, `nextRound`, `previousRound`, `start`, `stop`) também buscam a versão atual quando omitida. Fornecer versões explicitamente permite detectar alterações concorrentes:
 
@@ -125,8 +191,11 @@ revisões esperadas dos serviços nativos. Os payloads públicos usam estes nome
 
 Os tipos de ownership são `actors`, `items`, `journals`, `scenes`, `cards`,
 `compendiums`, `tokens`, `pages` e os grupos `actor-folders`, `item-folders`,
-`journal-folders`, `scene-folders`. A página usa ID `journalUUID:sectionId`;
-revisões de pastas em lote são strings opacas. Nenhum método novo substitui
+`journal-folders`, `scene-folders` e `compendium-folders`. A página usa ID
+`journalUUID:sectionId`; uma pasta de compêndios usa um dos `folderIds` do
+compêndio. Pastas de documentos alteram apenas os documentos diretamente nelas,
+enquanto uma pasta de compêndios altera todos os compêndios abaixo dela, incluindo
+subpastas. Revisões de pastas em lote são strings opacas. Nenhum método novo substitui
 silenciosamente uma revisão fornecida. Atualizações do Builder também conferem
 a cena gerada com a cena autoritativa da montagem. Ensaios mantêm o rollback nativo.
 

@@ -33,6 +33,7 @@ def table(request, campaign_id, detached_chat=False):
         for m in campaign.memberships.all()
     )
     layers = DOCK["layers"] if owner else DOCK["layers"][:1]
+    member_role = next(m.role for m in campaign.memberships.all() if m.user_id == request.user.pk)
     from gravewright.campaigns.catalog import get_ruleset
     from gravewright.campaigns.systems import resolve_system_id, sheet_provider
     ruleset = get_ruleset(campaign.system, campaign_id=campaign.pk) or {}
@@ -47,13 +48,14 @@ def table(request, campaign_id, detached_chat=False):
         "detached_chat": detached_chat,
         "campaign": campaign,
         "owner": owner,
-        "member_role": next(m.role for m in campaign.memberships.all() if m.user_id == request.user.pk),
+        "member_role": member_role,
         "layers": layers,
         "tools": {
             layer["id"]: [
                 tool
                 for tool in DOCK["tools"][layer["id"]]
-                if owner or tool["id"] != "visibility"
+                if (owner or tool["id"] != 'visibility')
+                and (member_role != 'streamer' or tool['id'] == 'select')
             ]
             for layer in layers
         },

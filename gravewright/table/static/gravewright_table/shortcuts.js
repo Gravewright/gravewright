@@ -107,8 +107,17 @@ export function mountShortcuts(table) {
         if ([...document.querySelectorAll('[aria-modal=true]')].some(visible)) return;
         const value = combination(event);
         if (!value) return;
-        const available = button => visible(button) || (button.closest('[data-dock-overflow]')?.hidden
-            && !button.hidden && !button.closest('[inert]') && visible(table.querySelector('[data-dock-menu-toggle]')));
+        const available = button => {
+            if (button.hidden || button.closest('[inert]')) return false;
+            if (visible(button)) return true;
+            const layer = button.closest('[data-shortcut-layer]');
+            // Personal visibility affects presentation only; inactive layers and
+            // native permission/capability flags still restrict their shortcuts.
+            if (button.hasAttribute('data-dock-user-hidden')) return layer
+                ? getComputedStyle(layer).display !== 'none' : visible(table.querySelector('[data-dock-menu-toggle]'));
+            return button.closest('[data-dock-overflow]')?.hidden
+                && visible(table.querySelector('[data-dock-menu-toggle]'));
+        };
         const entry = entries.find(item => available(item.button) && !item.button.disabled
             && item.button.getAttribute('aria-disabled') !== 'true'
             && (bindings[item.id] ?? item.defaultKey).split(' ').includes(value));

@@ -547,6 +547,28 @@ com letra ou número. Nomes e rótulos admitem até 120 caracteres. Mantenha os 
 e caminhos relativos estáveis nas atualizações para preservar permissões e
 referências.
 
+Uma coleção pode declarar `folder`, opcional: uma lista de uma a quatro pastas,
+da mais externa para a mais interna, com até 120 caracteres cada. O painel nativo
+de compêndios mostra os compêndios da coleção dentro dessas pastas, fechadas por
+padrão; coleções com o mesmo caminho compartilham as pastas, e dentro de uma
+pasta cada compêndio mostra apenas seu `label`. Buscas e filtros abrem as pastas
+que têm resultados sem alterar as pastas que o membro mantém abertas. Um `folder`
+inválido rejeita a instalação. A pasta é apenas apresentação: IDs de compêndios,
+permissões de leitura, importações e as pastas de atores criadas na importação
+não mudam. Os compêndios dessa coleção também trazem `folder`, `label` e
+`folderIds` em `api.compendiums.state()`; cada item de `folderIds` é o ID opaco
+da pasta correspondente. O mestre define o acesso de jogadores e transmissões
+para uma pasta inteira pelo botão **⋯** dela ou pelo tipo de ownership
+`compendium-folders`. Isso aplica as permissões a todos os compêndios abaixo da
+pasta, incluindo subpastas, em uma operação com revisão; funções mantidas em
+**Não alterar** conservam o acesso atual de cada compêndio. Hosts anteriores ao 0.3.8 ignoram o campo e listam os
+compêndios sem pastas; assim, um pacote pode declará-lo sem exigir um host mais
+novo:
+
+```json
+"folder": ["Sistema de exemplo", "Regras básicas"]
+```
+
 A instalação valida as declarações e os arquivos. A interface nativa mostra
 essas coleções apenas nas mesas que usam a versão exata, ativa, fixada,
 aprovada e não revogada desse sistema. Cada leitura confere os arquivos

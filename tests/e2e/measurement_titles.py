@@ -54,7 +54,7 @@ def check(gm, player, data, output):
     expect(title).to_have_value('Dangerous area <script>')
     panel.get_by_role('button', name='Close measurement', exact=True).click()
     expect(gm.locator('.measurement-title__text')).to_have_text('Dangerous area <script>')
-    expect(player.locator('.measurement-title')).to_have_count(0)
+    expect(player.locator('.measurement-title__text')).to_have_text('Dangerous area <script>')
     gm.get_by_role('button', name='Measure', exact=True).first.click()
     expect(title).to_have_value('Dangerous area <script>')
     # Selecting a new shape gives it an independent title.
@@ -85,7 +85,7 @@ def check(gm, player, data, output):
     panel.get_by_role('button', name='Clear', exact=True).click()
     panel.get_by_role('button', name='Confirm clearing', exact=True).click()
     expect(titles).to_have_count(0)
-    print('Measurement titles: inline editing, toggle, safe text, independent shapes, close/reopen and cleanup passed', flush=True)
+    print('Measurement titles: inline editing, broadcast, toggle, safe text, independent shapes, close/reopen and cleanup passed', flush=True)
 
 
 if __name__ == '__main__':

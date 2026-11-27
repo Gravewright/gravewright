@@ -3943,5 +3943,19 @@
   "Value per cell": "Valor por célula",
   "Measurement unit": "Unidade de medida",
   "Group": "Grupo",
-  "No group": "Sem grupo"
+  "No group": "Sem grupo",
+  "Customize the dock": "Personalizar a dock",
+  "Choose which tools and panels appear, and their order. Saved for your profile and this table on this device.": "Escolha quais ferramentas e painéis aparecem e em qual ordem. Salvo para seu perfil e esta mesa neste dispositivo.",
+  "Hidden controls keep their keyboard shortcuts. Settings always remain available from the table logo.": "Os controles ocultos mantêm seus atalhos. As configurações continuam disponíveis pelo logotipo da mesa.",
+  "Restore dock defaults": "Restaurar dock padrão",
+  "Could not load or save dock preferences on this device.": "Não foi possível carregar ou salvar as preferências da dock neste dispositivo.",
+  "Dock": "Dock",
+  "Panels menu": "Menu de painéis",
+  "Shown": "Visível",
+  "Move {action} up": "Mover {action} para cima",
+  "Move {action} down": "Mover {action} para baixo",
+  "All panels are hidden or pinned to the dock. Customize them in Settings.": "Todos os painéis estão ocultos ou fixados na dock. Personalize-os nas configurações.",
+  "Shared measurements": "Medições compartilhadas",
+  "Clear my drawings": "Limpar meus desenhos",
+  "Folder permissions": "Permissões da pasta"
 }

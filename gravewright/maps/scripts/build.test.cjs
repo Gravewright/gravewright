@@ -83,7 +83,11 @@ test("the complete build reports every named module, public entry and license to
   assert.ok(tools.includes("runtime/features/selection/ui/selection-workspace.js"));
   assert.ok(!tools.includes("function createSelection("));
   const preview = fs.readFileSync(path.join(outputRoot, maps, "builder-native.js"), "utf8");
-  assert.ok(preview.includes("/static/gravewright_maps/vendor/pixi.js"));
+  const pixiApplication = "runtime/widgets/game-board/lib/pixi-application.js";
+  assert.ok(preview.includes("./" + pixiApplication));
+  assert.ok(built.outputs.includes(maps + pixiApplication));
+  assert.ok(fs.readFileSync(path.join(outputRoot, maps, pixiApplication), "utf8")
+    .includes("/static/gravewright_maps/vendor/pixi.js"));
   assert.ok(preview.includes("/static/gravewright_maps/render-profile.js"));
   assert.ok(!built.outputs.some(name => /chunk-.*\.js$/.test(name)));
 });

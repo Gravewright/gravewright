@@ -11,6 +11,7 @@ MAX_COLLECTION_BYTES = 8 * 1024 * 1024
 MAX_COLLECTION_ENTRIES = 20000
 MAX_PACKS = 64
 MAX_ENTRY_BYTES = 256 * 1024
+MAX_FOLDER_DEPTH = 4
 MODULE_KINDS = {'actor_pack', 'item_pack', 'spell_pack'}
 IDENTIFIER = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}')
 
@@ -36,11 +37,27 @@ def _text(value, limit=120):
     return isinstance(value, str) and 0 < len(value.strip()) <= limit
 
 
+def folder_path(value):
+    """Return the directory folders a collection's packs appear under.
+
+    ``folder`` is optional display metadata: a list of nested folder names,
+    outermost first. Collections without it stay at the directory's top level.
+    """
+    folder = value.get('folder')
+    if folder is None:
+        return []
+    if (not isinstance(folder, list) or not 1 <= len(folder) <= MAX_FOLDER_DEPTH
+            or not all(_text(name) for name in folder)):
+        raise ValueError('Invalid compendium folder.')
+    return [name.strip() for name in folder]
+
+
 def validate_collection(value, system_id, actor_types, item_types):
     """Validate one collection against its provider's registered document types."""
     _json(value)
     if not isinstance(value, dict) or not _text(value.get('name')):
         raise ValueError('A compendium collection requires a name.')
+    folder_path(value)
     packs = value.get('packs')
     if not isinstance(packs, list) or not 1 <= len(packs) <= MAX_PACKS:
         raise ValueError('Invalid compendium pack count.')

@@ -105,6 +105,7 @@ export const FRONTEND_CONTRACT = {
       "configure": "configure",
       "setInitiative": "initiative",
       "rollInitiative": "roll",
+      "rollInitiativeBatch": "roll-initiative-batch",
       "toggle": "toggle",
       "moveUp": "order-up",
       "moveDown": "order-down",

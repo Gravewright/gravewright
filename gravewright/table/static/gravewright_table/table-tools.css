@@ -828,6 +828,13 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
 .gw-compendiums__pack:has(>.gw-compendiums__permissions)>summary{padding-right:var(--space-8)}
 .gw-compendiums__pack>summary small{float:right;color:var(--text-muted);margin-left:var(--space-1);font-size:var(--text-sm)}
 .gw-compendiums__pack>.gw-compendiums__permissions{position:absolute;right:0;top:0;width:28px;min-height:28px;padding:var(--space-0);border-color:transparent;background:transparent;font-size:var(--text-md)}
+.gw-compendiums__folder-group{position:relative;border-bottom:var(--size-1) solid var(--border)}
+.gw-compendiums__folder>summary{cursor:pointer;min-height:30px;box-sizing:border-box;padding:var(--space-1) var(--space-1) var(--space-1) var(--space-2);border-left:var(--size-2) solid var(--accent);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--accent) 8%,var(--surface-field, #151a20));font-weight:600;font-size:var(--text-sm);overflow-wrap:anywhere}
+.gw-compendiums__folder-group:has(>.gw-compendiums__permissions)>.gw-compendiums__folder>summary{padding-right:var(--space-8)}
+.gw-compendiums__folder>summary small{float:right;color:var(--text-muted);margin-left:var(--space-1);font-size:var(--text-sm)}
+.gw-compendiums__folder-group>.gw-compendiums__permissions{position:absolute;right:0;top:var(--space-px);width:28px;min-height:28px;padding:var(--space-0);border-color:transparent;background:transparent;font-size:var(--text-md)}
+.gw-compendiums__folder>:is(.gw-compendiums__folder-group,.gw-compendiums__pack){margin-left:var(--space-3)}
+.gw-compendiums__folder>:is(.gw-compendiums__folder-group,.gw-compendiums__pack):last-child{border-bottom:0}
 .gw-compendiums__entry{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:var(--space-1);min-height:34px;padding:var(--space-half) var(--space-0);border-top:var(--size-1) solid var(--border);box-sizing:border-box}
 .gw-compendiums__entry:not(:has(>.gw-compendiums__import)){grid-template-columns:minmax(0,1fr) auto}
 .gw-compendiums__entry[draggable=true]{cursor:grab}

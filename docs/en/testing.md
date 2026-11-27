@@ -90,6 +90,26 @@ asset reuse, table isolation and failed-upload cleanup.
 
 ## Browser scenarios
 
+`tests/e2e/dock_customization.py` checks the table's personal dock settings:
+tool/panel ordering, pinning, hiding without losing shortcuts, real panel actions,
+default restoration, reload and cross-tab persistence, failed storage, profile
+and role isolation, and English/Portuguese/Spanish at 1440, 390 and 320px. It uses
+the disposable Map Builder fixture and accepts `--output` and
+`--browser-executable`; choose a fresh output directory. The colocated
+`dock-preferences-model.test.mjs` also checks malformed preferences, unavailable
+entries, new controls and profile/campaign storage keys.
+
+`tests/e2e/shared_drawings.py` connects a GM, four players and a streamer to the
+same Map Builder fixture. It checks that a player's area measurement and drawings
+reach every other client, GM-layer measurements and drawings stay out of player
+and streamer state and socket frames, players cannot erase peers' drawings,
+concurrent drawings are all kept, undo and **Clear my drawings** affect only the
+author's rows, GMs can erase players' drawings, and the player Mini Paint panel at
+390px. It accepts `--output` and `--browser-executable`; use a fresh output
+directory. `gravewright.maps.tests.test_drawings` covers the server rules, and
+`maps/frontend/shared/lib/shared-rows.test.js` covers the shared row engine used by
+measurements and drawings.
+
 `uv run --locked python tests/e2e/door_rotation_anchor.py` checks door pivot
 selection, rotation, Undo, opening/closing artwork, the shared wall editor and
 saved settings in English, Portuguese and Spanish at desktop and mobile widths.
