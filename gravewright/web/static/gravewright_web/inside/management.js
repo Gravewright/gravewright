@@ -3,6 +3,7 @@ import { renderReleaseNotes } from './release-notes.js';
 import { createUpdateProgress } from './update-progress.js';
 import { createTranslator } from '/static/gravewright_modules/i18n.js';
 import { packageTagLabel } from './package-tags.js';
+import { compareVersions, currentReleases, packageBadges } from './package-library.js';
 function openPackageModal(element) {
   const placeholder = document.createComment('package-modal');
   element.before(placeholder); element.hidden = false;
@@ -94,6 +95,17 @@ function modules(root) {
   const perform = (target, work) => run(target, work, events.signal);
   const translator = createTranslator();
   const tagLabel = tag => packageTagLabel(tag, translator);
+  // Installing another version replaces the installed one; the server refuses
+  // a downgrade or a different package kind under the same ID.
+  const replacementError = code => code === 'newer_installed'
+    ? ui('A newer version of this package is installed. Remove it before installing an older version.', 'Uma versão mais nova deste pacote já está instalada. Remova-a antes de instalar uma versão mais antiga.', 'Ya hay instalada una versión más nueva de este paquete. Elimínala antes de instalar una versión anterior.')
+    : code === 'package_type_changed'
+      ? ui('This package ID is installed as another kind of package. Remove it before installing this one.', 'Este ID de pacote já está instalado como outro tipo de pacote. Remova-o antes de instalar este.', 'Este ID de paquete ya está instalado como otro tipo de paquete. Elimínalo antes de instalar este.')
+      : undefined;
+  // A replaced active language or server app takes effect after a reload.
+  const replacedActive = (result, previous) => !!result?.restartRequired || !!(result?.replaced?.length && previous?.globalEnabled);
+  const badgeLabels = pkg => packageBadges(pkg, installed).map(badge => badge.kind === 'django' ? translator.t('Django · Server')
+    : badge.kind === 'compendiums' ? translator.t('Compendiums') : ui('For ', 'Para ', 'Para ') + badge.name);
   const normalize = value => String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const installedOnly = root.dataset.moduleCatalog === "installed";
   const kind = root.dataset.packageKind;
@@ -146,7 +158,7 @@ function modules(root) {
       const response = await fetch(api + '/marketplace/install', {method:'POST', signal:events.signal, headers:{[header]:token, 'Content-Type':'application/json', Accept:'application/x-ndjson'}, body:JSON.stringify({id:row.id, version:row.version})});
       if (!response.ok) { const payload = await response.json(); throw Object.assign(new Error(payload.error), {code:payload.error}); }
       const reader = response.body.getReader(), decoder = new TextDecoder();
-      let buffer = '', complete = false;
+      let buffer = '', complete = false, result;
       try {
         while (true) {
           const {done, value} = await reader.read();
@@ -155,13 +167,14 @@ function modules(root) {
           for (const line of lines) {
             if (!line) continue;
             const event = JSON.parse(line); progress(event);
-            if (event.stage === 'error') throw Object.assign(new Error(event.error), {code:event.error});
-            if (event.stage === 'complete') complete = true;
+            if (event.stage === 'error') throw Object.assign(new Error(replacementError(event.error) ?? event.error), replacementError(event.error) ? {} : {code:event.error});
+            if (event.stage === 'complete') { complete = true; result = event; }
           }
           if (done) break;
         }
       } finally { reader.releaseLock(); }
       if (!complete) throw new Error(ui('Installation interrupted. Refresh to check the result.', 'Instalação interrompida. Atualize para conferir o resultado.', 'Instalación interrumpida. Actualiza para comprobar el resultado.'));
+      return result;
     } catch (error) { progress({stage:'error'}); throw error; }
     finally { close.disabled = false; }
   }
@@ -173,14 +186,22 @@ function modules(root) {
     root.querySelectorAll('[data-state]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.state === filter)));
     const direction = root.querySelector('[data-sort]').value === 'desc' ? -1 : 1;
     const size = Number(root.querySelector('[data-page-size]').value);
-    const localRows = nativeRow ? [...installed, nativeRow] : installed;
+    // A package has one installed release, so the library shows one card per ID.
+    const current = currentReleases(installed);
+    const localRows = nativeRow ? [...current, nativeRow] : current;
     const locals = new Map(localRows.map(r => [r.id + '@' + r.version, r]));
-    const all = (installedOnly ? localRows : releases).filter(r => packageType(locals.get(r.id + '@' + r.version) ?? r) === kind);
+    const byId = new Map(localRows.map(r => [r.id, r]));
+    // In the catalog, a newer release of an installed package is its update;
+    // an older or equal one describes the installed package.
+    const localOf = r => locals.get(r.id + '@' + r.version) ?? (!installedOnly && byId.has(r.id)
+      && compareVersions(r.version, byId.get(r.id).version) <= 0 ? byId.get(r.id) : undefined);
+    const upgradeOf = r => !installedOnly && !localOf(r) ? byId.get(r.id) : undefined;
+    const all = (installedOnly ? localRows : releases).filter(r => packageType(localOf(r) ?? r) === kind);
     const categories = root.querySelector('[data-categories]');
     if (categories) {
       const focusedCategory = categories.contains(document.activeElement) ? document.activeElement.dataset.category : undefined;
       const counts = new Map();
-      for (const item of all) for (const tag of new Set(item.tags ?? locals.get(item.id + '@' + item.version)?.tags ?? [])) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      for (const item of all) for (const tag of new Set(item.tags ?? localOf(item)?.tags ?? [])) counts.set(tag, (counts.get(tag) ?? 0) + 1);
       if (category && !counts.has(category) && (installedOnly || ready)) category = '';
       categories.replaceChildren();
       for (const [tag, count] of [['', all.length], ...[...counts].sort((a,b) => collator.compare(tagLabel(a[0]),tagLabel(b[0])) || collator.compare(a[0],b[0]))]) {
@@ -194,15 +215,16 @@ function modules(root) {
       }
     }
     const rows = all.filter(r => {
-      const local = locals.get(r.id + '@' + r.version);
+      const local = localOf(r), installedRelease = local ?? upgradeOf(r);
       const info = local ?? r;
       const tags = r.tags ?? local?.tags ?? [];
-      return (!category || tags.includes(category)) && normalize(`${r.id} ${info.name ?? ''} ${r.version} ${info.description ?? ''} ${info.author ?? ''} ${tags.join(' ')} ${tags.map(tagLabel).join(' ')}`).includes(q)
-        && (filter === 'all' || filter === 'installed' && !!local
+      const badges = badgeLabels(installedRelease ?? r);
+      return (!category || tags.includes(category)) && normalize(`${r.id} ${info.name ?? ''} ${r.version} ${info.description ?? ''} ${info.author ?? ''} ${tags.join(' ')} ${tags.map(tagLabel).join(' ')} ${badges.join(' ')}`).includes(q)
+        && (filter === 'all' || filter === 'installed' && !!installedRelease
           || filter === 'active' && local?.globalEnabled && !local.revoked
-          || filter === 'available' && !local || filter === 'revoked' && local?.revoked);
-    }).sort((a,b) => direction * (collator.compare(locals.get(a.id + '@' + a.version)?.name ?? a.name ?? a.id,
-      locals.get(b.id + '@' + b.version)?.name ?? b.name ?? b.id) || collator.compare(a.id,b.id) || collator.compare(b.version,a.version)));
+          || filter === 'available' && !installedRelease || filter === 'revoked' && local?.revoked);
+    }).sort((a,b) => direction * (collator.compare(localOf(a)?.name ?? a.name ?? a.id,
+      localOf(b)?.name ?? b.name ?? b.id) || collator.compare(a.id,b.id) || collator.compare(b.version,a.version)));
     const pages = Math.max(1, Math.ceil(rows.length / size));
     page = Math.min(page, pages);
     text(root, '[data-count]', `${rows.length} / ${all.length}`);
@@ -213,18 +235,16 @@ function modules(root) {
     const grid = root.querySelector(".module-catalog__grid");
     grid.replaceChildren();
     for (const row of rows.slice((page - 1) * size, page * size)) {
-      const local = locals.get(row.id + '@' + row.version), card = root.querySelector("template").content.firstElementChild.cloneNode(true);
+      const local = localOf(row), upgrade = upgradeOf(row), card = root.querySelector("template").content.firstElementChild.cloneNode(true);
       text(card, "h3", local?.name ?? row.name ?? row.id);
       text(card, '[data-card-description]', row.description ?? local?.description ?? '');
       const tags = card.querySelector('[data-tags]');
-      if (tags && (local?.django || row.type === 'django')) {
-        const badge = document.createElement('span');
-        badge.textContent = translator.t('Django · Server');
-        tags.append(badge);
+      if (tags) {
+        const labels = [...badgeLabels(local ?? upgrade ?? row), ...(row.tags ?? local?.tags ?? []).map(tagLabel)];
+        for (const label of labels) { const badge = document.createElement('span'); badge.textContent = label; tags.append(badge); }
       }
-      if (tags) for (const tag of row.tags ?? local?.tags ?? []) { const badge = document.createElement('span'); badge.textContent = tagLabel(tag); tags.append(badge); }
-      text(card, "[data-version]", row.builtin ? "PDF" : `v${row.version}`);
-      const status = row.builtin ? ui('Built-in', 'Integrado', 'Integrado') : local?.revoked ? ui('Revoked', 'Revogado', 'Revocado') : local?.globalEnabled ? ui('Active', 'Ativo', 'Activo') : local ? ui('Installed', 'Instalado', 'Instalado') : ui('Available', 'Disponível', 'Disponible');
+      text(card, "[data-version]", row.builtin ? "PDF" : upgrade ? `v${upgrade.version} → v${row.version}` : `v${(local ?? row).version}`);
+      const status = row.builtin ? ui('Built-in', 'Integrado', 'Integrado') : local?.revoked ? ui('Revoked', 'Revogado', 'Revocado') : local?.globalEnabled ? ui('Active', 'Ativo', 'Activo') : local ? ui('Installed', 'Instalado', 'Instalado') : upgrade ? ui('Update available', 'Atualização disponível', 'Actualización disponible') : ui('Available', 'Disponível', 'Disponible');
       text(card, '[data-status]', status);
       card.dataset.status = row.builtin ? 'builtin' : local?.revoked ? 'revoked' : local?.globalEnabled ? 'active' : 'installed';
       card.dataset.packageId = row.id;
@@ -258,18 +278,29 @@ function modules(root) {
         openPackageModal(detail);
       };
       show(card, "[data-action=install]", !local);
+      if (upgrade) {
+        // Installing a newer release replaces the installed one on the server.
+        const install = card.querySelector("[data-action=install]"), label = ui('Update', 'Atualizar', 'Actualizar');
+        install.title = label;
+        install.setAttribute('aria-label', label);
+        const span = install.querySelector('span');
+        if (span) span.textContent = label;
+      }
       card.querySelector("[data-action=install]").onclick = () => perform(root, async () => {
+        let result;
         try {
-        await installPackage(row);
+        result = await installPackage(row);
         } catch (error) {
           releases = [];
           ready = false;
           render();
           throw error;
         }
+        if (replacedActive(result, upgrade)) { location.reload(); return; }
         await refresh();
         manager.querySelector('[data-module-catalog=installed]').dispatchEvent(new Event('packages-changed'));
-        text(root, '[role=status]', ui('Package installed. It is now in your library.', 'Pacote instalado. Ele já está na sua biblioteca.', 'Paquete instalado. Ya está en tu biblioteca.'));
+        text(root, '[role=status]', upgrade ? ui('Package updated. The previous version was replaced.', 'Pacote atualizado. A versão anterior foi substituída.', 'Paquete actualizado. La versión anterior fue reemplazada.')
+          : ui('Package installed. It is now in your library.', 'Pacote instalado. Ele já está na sua biblioteca.', 'Paquete instalado. Ya está en tu biblioteca.'));
         show(root, "[role=status]", true);
       });
       if (installedOnly && (local?.locales || local?.django) && (!local.revoked || local.globalEnabled)) {
@@ -403,20 +434,25 @@ function modules(root) {
         const file = form.get('file');
         if (!(file instanceof File) || !file.size) throw new Error(ui('Select a ZIP file.', 'Selecione um arquivo ZIP.', 'Selecciona un archivo ZIP.'));
         if (file.size > Number(localDialog.dataset.maxBytes)) throw new Error(ui('The ZIP exceeds the 64 MiB package limit.', 'O ZIP ultrapassa o limite de 64 MiB por pacote.', 'El ZIP supera el límite de 64 MiB por paquete.'));
+        let result;
         try {
-          await http.upload('/api/module-packages/install-local', form);
+          result = await http.upload('/api/module-packages/install-local', form);
         } catch (error) {
-          const message = error.code === 'conflict'
+          const message = replacementError(error.code) ?? (error.code === 'conflict'
             ? ui('This ID and version are already installed with different contents.', 'Este ID e versão já estão instalados com conteúdo diferente.', 'Este ID y versión ya están instalados con contenido diferente.')
             : error.code === 'unavailable'
               ? ui('This package is not compatible with the current SDK.', 'Este pacote não é compatível com o SDK atual.', 'Este paquete no es compatible con el SDK actual.')
-              : ui('The ZIP is not a valid package for this library.', 'O ZIP não é um pacote válido para esta biblioteca.', 'El ZIP no es un paquete válido para esta biblioteca.');
+              : ui('The ZIP is not a valid package for this library.', 'O ZIP não é um pacote válido para esta biblioteca.', 'El ZIP no es un paquete válido para esta biblioteca.'));
           throw new Error(message);
         }
         closeLocal();
         closeBrowser();
+        const previous = currentReleases(installed).find(row => row.id === result?.manifest?.id);
+        if (replacedActive(result, previous)) { location.reload(); return; }
         await refresh();
-        text(root, '[role=status]', ui('Local package installed from ZIP.', 'Pacote local instalado do ZIP.', 'Paquete local instalado desde ZIP.'));
+        text(root, '[role=status]', result?.replaced?.length
+          ? ui('Package updated from ZIP. The previous version was replaced.', 'Pacote atualizado pelo ZIP. A versão anterior foi substituída.', 'Paquete actualizado desde ZIP. La versión anterior fue reemplazada.')
+          : ui('Local package installed from ZIP.', 'Pacote local instalado do ZIP.', 'Paquete local instalado desde ZIP.'));
         show(root, '[role=status]', true);
       });
     };

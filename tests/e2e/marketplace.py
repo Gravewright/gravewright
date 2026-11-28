@@ -158,7 +158,7 @@ def check_latest_releases(page, base, publisher_base, feed):
     for kind, section in [('system', 'systems'), ('module', 'addons')]:
         package_id = f'example.catalog-{kind}'
         page.goto(base + '/inside?section=' + section)
-        # An explicitly requested older version is still usable and remains in the library.
+        # An explicitly requested older version installs while nothing newer is installed.
         page.evaluate("""async id => {
             const {HttpClient} = await import('/static/gravewright_modules/http-client.js');
             await new HttpClient().post('/api/marketplace/install', {id, version:'1.9.0'});
@@ -183,18 +183,25 @@ def check_latest_releases(page, base, publisher_base, feed):
         expect(catalog.locator('[data-count]')).to_have_text('0 / 1')
         catalog.locator('input[type=search]').fill('1.10.0')
         expect(cards).to_have_count(1)
-        catalog.locator('[data-state=installed]').click()
-        expect(cards).to_have_count(0)
+        # The newer release is the installed package's update, not another package.
         catalog.locator('[data-state=available]').click()
+        expect(cards).to_have_count(0)
+        catalog.locator('[data-state=installed]').click()
         expect(cards).to_have_count(1)
+        expect(cards.locator('[data-version]')).to_have_text('v1.9.0 → v1.10.0')
+        update = cards.locator('[data-action=install]')
+        expect(update).to_have_attribute('aria-label', 'Update')
         with page.expect_request(lambda request: urlsplit(request.url).path == '/api/marketplace/install' and request.method == 'POST') as installing:
-            cards.locator('[data-action=install]').click()
+            update.click()
         assert installing.value.post_data_json == {'id': package_id, 'version': '1.10.0'}
         expect(catalog.locator('[data-install-progress]')).to_have_attribute('data-stage', 'complete', timeout=15000)
         browser.locator('[data-action=close-browser]').click()
-        expect(installed).to_have_count(2)
-        assert sorted(installed.evaluate_all('(cards) => cards.map(card => card.dataset.packageVersion)')) == ['1.10.0', '1.9.0']
-    print('Latest releases: signed unsorted numeric versions, systems and modules, categories, search, latest install payload and retained installed versions passed.')
+        # Installing the newer release replaced the older one: one card remains.
+        expect(installed).to_have_count(1)
+        expect(installed).to_have_attribute('data-package-version', '1.10.0')
+        versions = [row['version'] for row in page.request.get(base + '/api/module-packages').json() if row['id'] == package_id]
+        assert versions == ['1.10.0'], versions
+    print('Latest releases: signed unsorted numeric versions, systems and modules, categories, search, latest install payload and single-card replacement passed.')
 
 
 def check(page, base, keys_file, keys, feed):

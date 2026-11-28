@@ -79,6 +79,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `GRAVEWRIGHT_MAP_MAX_PIXELS` | `64000000` | Decoded map pixel limit |
 | `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` | `64000000` | Additional decoded-pixel ceiling when using the Pillow tiler |
 | `GRAVEWRIGHT_MAP_TILER` | `auto` | Map tiler: `auto`, `vips` or `pillow` |
+| `GRAVEWRIGHT_MAP_TILE_QUALITY` | empty | Empty for lossless WebP tiles; 1–100 for lossy WebP of uploaded maps |
 | `MAP_UPLOAD_MAX_MB` | `51200` | Map upload limit in MB (50 GiB); other limits still apply |
 | `MAP_IMAGE_MAX_WIDTH` | `500000` | Maximum source map width in pixels |
 | `MAP_IMAGE_MAX_HEIGHT` | `500000` | Maximum source map height in pixels |
@@ -132,7 +133,9 @@ For a native Runner, install into the Python environment named by its generated 
 
 Pillow decodes the entire map. Its additional `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` ceiling defaults to 64 million pixels, even if the overall map limit is higher. A larger image requires libvips or an explicit increase to that ceiling after assessing available memory. This pixel ceiling bounds accepted image size, not resident memory: decoding, orientation, resampling and codecs also allocate memory. Libvips streams ordinary maps in strips, but formats, codecs and EXIF rotations can require additional memory and temporary disk space.
 
-Only one map pyramid is generated at a time per server process, including decoding. Separate workers can still process maps concurrently. Both engines produce lossless WebP tiles with the same 512-pixel layout and partial edge tiles; reduced levels can differ because the resampling filters differ.
+Only one map pyramid is generated at a time per server process, including decoding. Separate workers can still process maps concurrently. Both engines produce WebP tiles, lossless by default, with the same 512-pixel layout and partial edge tiles; reduced levels can differ because the resampling filters differ.
+
+`GRAVEWRIGHT_MAP_TILE_QUALITY` allows lossy compression to reduce tile transfer sizes, which can help tables served over a slow upload link. Empty (the default) keeps lossless tiles. A whole number from 1 to 100 encodes the tiles of uploaded, imported and Map Builder maps as lossy WebP of that quality; transparency is kept. Solid-color maps stay lossless. The setting applies to maps generated after a restart; existing tiles are not re-encoded. Compare the size and appearance of a representative map before choosing a value: even 100 uses lossy encoding. Any other value prevents startup.
 
 Native tiling stages the source image and generated tiles under installation-root `data/runner/tmp/`. An explicit `GRAVEWRIGHT_RUNNER_ROOT` changes the tool root, and a Django `FILE_UPLOAD_TEMP_DIR` override takes precedence for tiling scratch space; relative paths resolve against the installation root. The directory must be writable and have room for the source, staged tiles and any codec spill files while final tiles are saved to media storage. Storage or native generation failures remain server errors, and already saved tiles are removed if the upload fails. See [deployment](deployment.md) for synchronous upload timeouts and capacity planning.
 

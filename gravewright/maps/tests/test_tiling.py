@@ -93,6 +93,27 @@ class PyramidCases:
                 self.assertEqual(result, (65, 33, 0))
                 self.assertEqual(tile.convert("RGB").tobytes(), image.tobytes())
 
+    def test_configured_quality_writes_lossy_webp_and_keeps_alpha(self):
+        def chunk(data):
+            self.assertEqual((data[:4], data[8:12]), (b"RIFF", b"WEBP"))
+            return data[12:16], data
+        with Image.new("RGBA", (300, 200)) as image:
+            image.putdata([(x * 3 % 256, y * 7 % 256, (x * y) % 256, 255 if x < 150 else 96)
+                           for y in range(image.height) for x in range(image.width)])
+            source = encoded_image(image)
+            _, lossless = self.generate(source)
+            with override_settings(GRAVEWRIGHT_MAP_TILE_QUALITY=80):
+                _, lossy = self.generate(source)
+        self.assertEqual(chunk(lossless[0, 0, 0])[0], b"VP8L")
+        # Extended lossy WebP keeps its alpha channel in a separate ALPH chunk.
+        kind, data = chunk(lossy[0, 0, 0])
+        self.assertEqual(kind, b"VP8X")
+        self.assertIn(b"VP8 ", data)
+        self.assertIn(b"ALPH", data)
+        with Image.open(BytesIO(data)) as tile:
+            self.assertEqual(tile.size, (300, 200))
+            self.assertEqual(tile.getchannel("A").getextrema(), (96, 255))
+
     def test_full_resolution_edge_tiles_match_source_coordinates(self):
         with Image.new("RGB", (1025, 37)) as image:
             image.putdata([(x * 3 % 256, y * 7 % 256, (x + y) * 5 % 256)

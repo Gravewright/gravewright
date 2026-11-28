@@ -36,3 +36,4 @@
     .module-catalog__overlay .module-catalog__local-dialog{width:100%}
     .module-catalog__overlay .module-catalog__local-dialog footer button{flex:1 1 auto}
 }
+.module-catalog__details>.module-catalog__tags{margin-top:var(--space-2)}.module-catalog__tags:empty{display:none}

@@ -57,6 +57,9 @@ class ModuleFailure(AuthError):
                 "permission_denied": 403,
                 "not_found": 404,
                 "conflict": 409,
+                "newer_installed": 409,
+                "package_type_changed": 409,
+                "system_required": 409,
                 "managed_start_required": 409,
                 "update_in_progress": 409,
                 "stale_context": 409,
@@ -118,27 +121,51 @@ def canonical(record: dict) -> bytes:
     ).encode("ascii")
 
 
-def compatible(value: str) -> bool:
-    """Stable release comparator conjunction, deliberately rejects unknown range syntax."""
+def version_range(value: str):
+    """Parse a stable release comparator conjunction; reject unknown range syntax."""
     if not isinstance(value, str) or not value.strip():
-        return False
+        return None
+    terms = []
     for term in value.split():
         match = re.fullmatch(
             r"(>=|<=|>|<|=)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", term
         )
         if not match:
-            return False
+            return None
         operator, *digits = match.groups()
-        version = tuple(map(int, digits))
-        if not {
-            ">=": SDK_VERSION >= version,
-            "<=": SDK_VERSION <= version,
-            ">": SDK_VERSION > version,
-            "<": SDK_VERSION < version,
-            "=": SDK_VERSION == version,
-        }[operator or "="]:
-            return False
-    return True
+        terms.append((operator or "=", tuple(map(int, digits))))
+    return terms
+
+
+def satisfies(current, value: str) -> bool:
+    """Whether a release tuple meets every comparison in ``value``."""
+    terms = version_range(value)
+    if terms is None:
+        return False
+    return all({
+        ">=": current >= version,
+        "<=": current <= version,
+        ">": current > version,
+        "<": current < version,
+        "=": current == version,
+    }[operator] for operator, version in terms)
+
+
+def compatible(value: str) -> bool:
+    return satisfies(SDK_VERSION, value)
+
+
+def release(version):
+    """Parse a stable three-component release, or return None."""
+    match = (re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version)
+             if isinstance(version, str) else None)
+    return tuple(map(int, match.groups())) if match else None
+
+
+def compendium_module(manifest) -> bool:
+    """A browser module that supplies compendiums without registering a system."""
+    return (isinstance(manifest, dict) and "content" in manifest
+            and not {"system", "django", "locales"} & set(manifest))
 
 
 def safe_path(name: str) -> PurePosixPath:
@@ -271,10 +298,8 @@ class ModulePackages:
             raise ModuleFailure("permission_denied", "Revoked module version")
         return self._install(record, archive)
 
-    def install_local(self, archive: bytes, expected_type=None):
-        """Install an owner-supplied ZIP without consulting a remote catalog."""
-        if expected_type not in {None, "module", "system", "django"}:
-            raise ModuleFailure("invalid_data")
+    def archive_manifest(self, archive: bytes):
+        """Read and schema-check the manifest of an owner-supplied ZIP."""
         if len(archive) > MAX_ARCHIVE:
             raise ModuleFailure("invalid_data", "Archive exceeds the package limit")
         try:
@@ -286,6 +311,13 @@ class ModulePackages:
         except (zipfile.BadZipFile, KeyError, ValueError, OSError):
             raise ModuleFailure("invalid_data", "Invalid module archive") from None
         self.contracts.validate("schemas/manifest.json", manifest)
+        return manifest
+
+    def install_local(self, archive: bytes, expected_type=None):
+        """Install an owner-supplied ZIP without consulting a remote catalog."""
+        if expected_type not in {None, "module", "system", "django"}:
+            raise ModuleFailure("invalid_data")
+        manifest = self.archive_manifest(archive)
         record = {
             "source": "local",
             "id": manifest["id"],
@@ -396,10 +428,21 @@ class ModulePackages:
                     if len({row["id"] for row in types}) != len(types):
                         raise ModuleFailure("invalid_data")
             if "content" in manifest:
-                from gravewright.compendiums.content import MAX_COLLECTION_BYTES, validate_collection
-                definition = manifest['system']
-                actor_types = {row['id'] for row in definition.get('actorTypes', [])}
-                item_types = {row['id'] for row in definition.get('itemTypes', [])}
+                from gravewright.compendiums.content import MAX_COLLECTION_BYTES, requirement, validate_collection
+                if "system" in manifest:
+                    provider = manifest["id"]
+                    definition = manifest['system']
+                    actor_types = {row['id'] for row in definition.get('actorTypes', [])}
+                    item_types = {row['id'] for row in definition.get('itemTypes', [])}
+                else:
+                    # The required system may be absent or change version after
+                    # installation; activation and reads check its actual types.
+                    required = requirement(manifest)
+                    provider = required[0] if required else None
+                    if required and (required[0] == manifest["id"]
+                                     or (required[1] is not None and version_range(required[1]) is None)):
+                        raise ModuleFailure("invalid_data", "Invalid required system")
+                    actor_types = item_types = None
                 for relative in manifest['content']['compendiums']:
                     path = str(safe_path(relative))
                     if not path.endswith('.json') or package.getinfo(path).file_size > MAX_COLLECTION_BYTES:
@@ -408,7 +451,10 @@ class ModulePackages:
                         value = json.loads(package.read(path))
                     except RecursionError:
                         raise ModuleFailure('invalid_data', 'Invalid compendium JSON depth') from None
-                    validate_collection(value, manifest['id'], actor_types, item_types)
+                    try:
+                        validate_collection(value, provider, actor_types, item_types)
+                    except ValueError as error:
+                        raise ModuleFailure('invalid_data', f'{relative}: {error}') from None
             if (
                 manifest["id"] != record["id"]
                 or manifest["version"] != record["version"]
@@ -426,10 +472,17 @@ class ModulePackages:
                 for app in manifest["django"]["apps"]:
                     if app.split(".")[0] + "/__init__.py" not in package.namelist():
                         raise ModuleFailure("invalid_data", "Missing Django app package")
-            else:
+            elif "entry" in manifest or not compendium_module(manifest):
                 entry = str(safe_path(manifest["entry"]))
                 if Path(entry).suffix not in (".js", ".mjs") or entry not in package.namelist():
                     raise ModuleFailure("invalid_data", "Missing JavaScript entry")
+            # Catalog records do not distinguish language packages from browser
+            # modules. Reject a kind change before storing the incoming release,
+            # so a refused replacement leaves neither a row nor package files.
+            for installed in Package.objects.filter(module_id=manifest["id"]).exclude(version=manifest["version"]):
+                if (package_type(installed.manifest) != package_type(manifest)
+                        or bool(installed.locale_catalogs) != bool(locale_catalogs)):
+                    raise ModuleFailure("package_type_changed")
             archives = self.directory / "archives"
             archives.mkdir(exist_ok=True)
             archived = archives / (record["sha256"] + ".zip")
@@ -554,11 +607,13 @@ class ModulePackages:
                 module_id=module_id, version=version, revoked=False
             ).first()
             if installed and "django" not in installed.manifest:
+                # A compendium module may have no browser code; it stays in the
+                # selection so table clients preserve it when they reconfigure.
                 descriptors.append(
                     {
                         "id": module_id,
                         "version": version,
-                        "entry": installed.manifest["entry"],
+                        **({"entry": installed.manifest["entry"]} if "entry" in installed.manifest else {}),
                         "baseUrl": f"/api/module-packages/{module_id}/{version}/{installed.digest}/",
                     }
                 )
@@ -587,7 +642,7 @@ class ModulePackages:
             raise ModuleFailure("invalid_data")
         from gravewright.campaigns.models import Campaign
 
-        Campaign.objects.select_for_update().get(pk=table_id)
+        campaign = Campaign.objects.select_for_update().get(pk=table_id)
         row, _ = ModuleSet.objects.get_or_create(campaign_id=table_id)
         if row.revision != expected_revision:
             raise ModuleFailure("conflict")
@@ -600,6 +655,11 @@ class ModulePackages:
             if installed.locale_catalogs or "django" in installed.manifest:
                 raise ModuleFailure("invalid_data", "Language and Django modules are activated for the installation.")
             self.verify_installed(installed)
+            # Already selected releases stay selectable, so an unrelated change
+            # never fails because their required system later changed; reads
+            # then hide their packs until the GM repairs the selection.
+            if compendium_module(installed.manifest) and row.modules.get(module_id) != version:
+                self.check_requirement(campaign, installed, modules)
         row.modules, row.replacements, row.revision = (
             modules,
             replacements,
@@ -608,11 +668,40 @@ class ModulePackages:
         row.save()
         return self.state(table_id)
 
+    def check_requirement(self, campaign, installed, modules):
+        """Reject a compendium module whose required system this table cannot supply."""
+        from gravewright.campaigns.systems import resolve_system_id
+        from gravewright.compendiums.catalog import system_types
+        from gravewright.compendiums.content import requirement, validate_collection
+        required = requirement(installed.manifest)
+        name = installed.manifest["name"]
+        if required is None:
+            actor_types = item_types = frozenset()
+        else:
+            system_id, versions = required
+            if resolve_system_id(campaign.system) != system_id:
+                raise ModuleFailure("system_required", f"{name} requires a table using the system {system_id}.")
+            provider = system_types(campaign, modules, versions)
+            if provider is None:
+                raise ModuleFailure(
+                    "system_required",
+                    f"{name} requires the system {system_id}"
+                    + (f" {versions}" if versions else "") + " active in this table.",
+                )
+            actor_types, item_types = provider[1], provider[2]
+        root = self.directory / "packages" / installed.module_id / installed.version / installed.digest
+        for relative in installed.manifest["content"]["compendiums"]:
+            try:
+                value = json.loads((root / str(safe_path(relative))).read_bytes())
+                validate_collection(value, required[0] if required else None, actor_types, item_types)
+            except (OSError, ValueError, RecursionError) as error:
+                raise ModuleFailure("incompatible_content", f"{relative}: {error}") from None
+
     def check(self, table_id, module_id, revision):
         """Reject a module handle from an inactive or superseded activation set."""
         state = self.state(table_id)
         if state["moduleSetRevision"] != revision or not any(
-            m["id"] == module_id for m in state["modules"]
+            m["id"] == module_id and "entry" in m for m in state["modules"]
         ):
             raise ModuleFailure("stale_context")
 

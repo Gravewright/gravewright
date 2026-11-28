@@ -1,5 +1,6 @@
-"""Read native data/compendiums collections; never execute package code."""
+"""Read installed package and legacy native collections; never execute package code."""
 import json
+import logging
 import uuid
 from collections import OrderedDict
 from pathlib import Path
@@ -7,6 +8,8 @@ from threading import RLock
 from django.conf import settings
 from gravewright.table.domain import MapError, manage, title, document, number
 from .models import ContentAccess
+
+logger = logging.getLogger(__name__)
 
 # By default, players observe item and spell reference
 # packs until the GM hides them. Actor, journal, scene and card packs can hold
@@ -63,62 +66,151 @@ def collection_key(base, collection):
     return collection.get('_module_key', base.name)
 
 
-def module_collections(who, pack_id=None):
-    """Expose exact, approved system packs only in tables where it is active.
+def _types(definition):
+    return (frozenset(row['id'] for row in definition.get('actorTypes', [])),
+            frozenset(row['id'] for row in definition.get('itemTypes', [])))
 
-    Assets are checked against their approved archive on every read. Stable IDs
-    exclude the release digest so an update retains existing read grants.
-    """
-    from gravewright.modules.models import ModuleSet, Package
-    from gravewright.modules.packages import ModuleFailure, compatible, host, safe_path
-    from .content import MAX_COLLECTION_BYTES, validate_collection
-    selected = ModuleSet.objects.filter(campaign_id=who.campaign_id).values_list('modules', flat=True).first() or {}
-    system_id = who.campaign.system
-    if not isinstance(selected, dict) or system_id not in selected:
-        return
-    package = Package.objects.filter(module_id=system_id, version=selected[system_id], revoked=False).first()
-    if not package or not isinstance(package.record, dict):
-        return
+
+def _release(package):
+    """Whether an installed row still describes one coherent, compatible release."""
+    from gravewright.modules.packages import compatible
     manifest = package.manifest
-    if (not isinstance(manifest, dict) or manifest.get('id') != system_id
-            or manifest.get('version') != package.version or not isinstance(manifest.get('system'), dict)
-            or not compatible(manifest.get('sdk', {}).get('requires'))):
+    return (isinstance(package.record, dict) and isinstance(manifest, dict)
+            and manifest.get('id') == package.module_id and manifest.get('version') == package.version
+            and compatible(manifest.get('sdk', {}).get('requires')))
+
+
+def _system(campaign, selected, packages, versions=None):
+    """``(system_id, actor_types, item_types, package)`` of the table's active system.
+
+    An installed system counts only through its exact, selected, non-revoked
+    release, and ``versions`` constrains that release. A built-in system has no
+    package release (``package`` is None), so it never satisfies a version range.
+    """
+    from gravewright.campaigns.systems import bundled, resolve_system_id
+    from gravewright.modules.packages import release, satisfies
+    system_id = resolve_system_id(campaign.system)
+    provider = bundled(system_id)
+    if provider is not None:
+        return None if versions is not None else (system_id, *_types(provider['descriptor']), None)
+    package = packages.get((system_id, selected.get(system_id)))
+    if package is None or not _release(package) or not isinstance(package.manifest.get('system'), dict):
+        return None
+    current = release(package.version)
+    if versions is not None and (current is None or not satisfies(current, versions)):
+        return None
+    return (system_id, *_types(package.manifest['system']), package)
+
+
+def _selected_packages(selected):
+    from gravewright.modules.models import Package
+    rows = Package.objects.filter(module_id__in=list(selected), revoked=False)
+    return {(row.module_id, row.version): row for row in rows if selected.get(row.module_id) == row.version}
+
+
+def system_types(campaign, modules, versions=None):
+    """The active system and types a compendium module would use with ``modules``."""
+    if not isinstance(modules, dict):
+        return None
+    return _system(campaign, modules, _selected_packages(modules), versions)
+
+
+# A broken release is reported once per reason rather than on every directory read.
+_reported = set()
+
+
+def _report(package, reason):
+    key = (package.module_id, package.version, package.digest, reason)
+    if key in _reported:
         return
-    paths = manifest.get('content', {}).get('compendiums', [])
+    if len(_reported) >= 256:
+        _reported.clear()
+    _reported.add(key)
+    logger.warning('Compendiums from %s %s are unavailable: %s', package.module_id, package.version, reason)
+
+
+def _sources(campaign, selected):
+    """Packages whose collections a table reads, with each one's document provider.
+
+    The table's system package comes first, then each selected compendium
+    module, which uses the active system's actual types or, without a
+    required system, supplies only journal packs.
+    """
+    from gravewright.modules.packages import compendium_module
+    from .content import requirement
+    packages = _selected_packages(selected)
+    system = _system(campaign, selected, packages)
+    if system is not None and system[3] is not None and 'content' in system[3].manifest:
+        yield system[3], system[0], system[1], system[2]
+    for _, package in sorted(packages.items()):
+        if not compendium_module(package.manifest) or not _release(package):
+            continue
+        required = requirement(package.manifest)
+        if required is None:
+            yield package, None, frozenset(), frozenset()
+            continue
+        provider = _system(campaign, selected, packages, required[1])
+        if provider is None or provider[0] != required[0]:
+            _report(package, 'the table does not use the required system ' + required[0]
+                    + (' ' + required[1] if required[1] else ''))
+            continue
+        yield package, required[0], provider[1], provider[2]
+
+
+def _package_collections(manager, package, provider, actor_types, item_types, pack_id):
+    from gravewright.modules.packages import ModuleFailure, safe_path
+    from .content import MAX_COLLECTION_BYTES, validate_collection
+    paths = package.manifest.get('content', {}).get('compendiums', [])
     if not isinstance(paths, list) or not 1 <= len(paths) <= 16:
         return
     try:
-        manager = host()
         base = manager.directory / 'packages' / str(safe_path(package.module_id)) / str(safe_path(package.version)) / str(safe_path(package.digest))
-        definition = manifest['system']
-        actor_types = {row['id'] for row in definition.get('actorTypes', [])}
-        item_types = {row['id'] for row in definition.get('itemTypes', [])}
         for relative in paths:
             key = (str(base.resolve()), package.digest, package.record.get('sha256'), relative,
-                   tuple(sorted(actor_types)), tuple(sorted(item_types)))
+                   provider, tuple(sorted(actor_types)), tuple(sorted(item_types)))
             cached = _cached_collection(key)
             if pack_id is not None and cached is not None and pack_id not in cached[0]['_pack_ids']:
                 continue
             path = base / str(safe_path(relative))
             if (path.suffix != '.json' or not path.resolve().is_relative_to(base.resolve())
                     or not path.is_file() or path.stat().st_size > MAX_COLLECTION_BYTES):
+                _report(package, 'invalid compendium path or size: ' + relative)
                 continue
             raw = manager.verify_installed(package, str(safe_path(relative)))
             if cached is None:
                 value = json.loads(raw)
-                validate_collection(value, system_id, actor_types, item_types)
-                value['_module_key'] = 'module:' + str(uuid.uuid5(uuid.NAMESPACE_URL, system_id + '/' + relative))
-                value['_module_id'] = system_id
+                validate_collection(value, provider, actor_types, item_types)
+                value['_module_key'] = 'module:' + str(uuid.uuid5(uuid.NAMESPACE_URL, package.module_id + '/' + relative))
+                value['_module_id'] = package.module_id
                 value['_module_path'] = relative
                 value['_pack_ids'] = {_pack_id(base, value, pack) for pack in value['packs']}
                 _cache_collection(key, value, len(raw))
             else:
                 value = cached[0]
             yield base, value
-    except (ModuleFailure, OSError, ValueError, TypeError, KeyError, RecursionError):
+    except (ModuleFailure, OSError, ValueError, TypeError, KeyError, RecursionError) as error:
         # Unavailable or changed approved content never falls back to another
         # release, directory or an arbitrary path provided by a browser client.
+        # Other packages remain available.
+        _report(package, getattr(error, 'message', None) or str(error) or type(error).__name__)
         return
+
+
+def module_collections(who, pack_id=None):
+    """Expose exact, approved package collections only in tables where they are active.
+
+    Assets are checked against their approved archive on every read. Stable IDs
+    exclude the release digest so an update retains existing read grants.
+    """
+    from gravewright.modules.models import ModuleSet
+    from gravewright.modules.packages import host
+    selected = ModuleSet.objects.filter(campaign_id=who.campaign_id).values_list('modules', flat=True).first() or {}
+    if not isinstance(selected, dict) or not selected:
+        return
+    manager = None
+    for package, provider, actor_types, item_types in _sources(who.campaign, selected):
+        manager = manager or host()
+        yield from _package_collections(manager, package, provider, actor_types, item_types, pack_id)
 
 
 def native_collections(who):

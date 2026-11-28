@@ -5,6 +5,7 @@ import json
 import zipfile
 from unittest.mock import patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
 from gravewright.accounts.models import User
@@ -209,3 +210,127 @@ class LifecycleTests(TestCase):
         self.assertEqual(campaign.system, 'publisher.test')
         selected.refresh_from_db()
         self.assertEqual(selected.modules, {'publisher.test': '1.1.0'})
+
+
+class SingleReleaseTests(TestCase):
+    """Installing another version replaces the installed release, as an update does."""
+
+    setUp = test_marketplace.MarketplaceTests.setUp
+    release = LifecycleTests.release
+    install = LifecycleTests.install
+    campaign = LifecycleTests.campaign
+
+    def upload(self, raw, kind='module'):
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post('/api/module-packages/install-local', {
+                'file': SimpleUploadedFile('package.zip', raw, content_type='application/zip'), 'kind': kind})
+
+    def test_local_install_of_a_newer_version_replaces_the_installed_release(self):
+        self.install()
+        selected = self.campaign()
+        _, raw = self.release('1.1.0')
+        response = self.upload(raw)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['replaced'], ['1.0.0'])
+        self.assertEqual(list(Package.objects.values_list('version', flat=True)), ['1.1.0'])
+        selected.refresh_from_db()
+        self.assertEqual(selected.modules, {'publisher.test': '1.1.0'})
+        self.assertEqual(selected.replacements, {'actor.sheet': 'publisher.test'})
+        self.assertEqual(ModuleValue.objects.get().value, {'keep': True})
+        self.assertEqual([row['version'] for row in self.client.get('/api/module-packages').json()], ['1.1.0'])
+
+    def test_an_older_version_is_refused_without_installing_it(self):
+        self.install(version='2.0.0')
+        _, raw = self.release('1.0.0')
+        response = self.upload(raw)
+        self.assertEqual(response.status_code, 409, response.content)
+        self.assertEqual(response.json(), {'error': 'newer_installed'})
+        self.assertEqual(list(Package.objects.values_list('version', flat=True)), ['2.0.0'])
+        digest = hashlib.sha256(raw).hexdigest()
+        self.assertFalse((host().directory / 'archives' / (digest + '.zip')).exists())
+
+    def test_a_package_id_keeps_its_kind(self):
+        self.install()
+        _, raw = self.release('1.1.0', system=True)
+        response = self.upload(raw, kind='system')
+        self.assertEqual(response.status_code, 409, response.content)
+        self.assertEqual(response.json(), {'error': 'package_type_changed'})
+        self.assertEqual(list(Package.objects.values_list('version', flat=True)), ['1.0.0'])
+
+    def assert_language_kind_change_rejected(self, locales):
+        installed = self.install(locales=locales)
+        installed.global_enabled = locales
+        installed.save(update_fields=['global_enabled'])
+        record, raw = self.release('1.1.0', locales=not locales)
+        engine = host()
+        original_archive = engine.directory / 'archives' / (installed.digest + '.zip')
+        original_bytes = original_archive.read_bytes()
+        for route in ('local', 'marketplace', 'update'):
+            with self.subTest(route=route):
+                if route == 'local':
+                    response = self.upload(raw)
+                else:
+                    with patch('gravewright.modules.views.download', side_effect=[json.dumps([record]).encode(), raw]):
+                        path = '/api/marketplace/install' if route == 'marketplace' else '/api/module-packages/update'
+                        version = '1.1.0' if route == 'marketplace' else '1.0.0'
+                        response = self.client.post(path, {'id': installed.module_id, 'version': version},
+                                                    content_type='application/json')
+                self.assertEqual(response.status_code, 409, response.content)
+                self.assertEqual(response.json(), {'error': 'package_type_changed'})
+                self.assertEqual(list(Package.objects.values_list('version', 'global_enabled')), [('1.0.0', locales)])
+                self.assertEqual(original_archive.read_bytes(), original_bytes)
+                engine.verify_installed(installed)
+                self.assertFalse((engine.directory / 'archives' / (record['sha256'] + '.zip')).exists())
+                self.assertFalse((engine.directory / 'packages' / installed.module_id / '1.1.0').exists())
+
+    def test_a_language_package_cannot_be_replaced_by_a_browser_module(self):
+        self.assert_language_kind_change_rejected(locales=True)
+
+    def test_a_browser_module_cannot_be_replaced_by_a_language_package(self):
+        self.assert_language_kind_change_rejected(locales=False)
+
+    def test_marketplace_install_of_a_newer_release_replaces_the_active_language(self):
+        row = self.install(locales=True)
+        row.global_enabled = True
+        row.save()
+        record, raw = self.release('1.1.0', locales=True)
+        with patch('gravewright.modules.views.download', side_effect=[json.dumps([record]).encode(), raw]), \
+                self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post('/api/marketplace/install', {'id': 'publisher.test', 'version': '1.1.0'},
+                                        content_type='application/json')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['replaced'], ['1.0.0'])
+        self.assertEqual(list(Package.objects.values_list('version', 'global_enabled')), [('1.1.0', True)])
+
+    def test_first_and_repeated_installs_keep_their_response_shape(self):
+        record, raw = self.release()
+        with patch('gravewright.modules.views.download', side_effect=[json.dumps([record]).encode(), raw] * 2):
+            for _ in range(2):
+                response = self.client.post('/api/marketplace/install', {'id': 'publisher.test', 'version': '1.0.0'},
+                                            content_type='application/json')
+                self.assertEqual(response.status_code, 200, response.content)
+                self.assertNotIn('replaced', response.json())
+        self.assertEqual(Package.objects.count(), 1)
+
+    def test_revoked_releases_stay_recorded_and_do_not_block_another_version(self):
+        self.install(version='1.1.0')
+        Package.objects.update(revoked=True)
+        _, raw = self.release('1.0.0')
+        response = self.upload(raw)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['replaced'], [])
+        self.assertEqual(sorted(Package.objects.values_list('version', 'revoked')), [('1.0.0', False), ('1.1.0', True)])
+
+    def test_an_active_server_app_switches_after_a_supervised_restart(self):
+        Package.objects.create(module_id='publisher.test', version='1.0.0', digest='f' * 64,
+                               manifest={'django': {'apps': ['review_app']}}, record={})
+        replacement = Package.objects.create(module_id='publisher.test', version='1.1.0', digest='e' * 64,
+                                             manifest={'django': {'apps': ['review_app']}}, record={})
+        from .lifecycle import supersede
+        with patch('gravewright.modules.server_apps.queue_activation',
+                   return_value={'restartRequired': True, 'stage': 'queued'}) as queue:
+            result = supersede(host(), replacement, lambda engine, row: row.version == '1.0.0')
+        queue.assert_called_once_with(replacement, True)
+        self.assertEqual(result['replaced'], ['1.0.0'])
+        self.assertTrue(result['restartRequired'])
+        self.assertEqual(Package.objects.count(), 2, 'The running release stays until the restart switches it.')

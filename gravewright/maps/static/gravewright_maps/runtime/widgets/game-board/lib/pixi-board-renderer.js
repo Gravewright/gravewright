@@ -1,11 +1,12 @@
 // widgets/game-board/lib/pixi-board-renderer.js
 import { tileBlobCache } from "../model/tile-blob-cache.js";
 import "/static/gravewright_maps/vendor/pixi.js";
-import { Assets, Container, Graphics, Sprite, Text, Texture } from "/static/gravewright_maps/vendor/pixi.js";
+import { Assets, Container, Graphics, Mesh, MeshGeometry, Sprite, Text, Texture } from "/static/gravewright_maps/vendor/pixi.js";
 import { createPixiApplication } from "./pixi-application.js";
 import * as engine from "/static/gravewright_maps/vendor/pixi.js";
 import { BOARD_STACK } from "../model/board-renderer.js";
 import { AssetReferencePool } from "../model/asset-reference-pool.js";
+import { pieceDisc } from "../model/piece-disc.js";
 var MAX_RESOLUTION = 2;
 var PIECE_GROUND = "#181d23";
 Assets.setPreferences({ preferWorkers: false });
@@ -356,8 +357,9 @@ var PixiBoardRenderer = class {
     const ring = new Graphics();
     const details = new Graphics();
     const conditions = new Container();
-    const art = texture ? new Sprite(texture) : new Text({ text: initials(piece.label), resolution: this.#textResolution, style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
-    art.anchor.set(0.5);
+    const geometry = texture ? new MeshGeometry({ positions: new Float32Array(0), uvs: new Float32Array(0), indices: new Uint32Array(0) }) : void 0;
+    const art = texture ? new Mesh({ geometry, texture }) : new Text({ text: initials(piece.label), resolution: this.#textResolution, style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
+    if (!texture) art.anchor.set(0.5);
     const label = new Text({ text: piece.label, resolution: this.#textResolution, style: {
       fill: "#f2ecdf",
       fontFamily: "sans-serif",
@@ -375,16 +377,11 @@ var PixiBoardRenderer = class {
       conditions,
       art,
       label,
+      geometry,
       teleportVersion: piece.teleportVersion ?? 0,
       ...piece.imageUrl ? { imageUrl: piece.imageUrl } : {},
       ...piece.imageUrl && texture ? { retainedImageUrl: piece.imageUrl } : {}
     };
-    if (texture) {
-      const mask = new Graphics();
-      root.addChild(mask);
-      art.mask = mask;
-      view.mask = mask;
-    }
     this.#pieces.set(key, view);
     this.#figures.addChild(root);
     this.#placePiece(view, piece);
@@ -400,13 +397,15 @@ var PixiBoardRenderer = class {
       return;
     view.appearance = key;
     view.root.alpha = piece.hidden ? 0.4 : 1;
-    view.art.angle = piece.rotation ?? 0;
-    view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.mask ? 0 : 0.85 });
-    view.mask?.clear().ellipse(0, 0, radius, radiusY).fill({ color: "#ffffff" });
-    if (view.art instanceof Sprite) {
-      const source = Math.max(view.art.texture.width, view.art.texture.height) || 1;
-      view.art.scale.set(piece.size / source);
+    view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.geometry ? 0 : 0.85 });
+    if (view.geometry) {
+      const { width, height } = view.art.texture, scale = piece.size / (Math.max(width, height) || 1);
+      const disc = pieceDisc(radius, radiusY, width * scale, height * scale, piece.rotation ?? 0);
+      view.geometry.positions = disc.positions;
+      view.geometry.uvs = disc.uvs;
+      view.geometry.indices = disc.indices;
     } else {
+      view.art.angle = piece.rotation ?? 0;
       view.art.style.fontSize = piece.size * 0.42;
       view.art.style.fill = piece.accent;
       view.art.text = initials(piece.label);
@@ -438,22 +437,29 @@ var PixiBoardRenderer = class {
       details.rect(-radius + 4, y, width, barHeight).fill({ color: "#000000", alpha: 0.65 });
       details.rect(-radius + 4, y, width * Math.max(0, Math.min(1, bar.value / bar.max)), barHeight).fill(bar.color || "#79c39a");
     });
-    for (const child of view.conditions.removeChildren())
-      child.destroy();
     const badges = piece.conditions ?? [];
     const badgeSize = Math.max(13, Math.min(21, piece.size / 3));
     const columns = Math.max(1, Math.floor(piece.size / (badgeSize + 2)));
-    badges.slice(0, 8).forEach((condition, index) => {
+    const icons = badges.slice(0, 8).map((condition, index) => {
       const color = condition.kind === "negative" ? "#ee7777" : condition.kind === "positive" ? "#79c39a" : "#d6b578";
       const glyph = condition.kind === "negative" ? "\u2620" : condition.kind === "positive" ? "\u2726" : "\u25C6";
       const x = -radius + badgeSize / 2 + index % columns * (badgeSize + 2);
       const y = -radiusY - badgeSize / 2 - 3 - (topBar ? barGap + barHeight + 2 : 0) - Math.floor(index / columns) * (badgeSize + 2);
       details.roundRect(x - badgeSize / 2, y - badgeSize / 2, badgeSize, badgeSize, 3).fill("#10151b").stroke({ color, width: 1 });
+      return { glyph, color, x, y };
+    });
+    const iconKey = JSON.stringify([icons, badgeSize, badges.length > 8 && [badges.length, radius, radiusY]]);
+    if (view.iconKey === iconKey)
+      return;
+    view.iconKey = iconKey;
+    for (const child of view.conditions.removeChildren())
+      child.destroy();
+    for (const { glyph, color, x, y } of icons) {
       const icon = new Text({ text: glyph, resolution: this.#textResolution, style: { fontFamily: "sans-serif", fontSize: badgeSize * 0.8, fill: color } });
       icon.anchor.set(0.5);
       icon.position.set(x, y);
       view.conditions.addChild(icon);
-    });
+    }
     if (badges.length > 8) {
       const more = new Text({ text: `+${badges.length - 8}`, resolution: this.#textResolution, style: { fontFamily: "sans-serif", fontSize: 11, fill: "#f2ecdf", stroke: { color: "#10151b", width: 3 } } });
       more.position.set(radius + 3, -radiusY - 13);
@@ -474,6 +480,7 @@ var PixiBoardRenderer = class {
     this.#pieces.delete(key);
     view.root.removeFromParent();
     view.root.destroy({ children: true });
+    view.geometry?.destroy();
     this.invalidate();
     if (view.retainedImageUrl)
       pieceAssets.release(view.retainedImageUrl);

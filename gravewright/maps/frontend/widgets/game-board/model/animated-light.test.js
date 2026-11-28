@@ -120,7 +120,7 @@ test('matching lights share textures within one board while different boards dis
 function stamps(count = 1) {
     return Array.from({ length: count }, (_, index) => ({
         light: { ...base, id: `torch-${index}`, animation: 'torch' }, x: base.x, y: base.y, radius: 500,
-        polygon: [{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }, { x: 0, y: 1000 }],
+        polygon: new Float64Array([0, 0, 1000, 0, 1000, 1000, 0, 1000]),
     }));
 }
 

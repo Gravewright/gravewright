@@ -250,6 +250,14 @@ if min(GRAVEWRIGHT_MAP_MAX_PIXELS, GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS) < 1:
 GRAVEWRIGHT_MAP_TILER = os.environ.get('GRAVEWRIGHT_MAP_TILER', 'auto').strip().lower()
 if GRAVEWRIGHT_MAP_TILER not in {'auto', 'vips', 'pillow'}:
     raise ValueError('GRAVEWRIGHT_MAP_TILER must be auto, vips or pillow.')
+# Empty keeps lossless WebP map tiles; 1-100 encodes uploaded maps as lossy WebP.
+_map_tile_quality = os.environ.get('GRAVEWRIGHT_MAP_TILE_QUALITY', '').strip()
+try:
+    GRAVEWRIGHT_MAP_TILE_QUALITY = int(_map_tile_quality) if _map_tile_quality else None
+except ValueError:
+    GRAVEWRIGHT_MAP_TILE_QUALITY = 0
+if GRAVEWRIGHT_MAP_TILE_QUALITY is not None and not 1 <= GRAVEWRIGHT_MAP_TILE_QUALITY <= 100:
+    raise ValueError('GRAVEWRIGHT_MAP_TILE_QUALITY must be empty or a whole number from 1 to 100.')
 
 
 # Email

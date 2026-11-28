@@ -74,3 +74,29 @@ test('small scenes do not start a worker and keep synchronous visibility', () =>
     assert.ok(called);
     jobs.dispose();
 });
+test('new walls reuse the worker and revoke the answer still computed with the old walls', () => {
+    const worker = new FakeWorker(), completed = [];
+    const jobs = new VisibilityJobs(walls, () => worker);
+    jobs.request(sources, 500, () => completed.push('old walls'));
+    const next = walls.slice(1);
+    jobs.setWalls(next);
+    assert.deepEqual(worker.messages.at(-1), { type: 'walls', walls: next });
+    jobs.request(sources, 500, value => completed.push(value));
+    assert.equal(worker.messages.length, 3, 'the new request waits for the running one');
+    worker.answer(1);
+    assert.deepEqual(completed, []);
+    assert.equal(worker.messages.at(-1).type, 'vision');
+    worker.answer(2);
+    assert.equal(completed.length, 1);
+    jobs.dispose();
+});
+test('a scene that grows past the threshold starts its worker on the next wall snapshot', () => {
+    let started = 0;
+    const worker = new FakeWorker();
+    const jobs = new VisibilityJobs(walls.slice(0, 2), () => { started++; return worker; });
+    assert.equal(started, 0);
+    jobs.setWalls(walls);
+    assert.equal(started, 1);
+    assert.deepEqual(worker.messages[0], { type: 'walls', walls });
+    jobs.dispose();
+});

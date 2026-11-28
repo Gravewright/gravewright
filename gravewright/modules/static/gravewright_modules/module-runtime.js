@@ -54,6 +54,8 @@ class ModuleRuntime {
       this.state = structuredClone(state);
       try {
         for (const descriptor of state.modules) {
+          // Compendium modules may supply only server-read content, no browser code.
+          if (descriptor.entry === undefined) continue;
           const life = new Lifetime(this.report);
           let active;
           try {

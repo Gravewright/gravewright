@@ -71,7 +71,7 @@ example.actor-counter/
 }
 ```
 
-Escolha sua licença real e inclua seu texto em `LICENSE.txt`. A licença da extensão não precisa corresponder ao valor ilustrativo acima; consulte a política de licenciamento. O schema rejeita campos desconhecidos e exige todos os campos mostrados. IDs precisam de pelo menos um ponto ou hífen, começar com letra minúscula e usar letras minúsculas/dígitos em seus componentes. Versões possuem três números, sem sufixos de pré-lançamento/build. Intervalos do SDK aceitam comparações separadas por espaços, como `>=1.0.0 <2.0.0`; não aceitam `^`, `~`, curingas ou `||`. O carregador verifica o SDK **1.0.0**; a API de domínio separada informa **1.2.0**.
+Escolha sua licença real e inclua seu texto em `LICENSE.txt`. A licença da extensão não precisa corresponder ao valor ilustrativo acima; consulte a política de licenciamento. O schema rejeita campos desconhecidos e exige todos os campos mostrados; apenas um [módulo de compêndio](#compêndios-fornecidos-por-pacotes) pode omitir `entry`. IDs precisam de pelo menos um ponto ou hífen, começar com letra minúscula e usar letras minúsculas/dígitos em seus componentes. Versões possuem três números, sem sufixos de pré-lançamento/build. Intervalos do SDK aceitam comparações separadas por espaços, como `>=1.0.0 <2.0.0`; não aceitam `^`, `~`, curingas ou `||`. O carregador verifica o SDK **1.0.0**; a API de domínio separada informa **1.2.0**.
 
 O contrato de domínio oferece `api.capabilities()` para descrever métodos explícitos sem conceder permissões. Pacotes de sistema confiáveis registram suas próprias operações com `api.systems.register_api(system_id, operations)` em `AppConfig.ready()`; módulos de navegador descobrem o provedor da campanha atual por `api.system.state()` e o chamam por `api.system.call(operation, data, options)`. Uploads binários recebem `File`/`Blob`; downloads retornam `{blob, name, contentType, size}`. Esses métodos preservam CSRF, autorização nativa, leases de ativação e o ciclo de vida do contexto; o descarte cancela operações pendentes. Veja a [referência da API](api.md) para payloads, revisões e opções de tempo limite.
 
@@ -167,7 +167,7 @@ atualizados quando o catálogo de seu namespace é registrado ou removido.
 
 Após a instalação assinada, o sistema aparece em Systems, `/api/rulesets` e no formulário de campanha. O catálogo usa a versão instalada compatível e não revogada mais recente de cada pacote, comparando os números da versão. Módulos comuns sem `system` continuam disponíveis em Installed modules. Campanhas existentes podem manter um sistema indisponível ao editar seus detalhes, mas ele não pode ser escolhido para uma nova campanha.
 
-Salvar uma mesa com um sistema instalado seleciona seus tipos e ativa seu pacote de interface. A versão exata já ativa é preservada; trocar o sistema remove o pacote anterior e mantém os demais módulos e preferências de interface. A mesa usa os tipos da versão exata ativada, ou da versão instalada mais recente quando nenhuma está ativada. Os dados dos atores mantêm a estrutura nativa existente; dados específicos do módulo usam as APIs de documentos e armazenamento de módulos. Instalar outra versão não muda automaticamente a versão ativada na mesa.
+Salvar uma mesa com um sistema instalado seleciona seus tipos e ativa seu pacote de interface. A versão exata já ativa é preservada; trocar o sistema remove o pacote anterior e mantém os demais módulos e preferências de interface. A mesa usa os tipos da versão exata ativada, ou da versão instalada mais recente quando nenhuma está ativada. Os dados dos atores mantêm a estrutura nativa existente; dados específicos do módulo usam as APIs de documentos e armazenamento de módulos. Instalar outra versão substitui a versão instalada e passa para ela as mesas que usavam a anterior; veja a [biblioteca de pacotes](#biblioteca-de-pacotes-e-instalação).
 
 ## Provedores de combate do sistema
 
@@ -267,7 +267,7 @@ Por padrão, os arquivos ZIP ficam em `MEDIA_ROOT/modules/archives/` e os pacote
 
 A ativação recebe `{modules, replacements, expectedRevision}`. `modules` relaciona IDs a versões exatas, `replacements` relaciona superfícies a IDs, e `expectedRevision` deve corresponder ao último `moduleSetRevision` lido (`"0"` inicialmente). Uma revisão antiga resulta em `conflict`. Alterações geram nova revisão e notificam a mesa. Clientes também consultam periodicamente e reconciliam ao reconectar.
 
-Um registro assinado com `status: "revoked"` revoga uma versão instalada quando o catálogo é consultado, remove suas ativações e preferências de substituição e altera as revisões afetadas. A revogação depende dessa consulta; não é um push permanente do publicador. Reverter para outra versão instalada altera o código, sem reverter os dados persistidos do módulo.
+Um registro assinado com `status: "revoked"` revoga uma versão instalada quando o catálogo é consultado, remove suas ativações e preferências de substituição e altera as revisões afetadas. A revogação depende dessa consulta; não é um push permanente do publicador. Voltar a uma versão anterior exige remover a mais nova e instalar a anterior, sem reverter os dados persistidos do módulo.
 
 ## Ciclo de vida e montagem
 
@@ -364,7 +364,32 @@ Após alterar rótulos nativos, execute `python scripts/audit_translations.py --
 
 A área interna possui bibliotecas separadas de **Sistemas** e **Módulos**, com visualização em grade/lista, busca e paginação. **Instalar sistema** ou **Instalar módulo** abre o catálogo configurado em uma janela filtrada por categoria. O sistema PDF integrado continua visível sem configuração remota. A biblioteca instalada não consulta o catálogo; os diagnósticos aparecem ao abrir a janela de instalação. Links antigos com `section=marketplace` levam à biblioteca de módulos.
 
-Novos registros assinados devem incluir `"type": "system"` ou `"type": "module"`. O campo participa da assinatura e deve corresponder ao manifesto do ZIP: sistemas declaram `system`. Valores inválidos e divergências são rejeitados. Registros antigos sem tipo continuam válidos e são tratados como módulos antes da instalação; depois, o manifesto instalado determina a categoria. Publicadores de sistemas devem incluir o tipo assinado para que o pacote apareça corretamente antes de ser instalado.
+Uma instalação mantém **uma versão por ID de pacote**, então cada biblioteca
+mostra um cartão por pacote. Instalar outra versão de um pacote instalado, pelo
+catálogo ou por um ZIP local, substitui a anterior exatamente como **Atualizar**:
+as mesas que usavam a versão antiga passam para a nova, substituições de
+interface e dados salvos do módulo são mantidos, um idioma ativo para a
+instalação continua ativo e os arquivos antigos são removidos após a gravação.
+A resposta lista as versões substituídas em `replaced`. Um app Django ativo só
+troca após a reinicialização supervisionada; por isso, a versão em execução
+continua instalada até lá e a resposta informa `restartRequired`. O host recusa
+uma versão mais antiga enquanto houver uma mais nova utilizável instalada
+(`newer_installed`) e uma versão de outro tipo de pacote com o mesmo ID
+(`package_type_changed`); remova o pacote instalado antes. Isso também recusa
+substituir um pacote de idioma por um módulo comum de navegador, ou o inverso.
+Um mesmo ID e versão continuam sem poder ser substituídos por outro conteúdo. Versões revogadas
+continuam registradas para que seus arquivos não sejam instalados de novo. A
+biblioteca mostra a versão não revogada mais nova ou a revogada mais nova quando
+não resta uma utilizável. Na janela de instalação, uma versão mais nova do catálogo
+para um pacote instalado aparece no cartão desse pacote como atualização.
+
+Os cartões instalados também mostram o que o pacote oferece: **Django ·
+Servidor** para código confiável de servidor, **Compêndios** quando ele declara
+`content.compendiums` e **Para** seguido do nome do sistema exigido por um
+módulo de compêndio. Esses rótulos vêm do manifesto instalado e não alteram as
+categorias do catálogo.
+
+Novos registros assinados devem incluir `"type": "system"`, `"type": "module"` ou `"type": "django"`. Registros Django exigem tipo explícito e um bloco `django` no manifesto. O campo participa da assinatura e deve corresponder ao manifesto do ZIP: sistemas declaram `system`. Valores inválidos e divergências são rejeitados. Registros antigos sem tipo continuam válidos e são tratados como módulos antes da instalação; depois, o manifesto instalado determina a categoria. Publicadores de sistemas devem incluir o tipo assinado para que o pacote apareça corretamente antes de ser instalado.
 
 Registros do catálogo aceitam `tags`: até 24 textos Unicode únicos, sem espaços nas extremidades, não vazios e com até 64 caracteres. As tags integram a assinatura e geram categorias na modal de instalação, separadas pelo tipo de pacote. Pacotes sem tags continuam aparecendo em Todos os pacotes.
 
@@ -508,13 +533,68 @@ Fichas de item também preservam a barra de título e emitem
 gravações, inclusive ao pressionar ESC. Uma rejeição mantém o item aberto.
 A perda de acesso fecha a janela imediatamente, sem aguardar novas escritas.
 
-## Compêndios fornecidos por um pacote de sistema
+<a id="compêndios-fornecidos-por-um-pacote-de-sistema"></a>
 
-Um sistema de navegador pode declarar até 16 coleções JSON no manifesto:
+## Compêndios fornecidos por pacotes
+
+Dois tipos de pacote de navegador podem declarar até 16 coleções JSON no
+manifesto:
 
 ```json
 "content": {"compendiums": ["compendiums/entities.json", "compendiums/gear.json"]}
 ```
+
+- Um **pacote de sistema** fornece compêndios de atores, itens e magias dos
+  próprios tipos de documento registrados, além de compêndios de diários.
+- Um **módulo de compêndio** é um módulo comum (sem `system`, `django` ou
+  `locales`) que declara `content`. Ele pode fornecer compêndios para um sistema
+  exigido ou, sem essa exigência, compêndios de diários para qualquer mesa. O
+  `entry` é opcional: um módulo sem ele não tem código de navegador e apenas
+  fornece conteúdo. Um módulo também pode declarar `entry` para combinar
+  compêndios com recursos de navegador.
+
+Um módulo de compêndio para um sistema indica esse sistema em `requiresSystem`,
+com uma faixa opcional de versões do pacote do sistema. A faixa usa as mesmas
+comparações das faixas de SDK:
+
+```json
+{
+  "id": "autor.bestiario",
+  "name": "Bestiário",
+  "version": "1.0.0",
+  "sdk": { "requires": ">=1.0.0 <2.0.0", "tested": "1.0.0" },
+  "description": "Criaturas para o sistema de exemplo.",
+  "author": "Seu nome",
+  "license": "CC-BY-4.0",
+  "content": {
+    "compendiums": ["compendiums/bestiario.json"],
+    "requiresSystem": { "id": "autor.sistema-exemplo", "version": ">=1.2.0 <2.0.0" }
+  }
+}
+```
+
+Sem `requiresSystem`, um módulo de compêndio fornece apenas compêndios
+`journal_pack` e fica disponível em mesas de qualquer sistema. Um pacote de
+sistema não pode declarar `requiresSystem`, e pacotes de idioma e apps Django
+não podem declarar `content`. Um sistema integrado não tem versão de pacote;
+por isso, um módulo que exige um sistema integrado deve omitir `version`. Um
+módulo de compêndio é instalado como módulo comum (`kind: "module"` na instalação
+local, tipo `module` no registro assinado do catálogo) e seu cartão na
+biblioteca mostra a etiqueta **Compêndios**.
+
+O mestre ativa um módulo de compêndio na mesa como qualquer outro módulo. A
+ativação rejeita com `system_required` um módulo que exige outro sistema, ou
+cujo sistema exigido não está ativo em uma versão compatível. Ela também valida
+cada entrada com os tipos de ator e item registrados pelo sistema ativo e
+rejeita divergências com `incompatible_content`. A lista de módulos da mesa
+explica o erro até que o mestre altere a seleção de novo. Um módulo que continua selecionado depois que a mesa troca a
+versão do sistema mantém a seleção, mas seus compêndios somem até que o mestre
+ative uma versão compatível; o log do servidor registra o motivo. Um pacote
+indisponível não esconde os compêndios do sistema nem de outros módulos.
+
+Hosts até a 0.3.8 recusam instalar um manifesto que declara `content` sem
+`system` e aceitam apenas compêndios de atores, itens e magias de pacotes de
+sistema.
 
 Os caminhos devem ser relativos ao pacote e terminar em `.json`. Caminhos
 absolutos, travessia de diretórios, URLs e links simbólicos para fora do pacote
@@ -538,10 +618,23 @@ desses campos:
 }
 ```
 
-Os tipos de compêndio aceitos são `actor_pack`, `item_pack` e `spell_pack`.
-Toda entrada deve usar o `systemId` do próprio fornecedor e um tipo registrado
-em `system.actorTypes` ou `system.itemTypes`. IDs de compêndio são únicos na
-coleção; IDs de entrada são únicos no compêndio. IDs aceitam letras ASCII,
+Os tipos de compêndio aceitos são `actor_pack`, `item_pack`, `spell_pack` e
+`journal_pack`. Toda entrada de ator, item ou magia deve usar o `systemId` do
+fornecedor (o próprio pacote de sistema ou o sistema exigido pelo módulo) e um
+tipo registrado em `system.actorTypes` ou `system.itemTypes`. Entradas de
+diário não pertencem a nenhum sistema: omitem `systemId`, podem definir `type`
+como `diary` (o padrão), `quest`, `quest_board` ou `roll_table` e guardam o
+documento em `data`, no mesmo formato de um [diário nativo](journals.md). Uma
+entrada `diary` pode, em vez disso, trazer texto simples em `content`, que vira
+a primeira página na importação:
+
+```json
+{"id": "capitulos", "label": "Capítulos", "type": "journal_pack", "entries": [
+  {"id": "prologo", "name": "Prólogo", "content": "A estrada termina num portão em ruínas."}
+]}
+```
+
+IDs de compêndio são únicos na coleção; IDs de entrada são únicos no compêndio. IDs aceitam letras ASCII,
 números, ponto, sublinhado, dois-pontos e hífen, até 120 caracteres, começando
 com letra ou número. Nomes e rótulos admitem até 120 caracteres. Mantenha os IDs
 e caminhos relativos estáveis nas atualizações para preservar permissões e
@@ -569,21 +662,31 @@ novo:
 "folder": ["Sistema de exemplo", "Regras básicas"]
 ```
 
-A instalação valida as declarações e os arquivos. A interface nativa mostra
-essas coleções apenas nas mesas que usam a versão exata, ativa, fixada,
-aprovada e não revogada desse sistema. Cada leitura confere os arquivos
-instalados com o ZIP aprovado; editar um arquivo não autoriza novo conteúdo.
-A coleção não declara IDs de mesas: a base vincula o acesso internamente.
-Por padrão, os compêndios são privados do mestre. As concessões de leitura e
-os padrões de papel existentes controlam a visibilidade para jogadores;
-importar documentos continua sendo uma ação do mestre. A base trata `data`
+A instalação valida as declarações e os arquivos. A interface nativa mostra as
+coleções de um sistema apenas nas mesas que usam a versão exata, ativa, fixada,
+aprovada e não revogada desse sistema, e as coleções de um módulo de compêndio
+apenas nas mesas em que sua versão exata está ativa. Cada leitura confere os
+arquivos instalados com o ZIP aprovado; editar um arquivo não autoriza novo
+conteúdo. A coleção não declara IDs de mesas: a base vincula o acesso
+internamente. Por padrão, jogadores podem ler compêndios de itens e magias;
+compêndios de atores e diários, que podem conter spoilers, ficam privados do
+mestre até serem compartilhados. Transmissões não veem compêndios sem
+concessão. As concessões de leitura e os padrões de papel existentes controlam
+a visibilidade; importar documentos continua sendo uma ação do mestre.
+Documentos importados são cópias: desativar ou remover o pacote os mantém na
+campanha. A base trata `data`
 como JSON opaco e conserva os campos do fornecedor, sem interpretar revisões
 ou regras de jogo. Atualize a base para uma versão com suporte a
 `content.compendiums` antes de instalar um pacote com essa declaração opcional.
 
 Os JSON declarados como coleções não são servidos pelas URLs genéricas de
 arquivos do pacote. Leia e importe suas entradas pela API de compêndios da
-mesa, que verifica o sistema ativo e as permissões de leitura atuais.
+mesa, que verifica os pacotes ativos e as permissões de leitura atuais.
+
+Um pacote instalado a partir de um ZIP local fica nessa instalação. Instalá-lo
+não autoriza distribuir seu conteúdo; consulte o
+[porte ético de módulos](ethical-module-porting.md) antes de publicar um
+compêndio feito a partir de um livro ou de outra fonte de terceiros.
 
 Use `api.compendiums.state()` para obter os IDs de compêndios e entradas
 visíveis. `api.compendiums.read({packId, id})` continua retornando uma entrada;

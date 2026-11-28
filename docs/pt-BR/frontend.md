@@ -1187,8 +1187,8 @@ Comandos pendentes mantêm a proteção de interação para edições concorrent
 Erros e instruções de rota continuam imediatos; não há aviso nem temporizador de
 salvamento. Textos de estado que não mudaram não são reescritos a cada renderização.
 
-Prévias locais de tokens reutilizam a chave da cena estática e a atualização de
-imagens enquanto suas entradas imutáveis continuam iguais. Elas não percorrem
+Prévias locais de tokens reutilizam as chaves das camadas da cena e a atualização
+de imagens enquanto suas entradas imutáveis continuam iguais. Elas não percorrem
 todas as transformações das imagens nativas nem reconstroem o índice de origens
 dos componentes a cada quadro. Um novo estado de imagens continua atualizando
 suas transformações e arte; mudanças de paredes, efeitos, identidade da cena e
@@ -1206,15 +1206,25 @@ ou do raster. Suas notificações de camadas/tokens entregam mudanças de regiã
 aparência sem solicitar outro manifesto nem alterar as URLs dos tiles existentes.
 Portais repetidos preservam os pisos decodificados e as texturas do mapa já carregadas.
 
+A arte de uma peça é uma pequena malha no formato do token: a elipse em pé,
+recortada ao retângulo da arte, com UVs que giram a arte dentro dela
+(`model/piece-disc.js`). Ela preserva a posição e o recorte da arte, ficando abaixo
+do limite de 100 vértices do agrupamento do Pixi, o que permite às peças dividir
+chamadas de desenho sem um passe de stencil para cada uma. A textura da arte
+pertence ao pool compartilhado de assets; liberar uma peça destrói seus objetos
+visuais e sua geometria sem destruir a textura compartilhada. Os glifos das condições só são recriados quando o conjunto
+de condições ou a sua disposição muda, não ao passar o mouse ou selecionar.
+
 ### Atualizações de imagens nativas
 
-`SceneImageArt` atualiza texturas de imagens comuns independentemente da chave
-estática da cena. Uma troca de origem mantém o sprite e sua imagem anterior até
+`SceneImageArt` atualiza texturas de imagens comuns independentemente das demais
+chaves das camadas da cena. Uma troca de origem mantém o sprite e sua imagem anterior até
 decodificar a nova textura; resultados atrasados não substituem estados mais
-novos nem uma cena encerrada. A imagem atual sobrevive à reconstrução de
-luzes/geometria na mesma cena. Superfícies compostas e pisos agrupados usam um
-cache separado com o mesmo ciclo de vida. Composições inalteradas são vinculadas
-de forma síncrona durante reconstruções de efeitos; trocas de material mantêm a
+novos nem uma cena encerrada. Efeitos, paredes, desenhos e cartas nunca tocam as
+camadas de imagens; uma mudança no conjunto de imagens, superfícies ou marcadores
+vincula a arte atual de forma síncrona a partir dos recursos retidos. Superfícies
+compostas e pisos agrupados usam um cache separado com o mesmo ciclo de vida.
+Composições inalteradas também são vinculadas de forma síncrona; trocas de material mantêm a
 imagem atual até terminar a decodificação. Mudanças de máscara, geometria,
 componentes do grupo ou visibilidade revogam imediatamente a cobertura antiga.
 A composição fecha todos os bitmaps de entrada, inclusive em falhas e
@@ -1244,9 +1254,26 @@ a revisão da cena; não descarte estados apenas porque essa revisão é igual.
 
 ### Trabalho de iluminação e visão
 
-`SceneLayers` calcula a oclusão das luzes uma vez por chave estática da cena e
-reutiliza os polígonos nas máscaras, no atlas de luz e na penumbra do mestre.
-`createVisibilityContext` compartilha os índices de paredes e mantém no máximo
+`SceneLayers` mantém uma chave para cada parte da cena (`SceneRenderKey.layers`).
+Somente outra cena, bloco, papel, tamanho da cena, tamanho da célula ou perfil de
+qualidade remonta todas as camadas. Imagens, arte de portas, desenhos, cartas,
+zonas, névoa e efeitos (luzes, partículas, shaders e o buffer de luz) são
+atualizados a partir da própria chave; sons espaciais não desenham nada e não
+mudam nenhuma chave. Desenhos e cartas são reconciliados por linha: um traço novo
+acrescenta um nó, e uma carta movida ou girada mantém o seu nó. Os efeitos mantêm
+o relógio da animação nessas atualizações.
+
+`LightPolygons` guarda um polígono de oclusão por luz e o reutiliza nas máscaras,
+no atlas de luz e na penumbra do mestre. O polígono só é recalculado quando a luz
+se move ou muda de alcance, cone ou elevação, ou quando muda uma parede dentro do
+seu alcance; abrir uma porta recalcula apenas as luzes que a alcançam. Uma luz
+desligada conserva o seu polígono. Cenas com pelo menos 128 segmentos de parede
+que bloqueiam luz calculam os polígonos que faltam em um worker de visibilidade
+quando disponível; cenas menores e workers indisponíveis usam a mesma geometria
+de forma síncrona. Enquanto isso, a luz
+mantém o polígono anterior (deslocado, se ela se moveu) e uma luz nova aparece
+quando o polígono fica pronto. Nós das luzes e carimbos do atlas são mantidos para
+luzes cuja linha e polígono não mudaram. `createVisibilityContext` compartilha os índices de paredes e mantém no máximo
 oito subconjuntos para alcance finito ou elevação. Preserve a aritmética dos
 raios e a composição das paredes: trocar a BVH pode mudar o arredondamento em
 extremidades coincidentes.
@@ -1264,7 +1291,11 @@ de forma síncrona. O worker mantém uma tarefa ativa e o último estado pendent
 transferindo buffers de coordenadas. Observadores nativos levam um `sourceId`
 para que o movimento preserve a última visão concluída enquanto calcula a
 seguinte. Trocas de seleção, alcance, elevação, cone ou prévia revogam essa visão
-imediatamente; mudanças de paredes ou cena encerram o worker anterior. Não
+imediatamente. Uma mudança de paredes envia as paredes novas ao mesmo worker,
+revoga respostas calculadas com as antigas e fecha o véu restrito até chegar a
+nova visão; uma troca de cena encerra o worker. Enquanto o worker ainda deve
+polígonos de luz, o véu irrestrito do mestre mantém os pixels atuais e é repintado
+uma vez quando eles chegam. Não
 reutilize a visão entre esses limites nem arredonde o alcance configurado ou as
 posições dos tokens para células.
 Movimento pendente preserva a textura do véu até o resultado chegar; a visão do

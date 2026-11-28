@@ -28,6 +28,7 @@ from .packages import (
     ModuleFailure,
     compatible,
     host,
+    package_type,
     safe_path,
     trusted_keys,
 )
@@ -244,13 +245,15 @@ def installation_stream(request, data):
                 record = next((r for r in catalog(engine) if r['id'] == data['id'] and r['version'] == data['version']), None)
                 if record is None:
                     raise ModuleFailure('not_found')
+                from .lifecycle import check_replacement
+                check_replacement(record['id'], record['version'], record.get('type', 'module'))
                 emit('download', received=0, total=None)
                 raw = download(record['download'], MAX_ARCHIVE,
                                progress=lambda received, total: emit('download', received=received, total=total))
                 emit('verify')
                 manifest = engine.install(record, raw)
-                audit(request, 'module.install', module=manifest['id'], version=manifest['version'])
-                emit('complete', manifest=manifest)
+                result = install_replacing(request, engine, manifest)
+                emit('complete', manifest=manifest, **result)
             except ModuleFailure as error:
                 emit('error', error=error.code)
             except Exception:
@@ -270,6 +273,20 @@ def installation_stream(request, data):
     response['Cache-Control'] = 'no-store'
     response['X-Accel-Buffering'] = 'no'
     return response
+
+
+def install_replacing(request, engine, manifest, **details):
+    """Make a newly installed release the only installed release of its package."""
+    from .lifecycle import supersede
+    audit(request, "module.install", module=manifest["id"], version=manifest["version"], **details)
+    with transaction.atomic():
+        replacement = Package.objects.select_for_update().get(module_id=manifest["id"], version=manifest["version"])
+        result = supersede(engine, replacement, server_active)
+        if result["replaced"]:
+            audit(request, "module.update", module=replacement.module_id, version=replacement.version,
+                  replaced=result["replaced"])
+    # An active Django release switches after a supervised restart.
+    return {"replaced": result["replaced"], **({"restartRequired": True} if result.get("restartRequired") else {})}
 
 
 @require_POST
@@ -293,9 +310,12 @@ def install(request):
     )
     if record is None:
         raise ModuleFailure("not_found")
+    from .lifecycle import check_replacement
+    check_replacement(record["id"], record["version"], record.get("type", "module"))
     manifest = engine.install(record, download(record["download"], MAX_ARCHIVE))
-    audit(request, "module.install", module=manifest["id"], version=manifest["version"])
-    return JsonResponse(manifest)
+    # Without a replacement the response keeps its original manifest shape.
+    result = install_replacing(request, engine, manifest)
+    return JsonResponse({**manifest, **{key: value for key, value in result.items() if value}})
 
 
 @require_http_methods(["GET", "POST"])
@@ -311,9 +331,13 @@ def local_install(request):
     raw = upload.read(MAX_ARCHIVE + 1)
     if len(raw) > MAX_ARCHIVE:
         raise ModuleFailure("invalid_data")
-    manifest = host().install_local(raw, expected_type=kind)
-    audit(request, "module.install", module=manifest["id"], version=manifest["version"], source="local")
-    return JsonResponse({"manifest": manifest, "directory": module_directory()})
+    from .lifecycle import check_replacement
+    engine = host()
+    incoming = engine.archive_manifest(raw)
+    check_replacement(incoming["id"], incoming["version"], package_type(incoming))
+    manifest = engine.install_local(raw, expected_type=kind)
+    result = install_replacing(request, engine, manifest, source="local")
+    return JsonResponse({"manifest": manifest, "directory": module_directory(), **result})
 
 
 @require_GET
@@ -368,8 +392,7 @@ def server_active(engine, row):
 @require_POST
 @owner
 def update_package(request):
-    from .lifecycle import replace_release
-    from .packages import package_type
+    from .lifecycle import supersede
     row = selected_package(request)
     engine = host(require_trust=True)
     candidates = [record for record in catalog(engine)
@@ -384,17 +407,13 @@ def update_package(request):
         row = Package.objects.select_for_update().filter(pk=row.pk).first()
         if row is None:
             raise ModuleFailure('not_found')
-        replacement = Package.objects.get(module_id=row.module_id, version=record['version'])
+        replacement = Package.objects.select_for_update().get(module_id=row.module_id, version=record['version'])
         if package_type(row.manifest) != package_type(replacement.manifest) or bool(row.locale_catalogs) != bool(replacement.locale_catalogs):
             raise ModuleFailure('invalid_data')
-        if server_active(engine, row):
-            from .server_apps import queue_activation
-            result = queue_activation(replacement, True)
-        else:
-            result = {}
         audit(request, 'module.update', module=row.module_id, version=replacement.version)
-        if not result:
-            replace_release(engine, row, replacement)
+        # Every older release of this package is replaced, so the library keeps one.
+        result = supersede(engine, replacement, server_active)
+    result.pop('replaced')
     return JsonResponse({'updated': True, 'version': replacement.version, **result})
 
 

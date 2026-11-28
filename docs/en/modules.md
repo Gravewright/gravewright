@@ -70,7 +70,7 @@ example.actor-counter/
 }
 ```
 
-Choose your actual license and include its text in `LICENSE.txt`. An extension's license need not match this illustrative value; see the licensing policy. The manifest schema rejects unknown keys and requires every field shown. IDs must contain at least one dot or hyphen, begin with a lowercase letter, and use lowercase letters/digits in their components. Versions use three numeric components, without prerelease/build suffixes. SDK ranges support whitespace-separated comparisons such as `>=1.0.0 <2.0.0`; `^`, `~`, wildcards, and `||` are not supported. The package loader currently checks SDK **1.0.0**; the separate domain API reports **1.2.0**.
+Choose your actual license and include its text in `LICENSE.txt`. An extension's license need not match this illustrative value; see the licensing policy. The manifest schema rejects unknown keys and requires every field shown; only a [compendium module](#compendiums-supplied-by-packages) may omit `entry`. IDs must contain at least one dot or hyphen, begin with a lowercase letter, and use lowercase letters/digits in their components. Versions use three numeric components, without prerelease/build suffixes. SDK ranges support whitespace-separated comparisons such as `>=1.0.0 <2.0.0`; `^`, `~`, wildcards, and `||` are not supported. The package loader currently checks SDK **1.0.0**; the separate domain API reports **1.2.0**.
 
 The domain contract's `api.capabilities()` describes explicit methods without granting permissions. Trusted system packages register their own operations with `api.systems.register_api(system_id, operations)` from `AppConfig.ready()`; browser modules discover the current campaign provider through `api.system.state()` and call it through `api.system.call(operation, data, options)`. Binary uploads accept `File`/`Blob`; downloads return `{blob, name, contentType, size}`. These methods retain CSRF, native authorization, activation leases and the owning context's lifetime; disposal cancels pending work. See the [API reference](api.md) for payloads, revisions and timeout options.
 
@@ -165,7 +165,7 @@ catalog is registered or disposed.
 
 After a signed installation, the system appears in Systems, `/api/rulesets`, and the campaign form. The catalog uses the newest compatible, non-revoked installed version per package, ordered by numeric version. Ordinary modules without `system` remain available under Installed modules. Existing campaigns can retain an unavailable system when editing their details, but it cannot be selected for a new campaign.
 
-Saving a campaign with an installed system selects its document types and activates its browser package. The existing exact release is retained when already active; switching systems removes the previous system package while preserving unrelated modules and replacement preferences. Tables use the document types of that exact activated release, or the latest installed version if none is activated. Actor data keeps the existing native document structure; module-specific data uses the supported module storage and document APIs. Installing a new version does not automatically change a table's activated release.
+Saving a campaign with an installed system selects its document types and activates its browser package. The existing exact release is retained when already active; switching systems removes the previous system package while preserving unrelated modules and replacement preferences. Tables use the document types of that exact activated release, or the latest installed version if none is activated. Actor data keeps the existing native document structure; module-specific data uses the supported module storage and document APIs. Installing another version replaces the installed release and moves the tables that used it to the new one; see [package library](#package-library-and-installation-browser).
 
 ## System combat providers
 
@@ -264,7 +264,7 @@ By default, installed archives live under `MEDIA_ROOT/modules/archives/`; extrac
 
 Activation uses `{modules, replacements, expectedRevision}`. `modules` maps IDs to exact versions, `replacements` maps surface names to module IDs, and `expectedRevision` must equal the last read `moduleSetRevision` (`"0"` initially). A stale revision produces `conflict`. Successful changes issue a fresh revision and notify table clients. Clients also poll and reconcile on reconnect, so activation does not depend solely on socket delivery.
 
-A signed catalog record with `status: "revoked"` revokes an installed release when that catalog is fetched, removes it from affected tables, clears its replacement preferences, and changes their revisions. This is catalog-fetch-driven revocation, not an always-connected publisher push. Rolling back to another installed version changes code selection; stored module data is not reverted.
+A signed catalog record with `status: "revoked"` revokes an installed release when that catalog is fetched, removes it from affected tables, clears its replacement preferences, and changes their revisions. This is catalog-fetch-driven revocation, not an always-connected publisher push. Returning to an older release means removing the newer one and installing the older one; stored module data is not reverted.
 
 ## Lifecycle and mounting
 
@@ -360,6 +360,30 @@ After changing native labels, run `python scripts/audit_translations.py --catalo
 ### Package library and installation browser
 
 Inside now has separate **Systems** and **Modules** libraries, with a tile/list view preference, search and pagination. **Install system** or **Install module** opens the configured catalog in a dialog filtered to that category. The native PDF system remains visible without remote configuration. Installed libraries never require a catalog fetch; catalog diagnostics appear when opening the installation browser. The old `section=marketplace` link resolves to Modules for compatibility.
+
+An installation keeps **one release per package ID**, so each library shows one
+card per package. Installing another version of an installed package, from the
+catalog or from a local ZIP, replaces it exactly as **Update** does: tables using
+the old release switch to the new one, interface replacements and module storage
+are kept, a globally active language stays active, and the old files are removed
+after commit. The response lists the replaced versions in `replaced`. An active
+Django app switches only after the supervised restart, so its running release
+stays installed until then and the response sets `restartRequired`. The host
+refuses an older version while a newer usable one is installed
+(`newer_installed`) and a release whose package kind differs from the installed
+one under the same ID (`package_type_changed`); remove the installed package
+first. This also rejects replacing a language package with an ordinary browser
+module, or the reverse. A release ID/version still cannot be replaced with different bytes.
+Revoked releases stay recorded so their bytes cannot be installed again. The
+library shows the newest non-revoked release, or the newest revoked release
+when none remains usable. In the installation browser, a newer catalog release
+of an installed package appears on that package's card as an update.
+
+Installed cards also show what a package provides: **Django · Server** for
+trusted server code, **Compendiums** when it declares `content.compendiums`, and
+**For** followed by the required system's name for a compendium module. These
+labels are derived from the installed manifest and do not affect catalog
+categories.
 
 New signed catalog records should include `"type": "system"`, `"type": "module"`, or `"type": "django"`. Django records require an explicit type and a `django` manifest block. This field participates in the signature and must match the ZIP manifest (`system` means the manifest declares `system`). Invalid values and mismatches are rejected. Legacy records without a type remain valid and default to modules when not yet installed; installed manifests determine their actual category. Publishers of system packages must include the signed type for correct discovery before installation.
 
@@ -504,13 +528,67 @@ the contents of both folders, so extensions stay out of this repository.
 
 [Ethical module porting](ethical-module-porting.md)
 
-## Compendiums supplied by a system package
+<a id="compendiums-supplied-by-a-system-package"></a>
 
-A browser system may declare up to 16 JSON collections in its manifest:
+## Compendiums supplied by packages
+
+Two kinds of browser package may declare up to 16 JSON collections in their
+manifest:
 
 ```json
 "content": {"compendiums": ["compendiums/entities.json", "compendiums/gear.json"]}
 ```
+
+- A **system package** supplies actor, item and spell packs of its own
+  registered document types, plus journal packs.
+- A **compendium module** is an ordinary module (no `system`, `django` or
+  `locales`) that declares `content`. It may supply packs for one required
+  system or, without that requirement, journal packs for any table. Its `entry`
+  is optional: a module without one has no browser code and only supplies
+  content. A module may also declare `entry` to combine compendiums with
+  browser features.
+
+A compendium module for one system names it in `requiresSystem`, optionally with
+a range of that system's package releases. The range uses the same comparisons
+as SDK ranges:
+
+```json
+{
+  "id": "author.bestiary",
+  "name": "Bestiary",
+  "version": "1.0.0",
+  "sdk": { "requires": ">=1.0.0 <2.0.0", "tested": "1.0.0" },
+  "description": "Creatures for the Example system.",
+  "author": "Your name",
+  "license": "CC-BY-4.0",
+  "content": {
+    "compendiums": ["compendiums/bestiary.json"],
+    "requiresSystem": { "id": "author.example-system", "version": ">=1.2.0 <2.0.0" }
+  }
+}
+```
+
+Without `requiresSystem`, a compendium module supplies only `journal_pack`
+packs and is available in tables of every system. A system package cannot
+declare `requiresSystem`, and language packages and Django apps cannot declare
+`content`. A built-in system has no package release, so a module requiring one
+must omit `version`. A compendium module is installed as an ordinary module
+(`kind: "module"` for local installation, type `module` in a signed catalog
+record) and its library card shows the **Compendiums** tag.
+
+The GM activates a compendium module for a table like any other module.
+Activation rejects a module that requires another system, or whose required
+system is not active at a matching release, with `system_required`. It also
+validates every entry against the active system's registered actor and item
+types and rejects a mismatch with `incompatible_content`. The table's module
+list explains either error until the GM changes the selection again. A module that stays selected after the table changes system release
+keeps its selection, but its packs disappear until the GM activates a matching
+release; the server log records why. One unavailable package does not hide the
+packs of the system or of other modules.
+
+Hosts up to 0.3.8 refuse to install a manifest that declares `content`
+without `system`, and accept only actor, item and spell packs from system
+packages.
 
 Paths must be relative package paths ending in `.json`. Absolute paths, traversal,
 URLs and symlinks outside the approved package are rejected. Each collection is
@@ -533,10 +611,23 @@ expressions or fetch external assets from those fields:
 }
 ```
 
-Supported pack kinds are `actor_pack`, `item_pack` and `spell_pack`. Every entry
-must use the provider's own `systemId` and a type registered in its
-`system.actorTypes` or `system.itemTypes`. Pack IDs must be unique within the
-collection; entry IDs must be unique within their pack. IDs accept ASCII
+Supported pack kinds are `actor_pack`, `item_pack`, `spell_pack` and
+`journal_pack`. Every actor, item and spell entry must use the provider's
+`systemId` (the system package itself or the module's required system) and a
+type registered in its `system.actorTypes` or `system.itemTypes`. Journal
+entries belong to no system: they omit `systemId`, may set `type` to `diary`
+(the default), `quest`, `quest_board` or `roll_table`, and keep their document in
+`data` with the same shape as a [native journal](journals.md). A diary entry may instead give
+plain text in `content`, which becomes its first page on import:
+
+```json
+{"id": "chapters", "label": "Chapters", "type": "journal_pack", "entries": [
+  {"id": "prologue", "name": "Prologue", "content": "The road ends at a ruined gate."}
+]}
+```
+
+Pack IDs must be unique within the collection; entry IDs must be unique within
+their pack. IDs accept ASCII
 letters, digits, dots, underscores, colons and hyphens, up to 120 characters,
 and must start with a letter or digit. Names and labels are limited to 120
 characters. Keep IDs and relative paths stable across updates so permissions
@@ -564,20 +655,29 @@ without requiring a newer host:
 ```
 
 Installation validates the declarations and files. The native compendium UI
-exposes them only in campaigns using that system's exact active, pinned,
-approved and non-revoked package version. Every read checks installed bytes
-against the approved archive; changing a file does not authorize new content.
-Collections do not declare campaign IDs. The host binds access internally.
-Packs are private to the GM by default. Existing compendium read grants and
-role defaults control player visibility; importing documents remains a GM
-action. The host treats `data` as opaque JSON and retains the provider's fields;
-it does not interpret revisions or game rules. Update the VTT
-base to a version supporting `content.compendiums` before installing a package
-that uses this optional declaration.
+exposes a system's collections only in campaigns using that system's exact
+active, pinned, approved and non-revoked package version, and a compendium
+module's collections only in campaigns where its exact release is active.
+Every read checks installed bytes against the approved archive; changing a file
+does not authorize new content. Collections do not declare campaign IDs. The
+host binds access internally. Item and spell packs are readable by players by
+default; actor and journal packs, which can hold spoilers, stay private to the GM
+until shared. Streamers see no pack without a grant. Existing compendium read
+grants and role defaults control visibility; importing documents remains a GM
+action. Imported documents are copies: deactivating or removing the package
+leaves them in the campaign. The host treats `data` as opaque JSON and retains
+the provider's fields; it does not interpret revisions or game rules. Update the
+VTT base to a version supporting `content.compendiums` before installing a
+package that uses this optional declaration.
 
 Declared collection JSON files are not served by generic package asset URLs.
 Read and import their entries through the table-scoped compendium API, which
-checks the active system and the user's current read grants.
+checks the active packages and the user's current read grants.
+
+A package installed from a local ZIP stays in that installation. Installing it
+does not authorize distributing its content; see
+[ethical module porting](ethical-module-porting.md) before you publish a
+compendium built from a book or another third-party source.
 
 Use `api.compendiums.state()` to discover visible pack and entry IDs.
 `api.compendiums.read({packId, id})` still returns one entry;

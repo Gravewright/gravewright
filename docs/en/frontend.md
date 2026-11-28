@@ -1116,7 +1116,7 @@ Pending commands keep the interaction guard for concurrent edits. Errors and
 route instructions remain immediate; there is no saving notice or notice timer.
 Unchanged status text is not rewritten on every paint.
 
-Local token previews reuse the static scene key and image reconciliation while
+Local token previews reuse the scene's layer keys and image reconciliation while
 their immutable scene inputs remain the same. They do not walk all native image
 transforms or reconstruct the component-origin index on every frame. A new image
 snapshot still reconciles its transforms and artwork; changed walls, effects,
@@ -1133,14 +1133,23 @@ revisions. Its layer/token notifications carry region and appearance changes
 without requesting a new scene manifest or changing existing tile URLs. Repeated
 portals therefore retain the decoded floors and raster textures already loaded.
 
+Piece art is one small mesh shaped like the token: the upright ellipse clipped
+to the art rectangle, with UVs that turn the art inside it (`model/piece-disc.js`).
+It preserves the art's placement and clipping while staying under Pixi's
+100-vertex batching limit, allowing pieces to share draw calls without a
+stencil pass each. The art texture belongs to the shared asset pool; releasing a
+piece destroys its display objects and geometry without destroying the shared texture. Condition badge glyphs are recreated only when
+the set of badges or their layout changes, not on hover or selection.
+
 ### Native image updates
 
-`SceneImageArt` reconciles ordinary image textures independently of the static
-scene key. A source change keeps the sprite and its previous art until the new
+`SceneImageArt` reconciles ordinary image textures independently of the other
+scene layer keys. A source change keeps the sprite and its previous art until the new
 texture is decoded; late results cannot overwrite newer state or a closed scene.
-Current art survives same-scene light/geometry rebuilds. Composed surfaces and
-grouped floors use a separate cache with the same lifecycle. Unchanged composites
-rebind synchronously during effect rebuilds; material replacement retains current
+Effects, walls, drawings and cards never touch image layers; a change of image
+membership, surfaces or placeholders rebinds current art synchronously from the
+retained resources. Composed surfaces and grouped floors use a separate cache
+with the same lifecycle. Unchanged composites rebind synchronously as well; material replacement retains current
 art until decoding completes. Changed masks, geometry, group membership or
 visibility revoke obsolete coverage immediately. Composition closes all input
 bitmaps, including failed and cancelled loads, and publishes no partial floor.
@@ -1168,9 +1177,24 @@ snapshots solely because that revision is equal.
 
 ### Lighting and vision work
 
-`SceneLayers` calculates light occlusion once for each static scene key and
-reuses those polygons for masks, the light atlas and the GM darkness veil.
-`createVisibilityContext` shares wall indices and keeps at most eight filtered
+`SceneLayers` keeps one key per part of the scene (`SceneRenderKey.layers`).
+Only a different scene, block, role, scene size, cell size or quality profile
+remounts every layer. Images, door art, drawings, cards, zones, fog and effects
+(lights, particles, shaders and the light buffer) each refresh from their own
+key; spatial sounds draw nothing and change no key. Drawings and cards reconcile
+by row: a new stroke adds one node, and a moved or turned card keeps its node.
+Effects keep their animation clock across these refreshes.
+
+`LightPolygons` caches one occlusion polygon per light and reuses it for masks,
+the light atlas and the GM darkness veil. A polygon is recalculated only when its
+light moves or changes range, cone or elevation, or when a wall inside its reach
+changes, so opening a door recalculates only the lights that reach it. A
+switched-off light keeps its polygon. Scenes with at least 128 light-blocking
+wall segments calculate missing polygons in a visibility worker when available;
+smaller scenes and unavailable workers use the same geometry synchronously.
+Meanwhile a light keeps its previous polygon (translated if it moved) and a new light appears when its
+polygon is ready. Light nodes and atlas stamps are retained for lights whose row
+and polygon did not change. `createVisibilityContext` shares wall indices and keeps at most eight filtered
 subsets for finite ranges or elevation. Preserve the original ray arithmetic
 and wall membership: changing a BVH can change rounding at coincident endpoints.
 
@@ -1186,8 +1210,11 @@ smaller scenes and unavailable workers use the same geometry synchronously.
 The worker keeps one active job and the latest pending snapshot, transferring
 coordinate buffers. Native observers carry a `sourceId` so movement can retain
 the last completed view while the next calculation runs. Selection, range,
-elevation, cone and preview changes revoke that view immediately; wall and scene
-changes terminate the old worker. Never reuse visibility across those boundaries
+elevation, cone and preview changes revoke that view immediately. A wall change
+sends the new walls to the same worker, revokes answers computed with the old
+walls and closes the restricted veil until the new view arrives; a scene change
+terminates the worker. While the worker still owes light polygons, the GM's
+unrestricted veil keeps its current pixels and is repainted once when they arrive. Never reuse visibility across those boundaries
 or quantize the configured vision range or token positions.
 Pending movement retains the existing veil texture until a result arrives;
 unrestricted GM vision reuses its static veil without repainting on token moves.

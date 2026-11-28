@@ -1,4 +1,7 @@
-"""Generate lossless 512 px map tiles, with level zero at full resolution.
+"""Generate 512 px WebP map tiles, with level zero at full resolution.
+
+Tiles are lossless unless GRAVEWRIGHT_MAP_TILE_QUALITY selects lossy WebP for
+uploaded rasters; generated solid-color maps always stay lossless.
 
 Decode and generation are serialized per process. The Pillow fallback decodes a
 whole raster and has a separate pixel ceiling; libvips streams ordinary maps
@@ -37,6 +40,14 @@ def configure_pillow_limit():
     Image.MAX_IMAGE_PIXELS = max(
         _DEFAULT_MAX_IMAGE_PIXELS or 0, settings.GRAVEWRIGHT_MAP_MAX_PIXELS
     )
+
+
+def _tile_encoding():
+    """Pillow save options and the libvips suffix for raster tiles."""
+    quality = getattr(settings, "GRAVEWRIGHT_MAP_TILE_QUALITY", None)
+    if quality is None:
+        return {"lossless": True}, ".webp[lossless]"
+    return {"quality": quality, "method": 4}, f".webp[Q={quality}]"
 
 
 def max_lod(width, height):
@@ -236,6 +247,7 @@ def _build_pillow(source, save_tile):
         source.close()
     width, height = level.size
     top = max_lod(width, height)
+    options, _suffix = _tile_encoding()
     try:
         _validate_size(width, height)
         for lod in range(top + 1):
@@ -249,7 +261,7 @@ def _build_pillow(source, save_tile):
                            min((x + 1) * TILE_SIZE, level.width),
                            min((y + 1) * TILE_SIZE, level.height))
                     with level.crop(box) as chunk, BytesIO() as encoded:
-                        chunk.save(encoded, format="WEBP", lossless=True)
+                        chunk.save(encoded, format="WEBP", **options)
                         with ContentFile(encoded.getvalue()) as content:
                             save_tile(lod, x, y, content)
     finally:
@@ -260,6 +272,7 @@ def _build_pillow(source, save_tile):
 def _build_vips(incoming, save_tile, orientation):
     pyvips = _load_vips()
     root = _scratch_root()
+    _options, suffix = _tile_encoding()
     with tempfile.TemporaryDirectory(prefix="map-tiles-", dir=root) as scratch:
         # Always use a generated filename: vips interprets [options] in names.
         # Chunked spooling also avoids retaining an extra compressed image copy.
@@ -293,7 +306,7 @@ def _build_vips(incoming, save_tile, orientation):
             # diagnostic as a server error; it can indicate disk exhaustion.
             image.dzsave(str(Path(scratch) / "map"), tile_size=TILE_SIZE,
                          overlap=0, depth="onetile", layout="dz", skip_blanks=-1,
-                         suffix=".webp[lossless]")
+                         suffix=suffix)
             for lod in range(top + 1):
                 w, h = level_size(width, height, lod)
                 directory = Path(scratch) / "map_files" / str(top - lod)

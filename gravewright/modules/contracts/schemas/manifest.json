@@ -133,7 +133,7 @@
     },
     "content": {
       "type": "object",
-      "description": "Read-only declarative compendiums of documents for this installed system.",
+      "description": "Read-only declarative compendiums. A system package supplies documents of its own types; a module without system supplies them for requiresSystem, or only journal packs when it declares no requirement.",
       "properties": {
         "compendiums": {
           "type": "array",
@@ -141,6 +141,25 @@
           "maxItems": 16,
           "uniqueItems": true,
           "items": { "type": "string", "minLength": 1, "maxLength": 240 }
+        },
+        "requiresSystem": {
+          "type": "object",
+          "description": "The campaign system whose actor and item types these compendiums use. Tables using another system cannot activate the module.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$",
+              "maxLength": 120
+            },
+            "version": {
+              "type": "string",
+              "description": "Whitespace-separated comparisons of the active system package version, such as >=1.2.0 <2.0.0.",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          },
+          "required": ["id"],
+          "additionalProperties": false
         }
       },
       "required": ["compendiums"],
@@ -226,8 +245,12 @@
   "additionalProperties": false,
   "allOf": [
     {
-      "if": { "required": ["content"] },
-      "then": { "required": ["system"] }
+      "if": { "required": ["system"] },
+      "then": { "properties": { "content": { "not": { "required": ["requiresSystem"] } } } }
+    },
+    {
+      "if": { "required": ["locales"] },
+      "then": { "not": { "required": ["content"] } }
     },
     {
       "if": {
@@ -252,14 +275,25 @@
               "required": [
                 "locales"
               ]
+            },
+            {
+              "required": [
+                "content"
+              ]
             }
           ]
         }
       },
       "else": {
-        "required": [
-          "entry"
-        ]
+        "if": {
+          "required": ["content"],
+          "not": { "required": ["system"] }
+        },
+        "else": {
+          "required": [
+            "entry"
+          ]
+        }
       }
     }
   ]

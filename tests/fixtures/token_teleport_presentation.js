@@ -1,5 +1,5 @@
 import 'pixi.js/unsafe-eval';
-import { Application, Graphics, Sprite, Text } from 'pixi.js';
+import { Application, Graphics, Mesh, Text } from 'pixi.js';
 import { PixiBoardRenderer } from '../../gravewright/maps/frontend/widgets/game-board/lib/pixi-board-renderer.js';
 import { BOARD_STACK } from '../../gravewright/maps/frontend/widgets/game-board/model/board-renderer.js';
 import { tokenController } from '../../gravewright/maps/frontend/features/tokens/ui/controller.js';
@@ -35,7 +35,7 @@ window.runTokenTeleportPresentation = async () => {
         name: 'Synthetic hero', version: 1, teleportVersion: 0, linkMode: 'linked',
         gridX: 1, gridY: 1, cells: 1, canControl: true, canOpenSheet: true,
         imageUrl: '/art/hero.png', accent: '#77ccbb',
-        bars: { health: { value: 7, max: 10, color: '#79c39a' } },
+        bars: { bar_2: { value: 7, max: 10, color: '#79c39a' } },
         conditions: [{ label: 'Synthetic blessing', kind: 'positive' }] };
     const pending = new Set(), failures = [];
     let controller, disposed = false, previews = 0;
@@ -84,12 +84,13 @@ window.runTokenTeleportPresentation = async () => {
         return root;
     }
     function art(label, expected = colors.art) {
-        const root = tokenRoot(label), sprite = root.children.find(child => child instanceof Sprite);
+        const root = tokenRoot(label), disc = root.children.find(child => child instanceof Mesh);
         const point = center(row), value = pixel(point.x, point.y);
         check(matches(value, expected), `${label}: GPU artwork has the expected color (${value})`);
-        check(sprite?.mask && !sprite.mask.destroyed, `${label}: the fresh artwork has a live circular mask`);
-        check(matches(pixel(point.x + 27, point.y - 27), colors.floor), `${label}: artwork corners are masked to the floor`);
-        check(matches(pixel(point.x, point.y + 26), colors.bar), `${label}: health bar is preserved`);
+        check(disc && !disc.destroyed && !disc.mask && disc.batched, `${label}: the fresh artwork is one batched disc without a stencil mask`);
+        check(matches(pixel(point.x + 27, point.y - 27), colors.floor), `${label}: artwork corners are clipped to the floor`);
+        // The bottom bar sits below the disc, filled from its left edge to 70%.
+        check(matches(pixel(point.x - 10, point.y + 39), colors.bar), `${label}: health bar is preserved`);
         check(root.children.some(child => child instanceof Text && child.visible && child.text === row.name), `${label}: selection label is visible`);
         check(root.children.some(child => child.children?.some(icon => icon instanceof Text)), `${label}: condition icon is preserved`);
         check(controller.view.selected[0] === row.id && controller.view.selection[0]?.actorId === row.actorId,
@@ -194,7 +195,7 @@ window.runTokenTeleportPresentation = async () => {
         await frame();
         check(art('late superseded artwork response', colors.final) === finalRoot,
             'superseded artwork cannot recreate or replace the final token');
-        report.cases.push('late-superseded-art-does-not-orphan-roots-or-masks');
+        report.cases.push('late-superseded-art-does-not-orphan-roots-or-art');
 
         await fetch('/gate/dispose/arm');
         update({ gridX: 7, teleportVersion: 8, imageUrl: '/art/dispose.png' });

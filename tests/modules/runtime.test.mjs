@@ -361,3 +361,18 @@ test("optional customization uses the active module lifetime and stops after dea
   assert.equal(f.runtime.canCustomize('configurable'),false);
   await assert.rejects(f.runtime.customize('configurable'),{code:'stale_context'});
 });
+
+test("compendium modules without browser code stay selected but load nothing", async () => {
+  const imported = [];
+  const f = fixture({ plain: { start(){}, register(){}, stop(){} } });
+  const importer = f.runtime.importer;
+  f.runtime.importer = async (url) => { imported.push(new URL(url).pathname); return importer(url); };
+  const value = f.state(['plain']);
+  value.modules.push({ id: 'book', version: '1.0.0', baseUrl: '/api/module-packages/book/1.0.0/hash/' });
+  await f.runtime.reconcile(value);
+  assert.deepEqual(imported, ['/api/module-packages/plain/1.0.0/hash/index.js']);
+  assert.deepEqual(f.errors, []);
+  assert.equal(f.ack, '1');
+  assert.deepEqual(f.runtime.state.modules.map(module => module.id), ['plain', 'book']);
+  await f.runtime.close();
+});

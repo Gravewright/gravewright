@@ -106,3 +106,26 @@ test('token previews retain image art and transforms until an image snapshot cha
         assert.equal(imageLayer.children.length, 1);
     } finally { f.restore(); }
 });
+
+test('a material change after a committed transform still shows the previous finish', async () => {
+    const f = fixture();
+    try {
+        f.layers.render(state, 70, 300, 300, true);
+        await settle();
+        f.loads[0](f.resource());
+        await settle();
+        const imageLayer = f.containers.find(row => row.id === 'native:images').container;
+        const sprite = imageLayer.children[0];
+        const moved = { ...placement, x: 125 };
+        f.layers.render({ ...state, images: [moved] }, 70, 300, 300, true);
+        assert.equal(imageLayer.children[0], sprite, 'the transform keeps the decoded surface sprite');
+        assert.equal(sprite.x, 125);
+        // With no remount in between, the new coverage identity must already be current.
+        f.layers.render({ ...state, images: [{ ...moved, surface: { ...moved.surface, materialId: 'next' } }] }, 70, 300, 300, true);
+        assert.equal(imageLayer.children.length, 1, 'the previous finish stays until the new material decodes');
+        assert.equal(imageLayer.children[0].x, 125);
+        await settle();
+        assert.equal(f.loads.length, 2, 'the replacement material is requested');
+        assert.equal(imageLayer.children.length, 1);
+    } finally { f.restore(); }
+});

@@ -289,11 +289,30 @@ escuridão, trocas de material atrasadas, remoção e mudanças de cena/papel.
 Amostra pixels reais da GPU entre quadros e serve apenas imagens sintéticas,
 com as mesmas opções de saída local e ambientes do cenário de atualização do tabuleiro.
 
+`uv run --locked python tests/e2e/scene_layer_updates.py` aplica desenhos,
+movimentos de cartas, abertura de portas, troca de luzes e movimento de sons
+espaciais numa cena sintética com 360 segmentos de parede, trinta tochas animadas,
+emissores de brasas, dois shaders e escuridão dinâmica como mestre; depois, repete
+desenhos, movimentos de cartas e abertura de portas como jogador. Ele confere que
+nenhuma dessas mudanças monta uma camada e que uma porta aberta deixa uma tocha
+alcançar a sala seguinte em pixels da GPU. Com a animação congelada, também
+compara atualizações parciais com uma montagem completa da cena para ambos os
+papéis. O relatório
+registra, por etapa, o tempo síncrono de `SceneLayers.render`, as camadas
+montadas, o maior intervalo entre quadros seguinte e as tarefas longas.
+`--frontend <cópia de gravewright/maps/frontend> --no-assert` mede outra árvore de
+código com o mesmo fixture para comparar antes e depois; `--repeat` muda as
+repetições e `--only "gm: toggle light"` (repetível) limita as etapas medidas.
+Compare execuções com o mesmo navegador e mecanismo de renderização na mesma
+máquina. WebGL por software pode dominar os tempos dos quadros; leia o tempo
+síncrono da atualização separadamente dos intervalos entre quadros.
+
 `uv run --locked python tests/e2e/token_teleport_presentation.py` verifica que o
 teleporte destrói e recria somente o objeto visual do token no destino, enquanto
 movimentos normais continuam interpolados. Os casos WebGL sintéticos cobrem
-atualizações duplicadas, identidade da seleção e da ficha, imagens atrasadas ou
-superadas, descarte e preservação dos recursos da câmera/piso. Usa as mesmas
+atualizações duplicadas, identidade da seleção e da ficha, recorte da arte com
+agrupamento de desenho, barras de vida e ícones de condições, imagens atrasadas
+ou superadas, descarte e preservação dos recursos da câmera/piso. Usa as mesmas
 opções de saída local e ambientes dos demais cenários de renderização independentes.
 
 `uv run --locked python tests/e2e/token_saving.py` abre o tabuleiro nativo com

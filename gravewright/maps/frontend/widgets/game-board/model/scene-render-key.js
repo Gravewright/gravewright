@@ -2,8 +2,8 @@
 export class SceneRenderKey {
     #parts = new WeakMap();
     #imageSources = new WeakMap();
-    #staticInputs = [];
-    #staticKey;
+    #layerInputs = [];
+    #layerKeys;
     part(value) {
         let key = this.#parts.get(value);
         if (key === undefined) {
@@ -23,15 +23,25 @@ export class SceneRenderKey {
         }
         return key;
     }
-    static(state, cell, width, height, gm, profile) {
+    /**
+     * One key per independently synchronized part of the scene. `base` changes
+     * remount everything; any other key refreshes only what reads that input.
+     * Spatial sounds are absent: nothing here draws them.
+     */
+    layers(state, cell, width, height, gm, profile) {
         const inputs = [state.containerId, state.blockId, state.sceneId, cell, width, height, gm, profile,
             state.images, state.walls, state.lights, state.particles, state.shaders, state.cards,
-            state.drawings, state.spatialSounds, state.lighting];
-        if (inputs.every((value, index) => value === this.#staticInputs[index])) return this.#staticKey;
-        this.#staticInputs = inputs;
-        return this.#staticKey = [state.containerId, state.blockId, state.sceneId, cell, width, height, gm, profile,
-            this.imageSources(state.images),
-            ...[state.walls, state.lights, state.particles, state.shaders, state.cards, state.drawings, state.spatialSounds, state.lighting].map(value => value ? this.part(value) : '')].join('|');
+            state.drawings, state.lighting];
+        if (this.#layerKeys && inputs.every((value, index) => value === this.#layerInputs[index])) return this.#layerKeys;
+        this.#layerInputs = inputs;
+        const part = value => value ? this.part(value) : '';
+        return this.#layerKeys = {
+            base: JSON.stringify([state.containerId, state.blockId, state.sceneId, cell, width, height, gm, profile]),
+            images: this.imageSources(state.images),
+            walls: part(state.walls), lights: part(state.lights), particles: part(state.particles),
+            shaders: part(state.shaders), cards: part(state.cards), drawings: part(state.drawings),
+            lighting: part(state.lighting),
+        };
     }
     zones(state) { return state.zones ? this.part(state.zones) : ''; }
     vision(state) { return `${!!state.previewTokenVision}|${this.part(state.vision)}`; }

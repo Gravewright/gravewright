@@ -23,3 +23,16 @@ test('revocation remains visible for the selected system', () => {
   const revoked = { ...savage, revoked: true };
   assert.deepEqual(tablePackages([revoked, dnd], 'savage', [savage]), [revoked]);
 });
+test('compendium modules for another system are listed only while selected', () => {
+  const book = { id: 'book', version: '1', content: { compendiums: ['book.json'], requiresSystem: { id: 'dnd' } } };
+  const lore = { id: 'lore', version: '1', content: { compendiums: ['lore.json'] } };
+  assert.deepEqual(tablePackages([book, lore], 'dnd', []), [book, lore]);
+  assert.deepEqual(tablePackages([book, lore], 'savage', []), [lore]);
+  assert.deepEqual(tablePackages([book, lore], 'savage', [book]), [book, lore]);
+});
+test('activation failures are explained in the interface language', async () => {
+  const { activationMessage } = await import('../../gravewright/modules/static/gravewright_modules/table-packages.js');
+  assert.match(activationMessage({ code: 'system_required' }, 'pt-BR'), /exige outro sistema/);
+  assert.match(activationMessage({ code: 'incompatible_content' }, 'es'), /tipos de documento/);
+  assert.match(activationMessage({ code: 'unexpected' }, 'en'), /could not be changed/);
+});

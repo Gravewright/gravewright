@@ -79,6 +79,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `GRAVEWRIGHT_MAP_MAX_PIXELS` | `64000000` | Limite de pixels decodificados de mapa |
 | `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` | `64000000` | Teto adicional de pixels decodificados ao usar o gerador Pillow |
 | `GRAVEWRIGHT_MAP_TILER` | `auto` | Gerador de tiles: `auto`, `vips` ou `pillow` |
+| `GRAVEWRIGHT_MAP_TILE_QUALITY` | vazio | Vazio para tiles WebP sem perdas; 1–100 para WebP com perdas nos mapas enviados |
 | `MAP_UPLOAD_MAX_MB` | `51200` | Limite de upload de mapa em MB (50 GiB); outros limites continuam aplicáveis |
 | `MAP_IMAGE_MAX_WIDTH` | `500000` | Largura máxima do mapa-fonte em pixels |
 | `MAP_IMAGE_MAX_HEIGHT` | `500000` | Altura máxima do mapa-fonte em pixels |
@@ -133,7 +134,9 @@ Para um Runner nativo, instale no ambiente Python indicado pelo inicializador ge
 
 Pillow decodifica o mapa inteiro. Seu teto adicional `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` tem padrão de 64 milhões de pixels, mesmo com um limite geral maior. Uma imagem maior exige libvips ou um aumento explícito desse teto após avaliar a memória disponível. Esse teto limita o tamanho de imagem aceito, não a memória residente: decodificação, orientação, reamostragem e codecs também alocam memória. Libvips processa mapas comuns em faixas, mas formatos, codecs e rotações EXIF podem exigir memória adicional e espaço temporário em disco.
 
-Apenas uma pirâmide de mapa é gerada por vez em cada processo do servidor, incluindo a decodificação. Workers separados ainda podem processar mapas simultaneamente. Os dois mecanismos produzem tiles WebP sem perdas, com a mesma disposição de 512 pixels e tiles parciais nas bordas; os níveis reduzidos podem diferir porque os filtros de reamostragem são diferentes.
+Apenas uma pirâmide de mapa é gerada por vez em cada processo do servidor, incluindo a decodificação. Workers separados ainda podem processar mapas simultaneamente. Os dois mecanismos produzem tiles WebP, sem perdas por padrão, com a mesma disposição de 512 pixels e tiles parciais nas bordas; os níveis reduzidos podem diferir porque os filtros de reamostragem são diferentes.
+
+`GRAVEWRIGHT_MAP_TILE_QUALITY` permite compressão com perdas para reduzir o tamanho da transferência dos tiles, o que pode ajudar mesas servidas por uma conexão com pouco upload. Vazio (o padrão) mantém tiles sem perdas. Um número inteiro de 1 a 100 grava os tiles de mapas enviados, importados e do Map Builder como WebP com perdas nessa qualidade; a transparência é mantida. Mapas de cor sólida continuam sem perdas. A configuração vale para mapas gerados depois de reiniciar o servidor; tiles existentes não são recodificados. Compare o tamanho e a aparência de um mapa representativo antes de escolher um valor: até 100 usa codificação com perdas. Qualquer outro valor impede a inicialização.
 
 A geração nativa prepara a imagem-fonte e os tiles em `data/runner/tmp/` dentro da instalação. Um `GRAVEWRIGHT_RUNNER_ROOT` explícito altera a raiz das ferramentas, e um override Django de `FILE_UPLOAD_TEMP_DIR` tem prioridade para a área temporária dos tiles; caminhos relativos partem da raiz da instalação. A pasta deve permitir escrita e comportar a fonte, os tiles preparados e eventuais arquivos temporários dos codecs enquanto os tiles finais são gravados na mídia. Falhas de armazenamento ou de geração nativa permanecem erros do servidor, e tiles já gravados são removidos se o upload falhar. Consulte [implantação](deployment.md) para timeouts de upload síncrono e dimensionamento.
 

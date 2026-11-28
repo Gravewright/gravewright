@@ -4,13 +4,14 @@ import { tileBlobCache } from "../model/tile-blob-cache.js";
 // generators for polyfills that do the same work without eval, so the policy stays strict. It must
 // be imported before any renderer is created.
 import "pixi.js/unsafe-eval";
-import { Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+import { Assets, Container, Graphics, Mesh, MeshGeometry, Sprite, Text, Texture } from "pixi.js";
 import { createPixiApplication } from './pixi-application.js';
 // The whole namespace, because a contributed layer needs the engine's constructors and must not
 // bring its own copy of them: a second Pixi shares no classes and no renderer with this one.
 import * as engine from "pixi.js";
 import { BOARD_STACK } from "../model/board-renderer.js";
 import { AssetReferencePool } from "../model/asset-reference-pool.js";
+import { pieceDisc } from "../model/piece-disc.js";
 /**
  * The one file that knows the board is drawn by Pixi. Everything above it speaks `BoardRenderer`,
  * so swapping the engine touches nothing else.
@@ -388,8 +389,11 @@ export class PixiBoardRenderer {
         const ring = new Graphics();
         const details = new Graphics();
         const conditions = new Container();
-        const art = texture ? new Sprite(texture) : new Text({ text: initials(piece.label), resolution: this.#textResolution, style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
-        art.anchor.set(.5);
+        // Art is one small mesh shaped like the token: it batches with every other piece,
+        // where a stencil mask per piece cost a separate pass and draw call each.
+        const geometry = texture ? new MeshGeometry({ positions: new Float32Array(0), uvs: new Float32Array(0), indices: new Uint32Array(0) }) : undefined;
+        const art = texture ? new Mesh({ geometry, texture }) : new Text({ text: initials(piece.label), resolution: this.#textResolution, style: { fill: piece.accent, fontFamily: "serif", fontSize: 10 } });
+        if (!texture) art.anchor.set(.5);
         const label = new Text({ text: piece.label, resolution: this.#textResolution, style: {
             fill: "#f2ecdf", fontFamily: "sans-serif", fontWeight: "600", fontSize: 10,
             align: "center", stroke: { color: PIECE_GROUND, width: 2, join: "round" },
@@ -397,18 +401,11 @@ export class PixiBoardRenderer {
         label.anchor.set(.5, 0);
         root.addChild(ring, art, details, conditions, label);
         const view = {
-            root, ring, details, conditions, art, label,
+            root, ring, details, conditions, art, label, geometry,
             teleportVersion: piece.teleportVersion ?? 0,
             ...(piece.imageUrl ? { imageUrl: piece.imageUrl } : {}),
             ...(piece.imageUrl && texture ? { retainedImageUrl: piece.imageUrl } : {}),
         };
-        if (texture) {
-            // Art arrives as whatever rectangle the sheet uploaded; the disc is what the table sees.
-            const mask = new Graphics();
-            root.addChild(mask);
-            art.mask = mask;
-            view.mask = mask;
-        }
         this.#pieces.set(key, view);
         this.#figures.addChild(root);
         this.#placePiece(view, piece);
@@ -424,14 +421,17 @@ export class PixiBoardRenderer {
             return;
         view.appearance = key;
         view.root.alpha = piece.hidden ? .4 : 1;
-        view.art.angle = piece.rotation ?? 0;
-        view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.mask ? 0 : .85 });
-        view.mask?.clear().ellipse(0, 0, radius, radiusY).fill({ color: "#ffffff" });
-        if (view.art instanceof Sprite) {
-            const source = Math.max(view.art.texture.width, view.art.texture.height) || 1;
-            view.art.scale.set(piece.size / source);
+        view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.geometry ? 0 : .85 });
+        if (view.geometry) {
+            // Art arrives as whatever rectangle the sheet uploaded; the disc is what the table sees.
+            const { width, height } = view.art.texture, scale = piece.size / (Math.max(width, height) || 1);
+            const disc = pieceDisc(radius, radiusY, width * scale, height * scale, piece.rotation ?? 0);
+            view.geometry.positions = disc.positions;
+            view.geometry.uvs = disc.uvs;
+            view.geometry.indices = disc.indices;
         }
         else {
+            view.art.angle = piece.rotation ?? 0;
             view.art.style.fontSize = piece.size * .42;
             view.art.style.fill = piece.accent;
             view.art.text = initials(piece.label);
@@ -463,23 +463,32 @@ export class PixiBoardRenderer {
             details.rect(-radius + 4, y, width, barHeight).fill({ color: '#000000', alpha: .65 });
             details.rect(-radius + 4, y, width * Math.max(0, Math.min(1, bar.value / bar.max)), barHeight).fill(bar.color || '#79c39a');
         });
-        for (const child of view.conditions.removeChildren())
-            child.destroy();
         const badges = piece.conditions ?? [];
         const badgeSize = Math.max(13, Math.min(21, piece.size / 3));
         const columns = Math.max(1, Math.floor(piece.size / (badgeSize + 2)));
-        badges.slice(0, 8).forEach((condition, index) => {
+        const icons = badges.slice(0, 8).map((condition, index) => {
             const color = condition.kind === 'negative' ? '#ee7777' : condition.kind === 'positive' ? '#79c39a' : '#d6b578';
             const glyph = condition.kind === 'negative' ? '☠' : condition.kind === 'positive' ? '✦' : '◆';
             const x = -radius + badgeSize / 2 + (index % columns) * (badgeSize + 2);
             const y = -radiusY - badgeSize / 2 - 3 - (topBar ? barGap + barHeight + 2 : 0)
                 - Math.floor(index / columns) * (badgeSize + 2);
             details.roundRect(x - badgeSize / 2, y - badgeSize / 2, badgeSize, badgeSize, 3).fill('#10151b').stroke({ color, width: 1 });
+            return { glyph, color, x, y };
+        });
+        // Hover, selection and bars change the appearance too; only a different set of
+        // badges replaces their text textures.
+        const iconKey = JSON.stringify([icons, badgeSize, badges.length > 8 && [badges.length, radius, radiusY]]);
+        if (view.iconKey === iconKey)
+            return;
+        view.iconKey = iconKey;
+        for (const child of view.conditions.removeChildren())
+            child.destroy();
+        for (const { glyph, color, x, y } of icons) {
             const icon = new Text({ text: glyph, resolution: this.#textResolution, style: { fontFamily: 'sans-serif', fontSize: badgeSize * .8, fill: color } });
             icon.anchor.set(.5);
             icon.position.set(x, y);
             view.conditions.addChild(icon);
-        });
+        }
         if (badges.length > 8) {
             const more = new Text({ text: `+${badges.length - 8}`, resolution: this.#textResolution, style: { fontFamily: 'sans-serif', fontSize: 11, fill: '#f2ecdf', stroke: { color: '#10151b', width: 3 } } });
             more.position.set(radius + 3, -radiusY - 13);
@@ -501,6 +510,8 @@ export class PixiBoardRenderer {
         this.#pieces.delete(key);
         view.root.removeFromParent();
         view.root.destroy({ children: true });
+        // A mesh leaves its geometry alive, and the art texture belongs to the asset pool.
+        view.geometry?.destroy();
         this.invalidate();
         if (view.retainedImageUrl)
             pieceAssets.release(view.retainedImageUrl);

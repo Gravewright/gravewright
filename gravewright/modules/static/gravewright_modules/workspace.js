@@ -1,4 +1,4 @@
-import { tablePackages } from "./table-packages.js";
+import { activationMessage, tablePackages } from "./table-packages.js";
 import { HttpClient } from "./http-client.js";
 import { BrowserBridge } from "./browser-bridge.js";
 import { ModuleRuntime } from "./module-runtime.js";
@@ -29,7 +29,9 @@ if (table) {
     const error = document.createElement("p");
     error.className = "module-marketplace__error";
     error.role = "alert";
-    error.hidden = true;
+    // An activation failure stays visible until the GM changes the selection again.
+    error.textContent = activationError;
+    error.hidden = !activationError;
     pane.append(error);
     const visiblePackages = tablePackages(packages, table.dataset.systemId, state?.modules);
     if (!visiblePackages.length) {
@@ -159,7 +161,7 @@ if (table) {
   };
   const tableId = table.dataset.tableId, scope = new AbortController(), http = new HttpClient(void 0, () => scope.signal), bridge = new BrowserBridge(tableId);
   const pane = document.querySelector("[data-table-modules]"), manage = pane?.dataset.manage === "true";
-  let state, packages = [], timer, fetching = false, again = false;
+  let state, packages = [], timer, fetching = false, again = false, activationError = "";
   const report = (error) => {
     if (error?.code === "stale_context" || scope.signal.aborted) return;
     if (error?.status === 401 || error?.code === "authentication_required") {
@@ -221,11 +223,13 @@ if (table) {
     }
   }
   async function configure(modules, replacements) {
+    activationError = "";
     try {
       const next = await http.post(`/api/tables/${tableId}/modules`, { modules, replacements, expectedRevision: state.moduleSetRevision });
       await refresh();
     } catch (error) {
-      report(error);
+      if (error?.code === "authentication_required" || error?.status === 401) report(error);
+      else activationError = activationMessage(error, document.documentElement.lang);
       await refresh();
     }
   }

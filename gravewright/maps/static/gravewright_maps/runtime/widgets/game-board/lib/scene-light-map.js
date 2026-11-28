@@ -14,6 +14,7 @@ var SceneLightMap = class {
   #textures;
   #ownsTextures;
   #stamps;
+  #nodes = /* @__PURE__ */ new Map();
   #lights = [];
   #lastRead = -Infinity;
   #sampleOnly;
@@ -36,19 +37,29 @@ var SceneLightMap = class {
       this.texture = Texture.from(this.canvas, true);
     }
   }
+  /** A stamp object that is still present keeps its atlas node; only new stamps are built. */
   #mount(stamps, now) {
     if (stamps === this.#stamps) return;
-    for (const node of this.#scene.removeChildren()) node.destroy({ children: true });
+    const previous = this.#nodes, next = /* @__PURE__ */ new Map();
     this.#lights = [];
     for (const stamp of stamps) {
-      const group = new Container();
-      const mask = new Graphics().poly(stamp.polygon.flatMap((p) => [p.x, p.y])).fill("white");
-      const light = new AnimatedLight(stamp.light, stamp.radius, this.#textures, now);
-      light.node.mask = mask;
-      group.addChild(mask, light.node);
-      this.#scene.addChild(group);
-      if (light.animated) this.#lights.push(light);
+      let entry = previous.get(stamp);
+      if (entry && !next.has(stamp)) previous.delete(stamp);
+      else {
+        const group = new Container();
+        const mask = new Graphics().poly(Array.from(stamp.polygon)).fill("white");
+        const light = new AnimatedLight(stamp.light, stamp.radius, this.#textures, now);
+        light.node.mask = mask;
+        group.addChild(mask, light.node);
+        entry = { group, light };
+      }
+      next.set(stamp, entry);
+      if (entry.light.animated) this.#lights.push(entry.light);
     }
+    for (const { group } of previous.values()) group.destroy({ children: true });
+    this.#scene.removeChildren();
+    for (const { group } of next.values()) this.#scene.addChild(group);
+    this.#nodes = next;
     this.#stamps = stamps;
   }
   #paint(stamps, now) {
@@ -60,7 +71,9 @@ var SceneLightMap = class {
     for (const stamp of stamps) {
       ctx.save();
       ctx.beginPath();
-      stamp.polygon.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      const polygon = stamp.polygon;
+      for (let i = 0; i < polygon.length; i += 2)
+        i ? ctx.lineTo(polygon[i], polygon[i + 1]) : ctx.moveTo(polygon[i], polygon[i + 1]);
       ctx.closePath();
       ctx.clip();
       if (stamp.light) paintAnimatedLight(ctx, stamp.light, stamp.x, stamp.y, stamp.radius, now);
@@ -104,6 +117,7 @@ var SceneLightMap = class {
     this.#pixels = void 0;
     this.#lights = [];
     this.#stamps = void 0;
+    this.#nodes.clear();
     this.#scene?.destroy({ children: true });
     if (this.#ownsTextures) this.#textures.dispose();
     if (this.texture !== Texture.EMPTY) this.texture.destroy(true);

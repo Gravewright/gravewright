@@ -16,15 +16,21 @@ var VisibilityJobs = class {
   #walls;
   #context;
   #worker;
+  #createWorker;
+  #failed = false;
   #active;
   #pending;
   #sequence = 0;
   #closed = false;
   constructor(walls, createWorker = workerFactory) {
     this.#walls = walls;
-    if (walls.length < 128) return;
+    this.#createWorker = createWorker;
+    this.#start();
+  }
+  #start() {
+    if (this.#worker || this.#failed || this.#walls.length < 128) return;
     try {
-      this.#worker = createWorker();
+      this.#worker = this.#createWorker();
       if (!this.#worker) return;
       this.#worker.onmessage = ({ data }) => this.#receive(data);
       this.#worker.onerror = (event) => {
@@ -32,6 +38,25 @@ var VisibilityJobs = class {
         this.#fallback();
       };
       this.#worker.onmessageerror = () => this.#fallback();
+      this.#worker.postMessage({ type: "walls", walls: this.#walls });
+    } catch {
+      this.#fallback();
+    }
+  }
+  /**
+   * Replace the wall snapshot and keep the worker. Callbacks of earlier requests
+   * are revoked: the worker answers them in order, still with the old walls.
+   */
+  setWalls(walls) {
+    if (this.#closed) return;
+    this.cancel();
+    this.#walls = walls;
+    this.#context = void 0;
+    if (!this.#worker) {
+      this.#start();
+      return;
+    }
+    try {
       this.#worker.postMessage({ type: "walls", walls });
     } catch {
       this.#fallback();
@@ -80,6 +105,7 @@ var VisibilityJobs = class {
   #fallback() {
     this.#worker?.terminate();
     this.#worker = void 0;
+    this.#failed = true;
     const latest = this.#pending ?? this.#active;
     this.#pending = this.#active = void 0;
     if (latest && !this.#closed) this.#calculate(latest);

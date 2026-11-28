@@ -280,11 +280,28 @@ delayed material changes, removal and scene/role changes. It samples actual GPU
 pixels between frames and serves only synthetic assets, with the same local
 output and runtime options as the board refresh scenario.
 
+`uv run --locked python tests/e2e/scene_layer_updates.py` applies drawings, card
+moves, door and light toggles and spatial-sound moves to a synthetic scene with
+360 wall segments, thirty animated torches, ember emitters, two shaders and
+dynamic darkness as the GM, then repeats drawings, card moves and door toggles
+as a player. It asserts that none of these updates mounts a layer and that an
+opened door lets a torch reach the next room in GPU pixels. With animation
+frozen, it also compares partial updates against a full scene mount for both
+roles. Its report records the synchronous `SceneLayers.render` time,
+layers mounted, the longest following frame gap and long tasks per step.
+`--frontend <copy of gravewright/maps/frontend> --no-assert` measures another
+source tree with the same fixture for before/after comparisons; `--repeat`
+changes the repetitions and `--only "gm: toggle light"` (repeatable) limits the
+measured steps. Compare runs with the same browser and rendering backend on the
+same machine. Software WebGL can dominate frame timings; read the synchronous
+update time separately from the frame gaps.
+
 `uv run --locked python tests/e2e/token_teleport_presentation.py` verifies that
 teleport destroys and recreates only the token's rendered object at its destination,
 while ordinary motion still interpolates. Its synthetic WebGL cases cover
-duplicate updates, selection and sheet identity, delayed/superseded artwork,
-disposal, and unchanged camera/floor resources. It uses the same local output and
+duplicate updates, selection and sheet identity, batched artwork clipping,
+health bars and condition badges, delayed/superseded artwork, disposal, and
+unchanged camera/floor resources. It uses the same local output and
 runtime options as the other standalone rendering scenarios.
 
 `uv run --locked python tests/e2e/token_saving.py` opens the native board with

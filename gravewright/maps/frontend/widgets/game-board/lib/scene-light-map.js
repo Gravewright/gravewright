@@ -2,7 +2,10 @@ import { Container, Graphics, RenderTexture, Texture } from 'pixi.js';
 import { paintAnimatedLight } from '../../../features/lighting/model/light-profiles.js';
 import { AnimatedLight, LightTexturePool } from './animated-light.js';
 
-/** Bounded GPU light atlas, with a separate CPU sample only for responsive particles. */
+/**
+ * Bounded GPU light atlas, with a separate CPU sample only for responsive particles.
+ * Stamp polygons are flat `[x0, y0, x1, y1, ...]` world coordinates.
+ */
 export class SceneLightMap {
     ambient;
     canvas = document.createElement('canvas');
@@ -15,6 +18,7 @@ export class SceneLightMap {
     #textures;
     #ownsTextures;
     #stamps;
+    #nodes = new Map();
     #lights = [];
     #lastRead = -Infinity;
     #sampleOnly;
@@ -39,19 +43,29 @@ export class SceneLightMap {
             this.texture = Texture.from(this.canvas, true);
         }
     }
+    /** A stamp object that is still present keeps its atlas node; only new stamps are built. */
     #mount(stamps, now) {
         if (stamps === this.#stamps) return;
-        for (const node of this.#scene.removeChildren()) node.destroy({ children: true });
+        const previous = this.#nodes, next = new Map();
         this.#lights = [];
         for (const stamp of stamps) {
-            const group = new Container();
-            const mask = new Graphics().poly(stamp.polygon.flatMap(p => [p.x, p.y])).fill('white');
-            const light = new AnimatedLight(stamp.light, stamp.radius, this.#textures, now);
-            light.node.mask = mask;
-            group.addChild(mask, light.node);
-            this.#scene.addChild(group);
-            if (light.animated) this.#lights.push(light);
+            let entry = previous.get(stamp);
+            if (entry && !next.has(stamp)) previous.delete(stamp);
+            else {
+                const group = new Container();
+                const mask = new Graphics().poly(Array.from(stamp.polygon)).fill('white');
+                const light = new AnimatedLight(stamp.light, stamp.radius, this.#textures, now);
+                light.node.mask = mask;
+                group.addChild(mask, light.node);
+                entry = { group, light };
+            }
+            next.set(stamp, entry);
+            if (entry.light.animated) this.#lights.push(entry.light);
         }
+        for (const { group } of previous.values()) group.destroy({ children: true });
+        this.#scene.removeChildren();
+        for (const { group } of next.values()) this.#scene.addChild(group);
+        this.#nodes = next;
         this.#stamps = stamps;
     }
     #paint(stamps, now) {
@@ -63,7 +77,9 @@ export class SceneLightMap {
         for (const stamp of stamps) {
             ctx.save();
             ctx.beginPath();
-            stamp.polygon.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+            const polygon = stamp.polygon;
+            for (let i = 0; i < polygon.length; i += 2)
+                i ? ctx.lineTo(polygon[i], polygon[i + 1]) : ctx.moveTo(polygon[i], polygon[i + 1]);
             ctx.closePath();
             ctx.clip();
             // Draw straight into the bounded atlas; never rasterize a 256px canvas per torch.
@@ -112,6 +128,7 @@ export class SceneLightMap {
         this.#pixels = undefined;
         this.#lights = [];
         this.#stamps = undefined;
+        this.#nodes.clear();
         this.#scene?.destroy({ children: true });
         if (this.#ownsTextures) this.#textures.dispose();
         if (this.texture !== Texture.EMPTY) this.texture.destroy(true);
